@@ -1,0 +1,30 @@
+{
+  "name": "com.ms2026.shaderfx",
+  "version": "0.1.0",
+  "displayName": "MS2026 ShaderFX",
+  "description": "データドリブンにシェーダーエフェクトを追加・調整・一括適用するツール。EffectProfile (ScriptableObject) にエフェクトモジュールを積み、EffectTarget を付けたオブジェクトへ EffectDirector が一括適用します。",
+  "unity": "6000.3",
+  "keywords": [
+    "shader",
+    "vfx",
+    "urp"
+  ],
+  "author": {
+    "name": "MS2026"
+  },
+  "dependencies": {
+    "com.unity.render-pipelines.universal": "17.3.0"
+  },
+  "samples": [
+    {
+      "displayName": "Stress Test (1024 Objects, All Effects)",
+      "description": "全4種のオブジェクト系エフェクトを均等配分した1024体 + 画面系エフェクト1種を一括生成し、SRP Batcherとフレームタイムを検証するためのメニュー項目を追加します。",
+      "path": "Samples~/StressTest"
+    },
+    {
+      "displayName": "Preset Library",
+      "description": "アニメ調キャラ標準・ホログラム敵・氷結・発火・グリッチ故障・トゥーン標準・ディゾルブ消滅・被弾フラッシュの8種の完成EffectProfileを同梱します。そのまま使う、または複製してパラメータ調整する出発点として使えます。",
+      "path": "Samples~/PresetLibrary"
+    }
+  ]
+}

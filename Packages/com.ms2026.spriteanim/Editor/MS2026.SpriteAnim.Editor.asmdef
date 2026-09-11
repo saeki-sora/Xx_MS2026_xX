@@ -1,0 +1,19 @@
+{
+    "name": "MS2026.SpriteAnim.Editor",
+    "rootNamespace": "MS2026.SpriteAnim.Editor",
+    "references": [
+        "MS2026.SpriteAnim.Runtime",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

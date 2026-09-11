@@ -1,0 +1,17 @@
+{
+    "name": "MS2026.ShaderFX.Timeline",
+    "rootNamespace": "MS2026.ShaderFX.Timeline",
+    "references": [
+        "MS2026.ShaderFX.Runtime",
+        "Unity.Timeline"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

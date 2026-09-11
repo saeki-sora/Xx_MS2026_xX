@@ -1,0 +1,19 @@
+{
+  "name": "com.ms2026.spriteanim",
+  "version": "0.1.0",
+  "displayName": "MS2026 SpriteAnim",
+  "description": "スプライトシート1枚さえあれば、再生・停止・再生中の別アニメーションへのクロスフェード遷移を「死ぬほど簡単かつ正確に」扱える2Dスプライトアニメーションツール。SpriteAnimationSet (ScriptableObject) にアニメーションを積み、SpriteAnimator を付けた SpriteRenderer / UI Image へ再生します。付属の Sprite Anim Studio エディタで、シートのスライスからアニメーション作成・プレビュー・遷移テスト・コード生成までを GUI だけで完結できます。",
+  "unity": "6000.3",
+  "keywords": [
+    "sprite",
+    "animation",
+    "2d",
+    "spritesheet"
+  ],
+  "author": {
+    "name": "MS2026"
+  },
+  "dependencies": {
+    "com.unity.ugui": "2.0.0"
+  }
+}
