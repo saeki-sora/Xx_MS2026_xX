@@ -1,0 +1,20 @@
+{
+    "name": "MS2026.GripInputBridge.Editor",
+    "rootNamespace": "MS2026.GripInputBridge.EditorTools",
+    "references": [
+        "MS2026.GripInputBridge.Runtime",
+        "MS2026.GripInputBridge.SerialTransport",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

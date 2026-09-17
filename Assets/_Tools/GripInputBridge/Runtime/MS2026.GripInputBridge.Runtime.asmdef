@@ -1,0 +1,16 @@
+{
+    "name": "MS2026.GripInputBridge.Runtime",
+    "rootNamespace": "MS2026.GripInputBridge",
+    "references": [
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

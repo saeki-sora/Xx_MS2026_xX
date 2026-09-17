@@ -1,0 +1,157 @@
+/* Grip Input Bridge - Editor Window styles (設計書 9章)
+   プレイヤーごとのアクセントカラーはC#側(GripInputBridgeWindow.cs)で個別に設定するため、
+   ここでは配色に依存しない共通レイアウト・タイポグラフィのみを定義する。 */
+
+.gib-root {
+    padding: 6px;
+}
+
+.gib-tab-bar {
+    flex-direction: row;
+    margin-bottom: 4px;
+}
+
+.gib-tab-button {
+    flex-grow: 1;
+    height: 28px;
+    margin-right: 2px;
+    -unity-font-style: bold;
+}
+
+.gib-tab-button--active {
+    background-color: rgba(90, 140, 220, 0.45);
+}
+
+.gib-input-source-bar {
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 6px;
+    margin-bottom: 6px;
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+}
+
+.gib-input-source-bar > Label {
+    margin-right: 6px;
+}
+
+.gib-input-source-bar > DropdownField {
+    flex-grow: 1;
+    max-width: 220px;
+}
+
+.gib-rec-button {
+    margin-left: 8px;
+    min-width: 90px;
+}
+
+.gib-content-root {
+    flex-grow: 1;
+}
+
+.gib-section-title {
+    font-size: 16px;
+    -unity-font-style: bold;
+    margin-bottom: 6px;
+}
+
+.gib-help-text {
+    white-space: normal;
+    margin-bottom: 8px;
+    opacity: 0.85;
+}
+
+.gib-player-panel {
+    flex-direction: column;
+    padding: 8px;
+    margin-bottom: 6px;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.12);
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.gib-player-header {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.gib-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    margin-right: 6px;
+    background-color: rgb(100, 100, 100);
+}
+
+.gib-player-name {
+    -unity-font-style: bold;
+    font-size: 13px;
+    margin-right: 8px;
+}
+
+.gib-status-label {
+    opacity: 0.8;
+}
+
+.gib-value-label {
+    font-size: 20px;
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+}
+
+.gib-preset-row {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.gib-preset-row > Label {
+    margin-right: 6px;
+}
+
+.gib-wizard-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.gib-wizard-row > Label {
+    min-width: 90px;
+}
+
+.gib-countdown-label {
+    font-size: 28px;
+    -unity-font-style: bold;
+    margin: 6px 0;
+}
+
+.gib-diagnostics-row {
+    flex-direction: row;
+    padding: 6px;
+    margin-bottom: 2px;
+    border-radius: 3px;
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.gib-diagnostics-row--warning {
+    background-color: rgba(220, 80, 60, 0.35);
+}
+
+.gib-diagnostics-cell {
+    flex-grow: 1;
+    flex-basis: 0;
+}
+
+.gib-getting-started-step {
+    margin-bottom: 10px;
+    padding: 8px;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.gib-getting-started-step-title {
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+}
