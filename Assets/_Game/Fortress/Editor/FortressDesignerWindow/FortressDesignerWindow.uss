@@ -1,0 +1,61 @@
+/* Fortress Designer - Editor Window styles.
+   GripInputBridgeWindow(Assets/_Tools/GripInputBridge/Editor/GripInputBridgeWindow)と
+   同じダーク基調・配色ルールに揃えている。IMGUI部分(タブの主要コンテンツ)は
+   EditorStyles/EditorGUILayoutの既定の見た目に従う。 */
+
+.fd-root {
+    padding: 6px;
+}
+
+.fd-tab-bar {
+    flex-direction: row;
+    margin-bottom: 6px;
+}
+
+.fd-tab-button {
+    flex-grow: 1;
+    height: 30px;
+    margin-right: 2px;
+    -unity-font-style: bold;
+}
+
+.fd-tab-button--active {
+    background-color: rgba(90, 140, 220, 0.45);
+}
+
+.fd-content-root {
+    flex-grow: 1;
+}
+
+.fd-tab-content {
+    padding: 4px 2px;
+}
+
+.fd-section-title {
+    font-size: 16px;
+    -unity-font-style: bold;
+    margin-bottom: 6px;
+}
+
+.fd-help-text {
+    white-space: normal;
+    margin-bottom: 10px;
+    opacity: 0.85;
+}
+
+.fd-getting-started-step {
+    margin-bottom: 10px;
+    padding: 8px;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.fd-getting-started-step-title {
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+}
+
+.fd-step-button {
+    margin-top: 6px;
+    max-width: 220px;
+}

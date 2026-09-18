@@ -1,0 +1,19 @@
+{
+    "name": "MS2026.Fortress.Editor",
+    "rootNamespace": "MS2026.Fortress.EditorTools",
+    "references": [
+        "MS2026.Fortress.Runtime",
+        "MS2026.GripInputBridge.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

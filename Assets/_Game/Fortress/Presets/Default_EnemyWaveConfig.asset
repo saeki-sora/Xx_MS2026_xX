@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0579de9c576aeb9458d9183b989e3c5a, type: 3}
+  m_Name: Default_EnemyWaveConfig
+  m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.EnemyWaveConfig
+  waveName: "\u30B5\u30F3\u30D7\u30EB\u30A6\u30A7\u30FC\u30D6"
+  spawnEntries:
+  - triggerTime: 0
+    spawnPointId: Spawn_0
+    enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+    count: 3
+    intervalBetweenSpawns: 0.5
+  - triggerTime: 2
+    spawnPointId: Spawn_2
+    enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+    count: 3
+    intervalBetweenSpawns: 0.5
+  - triggerTime: 4
+    spawnPointId: Spawn_4
+    enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+    count: 5
+    intervalBetweenSpawns: 0.4
+  - triggerTime: 6
+    spawnPointId: Spawn_6
+    enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+    count: 5
+    intervalBetweenSpawns: 0.4
+  loop: 1
+  loopInterval: 5
