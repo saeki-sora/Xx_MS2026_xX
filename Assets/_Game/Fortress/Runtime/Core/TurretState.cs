@@ -6,7 +6,10 @@ namespace MS2026.Fortress
         /// <summary>握っていない。レーザーは出ていない。</summary>
         Idle,
 
-        /// <summary>握っていて、レーザーを発射中。</summary>
+        /// <summary>最大握力を保持して発射までチャージ中。まだレーザーは出ていない。</summary>
+        Charging,
+
+        /// <summary>チャージが完了し、レーザーを発射中。</summary>
         Firing,
 
         /// <summary>オーバーヒートして沈黙中。握っても反応しない。</summary>

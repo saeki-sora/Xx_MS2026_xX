@@ -84,6 +84,12 @@ namespace MS2026.Fortress.EditorTools
                     var gripRect = GUILayoutUtility.GetRect(10, 14, GUILayout.ExpandWidth(true));
                     EditorGUI.ProgressBar(gripRect, provider.GetGripValue(turret.playerIndex), "握力");
 
+                    var chargeRect = GUILayoutUtility.GetRect(10, 14, GUILayout.ExpandWidth(true));
+                    var prevChargeColor = GUI.color;
+                    GUI.color = turret.IsFiring ? Color.Lerp(Color.white, Color.cyan, 1f) : Color.white;
+                    EditorGUI.ProgressBar(chargeRect, turret.ChargeProgress01, turret.IsFiring ? "チャージ完了" : "チャージ中");
+                    GUI.color = prevChargeColor;
+
                     var heatRect = GUILayoutUtility.GetRect(10, 14, GUILayout.ExpandWidth(true));
                     var prevBg = GUI.color;
                     GUI.color = Color.Lerp(Color.white, Color.red, turret.HeatRatio01);

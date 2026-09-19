@@ -34,7 +34,12 @@ namespace MS2026.Fortress
         public float CurrentThicknessMeters { get; private set; }
         public bool IsFiring => State == TurretState.Firing;
 
+        /// <summary>チャージの進み具合(0-1)。発射中は常に1。UI表示（チャージゲージ）に使う。</summary>
+        public float ChargeProgress01 { get; private set; }
+
         private float _silenceRemaining;
+        private float _chargeTimer;
+        private bool _hasChargedThisGrip;
 
         private void Update()
         {
@@ -55,8 +60,34 @@ namespace MS2026.Fortress
             var isGripping = provider.IsGripping(playerIndex);
             var grip = provider.GetGripValue(playerIndex);
 
-            if (isGripping)
+            if (!isGripping)
             {
+                Heat = Mathf.Max(0f, Heat - tuning.heatCoolingPerSecond * dt);
+                CurrentThickness01 = 0f;
+                CurrentThicknessMeters = 0f;
+                ChargeProgress01 = 0f;
+                _chargeTimer = 0f;
+                _hasChargedThisGrip = false;
+                SetState(TurretState.Idle);
+                return;
+            }
+
+            if (!_hasChargedThisGrip)
+            {
+                _chargeTimer = grip >= tuning.chargeGripThreshold01 ? _chargeTimer + dt : 0f;
+                ChargeProgress01 = tuning.chargeToFireSeconds > 0f
+                    ? Mathf.Clamp01(_chargeTimer / tuning.chargeToFireSeconds)
+                    : 1f;
+
+                if (_chargeTimer >= tuning.chargeToFireSeconds)
+                {
+                    _hasChargedThisGrip = true;
+                }
+            }
+
+            if (_hasChargedThisGrip)
+            {
+                ChargeProgress01 = 1f;
                 Heat += grip * grip * tuning.heatGainPerSecond * dt;
                 CurrentThickness01 = tuning.EvaluateThickness01(grip);
                 CurrentThicknessMeters = tuning.EvaluateThicknessMeters(grip);
@@ -64,10 +95,9 @@ namespace MS2026.Fortress
             }
             else
             {
-                Heat = Mathf.Max(0f, Heat - tuning.heatCoolingPerSecond * dt);
                 CurrentThickness01 = 0f;
                 CurrentThicknessMeters = 0f;
-                SetState(TurretState.Idle);
+                SetState(TurretState.Charging);
             }
 
             if (Heat >= tuning.overheatThreshold)
@@ -94,6 +124,9 @@ namespace MS2026.Fortress
             _silenceRemaining = tuning.overheatSilenceDuration;
             CurrentThickness01 = 0f;
             CurrentThicknessMeters = 0f;
+            ChargeProgress01 = 0f;
+            _chargeTimer = 0f;
+            _hasChargedThisGrip = false;
             SetState(TurretState.Overheated);
         }
 

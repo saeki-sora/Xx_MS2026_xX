@@ -110,6 +110,15 @@ namespace MS2026.Fortress.EditorTools
 
             EditorGUI.BeginChangeCheck();
 
+            EditorGUILayout.LabelField("チャージ発射", EditorStyles.miniBoldLabel);
+            var chargeSeconds = EditorGUILayout.FloatField(
+                new GUIContent("チャージ時間(秒)", "この秒数だけ最大握力をキープし続けると発射が始まる。"), tuning.chargeToFireSeconds);
+            var chargeThreshold = EditorGUILayout.Slider(
+                new GUIContent("チャージ判定しきい値", "この割合以上の握力をキープしている間だけチャージが進む。1.0で完全な最大握力のみ。"),
+                tuning.chargeGripThreshold01, 0f, 1f);
+
+            EditorGUILayout.Space(4);
+            EditorGUILayout.LabelField("太さ・熱", EditorStyles.miniBoldLabel);
             var minThickness = EditorGUILayout.FloatField(
                 new GUIContent("最小の太さ", "握力0のときのレーザーの太さ。"), tuning.minThickness);
             var maxThickness = EditorGUILayout.FloatField(
@@ -129,6 +138,8 @@ namespace MS2026.Fortress.EditorTools
             if (EditorGUI.EndChangeCheck())
             {
                 Undo.RecordObject(tuning, "Edit Laser Tuning Config");
+                tuning.chargeToFireSeconds = Mathf.Max(0f, chargeSeconds);
+                tuning.chargeGripThreshold01 = Mathf.Clamp01(chargeThreshold);
                 tuning.minThickness = Mathf.Max(0f, minThickness);
                 tuning.maxThickness = Mathf.Max(0f, maxThickness);
                 tuning.heatGainPerSecond = Mathf.Max(0f, heatGain);

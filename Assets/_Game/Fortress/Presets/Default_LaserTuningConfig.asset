@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbd850a17e5df944abfa9afb4d38c6f2, type: 3}
   m_Name: Default_LaserTuningConfig
   m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.LaserTuningConfig
+  chargeToFireSeconds: 0.5
+  chargeGripThreshold01: 0.95
   gripToThicknessCurve:
     serializedVersion: 2
     m_Curve:

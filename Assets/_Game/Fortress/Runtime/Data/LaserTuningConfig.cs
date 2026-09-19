@@ -9,6 +9,17 @@ namespace MS2026.Fortress
     [CreateAssetMenu(menuName = "Fortress/Laser Tuning Config", fileName = "New LaserTuningConfig")]
     public sealed class LaserTuningConfig : ScriptableObject
     {
+        [Header("チャージ発射（最大握力を一定時間キープしてから発射）")]
+        [Tooltip("握力がchargeGripThreshold01以上の状態を、この秒数だけ継続キープすると発射が始まる。" +
+                 "キープ中に握力がしきい値を下回るとチャージは0に戻る。")]
+        [Min(0f)]
+        public float chargeToFireSeconds = 1f;
+
+        [Tooltip("チャージが進行するとみなす握力のしきい値(0-1)。1.0で完全な最大握力のみ、" +
+                 "0.95などにするとほぼ最大でもチャージが進むようになる。")]
+        [Range(0f, 1f)]
+        public float chargeGripThreshold01 = 0.95f;
+
         [Header("太さ（握力%＝レーザーの太さ）")]
         [Tooltip("握力(0-1)からレーザーの太さ(0-1)への変換カーブ。左端が握力0、右端が握力1。")]
         public AnimationCurve gripToThicknessCurve = AnimationCurve.Linear(0f, 0f, 1f, 1f);
