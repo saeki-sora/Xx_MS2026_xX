@@ -13,6 +13,7 @@ namespace MS2026.Fortress.EditorTools
     public sealed class EnemyWavesTabView : VisualElement
     {
         private readonly IMGUIContainer _imgui;
+        private readonly SpawnPointsPanel _spawnPointsPanel = new SpawnPointsPanel();
 
         private EnemyWaveConfig _cachedWave;
         private SerializedObject _serializedWave;
@@ -70,6 +71,9 @@ namespace MS2026.Fortress.EditorTools
                 var pointCount = Object.FindObjectsByType<EnemySpawnPoint>(FindObjectsSortMode.None).Length;
                 EditorGUILayout.LabelField($"シーン内のスポーン地点: {pointCount}箇所", EditorStyles.miniLabel);
             }
+
+            EditorGUILayout.Space(6);
+            _spawnPointsPanel.Draw(director, wave);
 
             if (wave == null)
             {

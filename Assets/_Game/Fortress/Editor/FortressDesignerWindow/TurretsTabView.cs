@@ -134,6 +134,8 @@ namespace MS2026.Fortress.EditorTools
             var range = EditorGUILayout.FloatField(new GUIContent("射程"), tuning.range);
             var maxDamage = EditorGUILayout.FloatField(
                 new GUIContent("最大秒間ダメージ", "太さ最大時の秒間ダメージ。太さに比例してスケールする。"), tuning.maxDamagePerSecond);
+            var obstacleMultiplier = EditorGUILayout.FloatField(
+                new GUIContent("障害物へのダメージ倍率", "破壊可能な障害物へのダメージ倍率。1で敵と同じ。"), tuning.obstacleDamageMultiplier);
 
             if (EditorGUI.EndChangeCheck())
             {
@@ -148,6 +150,7 @@ namespace MS2026.Fortress.EditorTools
                 tuning.overheatSilenceDuration = Mathf.Max(0f, silenceDuration);
                 tuning.range = Mathf.Max(0.1f, range);
                 tuning.maxDamagePerSecond = Mathf.Max(0f, maxDamage);
+                tuning.obstacleDamageMultiplier = Mathf.Max(0f, obstacleMultiplier);
                 EditorUtility.SetDirty(tuning);
             }
 

@@ -52,6 +52,9 @@ namespace MS2026.Fortress.EditorTools
             director.spawnPoints = spawnPoints;
             director.wave = wave;
 
+            BuildSampleObstacles();
+            NavigationFieldTools.CreateField();
+
             SetupCamera();
 
             EditorUtility.SetDirty(tuning);
@@ -71,10 +74,11 @@ namespace MS2026.Fortress.EditorTools
             go.transform.SetParent(parent);
             go.transform.position = Vector3.zero;
 
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = PlaceholderSpriteFactory.CreateCircleSprite();
-            sr.color = new Color(0.6f, 0.85f, 1f);
-            sr.transform.localScale = Vector3.one * 2.5f;
+            var visual = go.AddComponent<PlaceholderVisual>();
+            visual.shape = PlaceholderShape.Circle;
+            visual.color = new Color(0.6f, 0.85f, 1f);
+            visual.Apply();
+            go.transform.localScale = Vector3.one * 2.5f;
 
             return go.AddComponent<CoreCrystalController>();
         }
@@ -100,10 +104,11 @@ namespace MS2026.Fortress.EditorTools
                 go.transform.position = slot.position;
                 go.transform.rotation = Quaternion.Euler(0f, 0f, slot.facingDegrees);
 
-                var sr = go.AddComponent<SpriteRenderer>();
-                sr.sprite = PlaceholderSpriteFactory.CreateCircleSprite();
-                sr.color = FortressColors.PlayerColor(slot.playerIndex);
-                sr.transform.localScale = Vector3.one * 1.2f;
+                var visual = go.AddComponent<PlaceholderVisual>();
+                visual.shape = PlaceholderShape.Circle;
+                visual.color = FortressColors.PlayerColor(slot.playerIndex);
+                visual.Apply();
+                go.transform.localScale = Vector3.one * 1.2f;
 
                 var turret = go.AddComponent<LaserTurret>();
                 turret.playerIndex = slot.playerIndex;
@@ -142,6 +147,18 @@ namespace MS2026.Fortress.EditorTools
             }
 
             return points;
+        }
+
+        private static void BuildSampleObstacles()
+        {
+            // 斜めの湧き位置→コアの直線上に破壊可能ブロック、北側に壊れない壁を置いて迂回を確認できるようにする。
+            foreach (var position in new[] { new Vector2(4f, 4f), new Vector2(-4f, 4f), new Vector2(4f, -4f), new Vector2(-4f, -4f) })
+            {
+                ObstacleFactory.Create(ObstacleKind.Destructible, position);
+            }
+
+            var wall = ObstacleFactory.Create(ObstacleKind.Solid, new Vector2(0f, 8.5f));
+            wall.transform.localScale = new Vector3(5f, 1f, 1f);
         }
 
         private static void PopulateSampleWave(EnemyWaveConfig wave, EnemyTypeDefinition enemyType)

@@ -4,10 +4,10 @@ using UnityEngine;
 namespace MS2026.Fortress
 {
     /// <summary>
-    /// 敵の最小実装。コア目掛けて直進し、接触するとダメージを与えて消滅する。
-    /// パス移動やノックバックなどの演出は将来フェーズで拡張する。
+    /// 敵の最小実装。コアを目指して進み、接触するとダメージを与えて消滅する。
+    /// 進行方向はEnemyNavigation.Current（経路探索）に問い合わせ、無ければ目標へ直進する。
     /// </summary>
-    public sealed class EnemyController : MonoBehaviour
+    public sealed class EnemyController : MonoBehaviour, ILaserTarget
     {
         public EnemyTypeDefinition definition;
         public Transform target;
@@ -15,6 +15,7 @@ namespace MS2026.Fortress
         public event Action<EnemyController> OnDeath;
 
         private float _currentHealth;
+        private Vector2 _moveDirection;
         private const float ArrivalDistance = 0.2f;
 
         private void Start()
@@ -41,18 +42,43 @@ namespace MS2026.Fortress
                 return;
             }
 
-            var toTarget = target.position - transform.position;
-            var distance = toTarget.magnitude;
+            var position = (Vector2)transform.position;
+            var toTarget = (Vector2)target.position - position;
 
-            if (distance <= ArrivalDistance)
+            if (toTarget.magnitude <= ArrivalDistance)
             {
                 target.GetComponent<CoreCrystalController>()?.TakeDamage(definition.damageToCore);
                 Destroy(gameObject);
                 return;
             }
 
-            var step = (Vector2)toTarget.normalized * definition.moveSpeed * Time.deltaTime;
-            transform.position += (Vector3)step;
+            var navigator = EnemyNavigation.Current;
+            var desired = toTarget.normalized;
+            if (navigator != null)
+            {
+                var navigated = navigator.GetDirection(position, definition.navigationProfile);
+                if (navigated.sqrMagnitude > 1e-6f)
+                {
+                    desired = navigated;
+                }
+            }
+
+            var blend = 1f - Mathf.Exp(-definition.turnSharpness * Time.deltaTime);
+            _moveDirection = _moveDirection.sqrMagnitude < 1e-6f
+                ? desired
+                : Vector2.Lerp(_moveDirection, desired, blend);
+            if (_moveDirection.sqrMagnitude > 1e-6f)
+            {
+                _moveDirection.Normalize();
+            }
+
+            var speed = definition.moveSpeed * (navigator != null ? navigator.GetSpeedMultiplier(position) : 1f);
+            transform.position += (Vector3)(_moveDirection * speed * Time.deltaTime);
+        }
+
+        public void ApplyLaserDamage(float baseDamage, LaserTuningConfig tuning)
+        {
+            TakeDamage(baseDamage);
         }
 
         public void TakeDamage(float amount)

@@ -39,7 +39,13 @@ namespace MS2026.Fortress.EditorTools
                 "敵ウェーブタブを開く", window.SwitchToEnemyWavesTab);
 
             AddStep(
-                "4. Play Modeでテストする",
+                "4. 障害物と敵の経路を作る",
+                "「経路・障害物」タブで、破壊可能なブロック・壊れない壁・通行コスト地帯を置き、" +
+                "敵の迂回ルートをSceneに表示して確認できます。コアへ到達できない湧き位置は自動で警告されます。",
+                "経路・障害物タブを開く", window.SwitchToNavigationTab);
+
+            AddStep(
+                "5. Play Modeでテストする",
                 "「テスト」タブでは、4人分の握力値・熱ゲージ・砲台の状態をリアルタイムに確認しながら、" +
                 "ウェーブの再生/停止をボタン一つで試せます。実機が無い場合は Grip Input Bridge のシミュレータで代用できます。",
                 "Grip Input Bridgeを開く", () => EditorApplication.ExecuteMenuItem("Tools/Grip Input Bridge/Open Window"));

@@ -20,6 +20,7 @@ namespace MS2026.Fortress.EditorTools
             GettingStarted,
             Turrets,
             EnemyWaves,
+            Navigation,
             Test
         }
 
@@ -30,6 +31,7 @@ namespace MS2026.Fortress.EditorTools
         private GettingStartedTabView _gettingStartedTab;
         private TurretsTabView _turretsTab;
         private EnemyWavesTabView _enemyWavesTab;
+        private NavigationTabView _navigationTab;
         private TestTabView _testTab;
 
         [MenuItem("Tools/Fortress/Open Fortress Designer")]
@@ -59,6 +61,7 @@ namespace MS2026.Fortress.EditorTools
             _gettingStartedTab = new GettingStartedTabView(this);
             _turretsTab = new TurretsTabView();
             _enemyWavesTab = new EnemyWavesTabView();
+            _navigationTab = new NavigationTabView();
             _testTab = new TestTabView();
 
             rootVisualElement.Add(BuildTabBar());
@@ -80,6 +83,7 @@ namespace MS2026.Fortress.EditorTools
             AddTabButton(bar, Tab.GettingStarted, "はじめに", "このツールの使い方を説明します。初めて開いた方はまずこちら。");
             AddTabButton(bar, Tab.Turrets, "砲台配置", "4基の砲台の位置・チューニング(太さ/熱/オーバーヒート)を調整します。");
             AddTabButton(bar, Tab.EnemyWaves, "敵ウェーブ", "敵が湧く位置・数・タイミングを調整します。");
+            AddTabButton(bar, Tab.Navigation, "経路・障害物", "敵の迂回経路の設定・可視化・到達チェックと、障害物（破壊可能/壁/地帯）の編集をします。");
             AddTabButton(bar, Tab.Test, "テスト", "Play Mode中に握力・熱・ウェーブ再生をリアルタイムで確認します。");
 
             return bar;
@@ -109,6 +113,7 @@ namespace MS2026.Fortress.EditorTools
                 Tab.GettingStarted => _gettingStartedTab,
                 Tab.Turrets => _turretsTab,
                 Tab.EnemyWaves => _enemyWavesTab,
+                Tab.Navigation => _navigationTab,
                 Tab.Test => _testTab,
                 _ => _gettingStartedTab
             };
@@ -132,6 +137,9 @@ namespace MS2026.Fortress.EditorTools
                 case Tab.EnemyWaves:
                     _enemyWavesTab.Refresh();
                     break;
+                case Tab.Navigation:
+                    _navigationTab.Refresh();
+                    break;
                 case Tab.Test:
                     _testTab.Refresh();
                     break;
@@ -140,5 +148,6 @@ namespace MS2026.Fortress.EditorTools
 
         internal void SwitchToTurretsTab() => SwitchTab(Tab.Turrets);
         internal void SwitchToEnemyWavesTab() => SwitchTab(Tab.EnemyWaves);
+        internal void SwitchToNavigationTab() => SwitchTab(Tab.Navigation);
     }
 }

@@ -16,6 +16,8 @@ namespace MS2026.Fortress
         [Tooltip("レーザーが当たる対象のレイヤー（敵・地形障害物など）。")]
         public LayerMask targetLayerMask = ~0;
 
+        private static readonly RaycastHit2D[] HitBuffer = new RaycastHit2D[16];
+
         private LaserTurret _turret;
 
         private void Awake()
@@ -49,16 +51,32 @@ namespace MS2026.Fortress
             var range = _turret.tuning.range;
             Vector3 endPoint = origin + (Vector3)(direction * range);
 
-            var hit = Physics2D.Raycast(origin, direction, range, targetLayerMask);
-            if (hit.collider != null)
+            // トリガー（通行コスト地帯など）は貫通させ、最も近い実体にだけ当てる。
+            var filter = new ContactFilter2D { useTriggers = false };
+            filter.SetLayerMask(targetLayerMask);
+            var hitCount = Physics2D.Raycast(origin, direction, filter, HitBuffer, range);
+
+            var nearest = -1;
+            var nearestDistance = float.PositiveInfinity;
+            for (var i = 0; i < hitCount; i++)
             {
+                if (HitBuffer[i].distance < nearestDistance)
+                {
+                    nearestDistance = HitBuffer[i].distance;
+                    nearest = i;
+                }
+            }
+
+            if (nearest >= 0)
+            {
+                var hit = HitBuffer[nearest];
                 endPoint = hit.point;
 
-                var enemy = hit.collider.GetComponentInParent<EnemyController>();
-                if (enemy != null)
+                var target = hit.collider.GetComponentInParent<ILaserTarget>();
+                if (target != null)
                 {
                     var damage = _turret.tuning.maxDamagePerSecond * _turret.CurrentThickness01 * Time.deltaTime;
-                    enemy.TakeDamage(damage);
+                    target.ApplyLaserDamage(damage, _turret.tuning);
                 }
             }
 

@@ -58,6 +58,10 @@ namespace MS2026.Fortress
         [Min(0f)]
         public float maxDamagePerSecond = 20f;
 
+        [Tooltip("破壊可能な障害物へのダメージ倍率。1で敵と同じ、2なら障害物は倍の速さで壊れる。")]
+        [Min(0f)]
+        public float obstacleDamageMultiplier = 1f;
+
         /// <summary>握力(0-1)から太さ(0-1、正規化値)を求める。</summary>
         public float EvaluateThickness01(float grip01)
         {
