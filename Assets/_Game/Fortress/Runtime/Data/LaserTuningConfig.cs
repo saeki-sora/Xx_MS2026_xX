@@ -49,6 +49,43 @@ namespace MS2026.Fortress
         [Min(0f)]
         public float overheatSilenceDuration = 3f;
 
+        [Header("回転（砲台は自動で360度回り続ける）")]
+        [Tooltip("通常時の回転速度(度/秒)。360なら1秒で1周。")]
+        [Min(0f)]
+        public float rotationSpeedDegPerSec = 45f;
+
+        [Tooltip("レーザー射出中の回転速度の倍率。横軸=レーザーの強さ(0-1、太さ)、縦軸=倍率。" +
+                 "既定は強く握るほど遅くなり、最大の強さで20%まで落ちる。")]
+        public AnimationCurve firingRotationMultiplierCurve = AnimationCurve.Linear(0f, 1f, 1f, 0.2f);
+
+        [Tooltip("チャージ中（最大握力をキープして発射を待っている間）の回転速度の倍率。")]
+        [Range(0f, 1f)]
+        public float chargingRotationMultiplier = 1f;
+
+        [Tooltip("オーバーヒートで沈黙している間の回転速度の倍率。0で止まる。")]
+        [Range(0f, 1f)]
+        public float overheatedRotationMultiplier = 1f;
+
+        [Tooltip("回転速度が切り替わるときの追従の速さ。大きいほど即座に切り替わり、小さいほど滑らかに加減速する。0で即時。")]
+        [Min(0f)]
+        public float rotationResponse = 8f;
+
+        [Header("照準表示（砲台の向きを示す線。射出していない間だけ表示）")]
+        [Tooltip("砲台の向きを示す線を表示するか。")]
+        public bool showAimIndicator = true;
+
+        [Tooltip("線の長さ(ワールド単位)。射程より長くはならない。")]
+        [Min(0.1f)]
+        public float aimIndicatorLength = 6f;
+
+        [Tooltip("線の太さ(ワールド単位)。")]
+        [Min(0.005f)]
+        public float aimIndicatorWidth = 0.06f;
+
+        [Tooltip("線の濃さ(0-1)。")]
+        [Range(0f, 1f)]
+        public float aimIndicatorAlpha = 0.35f;
+
         [Header("射程・ダメージ")]
         [Tooltip("レーザーが届く最大距離(ワールド単位)。")]
         [Min(0.1f)]
@@ -58,9 +95,23 @@ namespace MS2026.Fortress
         [Min(0f)]
         public float maxDamagePerSecond = 20f;
 
+        [Header("貫通（群衆の敵に対して）")]
+        [Tooltip("ONならレーザーが群衆の敵を貫通して、ビーム上の敵全員にダメージを与える。OFFなら最初の1体だけ。")]
+        public bool pierceEnemies = true;
+
+        [Tooltip("貫通できる敵の最大数（砲台に近い順）。0なら無制限。")]
+        [Min(0)]
+        public int maxPierceCount;
+
         [Tooltip("破壊可能な障害物へのダメージ倍率。1で敵と同じ、2なら障害物は倍の速さで壊れる。")]
         [Min(0f)]
         public float obstacleDamageMultiplier = 1f;
+
+        /// <summary>レーザーの強さ(太さ0-1)に応じた、射出中の回転速度の倍率。</summary>
+        public float EvaluateFiringRotationMultiplier(float strength01)
+        {
+            return Mathf.Max(0f, firingRotationMultiplierCurve.Evaluate(Mathf.Clamp01(strength01)));
+        }
 
         /// <summary>握力(0-1)から太さ(0-1、正規化値)を求める。</summary>
         public float EvaluateThickness01(float grip01)

@@ -58,13 +58,57 @@ namespace MS2026.Fortress.EditorTools
                 EditorGUILayout.HelpBox("Player Indexが重複している砲台があります。0-3が一意になるよう調整してください。", MessageType.Warning);
             }
 
+            EditorGUILayout.Space(6);
+            DrawVisualSection(turrets);
+
             EditorGUILayout.Space(12);
             DrawSharedTuningSection(turrets);
         }
 
         private static void DrawTurretRow(LaserTurret turret)
         {
-            using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                DrawTurretHeader(turret);
+                DrawRotationRow(turret);
+            }
+        }
+
+        private static readonly string[] DirectionLabels = { "時計回り", "反時計回り" };
+
+        private static void DrawRotationRow(LaserTurret turret)
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                GUILayout.Space(20);
+
+                EditorGUI.BeginChangeCheck();
+                var auto = EditorGUILayout.ToggleLeft(
+                    new GUIContent("自動回転", "OFFなら初期の向きのまま固定します。"), turret.autoRotate, GUILayout.Width(80));
+                var direction = EditorGUILayout.Popup((int)turret.rotationDirection, DirectionLabels, GUILayout.Width(90));
+                EditorGUILayout.LabelField(new GUIContent("速度倍率", "この砲台だけの回転速度の倍率。"), GUILayout.Width(56));
+                var scale = EditorGUILayout.FloatField(turret.rotationSpeedScale, GUILayout.Width(44));
+                if (EditorGUI.EndChangeCheck())
+                {
+                    Undo.RecordObject(turret, "Edit Turret Rotation");
+                    turret.autoRotate = auto;
+                    turret.rotationDirection = (TurretRotationDirection)direction;
+                    turret.rotationSpeedScale = Mathf.Max(0f, scale);
+                    EditorUtility.SetDirty(turret);
+                }
+
+                if (Application.isPlaying)
+                {
+                    EditorGUILayout.LabelField(
+                        $"回転 {turret.CurrentRotationSpeed:0}°/秒 (x{turret.CurrentRotationMultiplier:0.00})  向き {turret.AimAngleDegrees:0}°",
+                        EditorStyles.miniLabel);
+                }
+            }
+        }
+
+        private static void DrawTurretHeader(LaserTurret turret)
+        {
+            using (new EditorGUILayout.HorizontalScope())
             {
                 var color = FortressColors.PlayerColor(turret.playerIndex);
                 var prevColor = GUI.color;
@@ -87,6 +131,84 @@ namespace MS2026.Fortress.EditorTools
                 {
                     Selection.activeGameObject = turret.gameObject;
                     SceneView.lastActiveSceneView?.FrameSelected();
+                }
+            }
+        }
+
+        private static void DrawVisualSection(LaserTurret[] turrets)
+        {
+            EditorGUILayout.HelpBox(
+                "砲台の見た目は、体（本体のSpriteRenderer）・Barrel（砲身）・Muzzle（レーザーの発射位置）の3つで構成しています。" +
+                "本番の絵に差し替えるときは、SpriteRendererの絵を入れ替え、Muzzleを砲身の先端に合わせてください。",
+                MessageType.None);
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button(new GUIContent("仮の見た目を作成（足りない部分だけ）", "既にあるパーツには触りません。")))
+                {
+                    foreach (var turret in turrets)
+                    {
+                        TurretVisualFactory.EnsureVisual(turret, false);
+                    }
+                }
+
+                if (GUILayout.Button(new GUIContent("仮の見た目を作り直す", "砲身とMuzzleを削除して、仮の見た目で作り直します。")))
+                {
+                    foreach (var turret in turrets)
+                    {
+                        TurretVisualFactory.EnsureVisual(turret, true);
+                    }
+                }
+            }
+        }
+
+        private static SerializedObject _tuningSerialized;
+
+        private static readonly (string path, string label)[] RotationFields =
+        {
+            ("rotationSpeedDegPerSec", "通常の回転速度(度/秒)"),
+            ("firingRotationMultiplierCurve", "射出中の速度倍率（横=強さ 縦=倍率）"),
+            ("chargingRotationMultiplier", "チャージ中の速度倍率"),
+            ("overheatedRotationMultiplier", "オーバーヒート中の速度倍率"),
+            ("rotationResponse", "速度変化の追従の速さ")
+        };
+
+        private static readonly (string path, string label)[] AimFields =
+        {
+            ("showAimIndicator", "照準線を表示"),
+            ("aimIndicatorLength", "照準線の長さ"),
+            ("aimIndicatorWidth", "照準線の太さ"),
+            ("aimIndicatorAlpha", "照準線の濃さ")
+        };
+
+        private static void DrawRotationAndAim(LaserTuningConfig tuning)
+        {
+            if (_tuningSerialized == null || _tuningSerialized.targetObject != tuning)
+            {
+                _tuningSerialized = new SerializedObject(tuning);
+            }
+
+            _tuningSerialized.Update();
+
+            EditorGUILayout.Space(4);
+            EditorGUILayout.LabelField("回転（自動で360度）", EditorStyles.miniBoldLabel);
+            DrawSerializedFields(_tuningSerialized, RotationFields);
+
+            EditorGUILayout.Space(4);
+            EditorGUILayout.LabelField("照準表示", EditorStyles.miniBoldLabel);
+            DrawSerializedFields(_tuningSerialized, AimFields);
+
+            _tuningSerialized.ApplyModifiedProperties();
+        }
+
+        private static void DrawSerializedFields(SerializedObject serialized, (string path, string label)[] fields)
+        {
+            foreach (var field in fields)
+            {
+                var property = serialized.FindProperty(field.path);
+                if (property != null)
+                {
+                    EditorGUILayout.PropertyField(property, new GUIContent(field.label, property.tooltip));
                 }
             }
         }
@@ -134,6 +256,10 @@ namespace MS2026.Fortress.EditorTools
             var range = EditorGUILayout.FloatField(new GUIContent("射程"), tuning.range);
             var maxDamage = EditorGUILayout.FloatField(
                 new GUIContent("最大秒間ダメージ", "太さ最大時の秒間ダメージ。太さに比例してスケールする。"), tuning.maxDamagePerSecond);
+            var pierce = EditorGUILayout.Toggle(
+                new GUIContent("敵を貫通する", "ONならレーザー上の敵全員にダメージ。OFFなら最初の1体だけ。"), tuning.pierceEnemies);
+            var maxPierce = EditorGUILayout.IntField(
+                new GUIContent("貫通数の上限", "砲台に近い順にこの数だけ当てる。0なら無制限。"), tuning.maxPierceCount);
             var obstacleMultiplier = EditorGUILayout.FloatField(
                 new GUIContent("障害物へのダメージ倍率", "破壊可能な障害物へのダメージ倍率。1で敵と同じ。"), tuning.obstacleDamageMultiplier);
 
@@ -151,8 +277,12 @@ namespace MS2026.Fortress.EditorTools
                 tuning.range = Mathf.Max(0.1f, range);
                 tuning.maxDamagePerSecond = Mathf.Max(0f, maxDamage);
                 tuning.obstacleDamageMultiplier = Mathf.Max(0f, obstacleMultiplier);
+                tuning.pierceEnemies = pierce;
+                tuning.maxPierceCount = Mathf.Max(0, maxPierce);
                 EditorUtility.SetDirty(tuning);
             }
+
+            DrawRotationAndAim(tuning);
 
             EditorGUILayout.Space(4);
             if (GUILayout.Button("この設定が未割り当ての砲台に適用"))

@@ -7,10 +7,10 @@ namespace MS2026.ShaderFX.Editor
 {
     public sealed class ProfileBrowserWindow : EditorWindow
     {
-        [MenuItem("Tools/ShaderFX/Profile Browser")]
+        [MenuItem("Tools/シェーダーFX/プロファイルブラウザ")]
         private static void Open()
         {
-            var window = GetWindow<ProfileBrowserWindow>("ShaderFX Profiles");
+            var window = GetWindow<ProfileBrowserWindow>("シェーダーFX プロファイル");
             window.minSize = new Vector2(340, 240);
             window.Refresh();
         }

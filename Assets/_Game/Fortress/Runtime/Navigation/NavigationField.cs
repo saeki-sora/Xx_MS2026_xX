@@ -114,7 +114,12 @@ namespace MS2026.Fortress
 
             _dirty = false;
             _lastBuildTime = Time.time;
-            _lastSignature = ComputeSignature();
+            if (!Application.isPlaying)
+            {
+                // 変化検知(編集中の自動再計算)専用。Play中は障害物の変化通知で足りるので、走査コストを払わない。
+                _lastSignature = ComputeSignature();
+            }
+
             RebuildCount++;
         }
 

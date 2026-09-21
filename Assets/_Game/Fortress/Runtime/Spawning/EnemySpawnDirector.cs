@@ -20,7 +20,7 @@ namespace MS2026.Fortress
         [Tooltip("EnemyTypeDefinition.visualPrefabが未設定な場合に使う土台プレファブ。未設定なら空のGameObjectを生成する。")]
         public GameObject fallbackEnemyPrefab;
 
-        [Tooltip("Play開始時に自動でウェーブを再生するか。オフの場合はInspectorやFortress Designerの「ウェーブ開始」ボタンで手動再生する。")]
+        [Tooltip("Play開始時に自動でウェーブを再生するか。オフの場合はInspectorや要塞デザイナーの「ウェーブ開始」ボタンで手動再生する。")]
         public bool autoStartOnPlay = true;
 
         public bool IsPlaying { get; private set; }
@@ -28,6 +28,7 @@ namespace MS2026.Fortress
 
         private readonly List<EnemySpawnEntry> _pendingEntries = new List<EnemySpawnEntry>();
         private Dictionary<string, EnemySpawnPoint> _spawnPointsById;
+        private bool _swarmMissingLogged;
 
         private void Awake()
         {
@@ -134,6 +135,24 @@ namespace MS2026.Fortress
             {
                 Debug.LogWarning("[EnemySpawnDirector] enemyTypeが未設定のエントリがあります。", this);
                 return;
+            }
+
+            if (entry.enemyType.simulationMode == EnemySimulationMode.Swarm)
+            {
+                var swarm = SwarmSystem.Current;
+                if (swarm != null)
+                {
+                    swarm.Spawn(entry.enemyType, spawnPoint.transform.position);
+                    return;
+                }
+
+                if (!_swarmMissingLogged)
+                {
+                    _swarmMissingLogged = true;
+                    Debug.LogWarning(
+                        "[EnemySpawnDirector] 敵の種類がSwarmモードですが、シーンにSwarmSystemがありません。" +
+                        "要塞デザイナーの「群衆」タブで作成してください。今回は個別オブジェクトとして湧かせます。", this);
+                }
             }
 
             var prefab = entry.enemyType.visualPrefab != null ? entry.enemyType.visualPrefab : fallbackEnemyPrefab;

@@ -8,7 +8,7 @@ namespace MS2026.ShaderFX.Editor
         private const int GridSize = 32;
         private const float Spacing = 1.5f;
 
-        [MenuItem("Tools/ShaderFX/Spawn SRP Batcher Benchmark (1024 Cubes)")]
+        [MenuItem("Tools/シェーダーFX/SRPバッチャー負荷テストを生成（1024個のキューブ）")]
         private static void SpawnBenchmark()
         {
             var profile = Selection.activeObject as EffectProfile;

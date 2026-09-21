@@ -13,7 +13,7 @@ namespace MS2026.ShaderFX.Samples.StressTest
         private const int GridSize = 32; // 32 x 32 = 1024 objects
         private const float Spacing = 1.5f;
 
-        [MenuItem("Tools/ShaderFX/Samples/Spawn Full Stress Test (1024 Objects, All Effects)")]
+        [MenuItem("Tools/シェーダーFX/サンプル/全エフェクト負荷テストを生成（1024個）")]
         private static void Spawn()
         {
             var shader = Shader.Find("ShaderFX/Uber");

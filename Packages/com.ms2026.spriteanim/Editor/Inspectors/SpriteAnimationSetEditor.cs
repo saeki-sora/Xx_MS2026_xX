@@ -11,7 +11,7 @@ namespace MS2026.SpriteAnim.Editor
             DrawDefaultInspector();
 
             EditorGUILayout.Space();
-            if (GUILayout.Button("Sprite Anim Studio で開く", GUILayout.Height(24)))
+            if (GUILayout.Button("スプライトアニメスタジオで開く", GUILayout.Height(24)))
             {
                 SpriteAnimStudioWindow.OpenWithSet((SpriteAnimationSet)target);
             }

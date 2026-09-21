@@ -67,11 +67,11 @@ namespace MS2026.GripInputBridge.EditorTools
         private Button _calibrationStartButton;
         private Button _calibrationSaveButton;
 
-        [MenuItem("Tools/Grip Input Bridge/Open Window")]
+        [MenuItem("Tools/握力入力ブリッジ/ウィンドウを開く")]
         private static void Open()
         {
             var window = GetWindow<GripInputBridgeWindow>();
-            window.titleContent = new GUIContent("Grip Input Bridge");
+            window.titleContent = new GUIContent("握力入力ブリッジ");
             window.minSize = new Vector2(560, 480);
             window.Show();
         }

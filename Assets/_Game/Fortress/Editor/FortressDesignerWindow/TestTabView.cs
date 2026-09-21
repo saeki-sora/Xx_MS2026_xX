@@ -33,9 +33,9 @@ namespace MS2026.Fortress.EditorTools
             {
                 EditorGUILayout.HelpBox("Play Modeに入ると、握力・熱ゲージ・砲台の状態をリアルタイムに確認できます。", MessageType.Info);
 
-                if (GUILayout.Button("Grip Input Bridgeシミュレータを開く"))
+                if (GUILayout.Button("握力入力ブリッジ（シミュレータ）を開く"))
                 {
-                    EditorApplication.ExecuteMenuItem("Tools/Grip Input Bridge/Open Window");
+                    EditorApplication.ExecuteMenuItem("Tools/握力入力ブリッジ/ウィンドウを開く");
                 }
 
                 return;
@@ -79,6 +79,9 @@ namespace MS2026.Fortress.EditorTools
 
                         var grip = provider.GetGripValue(turret.playerIndex);
                         EditorGUILayout.LabelField($"握力 {grip:0.00}", GUILayout.Width(90));
+                        EditorGUILayout.LabelField(
+                            $"回転 {turret.CurrentRotationSpeed:0}°/秒 (x{turret.CurrentRotationMultiplier:0.00})  向き {turret.AimAngleDegrees:0}°",
+                            EditorStyles.miniLabel);
                     }
 
                     var gripRect = GUILayoutUtility.GetRect(10, 14, GUILayout.ExpandWidth(true));

@@ -14,7 +14,7 @@ namespace MS2026.SpriteAnim.Editor
         public static void Generate(SpriteAnimationSet set, string savePath, string className, string namespaceName)
         {
             var sb = new StringBuilder();
-            sb.AppendLine("// このファイルは Sprite Anim Studio によって自動生成されました。手動編集した内容は次回生成時に上書きされます。");
+            sb.AppendLine("// このファイルは スプライトアニメスタジオによって自動生成されました。手動編集した内容は次回生成時に上書きされます。");
 
             bool hasNamespace = !string.IsNullOrEmpty(namespaceName);
             string indent = hasNamespace ? "    " : "";

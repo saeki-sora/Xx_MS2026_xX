@@ -11,7 +11,7 @@ namespace MS2026.Fortress.EditorTools
         {
             AddToClassList("fd-tab-content");
 
-            var title = new Label("Fortress Designer へようこそ");
+            var title = new Label("要塞デザイナーへようこそ");
             title.AddToClassList("fd-section-title");
             Add(title);
 
@@ -23,13 +23,13 @@ namespace MS2026.Fortress.EditorTools
 
             AddStep(
                 "1. シーンを準備する",
-                "テスト用の要塞シーンが無い場合は、メニューの Tools > Fortress > Build Phase1 Test Scene で" +
+                "テスト用の要塞シーンが無い場合は、メニューの Tools > 要塞 > フェーズ1テストシーンを生成 で" +
                 "コア・4基の砲台・敵の湧き位置・サンプルの敵ウェーブを自動生成できます。既存のシーンがある場合は不要です。",
-                "テストシーンを自動生成", () => EditorApplication.ExecuteMenuItem("Tools/Fortress/Build Phase1 Test Scene"));
+                "テストシーンを自動生成", () => EditorApplication.ExecuteMenuItem("Tools/要塞/フェーズ1テストシーンを生成"));
 
             AddStep(
                 "2. 砲台を配置・チューニングする",
-                "「砲台配置」タブで4基の砲台の位置や、太さ・熱・オーバーヒートの数値を調整します。" +
+                "「砲台配置」タブで、4基の砲台の位置、太さ・熱・オーバーヒート、自動回転（射出中は強さに応じて減速）、照準線の数値を調整します。" +
                 "位置そのものはシーン上でGameObjectを選んで普通に動かすだけでOKです。",
                 "砲台配置タブを開く", window.SwitchToTurretsTab);
 
@@ -45,10 +45,16 @@ namespace MS2026.Fortress.EditorTools
                 "経路・障害物タブを開く", window.SwitchToNavigationTab);
 
             AddStep(
-                "5. Play Modeでテストする",
+                "5. 数千体の群衆を調整する",
+                "「群衆」タブで、敵同士の押し合い・渋滞のしやすさ（流体らしさ）を調整し、" +
+                "ストレステストで何体まで60FPSを保てるか計測できます。敵の種類（大きさ・重さ・アニメ）もここで編集します。",
+                "群衆タブを開く", window.SwitchToSwarmTab);
+
+            AddStep(
+                "6. Play Modeでテストする",
                 "「テスト」タブでは、4人分の握力値・熱ゲージ・砲台の状態をリアルタイムに確認しながら、" +
-                "ウェーブの再生/停止をボタン一つで試せます。実機が無い場合は Grip Input Bridge のシミュレータで代用できます。",
-                "Grip Input Bridgeを開く", () => EditorApplication.ExecuteMenuItem("Tools/Grip Input Bridge/Open Window"));
+                "ウェーブの再生/停止をボタン一つで試せます。実機が無い場合は 握力入力ブリッジのシミュレータで代用できます。",
+                "握力入力ブリッジを開く", () => EditorApplication.ExecuteMenuItem("Tools/握力入力ブリッジ/ウィンドウを開く"));
 
             var note = new Label(
                 "ヒント: 太さ・熱の増加量・オーバーヒートしきい値などは全て ScriptableObject (Laser Tuning Config) に" +

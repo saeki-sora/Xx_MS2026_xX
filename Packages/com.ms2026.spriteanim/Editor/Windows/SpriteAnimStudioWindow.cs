@@ -17,16 +17,16 @@ namespace MS2026.SpriteAnim.Editor
     /// </summary>
     public class SpriteAnimStudioWindow : EditorWindow
     {
-        [MenuItem("MS2026/Sprite Anim/Sprite Anim Studio")]
+        [MenuItem("MS2026/スプライトアニメ/スプライトアニメスタジオ")]
         public static void Open()
         {
-            var win = GetWindow<SpriteAnimStudioWindow>("Sprite Anim Studio");
+            var win = GetWindow<SpriteAnimStudioWindow>("スプライトアニメスタジオ");
             win.minSize = new Vector2(760, 560);
         }
 
         public static void OpenWithSet(SpriteAnimationSet set)
         {
-            var win = GetWindow<SpriteAnimStudioWindow>("Sprite Anim Studio");
+            var win = GetWindow<SpriteAnimStudioWindow>("スプライトアニメスタジオ");
             win.minSize = new Vector2(760, 560);
             win._set = set;
             win._selectedAnimIndex = set != null && set.EditorAnimationsList.Count > 0 ? 0 : -1;
@@ -590,7 +590,7 @@ namespace MS2026.SpriteAnim.Editor
             var sprites = Selection.objects.OfType<Sprite>().ToList();
             if (sprites.Count == 0)
             {
-                EditorUtility.DisplayDialog("Sprite Anim Studio", "Project ウィンドウでスプライトが選択されていません。", "OK");
+                EditorUtility.DisplayDialog("スプライトアニメスタジオ", "Project ウィンドウでスプライトが選択されていません。", "OK");
                 return;
             }
 

@@ -15,7 +15,7 @@ namespace MS2026.Fortress.EditorTools
     {
         private const string PresetFolder = "Assets/_Game/Fortress/Presets";
 
-        [MenuItem("Tools/Fortress/Build Phase1 Test Scene")]
+        [MenuItem("Tools/要塞/フェーズ1テストシーンを生成")]
         public static void Build()
         {
             if (GameObject.Find("Fortress") != null)
@@ -54,6 +54,7 @@ namespace MS2026.Fortress.EditorTools
 
             BuildSampleObstacles();
             NavigationFieldTools.CreateField();
+            SwarmTools.CreateSystem();
 
             SetupCamera();
 
@@ -65,7 +66,7 @@ namespace MS2026.Fortress.EditorTools
             Selection.activeGameObject = root;
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
 
-            Debug.Log("[Fortress] Phase1テストシーンを生成しました。Fortress Designer(Tools > Fortress)から調整できます。");
+            Debug.Log("[Fortress] Phase1テストシーンを生成しました。要塞デザイナー（メニュー Tools > 要塞）から調整できます。");
         }
 
         private static CoreCrystalController BuildCore(Transform parent)
@@ -115,6 +116,7 @@ namespace MS2026.Fortress.EditorTools
                 turret.tuning = tuning;
 
                 go.AddComponent<LaserBeamVisual>();
+                TurretVisualFactory.EnsureVisual(turret, false);
 
                 turrets[i] = turret;
             }

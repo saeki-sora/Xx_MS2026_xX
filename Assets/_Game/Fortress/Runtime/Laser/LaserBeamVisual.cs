@@ -46,8 +46,8 @@ namespace MS2026.Fortress
                 return;
             }
 
-            var origin = transform.position;
-            Vector2 direction = transform.up;
+            var origin = _turret.MuzzlePosition;
+            Vector2 direction = _turret.AimDirection;
             var range = _turret.tuning.range;
             Vector3 endPoint = origin + (Vector3)(direction * range);
 
@@ -78,6 +78,18 @@ namespace MS2026.Fortress
                     var damage = _turret.tuning.maxDamagePerSecond * _turret.CurrentThickness01 * Time.deltaTime;
                     target.ApplyLaserDamage(damage, _turret.tuning);
                 }
+            }
+
+            var swarm = SwarmSystem.Current;
+            if (swarm != null)
+            {
+                var tuning = _turret.tuning;
+                swarm.QueueBeam(
+                    origin,
+                    endPoint,
+                    _turret.CurrentThicknessMeters * 0.5f,
+                    tuning.maxDamagePerSecond * _turret.CurrentThickness01,
+                    tuning.pierceEnemies ? tuning.maxPierceCount : 1);
             }
 
             lineRenderer.enabled = true;

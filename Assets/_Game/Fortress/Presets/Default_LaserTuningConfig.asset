@@ -44,5 +44,40 @@ MonoBehaviour:
   heatCoolingPerSecond: 0.6
   overheatThreshold: 10
   overheatSilenceDuration: 3
+  rotationSpeedDegPerSec: 45
+  firingRotationMultiplierCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0.05557251
+      value: 0.8227539
+      inSlope: -0.99713814
+      outSlope: -0.99713814
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.9055962
+      value: -0.024837136
+      inSlope: -0.99713814
+      outSlope: -0.99713814
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  chargingRotationMultiplier: 1
+  overheatedRotationMultiplier: 1
+  rotationResponse: 8
+  showAimIndicator: 1
+  aimIndicatorLength: 6
+  aimIndicatorWidth: 0.06
+  aimIndicatorAlpha: 0.35
   range: 20
   maxDamagePerSecond: 20
+  pierceEnemies: 1
+  maxPierceCount: 0
+  obstacleDamageMultiplier: 1

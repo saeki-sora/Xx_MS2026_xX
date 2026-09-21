@@ -1,5 +1,12 @@
 namespace MS2026.Fortress
 {
+    /// <summary>砲台が回る向き。</summary>
+    public enum TurretRotationDirection
+    {
+        Clockwise,
+        CounterClockwise
+    }
+
     /// <summary>砲台の現在状態。企画書の「握るほど太く強く」「灼け落ちて沈黙する」に対応。</summary>
     public enum TurretState
     {
