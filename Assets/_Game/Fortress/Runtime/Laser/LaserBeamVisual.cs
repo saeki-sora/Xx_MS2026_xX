@@ -53,12 +53,24 @@ namespace MS2026.Fortress
             if (hit.collider != null)
             {
                 endPoint = hit.point;
+                var baseDamagePerSecond = _turret.tuning.maxDamagePerSecond * Time.deltaTime;
 
-                var enemy = hit.collider.GetComponentInParent<EnemyController>();
-                if (enemy != null)
+                // 健在な障害物は衝突判定を持つのでレイはそこで止まる＝奥の敵には届かない（完全遮蔽）。
+                // 破壊されると判定が消えて自動的にレイが素通りするようになるため、ここでの分岐だけでよい。
+                var obstacle = hit.collider.GetComponentInParent<DestructibleObstacle>();
+                if (obstacle != null)
                 {
-                    var damage = _turret.tuning.maxDamagePerSecond * _turret.CurrentThickness01 * Time.deltaTime;
-                    enemy.TakeDamage(damage);
+                    // 障害物側は太さ(強さ)への反応度合いを自分のチューニングで調整できるようにする
+                    // (太さをそのまま等倍で使う敵へのダメージとは別経路)。
+                    obstacle.TakeLaserDamage(baseDamagePerSecond, _turret.CurrentThickness01);
+                }
+                else
+                {
+                    var enemy = hit.collider.GetComponentInParent<EnemyController>();
+                    if (enemy != null)
+                    {
+                        enemy.TakeDamage(baseDamagePerSecond * _turret.CurrentThickness01);
+                    }
                 }
             }
 

@@ -16,7 +16,7 @@ namespace MS2026.Fortress.EditorTools
             Add(title);
 
             var intro = new Label(
-                "「握れ、灼ける前に」の土台システム（砲台配置・握力とレーザーの連動・敵の湧き）を、" +
+                "「握れ、灼ける前に」の土台システム（砲台配置・握力とレーザーの連動・地形破壊・敵の湧き）を、" +
                 "プレイテストしながら調整するためのツールです。数値をいじってPlay Modeで即確認する、を繰り返す想定です。");
             intro.AddToClassList("fd-help-text");
             Add(intro);
@@ -34,13 +34,21 @@ namespace MS2026.Fortress.EditorTools
                 "砲台配置タブを開く", window.SwitchToTurretsTab);
 
             AddStep(
-                "3. 敵の湧き方を調整する",
+                "3. 地形障害物を配置する",
+                "「地形破壊」タブで、レーザーを当てるほどひびが濃くなり、限界で崩れ落ちて時間経過で再生する" +
+                "障害物を配置できます。健在な間はレーザーを完全に遮るので、まずこれを壊してから奥の敵を狙う" +
+                "駆け引きが生まれます。プレイヤーとコアの間を漂う動きや、コアを中心に円形に周回する動きも" +
+                "設定で選べます(動かないままにもできます)。",
+                "地形破壊タブを開く", window.SwitchToTerrainTab);
+
+            AddStep(
+                "4. 敵の湧き方を調整する",
                 "「敵ウェーブ」タブで、いつ・どこに・何体・どの種類の敵を湧かせるかを一覧で編集できます。",
                 "敵ウェーブタブを開く", window.SwitchToEnemyWavesTab);
 
             AddStep(
-                "4. Play Modeでテストする",
-                "「テスト」タブでは、4人分の握力値・熱ゲージ・砲台の状態をリアルタイムに確認しながら、" +
+                "5. Play Modeでテストする",
+                "「テスト」タブでは、4人分の握力値・熱ゲージ・砲台の状態・障害物のHPや再生タイマーをリアルタイムに確認しながら、" +
                 "ウェーブの再生/停止をボタン一つで試せます。実機が無い場合は Grip Input Bridge のシミュレータで代用できます。",
                 "Grip Input Bridgeを開く", () => EditorApplication.ExecuteMenuItem("Tools/Grip Input Bridge/Open Window"));
 

@@ -6,9 +6,9 @@ using UnityEngine.UIElements;
 namespace MS2026.Fortress.EditorTools
 {
     /// <summary>
-    /// 「握れ、灼ける前に」の土台システム（砲台配置／握力とレーザーの連動／敵の湧き）を
+    /// 「握れ、灼ける前に」の土台システム（砲台配置／握力とレーザーの連動／地形破壊／敵の湧き）を
     /// インスペクターの隣にタブとしてドッキングできる専用ツール。設計はGripInputBridgeWindowに揃えてある。
-    /// タブ構成: はじめに / 砲台配置 / 敵ウェーブ / テスト。
+    /// タブ構成: はじめに / 砲台配置 / 地形破壊 / 敵ウェーブ / テスト。
     /// </summary>
     public sealed class FortressDesignerWindow : EditorWindow
     {
@@ -19,6 +19,7 @@ namespace MS2026.Fortress.EditorTools
         {
             GettingStarted,
             Turrets,
+            Terrain,
             EnemyWaves,
             Test
         }
@@ -29,6 +30,7 @@ namespace MS2026.Fortress.EditorTools
 
         private GettingStartedTabView _gettingStartedTab;
         private TurretsTabView _turretsTab;
+        private TerrainTabView _terrainTab;
         private EnemyWavesTabView _enemyWavesTab;
         private TestTabView _testTab;
 
@@ -37,7 +39,7 @@ namespace MS2026.Fortress.EditorTools
         {
             var window = GetWindow<FortressDesignerWindow>();
             window.titleContent = new GUIContent("Fortress Designer");
-            window.minSize = new Vector2(620, 520);
+            window.minSize = new Vector2(700, 520);
             window.Show();
         }
 
@@ -58,6 +60,7 @@ namespace MS2026.Fortress.EditorTools
 
             _gettingStartedTab = new GettingStartedTabView(this);
             _turretsTab = new TurretsTabView();
+            _terrainTab = new TerrainTabView();
             _enemyWavesTab = new EnemyWavesTabView();
             _testTab = new TestTabView();
 
@@ -79,6 +82,7 @@ namespace MS2026.Fortress.EditorTools
 
             AddTabButton(bar, Tab.GettingStarted, "はじめに", "このツールの使い方を説明します。初めて開いた方はまずこちら。");
             AddTabButton(bar, Tab.Turrets, "砲台配置", "4基の砲台の位置・チューニング(太さ/熱/オーバーヒート)を調整します。");
+            AddTabButton(bar, Tab.Terrain, "地形破壊", "レーザーで削れる障害物の配置・耐久・再生時間を調整します。");
             AddTabButton(bar, Tab.EnemyWaves, "敵ウェーブ", "敵が湧く位置・数・タイミングを調整します。");
             AddTabButton(bar, Tab.Test, "テスト", "Play Mode中に握力・熱・ウェーブ再生をリアルタイムで確認します。");
 
@@ -108,6 +112,7 @@ namespace MS2026.Fortress.EditorTools
             {
                 Tab.GettingStarted => _gettingStartedTab,
                 Tab.Turrets => _turretsTab,
+                Tab.Terrain => _terrainTab,
                 Tab.EnemyWaves => _enemyWavesTab,
                 Tab.Test => _testTab,
                 _ => _gettingStartedTab
@@ -129,6 +134,9 @@ namespace MS2026.Fortress.EditorTools
                 case Tab.Turrets:
                     _turretsTab.Refresh();
                     break;
+                case Tab.Terrain:
+                    _terrainTab.Refresh();
+                    break;
                 case Tab.EnemyWaves:
                     _enemyWavesTab.Refresh();
                     break;
@@ -139,6 +147,7 @@ namespace MS2026.Fortress.EditorTools
         }
 
         internal void SwitchToTurretsTab() => SwitchTab(Tab.Turrets);
+        internal void SwitchToTerrainTab() => SwitchTab(Tab.Terrain);
         internal void SwitchToEnemyWavesTab() => SwitchTab(Tab.EnemyWaves);
     }
 }

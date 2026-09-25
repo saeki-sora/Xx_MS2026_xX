@@ -43,6 +43,8 @@ namespace MS2026.Fortress.EditorTools
 
             DrawGripAndTurretStatus();
             EditorGUILayout.Space(10);
+            DrawObstacleStatus();
+            EditorGUILayout.Space(10);
             DrawWaveControls();
         }
 
@@ -89,6 +91,50 @@ namespace MS2026.Fortress.EditorTools
                     GUI.color = Color.Lerp(Color.white, Color.red, turret.HeatRatio01);
                     EditorGUI.ProgressBar(heatRect, turret.HeatRatio01, "熱");
                     GUI.color = prevBg;
+                }
+            }
+        }
+
+        private static void DrawObstacleStatus()
+        {
+            EditorGUILayout.LabelField("地形障害物の状態", EditorStyles.boldLabel);
+
+            var obstacles = Object.FindObjectsByType<DestructibleObstacle>(FindObjectsSortMode.None)
+                .OrderBy(o => o.name)
+                .ToArray();
+
+            if (obstacles.Length == 0)
+            {
+                EditorGUILayout.HelpBox("シーンにDestructibleObstacleが見つかりません。「地形破壊」タブから配置できます。", MessageType.Info);
+                return;
+            }
+
+            foreach (var obstacle in obstacles)
+            {
+                using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
+                {
+                    EditorGUILayout.LabelField(obstacle.name, GUILayout.Width(140));
+
+                    var isDestroyed = obstacle.State == ObstacleState.Destroyed;
+                    var barRect = GUILayoutUtility.GetRect(100, 16, GUILayout.Width(100));
+                    var label = isDestroyed ? $"再生まで{obstacle.RegenDelayRemaining:0.0}s" : $"HP {obstacle.HealthRatio01 * 100f:0}%";
+
+                    var prevColor = GUI.color;
+                    GUI.color = isDestroyed ? Color.gray : Color.Lerp(Color.red, Color.green, obstacle.HealthRatio01);
+                    EditorGUI.ProgressBar(barRect, obstacle.HealthRatio01, label);
+                    GUI.color = prevColor;
+
+                    GUILayout.FlexibleSpace();
+
+                    if (GUILayout.Button("破壊", GUILayout.Width(60)))
+                    {
+                        obstacle.ForceDestroy();
+                    }
+
+                    if (GUILayout.Button("全回復", GUILayout.Width(60)))
+                    {
+                        obstacle.ResetToFull();
+                    }
                 }
             }
         }

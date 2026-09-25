@@ -28,10 +28,10 @@ namespace MS2026.Fortress.EditorTools
                 return;
             }
 
-            EnsureFolder(PresetFolder);
+            EditorAssetUtility.EnsureFolder(PresetFolder);
 
-            var tuning = LoadOrCreateAsset<LaserTuningConfig>($"{PresetFolder}/Default_LaserTuningConfig.asset");
-            var enemyType = LoadOrCreateAsset<EnemyTypeDefinition>($"{PresetFolder}/Default_EnemyType.asset");
+            var tuning = EditorAssetUtility.LoadOrCreateAsset<LaserTuningConfig>($"{PresetFolder}/Default_LaserTuningConfig.asset");
+            var enemyType = EditorAssetUtility.LoadOrCreateAsset<EnemyTypeDefinition>($"{PresetFolder}/Default_EnemyType.asset");
             enemyType.displayName = "小型ドローン";
 
             var root = new GameObject("Fortress");
@@ -42,8 +42,12 @@ namespace MS2026.Fortress.EditorTools
             var layoutController = root.AddComponent<FortressLayoutController>();
             layoutController.turrets = turrets;
 
+            var obstacleTuning = EditorAssetUtility.LoadOrCreateAsset<DestructibleObstacleTuning>(
+                $"{PresetFolder}/Default_DestructibleObstacleTuning.asset");
+            BuildObstacles(root.transform, turrets, obstacleTuning);
+
             var spawnPoints = BuildSpawnPoints(root.transform);
-            var wave = LoadOrCreateAsset<EnemyWaveConfig>($"{PresetFolder}/Default_EnemyWaveConfig.asset");
+            var wave = EditorAssetUtility.LoadOrCreateAsset<EnemyWaveConfig>($"{PresetFolder}/Default_EnemyWaveConfig.asset");
             PopulateSampleWave(wave, enemyType);
 
             var directorGo = new GameObject("EnemySpawnDirector");
@@ -56,6 +60,7 @@ namespace MS2026.Fortress.EditorTools
 
             EditorUtility.SetDirty(tuning);
             EditorUtility.SetDirty(enemyType);
+            EditorUtility.SetDirty(obstacleTuning);
             EditorUtility.SetDirty(wave);
             AssetDatabase.SaveAssets();
 
@@ -182,35 +187,35 @@ namespace MS2026.Fortress.EditorTools
             camera.transform.rotation = Quaternion.identity;
         }
 
-        private static T LoadOrCreateAsset<T>(string path) where T : ScriptableObject
+        private static void BuildObstacles(Transform parent, LaserTurret[] turrets, DestructibleObstacleTuning tuning)
         {
-            var existing = AssetDatabase.LoadAssetAtPath<T>(path);
-            if (existing != null)
+            // 企画書の「プレイヤーの体面に障害物を置き」に対応する仮配置。地形案が決まり次第、
+            // 「地形破壊」タブの自動配置/個別配置で本番の位置に差し替えればよい。
+            const float distanceFromTurret = 3.5f;
+            var obstacleSize = new Vector2(1.2f, 2.5f);
+
+            var root = new GameObject("Obstacles");
+            root.transform.SetParent(parent);
+
+            foreach (var turret in turrets)
             {
-                return existing;
+                var go = new GameObject($"Obstacle_P{turret.playerIndex}");
+                go.transform.SetParent(root.transform);
+                go.transform.position = turret.transform.position + turret.transform.up * distanceFromTurret;
+                go.transform.rotation = turret.transform.rotation;
+
+                var obstacle = go.AddComponent<DestructibleObstacle>();
+                obstacle.tuning = tuning;
+                obstacle.ResetToFull(); // tuningをAwake後に割り当てているため、HPスナップショットを取り直す。
+
+                var wander = go.AddComponent<ObstacleMovement>();
+                wander.nearAnchor = turret.transform;
+
+                go.AddComponent<ObstacleVisual>();
+
+                // transform.localScaleを動かすので、コリジョンと見た目に同時に反映される。
+                obstacle.SetSize(obstacleSize);
             }
-
-            var asset = ScriptableObject.CreateInstance<T>();
-            AssetDatabase.CreateAsset(asset, path);
-            return asset;
-        }
-
-        private static void EnsureFolder(string path)
-        {
-            if (AssetDatabase.IsValidFolder(path))
-            {
-                return;
-            }
-
-            var parent = System.IO.Path.GetDirectoryName(path)?.Replace('\\', '/');
-            var folderName = System.IO.Path.GetFileName(path);
-
-            if (!string.IsNullOrEmpty(parent) && !AssetDatabase.IsValidFolder(parent))
-            {
-                EnsureFolder(parent);
-            }
-
-            AssetDatabase.CreateFolder(parent, folderName);
         }
     }
 }
