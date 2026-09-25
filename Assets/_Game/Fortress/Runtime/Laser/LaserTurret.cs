@@ -112,7 +112,13 @@ namespace MS2026.Fortress
                 return;
             }
 
-            if (!_hasChargedThisGrip)
+            var chargeRequired = tuning.chargeToFireEnabled && tuning.chargeToFireSeconds > 0f;
+            if (!chargeRequired)
+            {
+                // チャージ発射がOFFなら、握った瞬間から発射する（握力に応じて太さが変わる）。
+                _hasChargedThisGrip = true;
+            }
+            else if (!_hasChargedThisGrip)
             {
                 _chargeTimer = grip >= tuning.chargeGripThreshold01 ? _chargeTimer + dt : 0f;
                 ChargeProgress01 = tuning.chargeToFireSeconds > 0f

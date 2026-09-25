@@ -24,6 +24,12 @@ namespace MS2026.Fortress
         [ReadOnly] public NativeArray<float> speedMul;
         [ReadOnly] public NativeArray<float2> goals;
         public int goalCount;
+
+        [ReadOnly] public NativeArray<float> sdf;
+        [ReadOnly] public NativeArray<float2> sdfGradient;
+        public float obstacleAwareness;
+        public float wallContactRange;
+        public float wallSlide;
         public float2 navOrigin;
         public float navCell;
         public int navW;
@@ -54,23 +60,20 @@ namespace MS2026.Fortress
             {
                 var flow = SwarmMath.SampleDirection(
                     flowDirs, tp.profileIndex * navCellCount, p, navOrigin, navCell, navW, navH);
+                var direct = NearestGoalDirection(p);
 
-                if (math.lengthsq(flow) < 1e-6f && goalCount > 0)
+                if (math.lengthsq(flow) < 1e-6f)
                 {
-                    var best = goals[0];
-                    var bestDist = math.distancesq(p, best);
-                    for (var g = 1; g < goalCount; g++)
-                    {
-                        var d = math.distancesq(p, goals[g]);
-                        if (d < bestDist)
-                        {
-                            bestDist = d;
-                            best = goals[g];
-                        }
-                    }
-
-                    flow = math.normalizesafe(best - p);
+                    flow = direct;
                 }
+
+                // 遠くでは障害物を無視してコアへ一直線、壁に近づくほど経路（回り込む向き）に従う。
+                // こうすると壁にぶつかってから、押し合いながら壁沿いに流れて回り込む。
+                var wallDistance = SwarmMath.SampleScalar(sdf, p, navOrigin, navCell, navW, navH);
+                var contact = 1f - math.saturate((wallDistance - tp.radius) / wallContactRange);
+                var follow = math.lerp(obstacleAwareness, 1f, contact);
+                var heading = math.normalizesafe(math.lerp(direct, flow, follow), flow);
+                flow = math.lengthsq(direct) < 1e-6f ? flow : heading;
 
                 var terrain = speedMul[SwarmMath.NearestIndex(p, navOrigin, navCell, navW, navH)];
                 var crowd = math.saturate(CountNeighbors(i, p) / densityReference);
@@ -80,8 +83,43 @@ namespace MS2026.Fortress
 
             var blend = 1f - math.exp(-tp.acceleration * dt);
             var v = math.lerp(vel[i], desired, blend);
+
+            // 壁に向かう速度成分を消して、壁に張り付かず滑らせる。
+            var nearWall = SwarmMath.SampleScalar(sdf, p, navOrigin, navCell, navW, navH);
+            if (nearWall < tp.radius * 1.5f)
+            {
+                var normal = math.normalizesafe(SwarmMath.SampleVector(sdfGradient, 0, p, navOrigin, navCell, navW, navH));
+                var into = math.dot(v, normal);
+                if (into < 0f)
+                {
+                    v -= normal * (into * wallSlide);
+                }
+            }
+
             vel[i] = v;
             predOut[i] = p + v * dt;
+        }
+
+        private float2 NearestGoalDirection(float2 p)
+        {
+            if (goalCount <= 0)
+            {
+                return float2.zero;
+            }
+
+            var best = goals[0];
+            var bestDist = math.distancesq(p, best);
+            for (var g = 1; g < goalCount; g++)
+            {
+                var d = math.distancesq(p, goals[g]);
+                if (d < bestDist)
+                {
+                    bestDist = d;
+                    best = goals[g];
+                }
+            }
+
+            return math.normalizesafe(best - p);
         }
 
         private float CountNeighbors(int self, float2 p)

@@ -10,6 +10,9 @@ namespace MS2026.Fortress
     public sealed class LaserTuningConfig : ScriptableObject
     {
         [Header("チャージ発射（最大握力を一定時間キープしてから発射）")]
+        [Tooltip("OFF（既定）なら、握った瞬間からレーザーが出る。ONにすると、下のチャージ条件を満たすまで発射しない。")]
+        public bool chargeToFireEnabled;
+
         [Tooltip("握力がchargeGripThreshold01以上の状態を、この秒数だけ継続キープすると発射が始まる。" +
                  "キープ中に握力がしきい値を下回るとチャージは0に戻る。")]
         [Min(0f)]

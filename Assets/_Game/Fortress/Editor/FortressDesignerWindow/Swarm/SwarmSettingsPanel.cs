@@ -32,6 +32,12 @@ namespace MS2026.Fortress.EditorTools
                 ("wallStiffness", "壁からの押し出しの強さ"),
                 ("maxNeighborsChecked", "1体が調べる周囲の敵の上限（0=無制限）")
             }),
+            ("障害物とのぶつかり（ぶつかってから避ける）", new[]
+            {
+                ("obstacleAwareness", "障害物を事前に避ける度合い（0=ぶつかってから避ける）"),
+                ("wallContactRange", "壁沿いに回り込み始める距離"),
+                ("wallSlide", "壁に沿って滑る強さ")
+            }),
             ("コア到達", new[]
             {
                 ("arrivalMode", "到達した敵の扱い"),

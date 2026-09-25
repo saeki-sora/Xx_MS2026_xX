@@ -77,6 +77,21 @@ namespace MS2026.Fortress
         [Range(0, 256)]
         public int maxNeighborsChecked = 48;
 
+        [Header("障害物とのぶつかり（ぶつかってから避ける挙動）")]
+        [Tooltip("障害物を事前に見て避ける度合い。0=障害物を気にせずコアへ一直線に進み、ぶつかってから壁沿いに流れて回り込む。" +
+                 "1=最初から経路どおりに迂回する（ぶつからない）。")]
+        [Range(0f, 1f)]
+        public float obstacleAwareness = 0.1f;
+
+        [Tooltip("壁にこの距離（ワールド単位）まで近づくと、経路（回り込む向き）に従って壁沿いに進み始める。" +
+                 "大きいほど壁の手前から回り込み、小さいほど壁にぎりぎりまで突っ込む。")]
+        [Min(0.05f)]
+        public float wallContactRange = 0.6f;
+
+        [Tooltip("壁に向かう速度を消して壁沿いに滑らせる強さ(0-1)。0だと壁に押し付けたまま止まり、1だとするっと滑る。")]
+        [Range(0f, 1f)]
+        public float wallSlide = 0.9f;
+
         [Header("コア到達")]
         [Tooltip("コアに着いた敵の扱い。")]
         public SwarmArrivalMode arrivalMode = SwarmArrivalMode.VanishAndDamage;

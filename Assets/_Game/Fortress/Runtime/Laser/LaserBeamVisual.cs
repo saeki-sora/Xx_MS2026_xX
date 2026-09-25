@@ -76,7 +76,14 @@ namespace MS2026.Fortress
                 if (target != null)
                 {
                     var damage = _turret.tuning.maxDamagePerSecond * _turret.CurrentThickness01 * Time.deltaTime;
-                    target.ApplyLaserDamage(damage, _turret.tuning);
+                    if (target is IAttributedLaserTarget attributed)
+                    {
+                        attributed.ApplyLaserDamage(damage, _turret.tuning, _turret);
+                    }
+                    else
+                    {
+                        target.ApplyLaserDamage(damage, _turret.tuning);
+                    }
                 }
             }
 

@@ -17,6 +17,13 @@ namespace MS2026.Fortress.EditorTools
     {
         public static GameObject Create(ObstacleKind kind, Vector2 position)
         {
+            if (kind == ObstacleKind.Destructible)
+            {
+                // 破壊可能物は専用のファクトリ（プリセット・見た目・演出などを含む）で作る。
+                return DestructibleFactory.Create(
+                    DestructibleEditorSettings.ActivePreset, position, DestructibleEditorSettings.CurrentPlaceSize()).gameObject;
+            }
+
             var go = new GameObject(MakeName(kind));
             Undo.RegisterCreatedObjectUndo(go, "Add Obstacle");
             Undo.SetTransformParent(go.transform, GetOrCreateRoot().transform, "Add Obstacle");
@@ -32,14 +39,6 @@ namespace MS2026.Fortress.EditorTools
 
             switch (kind)
             {
-                case ObstacleKind.Destructible:
-                    go.transform.localScale = new Vector3(2f, 2f, 1f);
-                    visual.color = new Color(0.72f, 0.52f, 0.34f);
-                    visual.sortingOrder = -1;
-                    obstacle.mode = NavigationObstacleMode.Block;
-                    Undo.AddComponent<DestructibleObstacle>(go);
-                    break;
-
                 case ObstacleKind.Solid:
                     go.transform.localScale = new Vector3(4f, 1f, 1f);
                     visual.color = new Color(0.42f, 0.44f, 0.5f);
@@ -90,7 +89,7 @@ namespace MS2026.Fortress.EditorTools
             }
         }
 
-        private static GameObject GetOrCreateRoot()
+        internal static GameObject GetOrCreateRoot()
         {
             var existing = GameObject.Find("Obstacles");
             if (existing != null)

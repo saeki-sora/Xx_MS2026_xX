@@ -22,7 +22,7 @@ namespace MS2026.Fortress.EditorTools
             {
                 EditorGUILayout.HelpBox(
                     "破壊可＝レーザーで壊せて時間で再生する壁 / 壁＝壊れない壁 / 地帯＝通れるが遅くなり、敵が避けやすい範囲。" +
-                    "位置・大きさはここで数値編集するか、Sceneで直接動かせます。",
+                    "位置・大きさはここで数値編集するか、Sceneで直接動かせます。破壊可能物の耐久・見た目などの詳細は「破壊可能物」タブで編集します。",
                     MessageType.None);
 
                 foreach (var obstacle in obstacles)
@@ -74,13 +74,9 @@ namespace MS2026.Fortress.EditorTools
 
                 if (destructible != null)
                 {
-                    EditorGUI.BeginChangeCheck();
-                    var hp = LabeledFloat("HP", destructible.maxHealth);
-                    if (EditorGUI.EndChangeCheck())
-                    {
-                        Undo.RecordObject(destructible, "Edit Obstacle HP");
-                        destructible.maxHealth = Mathf.Max(1f, hp);
-                    }
+                    EditorGUILayout.LabelField(
+                        new GUIContent($"HP {destructible.settings.durability.maxHealth:0.#}", "耐久・見た目などの詳細は「破壊可能物」タブで編集できます。"),
+                        GUILayout.Width(62));
                 }
 
                 if (GUILayout.Button(new GUIContent("選択", "Sceneビューで選択して表示します。"), GUILayout.Width(40)))
