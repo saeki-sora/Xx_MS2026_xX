@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace MS2026.Fortress
 {
@@ -18,6 +19,28 @@ namespace MS2026.Fortress
 
         [Tooltip("この砲台の太さ・熱・回転・射程などのチューニングデータ。")]
         public LaserTuningConfig tuning;
+
+        [Header("弱握り吸引＋細いビーム / 強握りビーム")]
+        [Tooltip("ONなら弱く握ると吸引しながら細いビームを撃ち、強く握ると強いビームになる。")]
+        public bool weakGripSuctionEnabled;
+
+        [Tooltip("弱握りビームの太さ・ダメージの強さ。1で最大威力。")]
+        [Range(0.01f, 0.5f)] public float weakBeamStrength = 0.15f;
+
+        [Tooltip("開発中のキーボード操作用。ONならアナログ握力ではなく、プレイヤー別の弱・強ボタンで操作する。")]
+        public bool separateKeyboardButtons;
+
+        [Tooltip("この握力以上で強握り（ビーム）へ切り替わる。")]
+        [Range(0f, 1f)] public float strongGripEnterThreshold = 0.65f;
+
+        [Tooltip("ビーム中にこの握力を下回ると弱握り（吸引）へ戻る。境界でのちらつき防止用。")]
+        [Range(0f, 1f)] public float strongGripExitThreshold = 0.5f;
+
+        [Tooltip("弱握りで敵・エネルギーを引き寄せる範囲。")]
+        [Min(0.1f)] public float suctionRange = 12f;
+
+        [Tooltip("弱握りで引き寄せる速さ。")]
+        [Min(0f)] public float suctionSpeed = 7f;
 
         [Header("回転")]
         [Tooltip("ONなら自動で回り続ける。OFFなら初期の向きのまま固定。")]
@@ -49,7 +72,8 @@ namespace MS2026.Fortress
 
         public float CurrentThickness01 { get; private set; }
         public float CurrentThicknessMeters { get; private set; }
-        public bool IsFiring => State == TurretState.Firing;
+        public bool IsFiring => State == TurretState.Firing || State == TurretState.Suction;
+        public bool IsSuctioning => State == TurretState.Suction;
 
         /// <summary>チャージの進み具合(0-1)。発射中は常に1。UI表示（チャージゲージ）に使う。</summary>
         public float ChargeProgress01 { get; private set; }
@@ -72,6 +96,10 @@ namespace MS2026.Fortress
         private float _silenceRemaining;
         private float _chargeTimer;
         private bool _hasChargedThisGrip;
+        private bool _strongGripLatched;
+
+        private static readonly Key[] WeakKeys = { Key.A, Key.S, Key.K, Key.L };
+        private static readonly Key[] StrongKeys = { Key.Q, Key.W, Key.O, Key.P };
 
         private void Update()
         {
@@ -100,6 +128,12 @@ namespace MS2026.Fortress
             var isGripping = provider.IsGripping(playerIndex);
             var grip = provider.GetGripValue(playerIndex);
 
+            if (separateKeyboardButtons && TryGetKeyboardGrip(out var keyboardIsGripping, out var keyboardGrip))
+            {
+                isGripping = keyboardIsGripping;
+                grip = keyboardGrip;
+            }
+
             if (!isGripping)
             {
                 Heat = Mathf.Max(0f, Heat - tuning.heatCoolingPerSecond * dt);
@@ -108,8 +142,29 @@ namespace MS2026.Fortress
                 ChargeProgress01 = 0f;
                 _chargeTimer = 0f;
                 _hasChargedThisGrip = false;
+                _strongGripLatched = false;
                 SetState(TurretState.Idle);
                 return;
+            }
+
+            if (weakGripSuctionEnabled)
+            {
+                _strongGripLatched = _strongGripLatched
+                    ? grip >= strongGripExitThreshold
+                    : grip >= strongGripEnterThreshold;
+
+                if (!_strongGripLatched)
+                {
+                    Heat = Mathf.Max(0f, Heat - tuning.heatCoolingPerSecond * dt);
+                    CurrentThickness01 = Mathf.Clamp(weakBeamStrength, 0.01f, 0.5f);
+                    CurrentThicknessMeters = Mathf.Lerp(tuning.minThickness, tuning.maxThickness, CurrentThickness01);
+                    ChargeProgress01 = 1f;
+                    _chargeTimer = 0f;
+                    _hasChargedThisGrip = false;
+                    SetState(TurretState.Suction);
+                    SkillEnergySystem.Current?.ApplySuction(playerIndex, MuzzlePosition, suctionRange, suctionSpeed, dt);
+                    return;
+                }
             }
 
             var chargeRequired = tuning.chargeToFireEnabled && tuning.chargeToFireSeconds > 0f;
@@ -173,6 +228,8 @@ namespace MS2026.Fortress
                     return tuning.EvaluateFiringRotationMultiplier(CurrentThickness01);
                 case TurretState.Charging:
                     return tuning.chargingRotationMultiplier;
+                case TurretState.Suction:
+                    return 1f;
                 case TurretState.Overheated:
                     return tuning.overheatedRotationMultiplier;
                 default:
@@ -201,6 +258,7 @@ namespace MS2026.Fortress
             ChargeProgress01 = 0f;
             _chargeTimer = 0f;
             _hasChargedThisGrip = false;
+            _strongGripLatched = false;
             SetState(TurretState.Overheated);
         }
 
@@ -213,6 +271,23 @@ namespace MS2026.Fortress
 
             State = next;
             OnStateChanged?.Invoke(State);
+        }
+
+        private bool TryGetKeyboardGrip(out bool isGripping, out float grip)
+        {
+            isGripping = false;
+            grip = 0f;
+
+            if (playerIndex < 0 || playerIndex >= WeakKeys.Length || Keyboard.current == null)
+            {
+                return false;
+            }
+
+            var strongPressed = Keyboard.current[StrongKeys[playerIndex]].isPressed;
+            var weakPressed = Keyboard.current[WeakKeys[playerIndex]].isPressed;
+            isGripping = strongPressed || weakPressed;
+            grip = strongPressed ? 1f : weakPressed ? 0.35f : 0f;
+            return true;
         }
 
         private void OnDrawGizmosSelected()

@@ -100,6 +100,8 @@ namespace MS2026.Fortress
             }
 
             lineRenderer.enabled = true;
+            lineRenderer.loop = false;
+            lineRenderer.positionCount = 2;
             lineRenderer.startWidth = _turret.CurrentThicknessMeters;
             lineRenderer.endWidth = _turret.CurrentThicknessMeters;
             lineRenderer.SetPosition(0, origin);
@@ -109,5 +111,6 @@ namespace MS2026.Fortress
             lineRenderer.startColor = color;
             lineRenderer.endColor = color;
         }
+
     }
 }

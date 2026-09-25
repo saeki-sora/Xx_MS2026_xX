@@ -3,6 +3,7 @@
     "rootNamespace": "MS2026.Fortress",
     "references": [
         "MS2026.GripInputBridge.Runtime",
+        "Unity.InputSystem",
         "Unity.Burst",
         "Unity.Mathematics",
         "Unity.Collections"

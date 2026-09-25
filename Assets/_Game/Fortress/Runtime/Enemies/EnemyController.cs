@@ -16,6 +16,7 @@ namespace MS2026.Fortress
 
         private float _currentHealth;
         private Vector2 _moveDirection;
+        private Vector2 _pendingSuctionDisplacement;
         private const float ArrivalDistance = 0.2f;
 
         private void Start()
@@ -74,6 +75,31 @@ namespace MS2026.Fortress
 
             var speed = definition.moveSpeed * (navigator != null ? navigator.GetSpeedMultiplier(position) : 1f);
             transform.position += (Vector3)(_moveDirection * speed * Time.deltaTime);
+        }
+
+        /// <summary>
+        /// このフレームの自走が終わった後に適用する吸引力を蓄積する。
+        /// 複数の砲台から同時に吸われた場合は、それぞれの力を合成する。
+        /// </summary>
+        public void ApplySuction(Vector2 origin, float speed, float deltaTime)
+        {
+            var toOrigin = origin - (Vector2)transform.position;
+            if (toOrigin.sqrMagnitude <= 1e-6f || speed <= 0f || deltaTime <= 0f)
+            {
+                return;
+            }
+
+            _pendingSuctionDisplacement += toOrigin.normalized * speed * deltaTime;
+        }
+
+        private void LateUpdate()
+        {
+            // EnemyController.Update の自走後に動かすことで、移動中の敵にも吸引が確実に勝つ。
+            if (_pendingSuctionDisplacement.sqrMagnitude > 0f)
+            {
+                transform.position += (Vector3)_pendingSuctionDisplacement;
+                _pendingSuctionDisplacement = Vector2.zero;
+            }
         }
 
         public void ApplyLaserDamage(float baseDamage, LaserTuningConfig tuning)

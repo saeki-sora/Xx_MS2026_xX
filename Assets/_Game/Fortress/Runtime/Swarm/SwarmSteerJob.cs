@@ -12,6 +12,8 @@ namespace MS2026.Fortress
     [BurstCompile]
     public struct SwarmSteerJob : IJobParallelFor
     {
+        // xy = 吸引中心、z = 範囲、w = 速度。フレームごとの値コピー。
+        public FixedList512Bytes<float4> suctions;
         [ReadOnly] public NativeArray<float2> pos;
         public NativeArray<float2> vel;
         [WriteOnly] public NativeArray<float2> predOut;
@@ -83,6 +85,19 @@ namespace MS2026.Fortress
 
             var blend = 1f - math.exp(-tp.acceleration * dt);
             var v = math.lerp(vel[i], desired, blend);
+
+            // 自走に吸引速度を加える。複数の砲台の力を合成し、中心を通り越す移動は抑える。
+            for (var s = 0; s < suctions.Length; s++)
+            {
+                var suction = suctions[s];
+                var toOrigin = suction.xy - p;
+                var distanceSq = math.lengthsq(toOrigin);
+                if (distanceSq > 1e-6f && distanceSq <= suction.z * suction.z)
+                {
+                    var distance = math.sqrt(distanceSq);
+                    v += toOrigin / distance * math.min(suction.w, distance / math.max(dt, 1e-5f));
+                }
+            }
 
             // 壁に向かう速度成分を消して、壁に張り付かず滑らせる。
             var nearWall = SwarmMath.SampleScalar(sdf, p, navOrigin, navCell, navW, navH);

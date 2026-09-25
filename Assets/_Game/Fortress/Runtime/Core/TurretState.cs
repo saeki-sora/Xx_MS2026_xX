@@ -13,6 +13,9 @@ namespace MS2026.Fortress
         /// <summary>握っていない。レーザーは出ていない。</summary>
         Idle,
 
+        /// <summary>弱く握り、回転しながら細いビームを撃ち、敵とスキルエネルギーを吸引している。</summary>
+        Suction,
+
         /// <summary>最大握力を保持して発射までチャージ中。まだレーザーは出ていない。</summary>
         Charging,
 

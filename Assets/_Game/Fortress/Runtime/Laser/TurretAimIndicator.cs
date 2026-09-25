@@ -40,7 +40,7 @@ namespace MS2026.Fortress
             var tuning = _turret.tuning;
             var visible = tuning != null
                           && tuning.showAimIndicator
-                          && _turret.State != TurretState.Firing
+                          && !_turret.IsFiring
                           && _turret.State != TurretState.Overheated;
 
             _line.enabled = visible;

@@ -84,6 +84,7 @@ namespace MS2026.Fortress
         private readonly List<CoreCrystalController> _cores = new List<CoreCrystalController>();
         private readonly List<PendingSpawn> _pending = new List<PendingSpawn>();
         private readonly SwarmBeam[] _beamQueue = new SwarmBeam[SwarmLimits.MaxBeams];
+        private FixedList512Bytes<float4> _suctionQueue;
         private readonly List<SwarmSpike> _spikes = new List<SwarmSpike>();
 
         private readonly Stopwatch _phaseWatch = new Stopwatch();
@@ -280,6 +281,17 @@ namespace MS2026.Fortress
             return _types.Count - 1;
         }
 
+        /// <summary>このフレームの吸引を登録する。ジョブへ値コピーするため、実行中の配列には触れない。</summary>
+        public void QueueSuction(Vector2 origin, float range, float speed)
+        {
+            if (!isActiveAndEnabled || range <= 0f || speed <= 0f || _suctionQueue.Length >= _suctionQueue.Capacity)
+            {
+                return;
+            }
+
+            _suctionQueue.Add(new float4(origin.x, origin.y, range, speed));
+        }
+
         // ---------------------------------------------------------------
         // 毎フレームの流れ
         //   1. 前フレームのジョブを回収  2. その結果を描画  3. 追加・削除を反映  4. 次のジョブをスケジュール
@@ -332,6 +344,7 @@ namespace MS2026.Fortress
             ScheduleSimulation();
 
             _beamCount = 0;
+            _suctionQueue.Clear();
             _stats.alive = Storage.Count;
             _lastAlive = _stats.alive;
             RecordHistory();
@@ -493,6 +506,7 @@ namespace MS2026.Fortress
 
             handle = new SwarmSteerJob
             {
+                suctions = _suctionQueue,
                 pos = Storage.pos,
                 vel = Storage.vel,
                 predOut = Storage.predA,
