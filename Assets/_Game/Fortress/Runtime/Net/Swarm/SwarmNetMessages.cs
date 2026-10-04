@@ -43,6 +43,23 @@ namespace MS2026.Fortress.Net
     }
 
     /// <summary>
+    /// 群衆の敵1体のHostでの位置と速度(10バイト。段階5、起動引数/設定で切り替え)。
+    /// Clientは自分で計算した速度ではなくHostの速度で先読みし、その速度を引き継ぐ(一斉投入直後の混乱でズレにくくする)。
+    /// </summary>
+    public struct SwarmNetCorrectionV : INetworkSerializeByMemcpy
+    {
+        public ushort Id;
+        public short X;
+        public short Y;
+
+        /// <summary>速度(half)。</summary>
+        public ushort Vx;
+
+        /// <summary>速度(half)。</summary>
+        public ushort Vy;
+    }
+
+    /// <summary>
     /// 群衆の値を小さく詰める/戻す(Unity API非依存・EditModeテスト対象)。
     /// 位置: 1/500単位の16bit整数(±65.5まで、精度0.002)。向き: 256分割。速さ等: 16bit浮動小数(half)。
     /// </summary>

@@ -106,6 +106,16 @@ namespace MS2026.Fortress
         public float replicaErrorMax;
         public int replicaSnaps;
 
+        // そのうち、自分の画面に映っている敵の分(段階5。優先して補正しているかの確認用)。
+        public int replicaViewCorrections;
+        public float replicaViewErrorSum;
+
+        // 抜き取り検査(優先度と関係なく選ばれた補正)の分。優先度つきでも偏らない、全員のズレの見積もり。
+        public int replicaAuditCorrections;
+        public float replicaAuditErrorSum;
+        public int replicaAuditViewCorrections;
+        public float replicaAuditViewErrorSum;
+
         /// <summary>まだ追加していない(1フレームの上限を超えて次に回された)出現の数。</summary>
         public int pendingSpawns;
     }

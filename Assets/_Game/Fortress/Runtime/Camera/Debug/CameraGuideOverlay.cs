@@ -26,6 +26,12 @@ namespace MS2026.Fortress.Cameras
 
         private FortressCameraRig Rig => rig != null ? rig : FortressCameraRig.Active;
 
+        private void Awake()
+        {
+            // GUILayoutを使わないので、OnGUIの度のレイアウト準備(=毎フレームのGC)を止める。
+            useGUILayout = false;
+        }
+
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         private void OnGUI()
         {

@@ -59,7 +59,9 @@ public sealed class ArduinoSerialReader : MonoBehaviour
 
     private void Update()
     {
-        if (!logValues || Time.unscaledTime < _nextLogTime)
+        // 実機につながっていないとき(ポートを開けなかった・実機通信が無効)は出さない。
+        // 意味の無い値を0.3秒ごとにログへ書き続けると、ビルドでは文字列の生成とログ出力が負荷(GC)になるため(2026-10-04)。
+        if (!logValues || !IsDeviceActive || Time.unscaledTime < _nextLogTime)
         {
             return;
         }
@@ -83,6 +85,9 @@ public sealed class ArduinoSerialReader : MonoBehaviour
 #if MS2026_GRIP_SERIAL_ENABLED
     private SerialGripTransport _transport;
     private CompositeGripTransport _composite;
+
+    /// <summary>実機のCOMポートを開けて、入力元として使っているか。</summary>
+    public bool IsDeviceActive => _transport != null;
 
     private void Start()
     {
@@ -141,6 +146,9 @@ public sealed class ArduinoSerialReader : MonoBehaviour
         return config;
     }
 #else
+    /// <summary>実機通信が無効なので、常にfalse。</summary>
+    public bool IsDeviceActive => false;
+
     private void Start()
     {
         Debug.LogWarning(

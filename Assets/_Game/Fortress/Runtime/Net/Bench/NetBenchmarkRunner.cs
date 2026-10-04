@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Reflection;
 using System.Text;
+using Unity.Profiling;
 using UnityEngine;
 
 namespace MS2026.Fortress.Net
@@ -34,7 +37,19 @@ namespace MS2026.Fortress.Net
         private float _errorSum;
         private float _errorMax;
         private int _snaps;
+        private int _viewCorrections;
+        private float _viewErrorSum;
+        private int _auditCorrections;
+        private float _auditErrorSum;
+        private int _auditViewCorrections;
+        private float _auditViewErrorSum;
+        private long _allocBytes;
+        private long _allocCount;
         private readonly StringBuilder _line = new StringBuilder(512);
+
+        // そのフレームにC#で確保したメモリ量と回数(GCの元)。Unityのプロファイラの計測値を読むだけなので、計測自体の負荷はほぼ無い。
+        private ProfilerRecorder _gcAllocated;
+        private ProfilerRecorder _gcAllocations;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
@@ -87,6 +102,26 @@ namespace MS2026.Fortress.Net
                 {
                     hub.adaptiveCorrection = args.AdaptiveCorrection.Value;
                 }
+
+                if (args.PriorityCorrection.HasValue)
+                {
+                    hub.correctionMode = args.PriorityCorrection.Value ? SwarmCorrectionMode.Priority : SwarmCorrectionMode.RoundRobin;
+                }
+
+                if (args.SendVelocity.HasValue)
+                {
+                    hub.sendVelocity = args.SendVelocity.Value;
+                }
+
+                if (args.BudgetKBps.HasValue)
+                {
+                    hub.normalBudgetKBps = Mathf.Max(16f, args.BudgetKBps.Value);
+                }
+
+                if (args.MaxBudgetKBps.HasValue)
+                {
+                    hub.maxBudgetKBps = Mathf.Max(16f, args.MaxBudgetKBps.Value);
+                }
             }
 
             var bootstrap = FindFirstObjectByType<FortressNetworkBootstrap>();
@@ -109,13 +144,86 @@ namespace MS2026.Fortress.Net
         {
             // 1行で読めるよう、ログの呼び出し元(スタックトレース)を付けない。
             Application.SetStackTraceLogType(LogType.Log, StackTraceLogType.None);
+            _gcAllocated = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "GC Allocated In Frame");
+            _gcAllocations = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "GC Allocation In Frame Count");
+
+            if (_args.HideDDriveOverlay)
+            {
+                foreach (var overlay in FindObjectsByType<DDrive.Runtime.Net.NetDebugOverlay>(FindObjectsSortMode.None))
+                {
+                    overlay.Visible = false;
+                }
+            }
+
+            LogAndDisableComponents();
             StartWindow();
             Log($"START args={string.Join(" ", Environment.GetCommandLineArgs(), 1, Environment.GetCommandLineArgs().Length - 1)}");
+        }
+
+        // 動いている部品の種類と数をログに出し(どれを止めて試すかの手がかり)、指定された部品を止める。
+        private void LogAndDisableComponents()
+        {
+            var disable = new HashSet<string>(_args.DisableTypes ?? Array.Empty<string>());
+            var counts = new SortedDictionary<string, int>(StringComparer.Ordinal);
+            var disabled = new SortedDictionary<string, int>(StringComparer.Ordinal);
+
+            foreach (var behaviour in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
+            {
+                if (behaviour == null || behaviour == this || !behaviour.isActiveAndEnabled)
+                {
+                    continue;
+                }
+
+                var type = behaviour.GetType();
+                counts[type.Name] = counts.TryGetValue(type.Name, out var c) ? c + 1 : 1;
+
+                var hasOnGui = type.GetMethod("OnGUI", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic) != null;
+                if (disable.Contains(type.Name) || (_args.NoOnGui && hasOnGui))
+                {
+                    behaviour.enabled = false;
+                    disabled[type.Name] = disabled.TryGetValue(type.Name, out var d) ? d + 1 : 1;
+                }
+            }
+
+            var line = new StringBuilder("COMPONENTS");
+            foreach (var pair in counts)
+            {
+                line.Append(' ').Append(pair.Key).Append('x').Append(pair.Value);
+            }
+
+            Log(line.ToString());
+
+            if (disabled.Count > 0)
+            {
+                line.Clear().Append("DISABLED");
+                foreach (var pair in disabled)
+                {
+                    line.Append(' ').Append(pair.Key).Append('x').Append(pair.Value);
+                }
+
+                Log(line.ToString());
+            }
+        }
+
+        private void OnDestroy()
+        {
+            _gcAllocated.Dispose();
+            _gcAllocations.Dispose();
         }
 
         private void Update()
         {
             var frameMs = Time.unscaledDeltaTime * 1000f;
+            if (_gcAllocated.Valid)
+            {
+                _allocBytes += _gcAllocated.LastValue;
+            }
+
+            if (_gcAllocations.Valid)
+            {
+                _allocCount += _gcAllocations.LastValue;
+            }
+
             _frames++;
             _frameMsSum += frameMs;
             _frameMsMax = Mathf.Max(_frameMsMax, frameMs);
@@ -128,6 +236,12 @@ namespace MS2026.Fortress.Net
                 _errorSum += stats.replicaErrorSum;
                 _errorMax = Mathf.Max(_errorMax, stats.replicaErrorMax);
                 _snaps += stats.replicaSnaps;
+                _viewCorrections += stats.replicaViewCorrections;
+                _viewErrorSum += stats.replicaViewErrorSum;
+                _auditCorrections += stats.replicaAuditCorrections;
+                _auditErrorSum += stats.replicaAuditErrorSum;
+                _auditViewCorrections += stats.replicaAuditViewCorrections;
+                _auditViewErrorSum += stats.replicaAuditViewErrorSum;
             }
 
             TryBurst(swarm);
@@ -242,6 +356,14 @@ namespace MS2026.Fortress.Net
             _errorSum = 0f;
             _errorMax = 0f;
             _snaps = 0;
+            _viewCorrections = 0;
+            _viewErrorSum = 0f;
+            _auditCorrections = 0;
+            _auditErrorSum = 0f;
+            _auditViewCorrections = 0;
+            _auditViewErrorSum = 0f;
+            _allocBytes = 0;
+            _allocCount = 0;
         }
 
         private void WriteWindow(SwarmSystem swarm)
@@ -255,6 +377,8 @@ namespace MS2026.Fortress.Net
             _line.Append(" maxMs=").Append(_frameMsMax.ToString("0.0", inv));
             _line.Append(" gc=").Append(GC.CollectionCount(0) - _gcAtWindowStart);
             _line.Append(" memMB=").Append((GC.GetTotalMemory(false) / (1024f * 1024f)).ToString("0", inv));
+            _line.Append(" allocKBs=").Append((_allocBytes / 1024f / seconds).ToString("0.0", inv));
+            _line.Append(" allocs=").Append((long)(_allocCount / seconds));
 
             if (swarm != null)
             {
@@ -281,6 +405,17 @@ namespace MS2026.Fortress.Net
                 _line.Append(" repErr=").Append(NetTrafficStats.SwarmReportedError.ToString("0.00", inv));
             }
 
+            if (NetTrafficStats.SwarmCorrectionBudgetKBs > 0f)
+            {
+                _line.Append(" budgetKBs=").Append(NetTrafficStats.SwarmCorrectionBudgetKBs.ToString("0", inv));
+                _line.Append(" backoffs=").Append(NetTrafficStats.SwarmCorrectionBackoffs);
+            }
+
+            if (NetTrafficStats.SwarmRttMs >= 0f)
+            {
+                _line.Append(" rtt=").Append(NetTrafficStats.SwarmRttMs.ToString("0", inv));
+            }
+
             _line.Append(" buffered=").Append(NetTrafficStats.SwarmBufferedEvents);
 
             if (_corrections > 0)
@@ -288,6 +423,26 @@ namespace MS2026.Fortress.Net
                 _line.Append(" errAvg=").Append((_errorSum / _corrections).ToString("0.000", inv));
                 _line.Append(" errMax=").Append(_errorMax.ToString("0.00", inv));
                 _line.Append(" snaps=").Append(_snaps);
+            }
+
+            if (_viewCorrections > 0)
+            {
+                // 自分の画面に映っている敵だけのズレ(段階5で優先して補正している分)。
+                _line.Append(" errView=").Append((_viewErrorSum / _viewCorrections).ToString("0.000", inv));
+                _line.Append(" viewN=").Append(_viewCorrections);
+            }
+
+            if (_auditCorrections > 0)
+            {
+                // 抜き取り検査(優先度と関係なく選ばれた補正)のズレ。方式によらず比べられる、全員のズレの見積もり。
+                _line.Append(" errAudit=").Append((_auditErrorSum / _auditCorrections).ToString("0.000", inv));
+                _line.Append(" auditN=").Append(_auditCorrections);
+            }
+
+            if (_auditViewCorrections > 0)
+            {
+                _line.Append(" errViewAudit=").Append((_auditViewErrorSum / _auditViewCorrections).ToString("0.000", inv));
+                _line.Append(" viewAuditN=").Append(_auditViewCorrections);
             }
 
             Log(_line.ToString());

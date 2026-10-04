@@ -170,6 +170,22 @@ namespace MS2026.Fortress.Tests.EditMode
         }
 
         [Test]
+        public void TakeInto_AppendsToReusedListAndReturnsCount()
+        {
+            var queue = new SwarmNetEventQueue();
+            queue.EnqueueSpawn(Spawn(1));
+            queue.EnqueueSpawn(Spawn(2));
+            queue.EnqueueSpawn(Spawn(3));
+            var buffer = new System.Collections.Generic.List<SwarmNetEvent>();
+
+            Assert.AreEqual(2, queue.TakeInto(buffer, 2));
+            buffer.Clear();
+            Assert.AreEqual(1, queue.TakeInto(buffer, 10));
+            Assert.AreEqual(3, buffer[0].Id);
+            Assert.AreEqual(0, queue.TakeInto(buffer, 10));
+        }
+
+        [Test]
         public void LargeBacklog_StaysConsistentAcrossCompaction()
         {
             // 溜まりすぎたときの詰め直し(4096件ごと)をまたいでも、未送信の出現の取り消しが正しく効く。

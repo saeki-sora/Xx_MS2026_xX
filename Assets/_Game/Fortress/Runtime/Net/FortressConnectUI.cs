@@ -6,6 +6,10 @@ namespace MS2026.Fortress.Net
 {
     /// <summary>
     /// Phase 0検証用の最小限の接続画面(OnGUI)。本番UIはPhase 1以降で作り直す。
+    /// 毎フレームGCを出さないよう、GUILayout(呼ぶたびに内部でオブジェクトを作る)は使わず位置を自分で計算し、
+    /// 表示する文字列は変化したときだけ作り直す(2026-10-04 段階3)。
+    /// 入力欄(GUI.TextField)とスライダーも描くたびにメモリを確保する(計測で1フレームあたり約16回)ため、
+    /// プレイヤー番号は4つのボタン、IPは普段は文字で表示し「変更」を押したときだけ入力欄を出す。
     /// </summary>
     public sealed class FortressConnectUI : MonoBehaviour
     {
@@ -26,15 +30,51 @@ namespace MS2026.Fortress.Net
         [Tooltip("この画面高さを基準に、高解像度の画面ではUIを拡大する(基準以下では等倍)。")]
         public float referenceScreenHeight = 1080;
 
-        private readonly StringBuilder _statusBuilder = new();
+        private const float Padding = 6f;
+        private const float LineHeight = 22f;
+        private const float Spacing = 4f;
+        private const string Title = "D-Drive/NGO 接続 (Phase 0 検証用)";
+
+        private static readonly string[] PlayerLabels = { "プレイヤー1", "プレイヤー2", "プレイヤー3", "プレイヤー4" };
+        private static readonly string[] PlayerButtons = { "P1", "P2", "P3", "P4" };
+        private const float SmallButtonWidth = 60f;
+
+        private readonly StringBuilder _builder = new();
+
+        // IPの表示文字列(アドレスが変わったときだけ作り直す)と、入力欄を出しているか。
+        private string _addressLabelSource;
+        private string _addressLabel;
+        private bool _editingAddress;
+        private readonly GUIContent _reasonContent = new();
+        private string _reasonSource;
+        private float _reasonHeight;
+
+        // 接続中の表示文字列(状態が変わったときだけ作り直す)。
+        private int _statusKey = int.MinValue;
+        private string _statusLine;
+        private string _participantsLine;
+
+        private void Awake()
+        {
+            // GUILayoutを使わないので、OnGUIの度のレイアウト準備(=毎フレームのGC)を止める。
+            useGUILayout = false;
+        }
 
         private void Start()
         {
             // D-Driveの手動接続画面(Development Buildで左下に出る)は、この画面と役割が重なるうえ、
             // そこから接続するとプレイヤー番号を載せずに接続して承認で弾かれるので隠す(D-Driveの公開フィールドVisible)。
+            // 隠してもOnGUI自体は毎フレーム呼ばれてGCの元になるので、部品ごと止める。
             foreach (var overlay in FindObjectsByType<DDrive.Runtime.Net.NetManualConnectOverlay>(FindObjectsSortMode.None))
             {
                 overlay.Visible = false;
+                overlay.enabled = false;
+            }
+
+            // D-Driveの通信状態表示(Development Buildのみ)もGUILayoutを使わない(GUI.Boxだけ)ので、レイアウト準備を止める。
+            foreach (var overlay in FindObjectsByType<DDrive.Runtime.Net.NetDebugOverlay>(FindObjectsSortMode.None))
+            {
+                overlay.useGUILayout = false;
             }
 
             if (bootstrap == null)
@@ -65,82 +105,186 @@ namespace MS2026.Fortress.Net
             GUI.matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1f));
 
             var screenWidth = Screen.width / scale;
-            var screenHeight = Screen.height / scale;
             var x = anchorFromRightEdge ? screenWidth + areaPosition.x : areaPosition.x;
-
-            // 高さを固定すると内容(特にClient欄)が枠外にはみ出して描画されないため、画面下端までを上限にして中身の分だけ伸ばす。
-            GUILayout.BeginArea(new Rect(x, areaPosition.y, areaWidth, screenHeight - areaPosition.y));
-            GUILayout.BeginVertical(GUI.skin.box);
-            GUILayout.Label("D-Drive/NGO 接続 (Phase 0 検証用)");
+            var innerWidth = areaWidth - Padding * 2f;
 
             var networkManager = NetworkManager.Singleton;
-            if (networkManager == null || bootstrap == null)
-            {
-                GUILayout.Label("NetworkManager または FortressNetworkBootstrap が見つかりません。");
-            }
-            else if (networkManager.IsListening)
-            {
-                DrawSessionStatus(networkManager);
-            }
-            else
-            {
-                DrawConnectForm();
-            }
+            var state = networkManager == null || bootstrap == null ? 0 : networkManager.IsListening ? 1 : 2;
 
-            GUILayout.EndVertical();
-            GUILayout.EndArea();
+            // 先に高さを求めて枠を描き、その中に上から並べる(GUILayoutを使わない)。
+            var height = Padding * 2f + LineHeight + Spacing + ContentHeight(state, innerWidth);
+            GUI.Box(new Rect(x, areaPosition.y, areaWidth, height), GUIContent.none);
+
+            var y = areaPosition.y + Padding;
+            GUI.Label(Row(x, ref y, innerWidth, LineHeight), Title);
+            y += Spacing;
+
+            switch (state)
+            {
+                case 0:
+                    GUI.Label(Row(x, ref y, innerWidth, LineHeight), "NetworkManager または FortressNetworkBootstrap が見つかりません。");
+                    break;
+                case 1:
+                    DrawSessionStatus(networkManager, x, ref y, innerWidth);
+                    break;
+                default:
+                    DrawConnectForm(x, ref y, innerWidth);
+                    break;
+            }
         }
 
-        private void DrawConnectForm()
+        private float ContentHeight(int state, float width)
         {
-            if (!string.IsNullOrEmpty(bootstrap.LastDisconnectReason))
+            switch (state)
             {
-                GUILayout.Label($"前回の切断理由: {bootstrap.LastDisconnectReason}");
+                case 0:
+                    return LineHeight;
+                case 1:
+                    // 状態 / (Hostなら)参加中 / 切断ボタン
+                    var hostLines = NetworkManager.Singleton.IsServer ? 2 : 1;
+                    return (LineHeight + Spacing) * (hostLines + 1);
+                default:
+                    // (切断理由) / 番号ラベル / P1〜P4 / Hostボタン / 余白 / IP表示+変更 / (入力欄) / Clientボタン
+                    return ReasonHeight(width) + (LineHeight + Spacing) * (_editingAddress ? 6 : 5) + 8f;
+            }
+        }
+
+        private float ReasonHeight(float width)
+        {
+            var reason = bootstrap.LastDisconnectReason;
+            if (string.IsNullOrEmpty(reason))
+            {
+                return 0f;
             }
 
-            GUILayout.Label("自分のプレイヤー番号");
-            localPlayerIndex = Mathf.RoundToInt(GUILayout.HorizontalSlider(localPlayerIndex, 0, 3));
-            GUILayout.Label($"プレイヤー{localPlayerIndex + 1}");
+            if (!ReferenceEquals(reason, _reasonSource))
+            {
+                _reasonSource = reason;
+                _reasonContent.text = "前回の切断理由: " + reason;
+                _reasonHeight = -1f;
+            }
 
-            if (GUILayout.Button("Hostとして開始"))
+            if (_reasonHeight < 0f)
+            {
+                _reasonHeight = Mathf.Max(LineHeight, GUI.skin.label.CalcHeight(_reasonContent, width)) + Spacing;
+            }
+
+            return _reasonHeight;
+        }
+
+        private void DrawConnectForm(float x, ref float y, float width)
+        {
+            var reasonHeight = ReasonHeight(width);
+            if (reasonHeight > 0f)
+            {
+                GUI.Label(Row(x, ref y, width, reasonHeight - Spacing), _reasonContent);
+            }
+
+            GUI.Label(Row(x, ref y, width, LineHeight), "自分のプレイヤー番号");
+            var row = Row(x, ref y, width, LineHeight);
+            var buttonWidth = (width - Spacing * 3f) / 4f;
+            for (var i = 0; i < PlayerButtons.Length; i++)
+            {
+                var rect = new Rect(row.x + i * (buttonWidth + Spacing), row.y, buttonWidth, row.height);
+                if (GUI.Toggle(rect, localPlayerIndex == i, PlayerButtons[i], GUI.skin.button))
+                {
+                    localPlayerIndex = i;
+                }
+            }
+
+            if (GUI.Button(Row(x, ref y, width, LineHeight), "Hostとして開始"))
             {
                 bootstrap.HostGame(localPlayerIndex);
             }
 
-            GUILayout.Space(8);
-            GUILayout.Label("接続先IP");
-            joinAddress = GUILayout.TextField(joinAddress);
+            y += 8f;
+            row = Row(x, ref y, width, LineHeight);
+            var labelRect = new Rect(row.x, row.y, row.width - SmallButtonWidth - Spacing, row.height);
+            var buttonRect = new Rect(row.xMax - SmallButtonWidth, row.y, SmallButtonWidth, row.height);
+            GUI.Label(labelRect, AddressLabel());
+            if (GUI.Button(buttonRect, _editingAddress ? "決定" : "変更"))
+            {
+                _editingAddress = !_editingAddress;
+            }
 
-            if (GUILayout.Button("Clientとして接続"))
+            if (_editingAddress)
+            {
+                joinAddress = GUI.TextField(Row(x, ref y, width, LineHeight), joinAddress);
+            }
+
+            if (GUI.Button(Row(x, ref y, width, LineHeight), "Clientとして接続"))
             {
                 bootstrap.JoinGame(joinAddress, localPlayerIndex);
             }
         }
 
-        private void DrawSessionStatus(NetworkManager networkManager)
+        private string AddressLabel()
         {
-            var self = $"プレイヤー{bootstrap.LocalPlayerIndex + 1}";
+            if (!ReferenceEquals(joinAddress, _addressLabelSource))
+            {
+                _addressLabelSource = joinAddress;
+                _addressLabel = "接続先IP: " + joinAddress;
+            }
 
+            return _addressLabel;
+        }
+
+        private void DrawSessionStatus(NetworkManager networkManager, float x, ref float y, float width)
+        {
+            RefreshStatusText(networkManager);
+            GUI.Label(Row(x, ref y, width, LineHeight), _statusLine);
             if (networkManager.IsServer)
             {
-                _statusBuilder.Clear();
-                foreach (var playerIndex in bootstrap.ClientIdToPlayerIndex.Values)
-                {
-                    _statusBuilder.Append(" P").Append(playerIndex + 1);
-                }
-
-                GUILayout.Label($"Host として稼働中({self})");
-                GUILayout.Label($"参加中:{_statusBuilder}");
-            }
-            else
-            {
-                GUILayout.Label(networkManager.IsConnectedClient ? $"Client として接続済み({self})" : $"Client として接続待ち...({self})");
+                GUI.Label(Row(x, ref y, width, LineHeight), _participantsLine);
             }
 
-            if (GUILayout.Button("切断"))
+            if (GUI.Button(Row(x, ref y, width, LineHeight), "切断"))
             {
                 bootstrap.StopGame();
             }
+        }
+
+        // 役割・接続状態・自分の番号・参加者の組み合わせが変わったときだけ文字列を作る。
+        private void RefreshStatusText(NetworkManager networkManager)
+        {
+            var participants = 0;
+            if (networkManager.IsServer)
+            {
+                foreach (var playerIndex in bootstrap.ClientIdToPlayerIndex.Values)
+                {
+                    participants |= 1 << playerIndex;
+                }
+            }
+
+            var key = (networkManager.IsServer ? 1 : 0) | (networkManager.IsConnectedClient ? 2 : 0) | ((bootstrap.LocalPlayerIndex + 1) << 2) | (participants << 8);
+            if (key == _statusKey)
+            {
+                return;
+            }
+
+            _statusKey = key;
+            var self = bootstrap.LocalPlayerIndex >= 0 && bootstrap.LocalPlayerIndex < PlayerLabels.Length ? PlayerLabels[bootstrap.LocalPlayerIndex] : "?";
+            _statusLine = networkManager.IsServer
+                ? $"Host として稼働中({self})"
+                : networkManager.IsConnectedClient ? $"Client として接続済み({self})" : $"Client として接続待ち...({self})";
+
+            _builder.Clear().Append("参加中:");
+            for (var i = 0; i < 4; i++)
+            {
+                if ((participants & (1 << i)) != 0)
+                {
+                    _builder.Append(" P").Append(i + 1);
+                }
+            }
+
+            _participantsLine = _builder.ToString();
+        }
+
+        private static Rect Row(float x, ref float y, float width, float height)
+        {
+            var rect = new Rect(x + Padding, y, width, height);
+            y += height + Spacing;
+            return rect;
         }
     }
 }

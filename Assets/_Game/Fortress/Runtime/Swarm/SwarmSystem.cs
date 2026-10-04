@@ -135,6 +135,8 @@ namespace MS2026.Fortress
 
         private void Awake()
         {
+            // 計測表示(SwarmHud)はGUILayoutを使わないので、OnGUIの度のレイアウト準備(=毎フレームのGC)を止める。
+            useGUILayout = false;
             Initialize();
         }
 
@@ -432,6 +434,8 @@ namespace MS2026.Fortress
             {
                 _beamsJob[b] = _beamQueue[b];
             }
+
+            _lastBeamCount = _beamCount;
 
             _handle = BuildJobChain(count, dt);
             _flightDt = dt;

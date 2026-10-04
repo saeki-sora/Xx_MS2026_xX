@@ -69,13 +69,20 @@ namespace MS2026.Fortress
             if (system.IsReplica)
             {
                 var avg = stats.replicaCorrections > 0 ? stats.replicaErrorSum / stats.replicaCorrections : 0f;
+                var viewAvg = stats.replicaViewCorrections > 0 ? stats.replicaViewErrorSum / stats.replicaViewCorrections : 0f;
                 text += NetTrafficStats.SwarmFullStateReceived
-                    ? $"\nHostとのズレ 平均 {avg:0.00} / 最大 {stats.replicaErrorMax:0.0}"
+                    ? $"\nHostとのズレ 平均 {avg:0.00} (画面内 {viewAvg:0.00}) / 最大 {stats.replicaErrorMax:0.0}"
                     : $"\n全体の状態を受信中 (待機 {NetTrafficStats.SwarmBufferedEvents}件)";
             }
             else
             {
-                if (NetTrafficStats.SwarmCorrectionCycle > 0f)
+                if (NetTrafficStats.SwarmCorrectionBudgetKBs > 0f)
+                {
+                    text += NetTrafficStats.SwarmReportedError >= 0f
+                        ? $"\n補正 {NetTrafficStats.SwarmCorrectionBudgetKBs:0} KB/s・優先度順 (Clientのズレ {NetTrafficStats.SwarmReportedError:0.00})"
+                        : $"\n補正 {NetTrafficStats.SwarmCorrectionBudgetKBs:0} KB/s・優先度順";
+                }
+                else if (NetTrafficStats.SwarmCorrectionCycle > 0f)
                 {
                     text += NetTrafficStats.SwarmReportedError >= 0f
                         ? $"\n補正の間隔 {NetTrafficStats.SwarmCorrectionCycle:0.00}秒 (Clientのズレ {NetTrafficStats.SwarmReportedError:0.00})"

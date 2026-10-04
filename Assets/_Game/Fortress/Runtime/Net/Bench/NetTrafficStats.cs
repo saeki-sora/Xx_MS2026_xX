@@ -35,6 +35,15 @@ namespace MS2026.Fortress.Net
         /// <summary>Host: Clientから報告されたズレ(一番大きい物)。報告が無ければ負。</summary>
         public static float SwarmReportedError = -1f;
 
+        /// <summary>Host(優先度つきの補正): 今の補正の通信量の枠(Client1人あたり、一番多い人の値、KB/秒)。</summary>
+        public static float SwarmCorrectionBudgetKBs;
+
+        /// <summary>往復時間(ミリ秒)。Host: 一番遅いClient / Client: Hostとの間。測れなければ負。</summary>
+        public static float SwarmRttMs = -1f;
+
+        /// <summary>Host(優先度つきの補正): 回線の混み具合で通信量を下げた回数(全Clientの累計)。</summary>
+        public static int SwarmCorrectionBackoffs;
+
         public static void Sent(long bytes)
         {
             BytesSent += bytes;
@@ -54,6 +63,9 @@ namespace MS2026.Fortress.Net
             SwarmFullStateReceived = false;
             SwarmCorrectionCycle = 0f;
             SwarmReportedError = -1f;
+            SwarmCorrectionBudgetKBs = 0f;
+            SwarmRttMs = -1f;
+            SwarmCorrectionBackoffs = 0;
         }
     }
 }

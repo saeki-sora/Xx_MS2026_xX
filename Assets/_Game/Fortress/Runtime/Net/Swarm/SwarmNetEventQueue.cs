@@ -15,6 +15,7 @@ namespace MS2026.Fortress.Net
 
         // 番号 → まだ送っていない出現の位置。
         private readonly Dictionary<ushort, int> _unsentSpawns = new();
+        private readonly List<ushort> _keyScratch = new();
         private int _head;
 
         /// <summary>まだ送っていない件数(取り消し済みを含む)。</summary>
@@ -41,11 +42,19 @@ namespace MS2026.Fortress.Net
             _events.Add(new SwarmNetEvent { Id = id, Kind = SwarmNetEventKind.Despawn, TypeOrReason = reason });
         }
 
-        /// <summary>先頭から最大max件(取り消し済みは数えない)を取り出す。無ければnull。</summary>
+        /// <summary>先頭から最大max件(取り消し済みは数えない)を取り出す。無ければnull。(テスト用。実際の送信はGCを出さない TakeInto を使う)</summary>
         public SwarmNetEvent[] Take(int max)
         {
             var taken = new List<SwarmNetEvent>(System.Math.Min(max, Count));
-            while (_head < _events.Count && taken.Count < max)
+            TakeInto(taken, max);
+            return taken.Count > 0 ? taken.ToArray() : null;
+        }
+
+        /// <summary>先頭から最大max件(取り消し済みは数えない)を output の末尾へ取り出し、取り出した数を返す。output は使い回せる(GCを出さない)。</summary>
+        public int TakeInto(List<SwarmNetEvent> output, int max)
+        {
+            var taken = 0;
+            while (_head < _events.Count && taken < max)
             {
                 var e = _events[_head];
                 if (e.Kind == SwarmNetEventKind.Spawn && _unsentSpawns.TryGetValue(e.Id, out var position) && position == _head)
@@ -56,12 +65,13 @@ namespace MS2026.Fortress.Net
                 _head++;
                 if (e.Kind != SwarmNetEventKind.None)
                 {
-                    taken.Add(e);
+                    output.Add(e);
+                    taken++;
                 }
             }
 
             Compact();
-            return taken.Count > 0 ? taken.ToArray() : null;
+            return taken;
         }
 
         public void Clear()
@@ -86,8 +96,13 @@ namespace MS2026.Fortress.Net
             }
 
             _events.RemoveRange(0, _head);
-            var keys = new List<ushort>(_unsentSpawns.Keys);
-            foreach (var key in keys)
+            _keyScratch.Clear();
+            foreach (var key in _unsentSpawns.Keys)
+            {
+                _keyScratch.Add(key);
+            }
+
+            foreach (var key in _keyScratch)
             {
                 _unsentSpawns[key] -= _head;
             }

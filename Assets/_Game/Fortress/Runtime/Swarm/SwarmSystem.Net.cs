@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MS2026.Fortress.Net;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -13,7 +14,7 @@ namespace MS2026.Fortress
     ///
     /// Host(とオフライン): 追加した敵に番号を振り、追加/削除を AgentsSpawned / AgentsRemoved で知らせる。
     /// Client(<see cref="IsReplica"/>): 自分では湧かせず、ダメージ・コア到達でも消さない。動き(経路・押し合い)だけ自分で計算し、
-    ///   Hostから届いた追加(SpawnReplica)・削除(RemoveReplica)・位置(QueueCorrection)に従う。
+    ///   Hostから届いた追加(SpawnReplica)・削除(RemoveReplica)・位置(QueueCorrections)に従う。
     /// </summary>
     public sealed partial class SwarmSystem
     {
@@ -35,12 +36,6 @@ namespace MS2026.Fortress
         {
             public int Id;
             public EnemyRemovalReason Reason;
-        }
-
-        private struct PendingCorrection
-        {
-            public int Id;
-            public float2 Position;
         }
 
         /// <summary>Host(とオフライン)で敵が追加された(毎フレーム、まとめて1回)。</summary>
@@ -66,11 +61,20 @@ namespace MS2026.Fortress
         private readonly List<SpawnRecord> _spawnRecords = new List<SpawnRecord>();
         private readonly List<RemovalRecord> _removalRecords = new List<RemovalRecord>();
         private readonly List<int> _pendingRemovals = new List<int>();
-        private readonly List<PendingCorrection> _pendingCorrections = new List<PendingCorrection>();
+
+        // Hostから届いた補正。受信のたびにまとめてコピーし(1件ずつの処理やGCを出さないため)、
+        // 計算の直前にジョブ用へ移して、目標位置の表(_correctionTargets)をジョブで作る。
+        private NativeList<SwarmNetCorrection> _pendingCorrections;
+        private NativeList<SwarmNetCorrection> _jobCorrections;
+        private NativeList<SwarmNetCorrectionV> _pendingCorrectionsV;
+        private NativeList<SwarmNetCorrectionV> _jobCorrectionsV;
+        private NativeList<SwarmNetCorrection> _pendingAudit;
+        private NativeList<SwarmNetCorrection> _jobAudit;
+        private NativeArray<byte> _correctionAudit;
 
         private SwarmIdPool _idPool;
         private NativeHashSet<int> _removeIds;
-        private NativeHashMap<int, float2> _correctionTargets;
+        private NativeHashMap<int, float4> _correctionTargets;
         private NativeArray<int> _removedIds;
         private NativeArray<byte> _removedReasons;
         private NativeArray<float> _correctionErrors;
@@ -83,6 +87,18 @@ namespace MS2026.Fortress
         private float _correctionSnapDistance = 4f;
         private float _correctionLeadSeconds = 0.05f;
         private SwarmReplicaSmoothing _smoothing = SwarmReplicaSmoothing.RenderOffset;
+        private float _measuredLeadSeconds;
+        private float4 _replicaView;
+        private bool _hasReplicaView;
+        private int _lastBeamCount;
+
+        /// <summary>
+        /// Host: 直前の計算で使ったレーザー(補正の優先度づけ用)。<see cref="StorageReadable"/> の中でだけ読むこと。
+        /// </summary>
+        public NativeArray<SwarmBeam> RecentBeams => _beamsJob.GetSubArray(0, _lastBeamCount);
+
+        /// <summary>Host: コアの位置(補正の優先度づけ用)。<see cref="StorageReadable"/> の中でだけ読むこと。</summary>
+        public NativeArray<float2> CorePositions => _goals.GetSubArray(0, _goalCount);
 
         /// <summary>
         /// Client側の補正の効き方。sharpness=見た目が追いつく速さ、snapDistance=これ以上ズレたら即座に合わせる距離、
@@ -97,6 +113,21 @@ namespace MS2026.Fortress
         }
 
         private bool UsesRenderOffset => IsReplica && _smoothing == SwarmReplicaSmoothing.RenderOffset;
+
+        /// <summary>
+        /// Client: 実測した届くまでの遅れ(秒。往復時間の半分)。ConfigureReplicaCorrection の leadSeconds に足して先読みする(段階5)。
+        /// </summary>
+        public void SetReplicaMeasuredLead(float seconds)
+        {
+            _measuredLeadSeconds = Mathf.Clamp(seconds, 0f, 0.5f);
+        }
+
+        /// <summary>Client: 自分の画面に映る範囲(計測用。画面に映る敵のズレを別に数える)。hasView=false で数えない。</summary>
+        public void SetReplicaViewRect(Rect rect, bool hasView)
+        {
+            _replicaView = new float4(rect.xMin, rect.yMin, rect.xMax, rect.yMax);
+            _hasReplicaView = hasView;
+        }
 
         /// <summary>
         /// Clientの押し合い計算の反復回数(負なら群衆の設定どおり)。Clientの位置はHostが補正するので、
@@ -119,6 +150,8 @@ namespace MS2026.Fortress
             _resetIdsOnClear = true;
             _pendingRemovals.Clear();
             _pendingCorrections.Clear();
+            _pendingCorrectionsV.Clear();
+            _pendingAudit.Clear();
             ClearAll();
         }
 
@@ -134,6 +167,8 @@ namespace MS2026.Fortress
             _resetIdsOnClear = true;
             _pendingRemovals.Clear();
             _pendingCorrections.Clear();
+            _pendingCorrectionsV.Clear();
+            _pendingAudit.Clear();
             ClearAll();
         }
 
@@ -186,12 +221,32 @@ namespace MS2026.Fortress
             }
         }
 
-        /// <summary>Client専用。Hostでのその敵の位置を伝える(数フレームかけて寄せる)。</summary>
-        public void QueueCorrection(int id, Vector2 position)
+        /// <summary>
+        /// Client専用。Hostでの敵の位置(届いたまま、量子化された値)をまとめて伝える。中身はコピーするので、呼んだ後に配列を捨ててよい。
+        /// 知らない番号(既に消えた敵など)が混ざっていても構わない(該当する敵がいなければ何もしない)。
+        /// </summary>
+        /// <param name="audit">抜き取り検査の補正(優先度と関係なく選ばれた物)。普通の補正と同じく合わせ、ズレを別に数える。</param>
+        public void QueueCorrections(NativeArray<SwarmNetCorrection> corrections, bool audit = false)
         {
-            if (IsReplica)
+            if (IsReplica && corrections.IsCreated && corrections.Length > 0)
             {
-                _pendingCorrections.Add(new PendingCorrection { Id = id, Position = position });
+                if (audit)
+                {
+                    _pendingAudit.AddRange(corrections);
+                }
+                else
+                {
+                    _pendingCorrections.AddRange(corrections);
+                }
+            }
+        }
+
+        /// <summary>Client専用。速度つきの補正(段階5)。使い方は位置だけの物と同じ。</summary>
+        public void QueueCorrections(NativeArray<SwarmNetCorrectionV> corrections)
+        {
+            if (IsReplica && corrections.IsCreated && corrections.Length > 0)
+            {
+                _pendingCorrectionsV.AddRange(corrections);
             }
         }
 
@@ -210,11 +265,18 @@ namespace MS2026.Fortress
 
             _idPool = new SwarmIdPool(Mathf.Min(capacity, MaxNetIds));
             _removeIds = new NativeHashSet<int>(1024, Allocator.Persistent);
-            _correctionTargets = new NativeHashMap<int, float2>(4096, Allocator.Persistent);
+            _correctionTargets = new NativeHashMap<int, float4>(4096, Allocator.Persistent);
             _removedIds = new NativeArray<int>(capacity, Allocator.Persistent);
             _removedReasons = new NativeArray<byte>(capacity, Allocator.Persistent);
             _correctionErrors = new NativeArray<float>(capacity, Allocator.Persistent);
-            _correctionStats = new NativeArray<float>(4, Allocator.Persistent);
+            _correctionAudit = new NativeArray<byte>(capacity, Allocator.Persistent);
+            _correctionStats = new NativeArray<float>(10, Allocator.Persistent);
+            _pendingCorrections = new NativeList<SwarmNetCorrection>(4096, Allocator.Persistent);
+            _jobCorrections = new NativeList<SwarmNetCorrection>(4096, Allocator.Persistent);
+            _pendingCorrectionsV = new NativeList<SwarmNetCorrectionV>(4096, Allocator.Persistent);
+            _jobCorrectionsV = new NativeList<SwarmNetCorrectionV>(4096, Allocator.Persistent);
+            _pendingAudit = new NativeList<SwarmNetCorrection>(1024, Allocator.Persistent);
+            _jobAudit = new NativeList<SwarmNetCorrection>(1024, Allocator.Persistent);
         }
 
         private void DisposeNet()
@@ -232,7 +294,38 @@ namespace MS2026.Fortress
             DisposeArray(ref _removedIds);
             DisposeArray(ref _removedReasons);
             DisposeArray(ref _correctionErrors);
+            DisposeArray(ref _correctionAudit);
             DisposeArray(ref _correctionStats);
+
+            if (_pendingCorrections.IsCreated)
+            {
+                _pendingCorrections.Dispose();
+            }
+
+            if (_jobCorrections.IsCreated)
+            {
+                _jobCorrections.Dispose();
+            }
+
+            if (_pendingCorrectionsV.IsCreated)
+            {
+                _pendingCorrectionsV.Dispose();
+            }
+
+            if (_jobCorrectionsV.IsCreated)
+            {
+                _jobCorrectionsV.Dispose();
+            }
+
+            if (_pendingAudit.IsCreated)
+            {
+                _pendingAudit.Dispose();
+            }
+
+            if (_jobAudit.IsCreated)
+            {
+                _jobAudit.Dispose();
+            }
         }
 
         private int AllocateNetId()
@@ -332,6 +425,12 @@ namespace MS2026.Fortress
             _stats.replicaErrorSum = _correctionStats[1];
             _stats.replicaErrorMax = _correctionStats[2];
             _stats.replicaSnaps = (int)_correctionStats[3];
+            _stats.replicaViewCorrections = (int)_correctionStats[4];
+            _stats.replicaViewErrorSum = _correctionStats[5];
+            _stats.replicaAuditCorrections = (int)_correctionStats[6];
+            _stats.replicaAuditErrorSum = _correctionStats[7];
+            _stats.replicaAuditViewCorrections = (int)_correctionStats[8];
+            _stats.replicaAuditViewErrorSum = _correctionStats[9];
         }
 
         private void RaiseRemovalRecords()
@@ -356,19 +455,37 @@ namespace MS2026.Fortress
 
             _pendingRemovals.Clear();
 
-            _correctionTargets.Clear();
-            foreach (var correction in _pendingCorrections)
-            {
-                _correctionTargets[correction.Id] = correction.Position;
-            }
-
+            // 目標位置の表はジョブで作る(SwarmCorrectionTargetsJob)。ジョブが読む間に受信が来ても壊れないよう、ジョブ用へ移しておく。
+            _jobCorrections.CopyFrom(_pendingCorrections);
             _pendingCorrections.Clear();
+            _jobCorrectionsV.CopyFrom(_pendingCorrectionsV);
+            _pendingCorrectionsV.Clear();
+            _jobAudit.CopyFrom(_pendingAudit);
+            _pendingAudit.Clear();
+            var targetCount = _jobCorrections.Length + _jobCorrectionsV.Length + _jobAudit.Length;
+            if (_correctionTargets.Capacity < targetCount)
+            {
+                _correctionTargets.Capacity = targetCount;
+            }
         }
 
         private void DiscardNetJobInputs()
         {
             _pendingRemovals.Clear();
-            _pendingCorrections.Clear();
+            if (_pendingCorrections.IsCreated)
+            {
+                _pendingCorrections.Clear();
+            }
+
+            if (_pendingCorrectionsV.IsCreated)
+            {
+                _pendingCorrectionsV.Clear();
+            }
+
+            if (_pendingAudit.IsCreated)
+            {
+                _pendingAudit.Clear();
+            }
         }
 
         private JobHandle ScheduleReplicaCorrection(JobHandle dependsOn, int count, float dt)
@@ -378,6 +495,15 @@ namespace MS2026.Fortress
                 return dependsOn;
             }
 
+            var targets = new SwarmCorrectionTargetsJob
+            {
+                corrections = _jobCorrections.AsDeferredJobArray(),
+                correctionsWithVelocity = _jobCorrectionsV.AsDeferredJobArray(),
+                auditCorrections = _jobAudit.AsDeferredJobArray(),
+                targets = _correctionTargets,
+                inverseScale = 1f / SwarmNetQuantize.PositionScale
+            }.Schedule(dependsOn);
+
             var corrected = new SwarmCorrectionJob
             {
                 netId = Storage.netId,
@@ -386,11 +512,12 @@ namespace MS2026.Fortress
                 pos = Storage.pos,
                 correction = Storage.correction,
                 errorOut = _correctionErrors,
+                auditOut = _correctionAudit,
                 blend = 1f - Mathf.Exp(-_correctionSharpness * dt),
                 snapDistanceSq = _correctionSnapDistance * _correctionSnapDistance,
-                leadSeconds = _correctionLeadSeconds,
+                leadSeconds = _correctionLeadSeconds + _measuredLeadSeconds,
                 renderOnly = UsesRenderOffset ? 1 : 0
-            }.Schedule(count, 256, dependsOn);
+            }.Schedule(count, 256, targets);
 
             _correctionStatsScheduled = true;
 
@@ -398,9 +525,13 @@ namespace MS2026.Fortress
             return new SwarmCorrectionStatsJob
             {
                 errors = _correctionErrors,
+                audit = _correctionAudit,
+                pos = Storage.pos,
                 stats = _correctionStats,
                 count = count,
-                snapDistance = _correctionSnapDistance
+                snapDistance = _correctionSnapDistance,
+                view = _replicaView,
+                hasView = _hasReplicaView ? 1 : 0
             }.Schedule(corrected);
         }
     }

@@ -70,6 +70,37 @@ namespace MS2026.Fortress.Tests.EditMode
         }
 
         [Test]
+        public void PriorityCorrectionOptions_AreParsed()
+        {
+            var args = NetBenchmarkArgs.Parse(new[]
+            {
+                "-fortress-swarm-priority", "0", "-fortress-swarm-velocity", "1",
+                "-fortress-swarm-budget-kbs", "360", "-fortress-swarm-max-budget-kbs", "900"
+            });
+
+            Assert.AreEqual(false, args.PriorityCorrection);
+            Assert.AreEqual(true, args.SendVelocity);
+            Assert.AreEqual(360f, args.BudgetKBps);
+            Assert.AreEqual(900f, args.MaxBudgetKBps);
+            Assert.IsFalse(args.AnyBenchmark);
+            Assert.IsNull(NetBenchmarkArgs.Parse(new[] { "-fortress-swarm-velocity", "x" }).SendVelocity);
+        }
+
+        [Test]
+        public void BisectOptions_AreParsed()
+        {
+            var args = NetBenchmarkArgs.Parse(new[]
+            {
+                "-fortress-bench-no-ongui", "-fortress-bench-hide-ddrive-overlay", "-fortress-bench-disable", "LocalTurretGaugeHud,,FortressCameraRig"
+            });
+
+            Assert.IsTrue(args.NoOnGui);
+            Assert.IsTrue(args.HideDDriveOverlay);
+            CollectionAssert.AreEqual(new[] { "LocalTurretGaugeHud", "FortressCameraRig" }, args.DisableTypes);
+            CollectionAssert.AreEqual(new[] { "A", "B" }, NetBenchmarkArgs.Parse(new[] { "-fortress-bench-disable", "A+B" }).DisableTypes);
+        }
+
+        [Test]
         public void InvalidOrMissingValues_AreIgnored()
         {
             var args = NetBenchmarkArgs.Parse(new[] { "-fortress-bench-radius", "abc", "-fortress-bench-burst" });
