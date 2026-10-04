@@ -69,43 +69,13 @@ namespace MS2026.Fortress
             if (system.IsReplica)
             {
                 var avg = stats.replicaCorrections > 0 ? stats.replicaErrorSum / stats.replicaCorrections : 0f;
-                var viewAvg = stats.replicaViewCorrections > 0 ? stats.replicaViewErrorSum / stats.replicaViewCorrections : 0f;
-                if (!NetTrafficStats.SwarmFullStateReceived)
-                {
-                    text += $"\n全体の状態を受信中 (待機 {NetTrafficStats.SwarmBufferedEvents}件)";
-                }
-                else if (system.ReplicaUsesSnapshots)
-                {
-                    text += $"\n写真方式 先読み {system.ReplicaExtrapolationSeconds * 1000f:0}ms / 外れ 平均 {avg:0.000} 最大 {stats.replicaErrorMax:0.00}";
-                }
-                else
-                {
-                    text += $"\nHostとのズレ 平均 {avg:0.00} (画面内 {viewAvg:0.00}) / 最大 {stats.replicaErrorMax:0.0}";
-                }
+                text += NetTrafficStats.SwarmFullStateReceived
+                    ? $"\n写真方式 先読み {system.ReplicaExtrapolationSeconds * 1000f:0}ms / 外れ 平均 {avg:0.000} 最大 {stats.replicaErrorMax:0.00}"
+                    : "\n全員分の写真を受信中";
             }
-            else
+            else if (NetTrafficStats.SwarmSnapshotsSent > 0)
             {
-                if (NetTrafficStats.SwarmSnapshotsSent > 0)
-                {
-                    text += $"\n写真方式 1枚 {NetTrafficStats.SwarmSnapshotBytes / 1024f:0.0}KB ({NetTrafficStats.SwarmSnapshotBitsPerAgent:0.0}ビット/体)";
-                }
-                else if (NetTrafficStats.SwarmCorrectionBudgetKBs > 0f)
-                {
-                    text += NetTrafficStats.SwarmReportedError >= 0f
-                        ? $"\n補正 {NetTrafficStats.SwarmCorrectionBudgetKBs:0} KB/s・優先度順 (Clientのズレ {NetTrafficStats.SwarmReportedError:0.00})"
-                        : $"\n補正 {NetTrafficStats.SwarmCorrectionBudgetKBs:0} KB/s・優先度順";
-                }
-                else if (NetTrafficStats.SwarmCorrectionCycle > 0f)
-                {
-                    text += NetTrafficStats.SwarmReportedError >= 0f
-                        ? $"\n補正の間隔 {NetTrafficStats.SwarmCorrectionCycle:0.00}秒 (Clientのズレ {NetTrafficStats.SwarmReportedError:0.00})"
-                        : $"\n補正の間隔 {NetTrafficStats.SwarmCorrectionCycle:0.00}秒";
-                }
-
-                if (NetTrafficStats.SwarmEventBacklog > 0)
-                {
-                    text += $"\n送信待ち {NetTrafficStats.SwarmEventBacklog}件";
-                }
+                text += $"\n写真方式 {NetTrafficStats.SwarmSnapshotRate:0}枚/秒 細かさ{(1 << NetTrafficStats.SwarmSnapshotShift) * 0.002f:0.000} 1枚 {NetTrafficStats.SwarmSnapshotBytes / 1024f:0.0}KB ({NetTrafficStats.SwarmSnapshotBitsPerAgent:0.0}ビット/体)";
             }
 
             return text;

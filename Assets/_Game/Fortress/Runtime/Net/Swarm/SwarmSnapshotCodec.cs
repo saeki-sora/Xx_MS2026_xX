@@ -11,6 +11,9 @@ namespace MS2026.Fortress.Net
     /// 位置は1/500単位の整数。前の2枚の写真から「同じ速さで進んだら」の位置を予想し(Predict)、実際との差だけを送る。
     /// 群衆は滑らかに流れるので差はほとんど0〜数単位になり、指数ゴロム符号(ExpGolomb)で1軸あたり数ビットに縮む。
     /// 予想は整数だけで計算する(HostとClientで1単位でも食い違うと、以後ずっとずれるため。小数の計算はCPUで結果が変わり得る)。
+    ///
+    /// 差は 2^shift 単位に丸めて送る(位置の細かさ。shift=2 で0.008ワールド単位≒画面の1/3ピクセル)。Hostは丸めた後の位置
+    /// (Reconstruct)を次の予想に使うので、丸めの誤差は溜まらない(常に±半単位以内)。1段粗くするごとに1軸1ビット減る。
     /// </summary>
     public static class SwarmSnapshotMath
     {
@@ -43,6 +46,23 @@ namespace MS2026.Fortress.Net
         {
             var delta = h1 - h2;
             return h1 + ((delta * ratioQ + 512) >> 10);
+        }
+
+        /// <summary>差を 2^shift 単位に丸める(四捨五入。負の数も整数のシフトだけで計算し、HostとClientで必ず一致させる)。</summary>
+        public static int QuantizeResidual(int residual, int shift)
+        {
+            return (residual + ((1 << shift) >> 1)) >> shift;
+        }
+
+        public static int2 QuantizeResidual(int2 residual, int shift)
+        {
+            return new int2(QuantizeResidual(residual.x, shift), QuantizeResidual(residual.y, shift));
+        }
+
+        /// <summary>予想に丸めた差を足して位置を戻す(16bitの範囲に収める)。</summary>
+        public static int2 Reconstruct(int2 predicted, int2 quantizedResidual, int shift)
+        {
+            return math.clamp(predicted + (quantizedResidual << shift), short.MinValue, short.MaxValue);
         }
 
         public static uint ZigZag(int value)
@@ -245,6 +265,9 @@ namespace MS2026.Fortress.Net
         public int count;
         public int ratioQ;
 
+        /// <summary>差を丸める単位(2^shift)。</summary>
+        public int shift;
+
         public NativeArray<byte> alivePrev;
         public NativeArray<byte> aliveNow;
         public NativeArray<byte> removedSince;
@@ -319,7 +342,7 @@ namespace MS2026.Fortress.Net
                 }
 
                 continuing++;
-                var residual = current[id] - SwarmSnapshotMath.Predict(h1[id], h2[id], ratioQ);
+                var residual = SwarmSnapshotMath.QuantizeResidual(current[id] - SwarmSnapshotMath.Predict(h1[id], h2[id], ratioQ), shift);
                 var zx = SwarmSnapshotMath.ZigZag(residual.x);
                 var zy = SwarmSnapshotMath.ZigZag(residual.y);
                 for (var k = 0; k <= SwarmSnapshotMath.MaxGolombOrder; k++)
@@ -352,9 +375,13 @@ namespace MS2026.Fortress.Net
                     continue;
                 }
 
-                var residual = current[id] - SwarmSnapshotMath.Predict(h1[id], h2[id], ratioQ);
+                var predicted = SwarmSnapshotMath.Predict(h1[id], h2[id], ratioQ);
+                var residual = SwarmSnapshotMath.QuantizeResidual(current[id] - predicted, shift);
                 writer.WriteExpGolomb(SwarmSnapshotMath.ZigZag(residual.x), kx);
                 writer.WriteExpGolomb(SwarmSnapshotMath.ZigZag(residual.y), ky);
+
+                // Clientが復元する位置(丸めた後)を、以後の予想の元にする(丸めの誤差を溜めない)。
+                current[id] = SwarmSnapshotMath.Reconstruct(predicted, residual, shift);
             }
 
             writer.Flush();
@@ -472,6 +499,7 @@ namespace MS2026.Fortress.Net
         public int kx;
         public int ky;
         public int ratioQ;
+        public int shift;
         public int expectedContinuing;
         public uint expectedChecksum;
 
@@ -512,7 +540,7 @@ namespace MS2026.Fortress.Net
                     return;
                 }
 
-                var p = SwarmSnapshotMath.Predict(h1[id], h2[id], ratioQ) + new int2(rx, ry);
+                var p = SwarmSnapshotMath.Reconstruct(SwarmSnapshotMath.Predict(h1[id], h2[id], ratioQ), new int2(rx, ry), shift);
                 h2[id] = h1[id];
                 h1[id] = p;
             }

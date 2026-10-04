@@ -4,8 +4,26 @@
     {
       "name": "tool-docs",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "Docs/Tools"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8765",
+        "--directory",
+        "Docs/Tools"
+      ],
       "port": 8765
+    },
+    {
+      "name": "docs",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8766",
+        "--directory",
+        "Docs"
+      ],
+      "port": 8766
     }
   ]
 }

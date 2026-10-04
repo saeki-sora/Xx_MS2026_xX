@@ -31,20 +31,14 @@ namespace MS2026.Fortress.Net
         private long _receivedAtWindowStart;
         private long _eventsSentAtWindowStart;
         private long _eventsReceivedAtWindowStart;
-        private long _correctionsSentAtWindowStart;
-        private long _correctionsReceivedAtWindowStart;
         private long _snapshotsSentAtWindowStart;
         private long _snapshotsReceivedAtWindowStart;
-        private int _corrections;
+
+        // Client: 新しい写真が届いた瞬間の先読みの外れ(SwarmStats.replica*)の集計。
+        private int _measured;
         private float _errorSum;
         private float _errorMax;
         private int _snaps;
-        private int _viewCorrections;
-        private float _viewErrorSum;
-        private int _auditCorrections;
-        private float _auditErrorSum;
-        private int _auditViewCorrections;
-        private float _auditViewErrorSum;
         private long _allocBytes;
         private long _allocCount;
         private readonly StringBuilder _line = new StringBuilder(512);
@@ -80,56 +74,6 @@ namespace MS2026.Fortress.Net
             var hub = FindFirstObjectByType<SwarmNetworkHub>();
             if (hub != null)
             {
-                if (args.ReplicaSeparationIterations.HasValue)
-                {
-                    hub.replicaSeparationIterations = args.ReplicaSeparationIterations.Value;
-                }
-
-                if (args.Smoothing.HasValue)
-                {
-                    hub.smoothing = args.Smoothing.Value;
-                }
-
-                if (args.CorrectionCycleSeconds.HasValue)
-                {
-                    hub.correctionCycleSeconds = Mathf.Max(0.05f, args.CorrectionCycleSeconds.Value);
-                }
-
-                if (args.MinCorrectionCycleSeconds.HasValue)
-                {
-                    hub.minCorrectionCycleSeconds = Mathf.Max(0.05f, args.MinCorrectionCycleSeconds.Value);
-                }
-
-                if (args.AdaptiveCorrection.HasValue)
-                {
-                    hub.adaptiveCorrection = args.AdaptiveCorrection.Value;
-                }
-
-                if (args.PriorityCorrection.HasValue)
-                {
-                    hub.correctionMode = args.PriorityCorrection.Value ? SwarmCorrectionMode.Priority : SwarmCorrectionMode.RoundRobin;
-                }
-
-                if (args.SendVelocity.HasValue)
-                {
-                    hub.sendVelocity = args.SendVelocity.Value;
-                }
-
-                if (args.BudgetKBps.HasValue)
-                {
-                    hub.normalBudgetKBps = Mathf.Max(16f, args.BudgetKBps.Value);
-                }
-
-                if (args.MaxBudgetKBps.HasValue)
-                {
-                    hub.maxBudgetKBps = Mathf.Max(16f, args.MaxBudgetKBps.Value);
-                }
-
-                if (args.Replication.HasValue)
-                {
-                    hub.replicationMode = args.Replication.Value;
-                }
-
                 if (args.SnapshotRate.HasValue)
                 {
                     hub.snapshotRate = Mathf.Max(5f, args.SnapshotRate.Value);
@@ -138,6 +82,16 @@ namespace MS2026.Fortress.Net
                 if (args.SnapshotLeadSeconds.HasValue)
                 {
                     hub.snapshotLeadSeconds = Mathf.Max(0f, args.SnapshotLeadSeconds.Value);
+                }
+
+                if (args.AdaptiveSnapshotQuality.HasValue)
+                {
+                    hub.adaptiveSnapshotQuality = args.AdaptiveSnapshotQuality.Value;
+                }
+
+                if (args.SnapshotPrecisionShift.HasValue)
+                {
+                    hub.snapshotPrecisionShift = Mathf.Clamp(args.SnapshotPrecisionShift.Value, 0, 4);
                 }
             }
 
@@ -249,16 +203,10 @@ namespace MS2026.Fortress.Net
             if (swarm != null)
             {
                 var stats = swarm.Stats;
-                _corrections += stats.replicaCorrections;
+                _measured += stats.replicaCorrections;
                 _errorSum += stats.replicaErrorSum;
                 _errorMax = Mathf.Max(_errorMax, stats.replicaErrorMax);
                 _snaps += stats.replicaSnaps;
-                _viewCorrections += stats.replicaViewCorrections;
-                _viewErrorSum += stats.replicaViewErrorSum;
-                _auditCorrections += stats.replicaAuditCorrections;
-                _auditErrorSum += stats.replicaAuditErrorSum;
-                _auditViewCorrections += stats.replicaAuditViewCorrections;
-                _auditViewErrorSum += stats.replicaAuditViewErrorSum;
             }
 
             TryBurst(swarm);
@@ -316,7 +264,7 @@ namespace MS2026.Fortress.Net
             _burstDone = true;
         }
 
-        // Clientを待つ指定があれば、その人数がつながり、全体の状態を送り終えてから。
+        // Clientを待つ指定があれば、その人数がつながり、全員分の写真を送り終えてから。
         private bool IsReadyForBurst()
         {
             if (_args.ExpectedClients <= 0)
@@ -367,20 +315,12 @@ namespace MS2026.Fortress.Net
             _receivedAtWindowStart = NetTrafficStats.BytesReceived;
             _eventsSentAtWindowStart = NetTrafficStats.SwarmEventsSent;
             _eventsReceivedAtWindowStart = NetTrafficStats.SwarmEventsReceived;
-            _correctionsSentAtWindowStart = NetTrafficStats.SwarmCorrectionsSent;
-            _correctionsReceivedAtWindowStart = NetTrafficStats.SwarmCorrectionsReceived;
             _snapshotsSentAtWindowStart = NetTrafficStats.SwarmSnapshotsSent;
             _snapshotsReceivedAtWindowStart = NetTrafficStats.SwarmSnapshotsReceived;
-            _corrections = 0;
+            _measured = 0;
             _errorSum = 0f;
             _errorMax = 0f;
             _snaps = 0;
-            _viewCorrections = 0;
-            _viewErrorSum = 0f;
-            _auditCorrections = 0;
-            _auditErrorSum = 0f;
-            _auditViewCorrections = 0;
-            _auditViewErrorSum = 0f;
             _allocBytes = 0;
             _allocCount = 0;
         }
@@ -415,20 +355,6 @@ namespace MS2026.Fortress.Net
             _line.Append(" recvKBs=").Append(((NetTrafficStats.BytesReceived - _receivedAtWindowStart) / 1024f / seconds).ToString("0.0", inv));
             _line.Append(" evSent=").Append(NetTrafficStats.SwarmEventsSent - _eventsSentAtWindowStart);
             _line.Append(" evRecv=").Append(NetTrafficStats.SwarmEventsReceived - _eventsReceivedAtWindowStart);
-            _line.Append(" corSent=").Append(NetTrafficStats.SwarmCorrectionsSent - _correctionsSentAtWindowStart);
-            _line.Append(" corRecv=").Append(NetTrafficStats.SwarmCorrectionsReceived - _correctionsReceivedAtWindowStart);
-            _line.Append(" backlog=").Append(NetTrafficStats.SwarmEventBacklog);
-            if (NetTrafficStats.SwarmCorrectionCycle > 0f)
-            {
-                _line.Append(" cycle=").Append(NetTrafficStats.SwarmCorrectionCycle.ToString("0.00", inv));
-                _line.Append(" repErr=").Append(NetTrafficStats.SwarmReportedError.ToString("0.00", inv));
-            }
-
-            if (NetTrafficStats.SwarmCorrectionBudgetKBs > 0f)
-            {
-                _line.Append(" budgetKBs=").Append(NetTrafficStats.SwarmCorrectionBudgetKBs.ToString("0", inv));
-                _line.Append(" backoffs=").Append(NetTrafficStats.SwarmCorrectionBackoffs);
-            }
 
             var snapshotsSent = NetTrafficStats.SwarmSnapshotsSent - _snapshotsSentAtWindowStart;
             var snapshotsReceived = NetTrafficStats.SwarmSnapshotsReceived - _snapshotsReceivedAtWindowStart;
@@ -437,6 +363,13 @@ namespace MS2026.Fortress.Net
                 _line.Append(" snapSent=").Append(snapshotsSent);
                 _line.Append(" snapKB=").Append((NetTrafficStats.SwarmSnapshotBytes / 1024f).ToString("0.0", inv));
                 _line.Append(" bpa=").Append(NetTrafficStats.SwarmSnapshotBitsPerAgent.ToString("0.0", inv));
+                _line.Append(" snapShift=").Append(NetTrafficStats.SwarmSnapshotShift);
+                _line.Append(" qualitySteps=").Append(NetTrafficStats.SwarmSnapshotQualityStepUps);
+            }
+
+            if (NetTrafficStats.SwarmSnapshotLagMs >= 0f)
+            {
+                _line.Append(" lagMs=").Append(NetTrafficStats.SwarmSnapshotLagMs.ToString("0", inv));
             }
 
             if (snapshotsReceived > 0 || NetTrafficStats.SwarmSnapshotResyncs > 0)
@@ -449,38 +382,15 @@ namespace MS2026.Fortress.Net
                 }
             }
 
-            if (NetTrafficStats.SwarmRttMs >= 0f)
+            if (_measured > 0)
             {
-                _line.Append(" rtt=").Append(NetTrafficStats.SwarmRttMs.ToString("0", inv));
-            }
-
-            _line.Append(" buffered=").Append(NetTrafficStats.SwarmBufferedEvents);
-
-            if (_corrections > 0)
-            {
-                _line.Append(" errAvg=").Append((_errorSum / _corrections).ToString("0.000", inv));
+                // Client: 新しい写真が届いた瞬間の先読みの外れ(平均・最大)と、滑らせずにその場で合わせた数。
+                // 互換のため、測った数は auditN、平均は errAudit にも同じ値を書く(以前の計測スクリプトがこの名前で読む)。
+                _line.Append(" errAvg=").Append((_errorSum / _measured).ToString("0.000", inv));
                 _line.Append(" errMax=").Append(_errorMax.ToString("0.00", inv));
                 _line.Append(" snaps=").Append(_snaps);
-            }
-
-            if (_viewCorrections > 0)
-            {
-                // 自分の画面に映っている敵だけのズレ(段階5で優先して補正している分)。
-                _line.Append(" errView=").Append((_viewErrorSum / _viewCorrections).ToString("0.000", inv));
-                _line.Append(" viewN=").Append(_viewCorrections);
-            }
-
-            if (_auditCorrections > 0)
-            {
-                // 抜き取り検査(優先度と関係なく選ばれた補正)のズレ。方式によらず比べられる、全員のズレの見積もり。
-                _line.Append(" errAudit=").Append((_auditErrorSum / _auditCorrections).ToString("0.000", inv));
-                _line.Append(" auditN=").Append(_auditCorrections);
-            }
-
-            if (_auditViewCorrections > 0)
-            {
-                _line.Append(" errViewAudit=").Append((_auditViewErrorSum / _auditViewCorrections).ToString("0.000", inv));
-                _line.Append(" viewAuditN=").Append(_auditViewCorrections);
+                _line.Append(" errAudit=").Append((_errorSum / _measured).ToString("0.000", inv));
+                _line.Append(" auditN=").Append(_measured);
             }
 
             Log(_line.ToString());

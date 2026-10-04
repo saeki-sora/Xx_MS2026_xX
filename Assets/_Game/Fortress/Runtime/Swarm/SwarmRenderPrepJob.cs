@@ -22,7 +22,7 @@ namespace MS2026.Fortress
         [ReadOnly] public NativeArray<float> yRange;
         public int ySort;
 
-        /// <summary>ネット対戦のClientで、計算上の位置に足して描く「見た目だけのずらし」(SwarmCorrectionJob参照)。</summary>
+        /// <summary>ネット対戦のClientで、計算上の位置に足して描く「見た目だけのずらし」(SwarmSnapshotFollowJob参照。新しい写真が届いた瞬間の先読みの外れを、数フレームかけて目立たずに消す)。</summary>
         [ReadOnly] public NativeArray<float2> renderOffset;
         public int applyRenderOffset;
 

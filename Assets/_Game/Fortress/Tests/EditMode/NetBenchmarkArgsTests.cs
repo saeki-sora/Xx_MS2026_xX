@@ -14,8 +14,8 @@ namespace MS2026.Fortress.Tests.EditMode
             Assert.AreEqual(6f, args.BurstRadius);
             Assert.AreEqual(3f, args.BurstDelaySeconds);
             Assert.IsNull(args.SpawnsPerFrame);
-            Assert.IsNull(args.ReplicaSeparationIterations);
             Assert.IsNull(args.PacketQueueSize);
+            Assert.IsNull(args.SnapshotRate);
         }
 
         [Test]
@@ -25,8 +25,7 @@ namespace MS2026.Fortress.Tests.EditMode
             {
                 "-fortress-bench", "-fortress-bench-burst", "30000", "-fortress-bench-radius", "8.5",
                 "-fortress-bench-delay", "2", "-fortress-bench-clients", "3", "-fortress-bench-quit", "45",
-                "-fortress-bench-no-wave", "-fortress-swarm-spawns-per-frame", "0",
-                "-fortress-replica-separation", "-1", "-fortress-net-packet-queue", "128"
+                "-fortress-bench-no-wave", "-fortress-swarm-spawns-per-frame", "0", "-fortress-net-packet-queue", "128"
             });
 
             Assert.IsTrue(args.AnyBenchmark);
@@ -38,7 +37,6 @@ namespace MS2026.Fortress.Tests.EditMode
             Assert.AreEqual(45f, args.QuitAfterSeconds);
             Assert.IsTrue(args.StopWaves);
             Assert.AreEqual(0, args.SpawnsPerFrame);
-            Assert.AreEqual(-1, args.ReplicaSeparationIterations);
             Assert.AreEqual(128, args.PacketQueueSize);
         }
 
@@ -46,44 +44,27 @@ namespace MS2026.Fortress.Tests.EditMode
         public void OverridesAlone_DoNotStartBenchmark()
         {
             // 改善策の切り替えだけなら、計測(ログ・自動終了)は始めない。
-            var args = NetBenchmarkArgs.Parse(new[] { "-fortress-swarm-spawns-per-frame", "500" });
+            var args = NetBenchmarkArgs.Parse(new[] { "-fortress-swarm-spawns-per-frame", "500", "-fortress-swarm-snapshot-rate", "20" });
 
             Assert.IsFalse(args.AnyBenchmark);
             Assert.AreEqual(500, args.SpawnsPerFrame);
+            Assert.AreEqual(20f, args.SnapshotRate);
         }
 
         [Test]
-        public void CorrectionTuning_IsParsed()
+        public void SnapshotOptions_AreParsed()
         {
             var args = NetBenchmarkArgs.Parse(new[]
             {
-                "-fortress-swarm-smoothing", "blend", "-fortress-swarm-correction-cycle", "0.25",
-                "-fortress-swarm-correction-min-cycle", "0.1", "-fortress-swarm-adaptive", "0"
+                "-fortress-swarm-snapshot-rate", "20", "-fortress-swarm-snapshot-lead", "0.02",
+                "-fortress-swarm-snapshot-adaptive", "0", "-fortress-swarm-snapshot-shift", "1"
             });
 
-            Assert.AreEqual(SwarmReplicaSmoothing.BlendSimulation, args.Smoothing);
-            Assert.AreEqual(0.25f, args.CorrectionCycleSeconds);
-            Assert.AreEqual(0.1f, args.MinCorrectionCycleSeconds);
-            Assert.AreEqual(false, args.AdaptiveCorrection);
-            Assert.AreEqual(SwarmReplicaSmoothing.RenderOffset, NetBenchmarkArgs.Parse(new[] { "-fortress-swarm-smoothing", "RENDER" }).Smoothing);
-            Assert.IsNull(NetBenchmarkArgs.Parse(new[] { "-fortress-swarm-smoothing", "other" }).Smoothing);
-        }
-
-        [Test]
-        public void PriorityCorrectionOptions_AreParsed()
-        {
-            var args = NetBenchmarkArgs.Parse(new[]
-            {
-                "-fortress-swarm-priority", "0", "-fortress-swarm-velocity", "1",
-                "-fortress-swarm-budget-kbs", "360", "-fortress-swarm-max-budget-kbs", "900"
-            });
-
-            Assert.AreEqual(false, args.PriorityCorrection);
-            Assert.AreEqual(true, args.SendVelocity);
-            Assert.AreEqual(360f, args.BudgetKBps);
-            Assert.AreEqual(900f, args.MaxBudgetKBps);
-            Assert.IsFalse(args.AnyBenchmark);
-            Assert.IsNull(NetBenchmarkArgs.Parse(new[] { "-fortress-swarm-velocity", "x" }).SendVelocity);
+            Assert.AreEqual(20f, args.SnapshotRate);
+            Assert.AreEqual(0.02f, args.SnapshotLeadSeconds);
+            Assert.AreEqual(false, args.AdaptiveSnapshotQuality);
+            Assert.AreEqual(1, args.SnapshotPrecisionShift);
+            Assert.IsNull(NetBenchmarkArgs.Parse(new[] { "-fortress-swarm-snapshot-adaptive", "x" }).AdaptiveSnapshotQuality);
         }
 
         [Test]

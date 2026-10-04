@@ -30,9 +30,6 @@ namespace MS2026.Fortress
         /// <summary>計測用。新しい写真が届いたフレームは、先読みの外れの大きさ。それ以外は-1。</summary>
         [WriteOnly] public NativeArray<float> errorOut;
 
-        /// <summary>計測用(全員が偏りなく測られるので、抜き取り検査と同じ扱いにする)。</summary>
-        [WriteOnly] public NativeArray<byte> auditOut;
-
         /// <summary>写真の時刻から、今表示する時刻までの秒数。</summary>
         public float lead;
 
@@ -68,7 +65,6 @@ namespace MS2026.Fortress
             }
 
             errorOut[i] = newSnapshot != 0 ? math.length(jump) : -1f;
-            auditOut[i] = (byte)(newSnapshot != 0 ? 1 : 0);
             pos[i] = target;
             vel[i] = velocity;
             correction[i] = offset * (1f - blend);

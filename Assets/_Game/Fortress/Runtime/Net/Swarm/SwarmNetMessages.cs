@@ -6,13 +6,13 @@ namespace MS2026.Fortress.Net
 {
     public enum SwarmNetEventKind : byte
     {
-        /// <summary>取り消し済み(送らない)。</summary>
+        /// <summary>使わない(既定値)。</summary>
         None,
         Spawn,
         Despawn
     }
 
-    /// <summary>群衆の敵の出現/消滅1件(14バイト)。起きた順に、確実に送る。</summary>
+    /// <summary>群衆の敵1体の出現/消滅1件(14バイト)。写真(スナップショット)の「新しく出た敵」「消えた敵」と、全員分の写真に使う。</summary>
     public struct SwarmNetEvent : INetworkSerializeByMemcpy
     {
         public ushort Id;
@@ -32,31 +32,6 @@ namespace MS2026.Fortress.Net
 
         /// <summary>向き(0-255で一周)。</summary>
         public byte Facing;
-    }
-
-    /// <summary>群衆の敵1体のHostでの位置(6バイト)。補正用。取りこぼしてよいので再送しない。</summary>
-    public struct SwarmNetCorrection : INetworkSerializeByMemcpy
-    {
-        public ushort Id;
-        public short X;
-        public short Y;
-    }
-
-    /// <summary>
-    /// 群衆の敵1体のHostでの位置と速度(10バイト。段階5、起動引数/設定で切り替え)。
-    /// Clientは自分で計算した速度ではなくHostの速度で先読みし、その速度を引き継ぐ(一斉投入直後の混乱でズレにくくする)。
-    /// </summary>
-    public struct SwarmNetCorrectionV : INetworkSerializeByMemcpy
-    {
-        public ushort Id;
-        public short X;
-        public short Y;
-
-        /// <summary>速度(half)。</summary>
-        public ushort Vx;
-
-        /// <summary>速度(half)。</summary>
-        public ushort Vy;
     }
 
     /// <summary>

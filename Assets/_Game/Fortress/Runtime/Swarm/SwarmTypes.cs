@@ -25,26 +25,6 @@ namespace MS2026.Fortress
         LingerAndAttack = 1
     }
 
-    /// <summary>ネット対戦のClientで、敵の動きを何で決めるか(2026-10-05)。</summary>
-    public enum SwarmReplicaSource
-    {
-        /// <summary>Hostから届く全員の写真(同じ瞬間の位置と速度)を先読みして置く。押し合いは計算しない(既定)。</summary>
-        Snapshots = 0,
-
-        /// <summary>自分でも動き(経路・押し合い)を計算し、Hostから届いた位置で補正する(段階5まで。比較用)。</summary>
-        Corrections = 1
-    }
-
-    /// <summary>ネット対戦のClientで、Hostの位置へどう寄せるか。</summary>
-    public enum SwarmReplicaSmoothing
-    {
-        /// <summary>計算上の位置はその場でHostに合わせ、見た目だけを滑らかに追いつかせる(既定。ズレが溜まらない)。</summary>
-        RenderOffset = 0,
-
-        /// <summary>計算上の位置ごと、毎フレーム少しずつHostへ寄せる(従来の方式。比較用)。</summary>
-        BlendSimulation = 1
-    }
-
     /// <summary>ジョブから参照する、敵の種類ごとの数値（EnemyTypeDefinitionから毎フレーム作る）。</summary>
     public struct SwarmTypeParams
     {
@@ -110,21 +90,11 @@ namespace MS2026.Fortress
         public int maxCellCount;
         public float pairCheckEstimate;
 
-        // ネット対戦のClientで、直前のフレームに届いたHostの位置とのズレ(計測用)。
+        // ネット対戦のClientで、直前のフレームに新しい写真が届いたときの先読みの外れ(計測用)。
         public int replicaCorrections;
         public float replicaErrorSum;
         public float replicaErrorMax;
         public int replicaSnaps;
-
-        // そのうち、自分の画面に映っている敵の分(段階5。優先して補正しているかの確認用)。
-        public int replicaViewCorrections;
-        public float replicaViewErrorSum;
-
-        // 抜き取り検査(優先度と関係なく選ばれた補正)の分。優先度つきでも偏らない、全員のズレの見積もり。
-        public int replicaAuditCorrections;
-        public float replicaAuditErrorSum;
-        public int replicaAuditViewCorrections;
-        public float replicaAuditViewErrorSum;
 
         /// <summary>まだ追加していない(1フレームの上限を超えて次に回された)出現の数。</summary>
         public int pendingSpawns;

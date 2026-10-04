@@ -24,4 +24,4 @@
 
 ## マルチプレイ化（作業中）
 
-4人対戦（LAN・Host権威）の作業状況・ユーザーが決めた方針・残りの宿題（2台のPCでのテスト、性能改善の続き、Phase 5/6）は `Docs/Multiplayer/MultiplayerProgress.md` にまとめてある。マルチプレイ・通信・群衆の同期に関わる作業では、最初にこれを読み、進んだら同じ作業の中で更新すること。
+4人対戦（LAN・Host権威）の作業状況・ユーザーが決めた方針・残りの宿題（2台のPCでのテスト、性能改善の続き、Phase 5/6）は `Docs/Multiplayer/MultiplayerProgress.md` にまとめてある。マルチプレイ・通信・群衆の同期に関わる作業では、最初にこれを読み、進んだら同じ作業の中で更新すること。群衆の同期は「写真方式」（Hostが全員の位置を1秒30回、差分圧縮した写真で配り、Clientは先読みして表示）。人間向けの解説とネットワークの基礎は `Docs/Multiplayer/群衆同期_写真方式_解説.html`、実装の詳細は `Docs/Tools/FortressDesigner_AI_Reference.md` の Net 節。方式・既定値・ファイル構成を変えたら、この解説HTMLも同じ作業の中で更新する。

@@ -14,35 +14,19 @@ namespace MS2026.Fortress.Net
 
         public static long SwarmEventsSent;
         public static long SwarmEventsReceived;
-        public static long SwarmCorrectionsSent;
-        public static long SwarmCorrectionsReceived;
 
-        /// <summary>Host: まだ送っていない群衆の出現/消滅の数。</summary>
-        public static int SwarmEventBacklog;
 
-        /// <summary>Host: 途中参加者へ送っている最中の全体の状態の数。</summary>
+        /// <summary>Host: 全員分の写真(キーフレーム)を頼んできて、まだ送っていないClientの数。</summary>
         public static int SwarmFullStateTransfers;
 
-        /// <summary>Client: 全体の状態を受け取り終わるまで貯めている出現/消滅の数。</summary>
-        public static int SwarmBufferedEvents;
 
-        /// <summary>Client: 全体の状態を受け取り終えたか。</summary>
+        /// <summary>Client: 全員分の写真(キーフレーム)を受け取り終えたか。</summary>
         public static bool SwarmFullStateReceived;
 
-        /// <summary>Host: 今の補正の間隔(全員を1回ずつ補正するのにかける秒数)。</summary>
-        public static float SwarmCorrectionCycle;
 
-        /// <summary>Host: Clientから報告されたズレ(一番大きい物)。報告が無ければ負。</summary>
-        public static float SwarmReportedError = -1f;
 
-        /// <summary>Host(優先度つきの補正): 今の補正の通信量の枠(Client1人あたり、一番多い人の値、KB/秒)。</summary>
-        public static float SwarmCorrectionBudgetKBs;
 
-        /// <summary>往復時間(ミリ秒)。Host: 一番遅いClient / Client: Hostとの間。測れなければ負。</summary>
-        public static float SwarmRttMs = -1f;
 
-        /// <summary>Host(優先度つきの補正): 回線の混み具合で通信量を下げた回数(全Clientの累計)。</summary>
-        public static int SwarmCorrectionBackoffs;
 
         /// <summary>写真方式: 送った/受け取った写真の枚数(累計)。</summary>
         public static long SwarmSnapshotsSent;
@@ -58,6 +42,18 @@ namespace MS2026.Fortress.Net
         /// <summary>Client(写真方式): 復元がHostと合わず、全員分の写真で立て直した回数(累計)。0であるべき。</summary>
         public static int SwarmSnapshotResyncs;
 
+        /// <summary>Host(写真方式): 今の1秒あたりの写真の枚数。</summary>
+        public static float SwarmSnapshotRate;
+
+        /// <summary>写真方式: 写真がいつもよりどれだけ遅れて届いたか(ミリ秒)。Host: 報告の一番大きい物(無ければ負) / Client: 直近の報告値。</summary>
+        public static float SwarmSnapshotLagMs = -1f;
+
+        /// <summary>Host(写真方式): 今の位置の細かさ(差を丸める単位 2^shift、1/500ワールド単位)。</summary>
+        public static int SwarmSnapshotShift;
+
+        /// <summary>Host(写真方式): 遅れのために位置を粗くした回数(累計)。</summary>
+        public static int SwarmSnapshotQualityStepUps;
+
         public static void Sent(long bytes)
         {
             BytesSent += bytes;
@@ -72,18 +68,17 @@ namespace MS2026.Fortress.Net
         private static void ResetOnLoad()
         {
             BytesSent = BytesReceived = 0;
-            SwarmEventsSent = SwarmEventsReceived = SwarmCorrectionsSent = SwarmCorrectionsReceived = 0;
-            SwarmEventBacklog = SwarmFullStateTransfers = SwarmBufferedEvents = 0;
+            SwarmEventsSent = SwarmEventsReceived = 0;
+            SwarmFullStateTransfers = 0;
             SwarmFullStateReceived = false;
-            SwarmCorrectionCycle = 0f;
-            SwarmReportedError = -1f;
-            SwarmCorrectionBudgetKBs = 0f;
-            SwarmRttMs = -1f;
-            SwarmCorrectionBackoffs = 0;
             SwarmSnapshotsSent = SwarmSnapshotsReceived = 0;
             SwarmSnapshotBytes = 0;
             SwarmSnapshotBitsPerAgent = 0f;
             SwarmSnapshotResyncs = 0;
+            SwarmSnapshotRate = 0f;
+            SwarmSnapshotLagMs = -1f;
+            SwarmSnapshotShift = 0;
+            SwarmSnapshotQualityStepUps = 0;
         }
     }
 }

@@ -60,6 +60,30 @@ namespace MS2026.Fortress.Tests.EditMode
         }
 
         [Test]
+        public void QuantizeResidual_RoundsToNearestStep_AndReconstructStaysClose()
+        {
+            // 単位4(shift=2)。-2〜1 → 0、2〜5 → 1、-6〜-3 → -1。
+            Assert.AreEqual(0, SwarmSnapshotMath.QuantizeResidual(1, 2));
+            Assert.AreEqual(0, SwarmSnapshotMath.QuantizeResidual(-2, 2));
+            Assert.AreEqual(1, SwarmSnapshotMath.QuantizeResidual(2, 2));
+            Assert.AreEqual(-1, SwarmSnapshotMath.QuantizeResidual(-3, 2));
+            Assert.AreEqual(5, SwarmSnapshotMath.QuantizeResidual(5, 0));
+
+            for (var r = -50; r <= 50; r++)
+            {
+                var predicted = new int2(1000, -1000);
+                var actual = predicted + new int2(r, -r);
+                var back = SwarmSnapshotMath.Reconstruct(predicted, SwarmSnapshotMath.QuantizeResidual(actual - predicted, 2), 2);
+                Assert.LessOrEqual(math.abs(back.x - actual.x), 2);
+                Assert.LessOrEqual(math.abs(back.y - actual.y), 2);
+            }
+
+            // 16bitの範囲に収める。
+            Assert.AreEqual(new int2(short.MaxValue, short.MinValue),
+                SwarmSnapshotMath.Reconstruct(new int2(32760, -32760), new int2(10, -10), 2));
+        }
+
+        [Test]
         public void Checksum_SumIsOrderIndependentAndSensitive()
         {
             var a = SwarmSnapshotMath.Checksum(1, new int2(5, 6)) + SwarmSnapshotMath.Checksum(2, new int2(7, 8));
@@ -67,6 +91,47 @@ namespace MS2026.Fortress.Tests.EditMode
             var c = SwarmSnapshotMath.Checksum(2, new int2(7, 9)) + SwarmSnapshotMath.Checksum(1, new int2(5, 6));
             Assert.AreEqual(a, b);
             Assert.AreNotEqual(a, c);
+        }
+    }
+
+    public sealed class SwarmSnapshotQualityControllerTests
+    {
+        private static SwarmSnapshotQualityController Create()
+        {
+            return new SwarmSnapshotQualityController
+            {
+                MaxLevel = 2, HighLagMs = 60f, LowLagMs = 25f, StepUpIntervalSeconds = 0.3f, StepDownAfterSeconds = 1f
+            };
+        }
+
+        [Test]
+        public void NoReport_StaysAtLevelZero()
+        {
+            Assert.AreEqual(0, Create().Update(0.016f, -1f));
+        }
+
+        [Test]
+        public void HighLag_StepsUpOncePerInterval_UpToMax()
+        {
+            var controller = Create();
+            Assert.AreEqual(1, controller.Update(0.016f, 100f));
+            Assert.AreEqual(1, controller.Update(0.1f, 100f)); // 0.3秒以内は続けて上げない
+            Assert.AreEqual(2, controller.Update(0.25f, 100f));
+            Assert.AreEqual(2, controller.Update(1f, 100f));   // 上限
+            Assert.AreEqual(2, controller.StepUps);
+        }
+
+        [Test]
+        public void CalmForOneSecond_StepsDown_MediumLagHolds()
+        {
+            var controller = Create();
+            controller.Update(0.016f, 100f);
+            controller.Update(0.4f, 100f); // 2
+            Assert.AreEqual(2, controller.Update(0.6f, 10f));
+            Assert.AreEqual(2, controller.Update(0.3f, 40f)); // 25〜60msの間は戻さず、落ち着いた時間も数え直し
+            Assert.AreEqual(2, controller.Update(0.6f, 10f));
+            Assert.AreEqual(1, controller.Update(0.5f, 10f));
+            Assert.AreEqual(0, controller.Update(1f, 10f));
         }
     }
 
@@ -177,7 +242,7 @@ namespace MS2026.Fortress.Tests.EditMode
                 new SwarmSnapshotEncodeJob
                 {
                     netId = netId, pos = pos, typeIdx = typeIdx, speedScale = speedScale, animTime = animTime, facing = facing,
-                    typeToNet = typeToNet, count = frame.ids.Length, ratioQ = ratios[f],
+                    typeToNet = typeToNet, count = frame.ids.Length, ratioQ = ratios[f], shift = 2,
                     alivePrev = alivePrev, aliveNow = aliveNow, removedSince = removedSince, removedReason = removedReason,
                     h1 = h1, h2 = h2, current = current, indexOfId = indexOfId,
                     despawns = despawns, spawns = spawns, bits = bits, header = header
@@ -186,7 +251,7 @@ namespace MS2026.Fortress.Tests.EditMode
                 new SwarmSnapshotDecodeJob
                 {
                     bits = bits.AsArray(), despawns = despawns.AsArray(), spawns = spawns.AsArray(),
-                    kx = header[0], ky = header[1], ratioQ = ratios[f], expectedContinuing = header[2], expectedChecksum = (uint)header[3],
+                    kx = header[0], ky = header[1], ratioQ = ratios[f], shift = 2, expectedContinuing = header[2], expectedChecksum = (uint)header[3],
                     hostDeltaSeconds = 1f / 30f,
                     alive = cAlive, h1 = cH1, h2 = cH2, snapPos = snapPos, snapVel = snapVel, result = result
                 }.Run();
@@ -196,8 +261,10 @@ namespace MS2026.Fortress.Tests.EditMode
                 {
                     var id = frame.ids[i];
                     Assert.AreEqual(1, cAlive[id]);
-                    Assert.AreEqual(frame.positions[i].x, snapPos[id].x, 0.002f);
-                    Assert.AreEqual(frame.positions[i].y, snapPos[id].y, 0.002f);
+                    // 差を4単位(0.008)に丸めて送るので、誤差は半単位(0.004)＋元の量子化(0.001)以内。Hostの丸めた位置とは完全に一致する。
+                    Assert.AreEqual(frame.positions[i].x, snapPos[id].x, 0.0051f);
+                    Assert.AreEqual(frame.positions[i].y, snapPos[id].y, 0.0051f);
+                    Assert.AreEqual(h1[id], cH1[id]);
                 }
 
                 if (f == 2)

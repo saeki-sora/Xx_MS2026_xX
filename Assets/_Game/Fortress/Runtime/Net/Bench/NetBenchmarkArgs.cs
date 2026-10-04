@@ -19,19 +19,11 @@ namespace MS2026.Fortress.Net
     ///   -fortress-bench-disable A+B+...     指定した型名の部品(MonoBehaviour)を止めて測る(GCや負荷の出どころの二分探索用)。
     ///                                       区切りは + を使う(cmd/batはカンマを引数の区切りとして扱うため。カンマは引用符で囲めば可)
     ///   -fortress-swarm-spawns-per-frame N  1フレームに追加する群衆の上限(0=無制限=改善前の動き)
-    ///   -fortress-replica-separation N      Clientの押し合い計算の反復回数(未指定ならSwarmNetworkHubの設定)
     ///   -fortress-net-packet-queue N        1フレームに送受信できるパケット数の上限(未指定ならFortressNetworkBootstrapの設定)
-    ///   -fortress-swarm-smoothing render|blend  Clientの寄せ方(render=見た目だけ滑らかに、blend=従来)
-    ///   -fortress-swarm-correction-cycle S      普段の補正の間隔(秒)
-    ///   -fortress-swarm-correction-min-cycle S  自動調整で縮める間隔の下限(秒)
-    ///   -fortress-swarm-adaptive 0|1            補正の間隔(優先度つきでは通信量)の自動調整を切る/入れる
-    ///   -fortress-swarm-priority 0|1            優先度つきの補正(段階5)を切る(=番号順に全員を同じ間隔で送る)/入れる
-    ///   -fortress-swarm-velocity 0|1            補正に速度を載せない/載せる
-    ///   -fortress-swarm-budget-kbs N            優先度つきの補正の普段の通信量(Client1人あたり、KB/秒)
-    ///   -fortress-swarm-max-budget-kbs N        同、ズレが大きい間の上限(KB/秒)
-    ///   -fortress-swarm-replication snapshot|corrections  群衆の同期方式(写真方式/補正方式)
     ///   -fortress-swarm-snapshot-rate N         写真方式で1秒に送る写真の枚数
     ///   -fortress-swarm-snapshot-lead S         写真方式で、届く遅れの見込みとしてさらに先読みする秒数
+    ///   -fortress-swarm-snapshot-adaptive 0|1   写真方式で、遅れに応じて位置を自動で粗くする(写真を軽くする)のを切る/入れる
+    ///   -fortress-swarm-snapshot-shift N        写真方式の位置の細かさ(差を丸める単位 2^N、1/500ワールド単位。0=最も細かい)
     /// </summary>
     public struct NetBenchmarkArgs
     {
@@ -46,19 +38,11 @@ namespace MS2026.Fortress.Net
         public bool NoOnGui;
         public string[] DisableTypes;
         public int? SpawnsPerFrame;
-        public int? ReplicaSeparationIterations;
         public int? PacketQueueSize;
-        public SwarmReplicaSmoothing? Smoothing;
-        public float? CorrectionCycleSeconds;
-        public float? MinCorrectionCycleSeconds;
-        public bool? AdaptiveCorrection;
-        public bool? PriorityCorrection;
-        public bool? SendVelocity;
-        public float? BudgetKBps;
-        public float? MaxBudgetKBps;
-        public SwarmReplicationMode? Replication;
         public float? SnapshotRate;
         public float? SnapshotLeadSeconds;
+        public bool? AdaptiveSnapshotQuality;
+        public int? SnapshotPrecisionShift;
 
         public bool AnyBenchmark => LogEnabled || BurstCount > 0 || QuitAfterSeconds > 0f || StopWaves;
 
@@ -108,38 +92,8 @@ namespace MS2026.Fortress.Net
                     case "-fortress-swarm-spawns-per-frame":
                         result.SpawnsPerFrame = NextInt(args, ref i);
                         break;
-                    case "-fortress-replica-separation":
-                        result.ReplicaSeparationIterations = NextInt(args, ref i);
-                        break;
                     case "-fortress-net-packet-queue":
                         result.PacketQueueSize = NextInt(args, ref i);
-                        break;
-                    case "-fortress-swarm-smoothing":
-                        result.Smoothing = NextSmoothing(args, ref i);
-                        break;
-                    case "-fortress-swarm-correction-cycle":
-                        result.CorrectionCycleSeconds = NextFloat(args, ref i);
-                        break;
-                    case "-fortress-swarm-correction-min-cycle":
-                        result.MinCorrectionCycleSeconds = NextFloat(args, ref i);
-                        break;
-                    case "-fortress-swarm-adaptive":
-                        result.AdaptiveCorrection = NextBool(args, ref i);
-                        break;
-                    case "-fortress-swarm-priority":
-                        result.PriorityCorrection = NextBool(args, ref i);
-                        break;
-                    case "-fortress-swarm-velocity":
-                        result.SendVelocity = NextBool(args, ref i);
-                        break;
-                    case "-fortress-swarm-budget-kbs":
-                        result.BudgetKBps = NextFloat(args, ref i);
-                        break;
-                    case "-fortress-swarm-max-budget-kbs":
-                        result.MaxBudgetKBps = NextFloat(args, ref i);
-                        break;
-                    case "-fortress-swarm-replication":
-                        result.Replication = NextReplication(args, ref i);
                         break;
                     case "-fortress-swarm-snapshot-rate":
                         result.SnapshotRate = NextFloat(args, ref i);
@@ -147,48 +101,16 @@ namespace MS2026.Fortress.Net
                     case "-fortress-swarm-snapshot-lead":
                         result.SnapshotLeadSeconds = NextFloat(args, ref i);
                         break;
+                    case "-fortress-swarm-snapshot-adaptive":
+                        result.AdaptiveSnapshotQuality = NextBool(args, ref i);
+                        break;
+                    case "-fortress-swarm-snapshot-shift":
+                        result.SnapshotPrecisionShift = NextInt(args, ref i);
+                        break;
                 }
             }
 
             return result;
-        }
-
-        private static SwarmReplicationMode? NextReplication(string[] args, ref int i)
-        {
-            if (i + 1 >= args.Length)
-            {
-                return null;
-            }
-
-            i++;
-            switch (args[i].ToLowerInvariant())
-            {
-                case "snapshot":
-                    return SwarmReplicationMode.Snapshot;
-                case "corrections":
-                    return SwarmReplicationMode.Corrections;
-                default:
-                    return null;
-            }
-        }
-
-        private static SwarmReplicaSmoothing? NextSmoothing(string[] args, ref int i)
-        {
-            if (i + 1 >= args.Length)
-            {
-                return null;
-            }
-
-            i++;
-            switch (args[i].ToLowerInvariant())
-            {
-                case "render":
-                    return SwarmReplicaSmoothing.RenderOffset;
-                case "blend":
-                    return SwarmReplicaSmoothing.BlendSimulation;
-                default:
-                    return null;
-            }
         }
 
         private static bool? NextBool(string[] args, ref int i)

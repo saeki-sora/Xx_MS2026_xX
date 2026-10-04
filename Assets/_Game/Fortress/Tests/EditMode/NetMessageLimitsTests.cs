@@ -10,16 +10,15 @@ namespace MS2026.Fortress.Tests.EditMode
         [Test]
         public void UnreliablePayloads_FitWithinNgoLimit()
         {
-            AssertFits<SwarmNetCorrection>();
             AssertFits<EnemyNetPosition>();
             AssertFits<DestructibleNetPosition>();
         }
 
         [Test]
-        public void SwarmCorrection_IsSixBytes()
+        public void SwarmEvent_Is14Bytes()
         {
-            // 通信量の見積もり(3万体で約2.9Mbps)の前提。
-            Assert.AreEqual(6, UnsafeUtility.SizeOf<SwarmNetCorrection>());
+            // 写真の「新しく出た敵」「消えた敵」1件の大きさ(通信量の見積もりの前提)。
+            Assert.AreEqual(14, UnsafeUtility.SizeOf<SwarmNetEvent>());
         }
 
         private static void AssertFits<T>() where T : struct

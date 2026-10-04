@@ -7,9 +7,8 @@ namespace MS2026.Fortress.Net
     public enum FortressNetChannel : byte
     {
         None = 0,
-        SwarmEvents = 1,
-        SwarmFullState = 2,
-        SwarmCorrections = 3,
+
+        // 1〜3 は以前の群衆の補正方式で使っていた(2026-10-05 削除)。混ざらないよう再利用しない。
         SwarmSnapshot = 4,
         SwarmKeyframe = 5
     }

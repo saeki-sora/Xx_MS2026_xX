@@ -330,7 +330,6 @@ namespace MS2026.Fortress
             _stats.drawBatches = _renderer.LastBatchCount;
 
             ApplyPendingCommands();
-            RaiseSpawnRecords();
 
             _refreshTimer -= Time.unscaledDeltaTime;
             if (_refreshTimer <= 0f)
@@ -399,11 +398,7 @@ namespace MS2026.Fortress
                     continue;
                 }
 
-                if (Storage.TryAdd(spawn.position, spawn.type, spawn.hp, spawn.speed, spawn.animStart, spawn.face, id))
-                {
-                    RecordSpawn(spawn, id);
-                }
-                else if (spawn.id < 0)
+                if (!Storage.TryAdd(spawn.position, spawn.type, spawn.hp, spawn.speed, spawn.animStart, spawn.face, id) && spawn.id < 0)
                 {
                     ReleaseNetId(id);
                 }
@@ -434,8 +429,6 @@ namespace MS2026.Fortress
             {
                 _beamsJob[b] = _beamQueue[b];
             }
-
-            _lastBeamCount = _beamCount;
 
             _handle = BuildJobChain(count, dt);
             _flightDt = dt;
@@ -513,8 +506,8 @@ namespace MS2026.Fortress
             _stageWatch.Restart();
             _stageLast = 0d;
 
-            // Clientでは最初に、Hostの位置とのズレを少し詰める(以降の押し合い等はその位置から計算する)。
-            var handle = ScheduleReplicaCorrection(default, count, dt);
+            // Client(写真方式)では最初に、Hostの写真を先読みした位置に置く(押し合いは計算しない)。
+            var handle = IsReplica ? ScheduleReplicaFollow(default, count) : default;
 
             handle = new SwarmCellIndexJob
             {
@@ -567,7 +560,7 @@ namespace MS2026.Fortress
                 Mark(ref handle, 1);
             }
 
-            if (UsesSnapshots)
+            if (IsReplica)
             {
                 // 写真方式のClient: 位置と速度は写真で決まっているので、押し合いを計算せず、向き・アニメ・到着だけ進める。
                 handle = new SwarmReplicaFinalizeJob
@@ -631,7 +624,7 @@ namespace MS2026.Fortress
 
             var input = Storage.predA;
             var output = Storage.predB;
-            var separationIterations = SeparationIterations;
+            var separationIterations = _settings.separationIterations;
             for (var iteration = 0; iteration < separationIterations; iteration++)
             {
                 handle = new SwarmSeparationJob
@@ -761,7 +754,7 @@ namespace MS2026.Fortress
                 yRange = _yRange,
                 ySort = _settings.ySort ? 1 : 0,
                 renderOffset = Storage.correctionB,
-                applyRenderOffset = UsesRenderOffset ? 1 : 0,
+                applyRenderOffset = IsReplica ? 1 : 0,
                 tmpInstances = _tmpInstances,
                 keyOf = _keyOf
             }.Schedule(count, 256, handle);

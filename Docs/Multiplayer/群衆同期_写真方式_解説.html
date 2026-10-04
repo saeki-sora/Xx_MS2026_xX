@@ -1,0 +1,975 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>群衆同期 写真方式</title>
+<meta name="description" content="3万体の群衆を4台のPCで共有する「写真方式（スナップショット同期）」の仕組み・工夫・難易度と、それを理解するためのネットワークの基礎をゼロから解説">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../Tools/assets/guide.css">
+<style>
+:root{--acc:#ff5fa2;--acc-ink:#1f0612;--acc2:#4de2ff;--acc3:#c6ff3d}
+:root[data-theme="light"]{--acc:#c2185b;--acc-ink:#ffffff;--acc2:#007f99;--acc3:#4d7a00}
+
+/* ---- page-specific components ---- */
+.part{margin-top:120px;padding:34px 0 0;border-top:1px solid var(--line2);position:relative}
+.part .no{font-family:var(--display);font-weight:900;font-size:clamp(64px,10vw,120px);line-height:.9;color:transparent;-webkit-text-stroke:1.2px var(--acc);opacity:.7}
+.part .tt{font-family:var(--display);font-weight:800;font-size:clamp(22px,3vw,34px);margin-top:10px}
+.part .ds{color:var(--ink2);max-width:760px;margin-top:8px}
+.route{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:26px}
+.route a{display:flex;flex-direction:column;gap:6px;padding:20px;border-radius:18px;border:1px solid var(--line);background:var(--card);text-decoration:none;transition:.25s}
+.route a:hover{border-color:var(--acc);transform:translateY(-3px)}
+.route .who{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--acc)}
+.route .what{font-weight:800;font-size:17px}
+.route .how{font-size:13.5px;color:var(--ink2)}
+.stars{font-family:var(--mono);letter-spacing:.12em;color:var(--acc);white-space:nowrap}
+.stars i{font-style:normal;color:var(--line2)}
+.meter{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;align-items:center;margin-top:12px}
+.bar{height:10px;border-radius:99px;background:var(--card2);overflow:hidden;border:1px solid var(--line)}
+.bar>span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--acc2),var(--acc))}
+.big{font-family:var(--display);font-weight:900;font-size:clamp(30px,4vw,48px);line-height:1;color:var(--acc)}
+.big small{font-size:.45em;color:var(--ink2);font-family:var(--sans);font-weight:700;margin-left:4px}
+.kpi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:26px}
+.kpi .card{padding:18px}
+.kpi .lb{font-size:12.5px;color:var(--mute);margin-top:8px;line-height:1.6}
+.figure{margin-top:24px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,var(--card),transparent);padding:20px}
+.figure svg{display:block;width:100%;height:auto}
+.figure .scroll{overflow-x:auto}
+@media (max-width:620px){.figure .scroll svg{min-width:600px}}
+.figure .cap{font-size:13px;color:var(--mute);margin-top:10px}
+.svg-ink{fill:var(--ink)}.svg-mute{fill:var(--mute)}.svg-acc{fill:var(--acc)}.svg-acc2{fill:var(--acc2)}.svg-err{fill:var(--err)}
+.svg-line{stroke:var(--line2)}.svg-sacc{stroke:var(--acc)}.svg-sacc2{stroke:var(--acc2)}.svg-serr{stroke:var(--err)}.svg-sok{stroke:var(--ok)}
+.svg-txt{font-family:var(--sans);font-size:13px;fill:var(--ink2)}
+.svg-txt.b{font-weight:700;fill:var(--ink)}
+.svg-mono{font-family:var(--mono);font-size:11px;fill:var(--mute)}
+.vs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:24px}
+.vs .card h4{display:flex;align-items:center;gap:8px}
+.tag{font-family:var(--mono);font-size:10.5px;padding:2px 8px;border-radius:999px;border:1px solid currentColor}
+.tag.bad{color:var(--err)}.tag.good{color:var(--ok)}.tag.mid{color:var(--warn)}
+.demo{margin-top:24px;border:1px solid var(--line2);border-radius:22px;overflow:hidden;background:var(--bg2)}
+.demo .head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.demo .head .t{font-weight:800}
+.demo .body{padding:16px}
+.demo canvas{width:100%;height:auto;display:block;border-radius:12px;background:#0b0d14}
+:root[data-theme="light"] .demo canvas{background:#e9e7df}
+.demo .twin{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.demo .lbl{font-size:13px;margin-bottom:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{all:unset;cursor:pointer;font-size:13px;padding:7px 14px;border:1px solid var(--line2);border-radius:999px;color:var(--ink);transition:.2s;display:inline-flex;gap:6px;align-items:center}
+.btn:hover{border-color:var(--acc)}
+.btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.btn.on{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.form label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--ink2)}
+.form input[type=number],.form input[type=text]{font:inherit;font-family:var(--mono);font-size:15px;color:var(--ink);background:var(--card2);border:1px solid var(--line2);border-radius:10px;padding:8px 10px;width:100%}
+.form input[type=range]{width:100%;accent-color:var(--acc)}
+.out{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.out div{padding:12px 14px;border-radius:12px;background:var(--card);border:1px solid var(--line)}
+.out .k{font-size:12px;color:var(--mute)}
+.out .v{font-family:var(--mono);font-size:18px;font-weight:600;color:var(--ink);margin-top:2px;overflow-wrap:anywhere}
+.bits{font-family:var(--mono);font-size:20px;letter-spacing:.08em;overflow-wrap:anywhere;margin-top:10px}
+.bits .z{color:var(--acc2)}.bits .o{color:var(--acc)}.bits .s{color:var(--ink)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--mute);margin-top:6px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px;background:var(--c)}
+.chain{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;align-items:center}
+.chain .s{padding:8px 12px;border-radius:12px;border:1px solid var(--line2);background:var(--card);font-size:13.5px}
+.chain .s b{color:var(--acc)}
+.chain .a{color:var(--acc)}
+.numbers{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:20px}
+.numbers div{padding:14px 16px;border-radius:14px;border:1px solid var(--line);background:var(--card)}
+.numbers .v{font-family:var(--mono);font-size:17px;color:var(--acc);font-weight:600}
+.numbers .k{font-size:13px;color:var(--ink2);margin-top:2px}
+.quiz details{border:1px solid var(--line);border-radius:14px;background:var(--card);padding:0 16px;margin-top:10px}
+.quiz summary{cursor:pointer;padding:14px 0;font-weight:700;list-style:none;display:flex;gap:10px}
+.quiz summary::before{content:"Q";font-family:var(--display);color:var(--acc);font-weight:900}
+.quiz summary::-webkit-details-marker{display:none}
+.quiz .ans{padding:0 0 16px;color:var(--ink2);font-size:14.5px;border-top:1px dashed var(--line2);padding-top:12px}
+.quiz .ans::before{content:"A. ";font-weight:900;color:var(--ok)}
+.lesson-head{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap}
+.lesson-head .lv{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--acc);border:1px solid color-mix(in srgb,var(--acc) 50%,transparent);border-radius:999px;padding:3px 10px}
+.mini{font-size:13.5px;color:var(--ink2)}
+ul.dots{margin:12px 0 0 1.2em;color:var(--ink2)}
+ul.dots li{margin-top:4px}
+ol.nums{margin:12px 0 0 1.4em;color:var(--ink2)}
+ol.nums li{margin-top:6px}
+.layout{font-family:var(--mono);font-size:12.5px}
+.layout td:first-child{font-family:var(--mono)}
+.devzone::before{content:"FOR PROGRAMMERS — ここから先は実装を触る人向け"}
+@media (max-width:1100px){.kpi{grid-template-columns:repeat(2,minmax(0,1fr))}.route{grid-template-columns:1fr}}
+@media (max-width:920px){.vs,.demo .twin{grid-template-columns:1fr}.kpi{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.kpi{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<div class="orbs" aria-hidden="true"><div class="orb a"></div><div class="orb b"></div></div>
+
+<div class="shell">
+<nav class="side" aria-label="目次">
+  <a class="back" href="../Tools/index.html">← ツール一覧</a>
+  <a class="brand" href="#top"><span class="mark">写</span><span class="t">群衆同期 写真方式</span></a>
+  <ol id="toc"></ol>
+  <div class="foot">
+    <button class="themebtn" id="themeBtn" type="button"><span aria-hidden="true">◐</span><span data-label>ライト表示</span></button>
+    <div class="meta mono">Docs/Multiplayer<br>2026-10-05 時点</div>
+  </div>
+</nav>
+
+<main id="top">
+<!-- ================================================================ HERO -->
+<header class="hero">
+  <div class="tags">
+    <span class="pill hot">ネット対戦の心臓部</span>
+    <span class="pill">3万体 × 4人</span>
+    <span class="pill">LAN・Host権威</span>
+    <span class="pill">ネットワーク入門つき</span>
+  </div>
+  <h1 class="mega jp" aria-label="群衆同期 写真方式"><span class="o">SNAPSHOT</span><span class="f">写真方式</span></h1>
+  <p class="subname">「握れ、灼ける前に」の群衆を全員の画面にそろえる仕組み — <b>Snapshot Replication + Delta Coding + Extrapolation</b></p>
+  <div class="hero-row">
+    <div>
+      <p class="oneword">Hostが<span class="hl">全員の位置を同じ瞬間に撮った写真</span>を、<br><span class="hl">前の写真との差だけ</span>に縮めて1秒30回配り、<br>Clientは<span class="hl">少し先を予想して</span>表示する。</p>
+      <p class="analogy">たとえるなら「パラパラ漫画を1秒に30ページ、<b>前のページとの違いだけ</b>メモして郵送する」仕組み。受け取った人は、次のページが届くまでの一瞬を「みんな同じ向きにちょっと進めて」描いておくので、遅れも見えないし、絵がガタガタもしない。</p>
+    </div>
+    <div class="facts"><dl>
+      <dt>何のため</dt><dd>最大3万体の敵の群れを、4台のPCで「同じ見た目」に保つ</dd>
+      <dt>一般的な名前</dt><dd>スナップショット同期 ＋ 差分（予測）符号化 ＋ 推測航法（外挿）</dd>
+      <dt>結果</dt><dd>ズレ 約0.04（敵の半径0.22の1/5以下）、Client1人あたり普段 約0.6MB/秒、震え・隙間なし</dd>
+      <dt>導入難易度</dt><dd><span class="stars">★★★★<i>★</i></span> 上級（理由は<a href="#difficulty">こちら</a>）</dd>
+      <dt>この文書</dt><dd>前半＝方式と工夫、後半＝ネットワークの基礎講座（知識ゼロから）、最後＝プログラマー向け</dd>
+    </dl></div>
+  </div>
+  <div class="marquee" aria-hidden="true"><div class="track" id="mq" data-words="同じ瞬間の写真|予想との差だけ送る|指数ゴロム符号|丸めても溜まらない|1ビットも狂わせない|先読み|外れは見た目で隠す|遅れたら軽くする|途中参加|ネットワーク入門"></div></div>
+</header>
+
+<!-- ================================================================ HOW TO READ -->
+<section id="howto" data-nav="この文書の読み方">
+  <div class="eyebrow rv">00 / How to read</div>
+  <h2 class="rv">読む人に合わせて、<em>3つの道</em></h2>
+  <p class="lead rv">全部読むと長いです。目的に合わせて入口を選んでください。分からない言葉が出てきたら、<a href="#gloss">用語集</a>か、点線の付いた言葉にマウスを乗せてください。</p>
+  <div class="route rv">
+    <a href="#overview"><span class="who">5分で知りたい人</span><span class="what">第1部だけ</span><span class="how">どんな方式で、何が良くて、どれくらい難しいか。企画・デザインの人もここまでで十分。</span></a>
+    <a href="#same-moment"><span class="who">実装を触る・直す人</span><span class="what">第2部 → プログラマー向け</span><span class="how">一つ一つの工夫の理由と、コード・通信の中身・調整できる値。</span></a>
+    <a href="#b1"><span class="who">ネットワークを学びたい人</span><span class="what">第3部から</span><span class="how">「パケットって何？」から始めて、ゲームの同期方式を自分で選べるところまで。最後に練習問題。</span></a>
+  </div>
+  <div class="callout info rv"><span class="ci">i</span><div>この文書の数値は、2026-10-05 に1台のPCで Host と Client を動かして測った結果です（<code>Tools/NetTest/bench_2p.bat</code> など）。実機4台での確認は、まだ宿題として残っています（<code>Docs/Multiplayer/MultiplayerProgress.md</code>）。</div></div>
+</section>
+
+<!-- ================================================================ PART 1 -->
+<div class="part rv"><div class="no">01</div><div class="tt">第1部　全体像 — 何を、どうやって、どれくらい</div><p class="ds">専門知識なしで読めます。</p></div>
+
+<section id="overview" data-nav="何をしている？">
+  <div class="eyebrow rv">01 / Overview</div>
+  <h2 class="rv">ひとことで言うと、<em>Hostの写真を配る</em></h2>
+  <p class="lead rv">このゲームのネット対戦では、<b>Host</b>（部屋を立てたPC）だけが本物の計算をします。敵がどこに湧き、どう歩き、誰のレーザーで倒れたか。全部 Host が決めます。他の3台（<b>Client</b>）は、Host から届く「写真」を見て、同じ景色を描きます。</p>
+
+  <div class="flow rv">
+    <div class="flow-title">1枚の写真が届くまで（1秒に30回くり返す）</div>
+    <div class="pipe">
+      <div class="node"><div class="k">HOST</div><div class="v">① 計算する</div><div class="s">3万体の歩き・押し合い・被弾をいつも通り計算</div></div><div class="arrow"></div>
+      <div class="node hl"><div class="k">HOST</div><div class="v">② 撮る</div><div class="s">全員の位置を<b>同じ瞬間</b>に記録</div></div><div class="arrow"></div>
+      <div class="node hl"><div class="k">HOST</div><div class="v">③ 縮める</div><div class="s">前の2枚からの<b>予想との差</b>だけを、数ビットに詰める</div></div><div class="arrow"></div>
+      <div class="node"><div class="k">LAN</div><div class="v">④ 届ける</div><div class="s">確実に・順番どおりに（数ミリ秒）</div></div><div class="arrow"></div>
+      <div class="node hl"><div class="k">CLIENT</div><div class="v">⑤ 戻す</div><div class="s">同じ予想に差を足して位置を復元。Hostと<b>1ビットも違わない</b></div></div><div class="arrow"></div>
+      <div class="node hl"><div class="k">CLIENT</div><div class="v">⑥ 先読みして描く</div><div class="s">届くまでの遅れの分だけ、各敵の速度で<b>少し先へ</b>進めて表示</div></div>
+    </div>
+  </div>
+
+  <div class="cards three">
+    <div class="card feat rv"><div class="ic">📸</div><h3>同じ瞬間の写真だから、震えない</h3><p>全員の位置が「同じ瞬間」のものなので、隣どうしがぶつからない。以前の方式で起きていた「ガクガク震えて隙間だらけ」が、原理的に起きない。</p><div class="ex">例：<b>密集して流体のように動く群れ</b>が、Clientでもそのまま見える</div></div>
+    <div class="card feat rv" style="--c:var(--acc2)"><div class="ic">🗜️</div><h3>差だけ送るから、軽い</h3><p>群衆は滑らかに流れるので、「前の2枚から予想した位置」と実際の位置の差はほぼ0。それを可変長の符号で詰めると、1体あたり約7ビット。</p><div class="ex">例：そのまま送ると <b>約43Mbps</b> → 実際は <b>約5Mbps</b></div></div>
+    <div class="card feat rv" style="--c:var(--acc3)"><div class="ic">🔮</div><h3>先読みするから、遅れない</h3><p>写真を待ってから描くと遅れる。そこで最新の写真を「各敵の速度 × 届くまでの時間」だけ先へ進めて描く。遅れは実質、通信の時間（LANで数ミリ秒）だけ。</p><div class="ex">例：外れても平均 <b>0.04</b>（1ピクセルは約0.026）</div></div>
+  </div>
+</section>
+
+<section id="names" data-nav="名前と仲間">
+  <div class="eyebrow rv">02 / Names</div>
+  <h2 class="rv">「写真方式」は<em>あだ名</em>。正式には3つの技術の組み合わせ</h2>
+  <p class="lead rv">このプロジェクトでは分かりやすさのため「写真方式」と呼んでいます。ゲーム業界・通信の世界では、次の名前で知られる技術を組み合わせたものです。</p>
+  <div class="ptable-wrap rv"><div class="ptable-cap">使っている技術と、世間での呼び名</div><div class="ptable-scroll"><table class="params">
+    <tr><th>この文書での呼び方</th><th>一般的な名前（英語）</th><th>何をする</th><th>身近な例</th></tr>
+    <tr><td>写真を配る</td><td>Snapshot Replication（スナップショット同期・状態同期）</td><td>ある瞬間の「状態そのもの」を定期的に送る</td><td>オンラインFPS（Valveのゲームなど）の基本形</td></tr>
+    <tr><td>予想との差だけ送る</td><td>Delta Compression / Predictive Coding（差分圧縮・予測符号化）</td><td>前の値から予想し、外れた分だけ送る</td><td>動画（MPEGの「前のコマとの差」）、音声圧縮</td></tr>
+    <tr><td>ビットに詰める</td><td>Exp-Golomb Coding（指数ゴロム符号）＋ ZigZag</td><td>小さい数ほど短い符号にする</td><td>H.264/H.265 動画の中で実際に使われている符号</td></tr>
+    <tr><td>先読みして描く</td><td>Dead Reckoning / Extrapolation（推測航法・外挿）</td><td>最後に分かった位置と速度から「今」を予想する</td><td>船や飛行機の航法、多くのオンラインゲーム</td></tr>
+    <tr><td>外れを見た目で隠す</td><td>Error Smoothing / Visual Offset（誤差の平滑化）</td><td>予想の外れを一瞬で直さず、数フレームかけて消す</td><td>レースゲームの他車の表示</td></tr>
+    <tr><td>全員分の写真</td><td>Keyframe（キーフレーム、I-frame）</td><td>差ではなく「全部」を送る1枚。途中参加・立て直しに使う</td><td>動画の「キーフレーム」と全く同じ考え方</td></tr>
+  </table></div></div>
+  <div class="callout rv"><span class="ci">!</span><div>よくある「スナップショット補間（Snapshot Interpolation）」は、届いた2枚の<b>間</b>をつなぐので、必ず写真1〜2枚分（このゲームなら0.03〜0.1秒）遅れます。今回は2枚を待たずに<b>最新の1枚から先を予想する（外挿）</b>ので遅れません。代わりに「予想が外れる」問題が出るので、それを目立たせない工夫を第2部で説明します。</div></div>
+</section>
+
+<section id="difficulty" data-nav="導入難易度">
+  <div class="eyebrow rv">03 / Difficulty</div>
+  <h2 class="rv">導入難易度は <em>上級</em>（★4つ）</h2>
+  <p class="lead rv">やっていること自体は「写真を撮って、差を送って、先読みする」だけです。難しいのは<b>細部を1ビットも間違えられない</b>ところと、<b>時間の扱い</b>です。部品ごとの難しさは次のとおりです。</p>
+  <div class="ptable-wrap rv"><div class="ptable-cap">部品ごとの難しさ <span class="src">★の数は「ネットワークの基礎がある人」にとっての難しさの目安</span></div><div class="ptable-scroll"><table class="params">
+    <tr><th>部品</th><th>難しさ</th><th>なぜ難しい</th></tr>
+    <tr><td>写真の圧縮・復元</td><td><span class="stars">★★★★★</span></td><td>HostとClientの計算が1単位でも違うと、その後ずっとずれ続ける（しかも気付きにくい）。小数の計算はCPUによって結果がわずかに変わり得るので、予想は全部整数で書き、さらに毎回「確かめ用の値」で照合した。ビット単位の読み書き（ビットパッキング）も、1つ間違えると以降が全部壊れる。</td></tr>
+    <tr><td>時計合わせと先読み</td><td><span class="stars">★★★★<i>★</i></span></td><td>HostとClientの時計は別物。「今、Hostでは何時か」を、届いた写真の時刻から推定する必要がある。届く時間は毎回ばらつくので、その揺れが表示の揺れにならないようにする。</td></tr>
+    <tr><td>外れを隠す表示</td><td><span class="stars">★★★<i>★★</i></span></td><td>「計算上の位置」と「描く位置」を分けて持ち、差を数フレームで消す。考え方は単純だが、新しく湧いた敵・消えた敵・瞬間移動が必要な場合との組み合わせに注意が要る。</td></tr>
+    <tr><td>途中参加・立て直し</td><td><span class="stars">★★★<i>★★</i></span></td><td>「差」の流れの途中から入る人に、どの時点から差を受け取ればよいかを矛盾なく伝える（キーフレームの直後から）。</td></tr>
+    <tr><td>遅れたら軽くする</td><td><span class="stars">★★<i>★★★</i></span></td><td>仕組みは簡単。ただし「何を減らすか」を間違えると逆効果（実際に一度失敗した。<a href="#adaptive">こちら</a>）。</td></tr>
+    <tr><td>計測の仕組み</td><td><span class="stars">★★★<i>★★</i></span></td><td>「良くなったか」を数字で言えないと改善できない。測り方そのものが偏っていて判断を誤ったこともある。</td></tr>
+  </table></div></div>
+  <div class="meter rv">
+    <div class="bar"><span style="width:80%"></span></div><div class="stars">★★★★<i>★</i></div>
+  </div>
+  <p class="mini rv" style="margin-top:12px">目安：ネットワークゲームを作ったことがある人なら、仕組みを理解して同じ物を作るのに<b>数週間</b>。初めての人がゼロから作るなら、この文書の第3部の知識を身につけるところから始めて<b>数か月</b>。（あくまで目安です）</p>
+</section>
+
+<section id="result" data-nav="結果（数字）">
+  <div class="eyebrow rv">04 / Results</div>
+  <h2 class="rv">数字で見る、<em>前と後</em></h2>
+  <p class="lead rv">以前の方式（各PCで計算してHostの位置で補正する方式）との比較です。1台のPCでHostとClientを動かし、3万体を一斉に湧かせて測りました。</p>
+  <div class="kpi">
+    <div class="card rv"><div class="big">0.04</div><div class="lb">落ち着いた後のClientのズレ（ワールド単位）<br>以前は 0.35〜0.40（＝敵1体分。これが震えの原因）</div></div>
+    <div class="card rv"><div class="big">0<small>回</small></div><div class="lb">HostとClientの復元が食い違った回数<br>（圧縮・復元は完全一致）</div></div>
+    <div class="card rv"><div class="big">160<small>FPS</small></div><div class="lb">Hostの速さ（投入後）<br>以前は約113。Clientも 257→330</div></div>
+    <div class="card rv"><div class="big">0.6<small>MB/秒</small></div><div class="lb">Client1人あたりの普段の通信量（約5Mbps）<br>何も工夫せず送ると約5.4MB/秒</div></div>
+  </div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">3万体を一斉に湧かせた直後の「瞬間移動」の回数（Client1人、2人対戦） <span class="src">瞬間移動 = 予想が2以上外れて、滑らかにせずその場で合わせた敵の数</span></div><div class="ptable-scroll"><table class="params">
+    <tr><th>投入後</th><th>写真方式（最初の版）</th><th>写真方式（今：速度に上限を付けた後）</th></tr>
+    <tr><td>0〜1秒</td><td>58,995</td><td class="up">約3,200〜3,500</td></tr>
+    <tr><td>1〜2秒</td><td>8,306</td><td class="up">約1,000〜1,800</td></tr>
+    <tr><td>2〜3秒</td><td>316</td><td class="up">0〜1</td></tr>
+    <tr><td>3秒以降</td><td>51</td><td class="up">0</td></tr>
+  </table></div></div>
+  <p class="mini rv" style="margin-top:12px">投入直後の1秒は、Hostの画面でも3万体が狭い所で押し合って弾け飛ぶ「混乱期」です。そこで残る瞬間移動は、Host側の動き自体が激しいためです。ユーザー確認では「見た目はほぼ完璧」でした。</p>
+</section>
+
+<!-- ================================================================ PART 2 -->
+<div class="part rv"><div class="no">02</div><div class="tt">第2部　工夫した点 — なぜそうしたのか</div><p class="ds">一つ一つの工夫に「困っていたこと」「やったこと」「効果」があります。たとえ話から入り、最後に少しだけ中身を見せます。</p></div>
+
+<section id="same-moment" data-nav="工夫1 同じ瞬間の写真">
+  <div class="eyebrow rv">05 / Same moment</div>
+  <h2 class="rv">工夫1　<em>全員を同じ瞬間で</em>そろえる</h2>
+  <p class="lead rv">これがこの方式を選んだ一番の理由です。以前の方式で起きた問題から説明します。</p>
+  <div class="vs">
+    <div class="card rv"><h4>以前：各PCで計算＋補正 <span class="tag bad">震える</span></h4><p class="mini" style="margin-top:8px">Clientも自分で群衆を計算し、Hostから届いた位置で<b>1体ずつ、ばらばらの時刻に</b>直していました。ところがClientの計算はHostと少しずつずれ（平均0.4）、その大きさは<b>敵1体分の間隔とほぼ同じ</b>。直された敵が、まだ直されていない隣の敵に重なり、押し合いの計算で両方が弾け飛ぶ。これが毎秒何万回も起きて、全体がガクガク震え、弾けた分だけ隙間ができていました。</p></div>
+    <div class="card rv"><h4>今：写真方式 <span class="tag good">震えない</span></h4><p class="mini" style="margin-top:8px">Clientは群衆を<b>計算しません</b>。全員の位置が「同じ瞬間の写真」から来るので、Hostで重なっていない敵は、Clientでも重なりません。先読みも全員が同じ時間だけ、それぞれの速度で進むので、流れに沿って一緒に動き、ぶつからない。</p></div>
+  </div>
+
+  <div class="demo rv" id="demoMix">
+    <div class="head"><span class="t">見比べてみる（イメージ）</span><span><button class="btn" id="mixPlay" type="button">▶ 再生</button></span></div>
+    <div class="body">
+      <div class="twin">
+        <div><div class="lbl"><span class="tag bad">以前</span>1体ずつばらばらに直す</div><canvas id="cvMix" width="460" height="260" aria-label="以前の方式のイメージ。点が震えて隙間ができる"></canvas></div>
+        <div><div class="lbl"><span class="tag good">今</span>同じ瞬間の写真＋先読み</div><canvas id="cvSnap" width="460" height="260" aria-label="写真方式のイメージ。点がそろって滑らかに流れる"></canvas></div>
+      </div>
+      <p class="mini" style="margin-top:10px">実際のゲームの映像ではなく、仕組みを見せるための簡単な再現です。左は「計算のずれ」と「ばらばらの補正」で点が震え、ぶつかって隙間ができます。右は全員が同じ流れで動きます。</p>
+    </div>
+  </div>
+  <div class="callout warn rv"><span class="ci">!</span><div><b>教訓</b>：補正の頻度を上げる・大事な敵から直す（優先度）など、以前の方式のままでも多くの改善を試しました。数字は良くなっても、<b>「別々の計算結果を混ぜる」限り震えは消えません</b>でした。方式そのものの限界は、細かい調整では越えられません。</div></div>
+</section>
+
+<section id="prediction" data-nav="工夫2 予想との差だけ">
+  <div class="eyebrow rv">06 / Prediction</div>
+  <h2 class="rv">工夫2　<em>予想との差</em>だけを送る</h2>
+  <p class="lead rv">写真を1秒30回、全員分そのまま送ると、3万体 × 位置4バイト（＋番号2バイト）× 30回 ＝ 毎秒5.4MB（約43Mbps）。1人分としても重く、4人なら3倍です。そこで「当たり前のこと」は送らないことにしました。</p>
+  <div class="figure rv">
+    <div class="scroll"><svg viewBox="0 0 760 210" role="img" aria-label="前の2枚から次の位置を予想し、実際との差だけを送る図">
+      <line x1="40" y1="150" x2="720" y2="150" class="svg-line" stroke-width="1"/>
+      <circle cx="120" cy="150" r="10" class="svg-mute"/>
+      <text x="120" y="182" text-anchor="middle" class="svg-mono">2枚前 (h2)</text>
+      <circle cx="300" cy="120" r="10" class="svg-acc2"/>
+      <text x="300" y="182" text-anchor="middle" class="svg-mono">1枚前 (h1)</text>
+      <line x1="120" y1="150" x2="300" y2="120" class="svg-sacc2" stroke-width="2"/>
+      <line x1="300" y1="120" x2="480" y2="90" class="svg-sacc2" stroke-width="2" stroke-dasharray="6 6"/>
+      <circle cx="480" cy="90" r="10" fill="none" class="svg-sacc2" stroke-width="2" stroke-dasharray="4 3"/>
+      <text x="480" y="62" text-anchor="middle" class="svg-txt b">予想（同じ速さで進んだら）</text>
+      <circle cx="492" cy="104" r="10" class="svg-acc"/>
+      <text x="560" y="128" class="svg-txt b">実際</text>
+      <line x1="480" y1="90" x2="492" y2="104" class="svg-sacc" stroke-width="3"/>
+      <text x="600" y="96" class="svg-txt">← 送るのはこの<tspan class="svg-acc" font-weight="700">ほんの少しの差</tspan>だけ</text>
+    </svg></div>
+    <div class="cap">群衆は滑らかに流れるので、「前の2枚から、同じ速さで進んだら」という予想はほとんど当たる。外れた分（たいてい0〜数単位）だけを送る。</div>
+  </div>
+  <div class="split">
+    <div class="card rv"><h4>たとえ話</h4><p class="mini" style="margin-top:6px">毎朝同じ時刻に同じ道を通る人の「今日の通勤」を報告するとき、「いつも通り」なら一言で済みます。いつもと違ったところ（「信号で3秒待った」）だけ伝えれば十分です。</p></div>
+    <div class="card rv"><h4>どれくらい小さくなる？</h4><p class="mini" style="margin-top:6px">敵は1秒に約2進むので、1/30秒で約0.067。位置の単位（1/500）だと約33単位の移動です。そのまま送ると1軸10ビット前後。予想との差なら、ほとんどが0〜2単位で、1〜3ビット程度になります。</p></div>
+  </div>
+  <div class="callout rv"><span class="ci">i</span><div>写真の間隔は毎回ぴったり1/30秒ではありません（Hostのフレームの都合で数ミリ秒揺れる）。そこで「前回の間隔に対して今回は何倍か」も一緒に送り、予想をその分だけ伸び縮みさせています（<code>ratioQ</code>）。</div></div>
+</section>
+
+<section id="bits" data-nav="工夫3 ビットに詰める">
+  <div class="eyebrow rv">07 / Entropy coding</div>
+  <h2 class="rv">工夫3　小さい数を<em>短い符号</em>で書く</h2>
+  <p class="lead rv">差はほとんど0や1なのに、いつも32ビット（int）で送ったら台無しです。そこで「小さい数ほど短く、大きい数でも書ける」符号を使います。<span class="term" tabindex="0" data-tip="0なら1ビット、1〜2なら3ビット、3〜6なら5ビット…と、小さい数ほど短くなる可変長の符号。動画規格H.264でも使われている。">指数ゴロム符号</span>です。</p>
+  <ol class="nums rv">
+    <li><b>ZigZag</b>：差はマイナスもあるので、0, −1, 1, −2, 2 … を 0, 1, 2, 3, 4 … に並べ替える（小さい数のまま）。</li>
+    <li><b>指数ゴロム符号</b>：その数を「0の並び＋1＋残りのビット」で書く。0の数で長さが分かるので、区切り記号がいらない。</li>
+    <li><b>次数 k</b>：差が全体的に大きめの写真では、最初から下位kビットを素直に書いた方が短い。そこで写真1枚ごと・x軸とy軸ごとに、合計が一番短くなるkを0〜7から選んで、写真に書いておく。</li>
+  </ol>
+  <div class="demo rv">
+    <div class="head"><span class="t">やってみる：差を符号にする</span><span class="mini">（説明用に、教科書どおり上位ビットから並べています）</span></div>
+    <div class="body">
+      <div class="form">
+        <label>差（予想との違い、マイナス可）<input type="number" id="egValue" value="3" min="-100000" max="100000" step="1"></label>
+        <label>次数 k = <b id="egKLabel">0</b><input type="range" id="egK" min="0" max="7" value="0"></label>
+      </div>
+      <div class="out">
+        <div><div class="k">ZigZag後の値</div><div class="v" id="egZig">6</div></div>
+        <div><div class="k">ビット数</div><div class="v" id="egLen">5</div></div>
+        <div><div class="k">int のままなら</div><div class="v">32</div></div>
+      </div>
+      <div class="bits" id="egBits" aria-live="polite"></div>
+      <div class="legend"><span style="--c:var(--acc2)">長さを表す0の並び</span><span style="--c:var(--acc)">区切りの1</span><span style="--c:var(--ink)">値の残りのビット</span></div>
+    </div>
+  </div>
+  <p class="mini rv" style="margin-top:14px">結果、落ち着いているとき1体あたり<b>約7ビット（x・y合計）</b>まで縮みました。そのまま送る場合（番号2バイト＋位置4バイト＝48ビット）の約1/7です。</p>
+</section>
+
+<section id="rounding" data-nav="工夫4 丸めても溜めない">
+  <div class="eyebrow rv">08 / Quantization</div>
+  <h2 class="rv">工夫4　見えない細かさは捨てる、<em>でも誤差は溜めない</em></h2>
+  <p class="lead rv">位置は1/500単位（0.002）で持っていました。でも画面の1ピクセルは約0.026。0.002の違いは目に見えません。そこで差を<b>4単位（0.008、約1/3ピクセル）刻みに丸めて</b>送ります。1軸あたり約2ビット軽くなり、普段の通信量は約1/3減りました。</p>
+  <div class="split">
+    <div class="card rv"><h4>ふつうに丸めると…<span class="tag bad">ずれが溜まる</span></h4><p class="mini" style="margin-top:6px">毎回「本当の位置」を基準に丸めた差を送ると、Clientは「丸めた差」を積み重ねていくので、丸めの誤差が少しずつ溜まって、どんどんずれていきます。</p></div>
+    <div class="card rv"><h4>この方式 <span class="tag good">溜まらない</span></h4><p class="mini" style="margin-top:6px">Hostは「Clientが復元するはずの位置（丸めた後）」を自分でも計算し、<b>それを次の予想の元にします</b>。毎回の差は「Clientが今持っている位置」との差になるので、誤差はいつも半刻み（0.004）以内に収まり、溜まりません。</p></div>
+  </div>
+  <div class="callout rv"><span class="ci">i</span><div>これは音声・画像圧縮で「閉ループ予測（closed-loop prediction）」と呼ばれる定番の工夫です。「送り手が受け手の頭の中を再現しながら送る」と覚えてください。</div></div>
+</section>
+
+<section id="exact" data-nav="工夫5 1ビットも狂わせない">
+  <div class="eyebrow rv">09 / Bit-exact</div>
+  <h2 class="rv">工夫5　HostとClientで<em>1ビットも狂わせない</em></h2>
+  <p class="lead rv">差だけを送る方式には、大きな弱点があります。<b>Clientが一度でも違う値を復元すると、その後の予想も全部ずれ、ずっと戻らない</b>ことです。そこで3重に守っています。</p>
+  <div class="cards three">
+    <div class="card feat rv"><div class="ic">🔢</div><h3>整数だけで予想する</h3><p>小数（float）の計算は、CPUの種類や命令の選び方で最後の桁が変わることがあります。予想の計算は全部整数で行い、間隔の比も「1024倍した整数」にしてHostが送ります。</p><div class="ex">例：<b>Predict = h1 + ((h1−h2) × ratioQ + 512) &gt;&gt; 10</b></div></div>
+    <div class="card feat rv" style="--c:var(--acc2)"><div class="ic">🧾</div><h3>確かめ用の値で照合</h3><p>Hostは全員の位置から「確かめ用の値（チェックサム）」を計算して写真に入れます。Clientも復元後に同じ計算をし、合わなければ壊れたと判断します。</p><div class="ex">記録：今までの計測で <b>不一致 0回</b></div></div>
+    <div class="card feat rv" style="--c:var(--acc3)"><div class="ic">🛟</div><h3>壊れたら全員分で立て直す</h3><p>照合が合わない・写真の番号が飛んだときは、Hostに「全員分の写真（キーフレーム）」を頼み、そこから差の受け取りをやり直します。</p><div class="ex">途中参加も<b>同じ仕組み</b>で入る</div></div>
+  </div>
+  <div class="callout warn rv"><span class="ci">!</span><div><b>なぜ「確実に届く送り方」なのか</b>：差は「前の写真」を前提にしているので、1枚でも抜けると次から復元できません。だから写真は、取りこぼしたら再送してくれる送り方（Reliable）で、順番どおりに届けています。代わりに、取りこぼしの多い回線では再送待ちで一瞬引っかかることがあります（有線LAN前提の判断）。</div></div>
+</section>
+
+<section id="lookahead" data-nav="工夫6 先読み">
+  <div class="eyebrow rv">10 / Extrapolation</div>
+  <h2 class="rv">工夫6　写真を待たずに<em>先を予想して</em>描く</h2>
+  <p class="lead rv">写真は「撮った瞬間」の景色です。Clientに届いたときには、もう少し時間が経っています。そこでClientは「Hostでは今ごろこうなっているはず」の位置に描きます。</p>
+  <div class="figure rv">
+    <div class="scroll"><svg viewBox="0 0 760 230" role="img" aria-label="写真の時刻と表示する時刻の関係を示すタイムライン">
+      <line x1="40" y1="70" x2="720" y2="70" class="svg-line" stroke-width="2"/>
+      <text x="40" y="52" class="svg-txt b">Host の時間</text>
+      <line x1="40" y1="170" x2="720" y2="170" class="svg-line" stroke-width="2"/>
+      <text x="40" y="200" class="svg-txt b">Client の時間</text>
+      <g><circle cx="160" cy="70" r="7" class="svg-acc2"/><text x="160" y="96" text-anchor="middle" class="svg-mono">写真n</text></g>
+      <g><circle cx="360" cy="70" r="7" class="svg-acc2"/><text x="360" y="96" text-anchor="middle" class="svg-mono">写真n+1（33ms後）</text></g>
+      <line x1="160" y1="70" x2="200" y2="170" class="svg-sacc2" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <circle cx="200" cy="170" r="6" class="svg-acc2"/><text x="200" y="150" text-anchor="middle" class="svg-mono">届く</text>
+      <line x1="360" y1="70" x2="400" y2="170" class="svg-sacc2" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <circle cx="400" cy="170" r="6" class="svg-acc2"/>
+      <rect x="160" y="112" width="140" height="16" rx="8" class="svg-acc" opacity=".25"/>
+      <text x="230" y="124" text-anchor="middle" class="svg-mono">先読み（0〜40ms）</text>
+      <line x1="300" y1="70" x2="300" y2="170" class="svg-sacc" stroke-width="2"/>
+      <text x="300" y="222" text-anchor="middle" class="svg-txt b">今描く瞬間</text>
+      <text x="530" y="124" class="svg-txt">表示する位置 ＝ 写真の位置 ＋ 速度 × 先読み</text>
+    </svg></div>
+    <div class="cap">先読みの量は、写真が届いた直後は短く（数ミリ秒）、次の写真の直前は長く（約40ミリ秒）なる。届く時間の揺れに引きずられないよう、時計の差の推定を工夫している（下）。</div>
+  </div>
+  <div class="split">
+    <div class="card rv"><h4>「Hostでは今何時？」の推定</h4><p class="mini" style="margin-top:6px">写真には撮った時刻（Hostの時計）が書いてあります。Clientは「届いた自分の時刻 − 撮った時刻」を毎回計算し、<b>一番小さかった値</b>を「時計の差」の基準にします。一番速く届いた回が、一番余計な遅れの少ない回だからです。基準は1秒に2ミリ秒ずつ忘れていき、回線の状態が変わっても合わせ直します。</p></div>
+    <div class="card rv"><h4>速度はどこから？</h4><p class="mini" style="margin-top:6px">速度は送っていません。「1枚前との位置の差 ÷ 時間」で分かります。これも全員が同じ写真から計算するので、隣どうしの速度もそろい、先読みしてもぶつかりません。ただし写真が途切れたときに飛んでいかないよう、先読みは最大0.2秒までにしています。</p></div>
+  </div>
+</section>
+
+<section id="smooth" data-nav="工夫7 外れを隠す">
+  <div class="eyebrow rv">11 / Smoothing</div>
+  <h2 class="rv">工夫7　先読みの外れは<em>見た目だけ</em>でゆっくり消す</h2>
+  <p class="lead rv">先読みは予想なので、新しい写真が届くと少し外れていたことが分かります（平均0.04）。それを一瞬で直すと、敵がピクッと跳ねて見えます。</p>
+  <div class="chain rv">
+    <div class="s">新しい写真が届く</div><span class="a">→</span>
+    <div class="s">位置（計算上）は<b>すぐ正しい所へ</b></div><span class="a">→</span>
+    <div class="s">描く位置は<b>前のフレームの続き</b>から</div><span class="a">→</span>
+    <div class="s">その差（ずらし）を<b>約0.07秒</b>で消していく</div>
+  </div>
+  <p class="mini rv" style="margin-top:14px">「計算上の位置」と「描くためのずらし」を分けて持つのがポイントです。計算上の位置はいつも正しいので、ずれが溜まりません。ずらしは見た目だけなので、当たり判定などには影響しません（そもそも当たり判定はHostだけが行います）。外れが2以上と大きすぎるときは、滑らせると不自然なので、その場で合わせます（＝「瞬間移動」の回数として数えています）。</p>
+</section>
+
+<section id="burst" data-nav="工夫8 一斉投入の混乱">
+  <div class="eyebrow rv">12 / Burst</div>
+  <h2 class="rv">工夫8　一斉投入の混乱期には<em>速度に上限</em></h2>
+  <p class="lead rv">3万体を一度に湧かせると、Hostでは最初の1秒、狭い所で押し合って敵が弾け飛びます。このとき写真の差から計算した速度が、敵の本来の最高速度よりずっと大きくなり、先読みが行き過ぎていました（1秒目の瞬間移動が約6万回）。</p>
+  <div class="callout rv"><span class="ci">✓</span><div>先読みに使う速度を「その敵の種類の最高速度 × 1.6」までに抑えました（Hostの計算でも同じ上限を使っている）。1秒目の瞬間移動は <b>約6万 → 約3,500回（約94%減）</b>、2秒目以降はほぼ0になりました。</div></div>
+</section>
+
+<section id="adaptive" data-nav="工夫9 遅れたら軽く">
+  <div class="eyebrow rv">13 / Adaptive quality</div>
+  <h2 class="rv">工夫9　遅れたら<em>枚数ではなく細かさ</em>を減らす</h2>
+  <p class="lead rv">確実に届ける送り方には「1度に送れる量」に上限があります。一斉投入の直後は写真1枚が重くなり（約60KB）、4人分を1台のPCで動かしたテストでは、裏のClientに写真が最大0.2秒遅れて届きました。そこで「遅れているときは写真を軽くする」仕組みを入れました。</p>
+  <div class="vs">
+    <div class="card rv"><h4>最初の案：写真の枚数を減らす <span class="tag bad">逆効果</span></h4><p class="mini" style="margin-top:8px">遅れは減りました（0.2秒→0.1秒）。でも写真の間隔が0.1秒に延びたせいで、混乱期の不規則な動きを0.1秒も先読みすることになり、<b>瞬間移動が約1万→約11万回</b>に増えました。遅れていなかったClientまで悪化しました。</p></div>
+    <div class="card rv"><h4>今の案：位置を少し粗くする <span class="tag good">採用</span></h4><p class="mini" style="margin-top:8px">枚数（1秒30枚）はそのままにして、遅れている間だけ位置の細かさを 0.008 → 0.016 → 0.032（約1ピクセル）と粗くし、写真を軽くします。間隔が変わらないので先読みの精度は保たれます。</p></div>
+  </div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">自動調整のルール</div><div class="ptable-scroll"><table class="params">
+    <tr><th>状況</th><th>判定</th><th>やること</th></tr>
+    <tr><td>写真がいつもより80ms以上遅れて届いた（一番遅いClient）</td><td>送りきれていない</td><td>細かさを1段粗くする（0.3秒に1回まで、最大2段）</td></tr>
+    <tr><td>遅れが40ms以下の状態が1秒続いた</td><td>落ち着いた</td><td>1段戻す</td></tr>
+    <tr><td>その間</td><td>様子見</td><td>今のまま</td></tr>
+  </table></div></div>
+  <div class="callout warn rv"><span class="ci">!</span><div><b>教訓</b>：「通信が詰まったら送る量を減らす」は正しいのですが、<b>何を減らすか</b>で結果が真逆になりました。このゲームでは「時間の細かさ（枚数）」は先読みの精度そのものなので削れず、「位置の細かさ」は目に見えないので削れる、という違いがありました。</div></div>
+</section>
+
+<section id="join" data-nav="工夫10 途中参加と出入り">
+  <div class="eyebrow rv">14 / Join &amp; membership</div>
+  <h2 class="rv">工夫10　途中参加と、<em>敵の出入り</em>も同じ写真で</h2>
+  <div class="cards two">
+    <div class="card feat rv"><div class="ic">🚪</div><h3>途中参加</h3><p>参加したClientは「全員分の写真（キーフレーム）」を頼みます。Hostは次の写真を撮った直後に、そのClientにだけ全員分（3万体で約540KB）を送り、それ以降の差の写真を送り始めます。同じ順番どおりの送り方なので、「全員分」の後に「差」が必ず届き、矛盾しません。</p><div class="ex">計測：3万体の戦場に4人目が入って、<b>1秒以内</b>に約2.4万体を受け取り、ずれ0.05で追従</div></div>
+    <div class="card feat rv" style="--c:var(--acc2)"><div class="ic">🧩</div><h3>湧いた・消えた</h3><p>写真には「消えた敵（理由つき：倒された・コアに着いた）」「新しく出た敵（種類・位置・向き）」も入っています。位置と顔ぶれが同じ1枚で届くので、「位置は届いたのに、その敵をまだ知らない」というずれが起きません。</p><div class="ex">注意：<b>同じ番号で消えてすぐ出直した敵</b>は、消さずにそのまま使う（同じフレームで消す処理と出す処理が重なると両方消えるため）</div></div>
+  </div>
+</section>
+
+<section id="perf" data-nav="工夫11 速く・ゴミを出さない">
+  <div class="eyebrow rv">15 / Performance</div>
+  <h2 class="rv">工夫11　<em>速く</em>、そして<em>ゴミを出さない</em></h2>
+  <div class="cards">
+    <div class="card feat rv"><div class="ic">⚡</div><h3>Burst と Jobs</h3><p>写真の作成・復元・先読みは、Unity の Burst（C#を高速な機械語にする仕組み）で動かします。3万体分でも1ミリ秒もかかりません。</p></div>
+    <div class="card feat rv" style="--c:var(--acc2)"><div class="ic">🧹</div><h3>GC（ゴミ集め）を起こさない</h3><p>C#では、使い終わったメモリを集める「GC」が走ると一瞬止まります。送受信は「名前なしメッセージ」と一時メモリ（Allocator.Temp）で行い、毎フレームのゴミを出しません。</p></div>
+    <div class="card feat rv" style="--c:var(--acc3)"><div class="ic">🪶</div><h3>Clientは計算しない</h3><p>Clientは押し合いの計算をやめたので軽くなりました（FPS 257→330）。Hostも以前の補正のための計算がなくなり、113→160FPSになりました。</p></div>
+  </div>
+</section>
+
+<section id="history" data-nav="ここまでの道のり">
+  <div class="eyebrow rv">16 / History</div>
+  <h2 class="rv">ここまでの<em>道のり</em>（失敗も込みで）</h2>
+  <p class="lead rv">最初から今の形だったわけではありません。測って、失敗して、直してきた記録です。同じ失敗を繰り返さないために残しておきます。</p>
+  <div class="steps">
+    <div class="step rv"><div class="n">1</div><div><h3>各PCで計算＋Hostの位置で補正（最初の方式）</h3><p>通信量は少ない（Hostの位置を全部送る方式の約1/10）が、Clientの群衆は少しずつずれる。</p></div></div>
+    <div class="step rv"><div class="n">2</div><div><h3>補正が1件も届いていなかった</h3><p>「届かなくてもよい送り方（Unreliable）」には1回1296バイトの上限があり、超えると黙って送られない。分割して送るように直した。<b>教訓：エラーを見落とさない計測を先に作る。</b></p></div></div>
+    <div class="step rv"><div class="n">3</div><div><h3>カクつき（GC）退治</h3><p>配列をRPCで送ると毎回ゴミが出ていた。名前なしメッセージに切り替え。画面表示（OnGUI）の作りも見直した。</p></div></div>
+    <div class="step rv"><div class="n">4</div><div><h3>補正を「見た目だけのずらし」に・補正の頻度の自動調整・優先度つき補正</h3><p>数字（ずれの平均）は少しずつ良くなった。途中で「測り方が偏っていて比べられない」ことにも気付き、偏らない測り方（抜き取り検査）を入れた。</p></div></div>
+    <div class="step rv"><div class="n">5</div><div><h3>「Clientが震えて隙間だらけ」— 方式の限界</h3><p>ユーザーが画面で見て気付いた。数字の改善とは別に、混ぜる方式そのものが震えの原因だった。<b>教訓：数字だけでなく、必ず目で見る。</b></p></div></div>
+    <div class="step rv"><div class="n">6</div><div><h3>写真方式へ</h3><p>「写真をつなぐ（0.1秒遅れる）」案と「全PCで同じ計算（ロックステップ）」案も比べ、遅れも震えもない「写真＋先読み」を選んだ。ずれは約1/10、FPSも向上。</p></div></div>
+    <div class="step rv"><div class="n">7</div><div><h3>4人テストと、遅れ対策</h3><p>枚数を減らす案は逆効果だったので、細かさを減らす案に変更。旧方式のコードは削除した。</p></div></div>
+  </div>
+</section>
+
+<!-- ================================================================ PART 3 -->
+<div class="part rv"><div class="no">03</div><div class="tt">第3部　ネットワークの基礎講座 — ゼロから一人前へ</div><p class="ds">「パケットって何？」から始めて、ゲームの同期方式を自分で選び、測って直せるところまで。第1〜2部に出てきた言葉は、ここで全部説明します。各講の最後の「ここだけ覚える」だけ拾い読みしても大丈夫です。</p></div>
+
+<section id="b1" data-nav="講1 ネットワークって何">
+  <div class="eyebrow rv">L1 / Basics</div>
+  <div class="lesson-head rv"><h2>ネットワークは<em>小包の郵便</em></h2><span class="lv">LEVEL 1</span></div>
+  <p class="lead rv">PCどうしの通信は、電話のように線がつながりっぱなしになるのではありません。データを小さな<b>小包（パケット）</b>に分けて、宛先を書いて、次々に送り出す「郵便」です。</p>
+  <div class="cards">
+    <div class="card feat rv"><div class="ic">📦</div><h3>パケット</h3><p>データの小包。1個に入るのは約1,500バイトまで（これを<b>MTU</b>と呼ぶ）。大きいデータは複数の小包に分けて送り、向こうで組み立て直す。</p></div>
+    <div class="card feat rv"><div class="ic">🏠</div><h3>IPアドレス</h3><p>PCの住所。例：<code>192.168.1.10</code>。家やLANの中だけで通じる住所（プライベート）と、インターネット全体で通じる住所がある。</p></div>
+    <div class="card feat rv"><div class="ic">🚪</div><h3>ポート</h3><p>住所の中の「部屋番号」。同じPCでも、ゲームは7777番、ブラウザは別の番号…と使い分ける。このゲームはUDPの7777番。</p></div>
+    <div class="card feat rv"><div class="ic">🛣️</div><h3>LAN とインターネット</h3><p>LANは同じ建物の中の道（スイッチやルーターでつながる）。インターネットは国中・世界中の道。LANは近いので速く、混みにくい。</p></div>
+  </div>
+  <div class="callout rv"><span class="ci">★</span><div><b>ここだけ覚える</b>：データは小包（パケット、約1,500バイトまで）に分けて送る。宛先は「IPアドレス（住所）＋ポート（部屋番号）」。</div></div>
+</section>
+
+<section id="b2" data-nav="講2 速さと遅さ">
+  <div class="eyebrow rv">L2 / Bandwidth &amp; latency</div>
+  <div class="lesson-head rv"><h2>「速い」には<em>2種類</em>ある</h2><span class="lv">LEVEL 1</span></div>
+  <p class="lead rv">ネットワークの「速さ」は、<b>道の太さ（帯域）</b>と<b>届くまでの時間（遅延）</b>の2つに分けて考えます。混ぜると判断を誤ります。</p>
+  <div class="ptable-wrap rv"><div class="ptable-cap">ネットワークの大事な5つの数</div><div class="ptable-scroll"><table class="params">
+    <tr><th>名前</th><th>意味</th><th>たとえ</th><th>単位・目安</th></tr>
+    <tr><td>帯域（バンド幅）</td><td>1秒に運べる量</td><td>道路の車線の数</td><td>Mbps（メガ<b>ビット</b>毎秒）。有線LANは100〜1000Mbps</td></tr>
+    <tr><td>遅延（レイテンシ）</td><td>1個の小包が届くまでの時間</td><td>家から郵便局までの距離</td><td>ミリ秒（ms）。LAN内は1ms未満</td></tr>
+    <tr><td>RTT（往復時間）</td><td>送って、返事が戻るまで</td><td>行って帰ってくる時間</td><td>ms。片道の約2倍</td></tr>
+    <tr><td>ジッター</td><td>遅延の「ばらつき」</td><td>渋滞で到着時刻がぶれる</td><td>ms。小さいほど安定</td></tr>
+    <tr><td>パケットロス</td><td>途中で消える小包の割合</td><td>郵便事故</td><td>%。有線LANではほぼ0、混んだWi-Fiでは数%</td></tr>
+  </table></div></div>
+  <div class="split">
+    <div class="card rv"><h4>ビットとバイトに注意</h4><p class="mini" style="margin-top:6px">1バイト＝8ビット。回線の速さは「ビット」（Mbps）、ファイルの大きさは「バイト」（MB）で言うことが多い。<b>1MB/秒 ＝ 8Mbps</b>。この文書の「Client1人あたり0.6MB/秒」は約5Mbps です。</p></div>
+    <div class="card rv"><h4>遅延の目安</h4><p class="mini" style="margin-top:6px">同じLAN：1ms未満 ／ 同じ県内のネット：5〜20ms ／ 日本〜アメリカ：100ms以上。光でも地球の裏まで約70ms かかるので、遠いと絶対に速くできない。だからこのゲームは<b>LAN前提</b>です。</p></div>
+  </div>
+  <div class="demo rv">
+    <div class="head"><span class="t">計算してみる：群衆を送るには何Mbps？</span>
+      <span><button class="btn" type="button" data-preset="6">そのまま（6バイト/体）</button> <button class="btn" type="button" data-preset="0.9">写真方式（約0.9バイト/体）</button></span></div>
+    <div class="body">
+      <div class="form">
+        <label>敵の数<input type="number" id="bwCount" value="30000" min="0" step="1000"></label>
+        <label>1体あたりのバイト数<input type="number" id="bwBytes" value="6" min="0" step="0.1"></label>
+        <label>1秒に送る回数<input type="number" id="bwRate" value="30" min="1" step="1"></label>
+        <label>Clientの人数<input type="number" id="bwClients" value="3" min="1" max="16" step="1"></label>
+      </div>
+      <div class="out">
+        <div><div class="k">Client1人あたり</div><div class="v" id="bwPer">—</div></div>
+        <div><div class="k">Hostが送る合計</div><div class="v" id="bwTotal">—</div></div>
+        <div><div class="k">100Mbpsの有線LANに対して</div><div class="v" id="bwShare">—</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="callout rv"><span class="ci">★</span><div><b>ここだけ覚える</b>：帯域（太さ）と遅延（時間）は別物。帯域が足りないなら「送る量を減らす」、遅延が問題なら「待たない工夫（先読みなど）」で対処する。</div></div>
+</section>
+
+<section id="b3" data-nav="講3 TCPとUDP">
+  <div class="eyebrow rv">L3 / TCP vs UDP</div>
+  <div class="lesson-head rv"><h2>書留の<em>TCP</em>、はがきの<em>UDP</em></h2><span class="lv">LEVEL 2</span></div>
+  <p class="lead rv">小包の送り方（プロトコル）には大きく2つあります。ゲームではほぼ必ず<b>UDP</b>を使い、その上に自分たちで「必要な所だけ確実にする」仕組みを作ります。</p>
+  <div class="vs">
+    <div class="card rv"><h4>TCP（書留郵便）</h4><ul class="dots"><li>必ず届く・順番どおりに届く</li><li>1個でも抜けると、<b>後ろの小包が全部待たされる</b>（Head-of-line blocking）</li><li>Webページ、ファイル転送向き</li></ul></div>
+    <div class="card rv"><h4>UDP（はがき）</h4><ul class="dots"><li>届くかも順番も保証なし。その代わり<b>待たない</b></li><li>古い情報は捨ててよいゲーム（位置など）に向く</li><li>必要なら「届いたら返事」を自分で作る</li></ul></div>
+  </div>
+  <div class="figure rv">
+    <div class="scroll"><svg viewBox="0 0 760 170" role="img" aria-label="1つの小包が抜けると後ろが待たされる様子">
+      <text x="20" y="30" class="svg-txt b">確実に・順番どおり（TCP的）</text>
+      <g transform="translate(20,48)">
+        <rect x="0" width="70" height="34" rx="8" class="svg-acc2" opacity=".85"/><text x="35" y="22" text-anchor="middle" class="svg-mono" fill="#000">1</text>
+        <rect x="80" width="70" height="34" rx="8" fill="none" class="svg-serr" stroke-width="2" stroke-dasharray="5 4"/><text x="115" y="22" text-anchor="middle" class="svg-mono">2 消えた</text>
+        <rect x="160" width="70" height="34" rx="8" class="svg-mute" opacity=".5"/><text x="195" y="22" text-anchor="middle" class="svg-mono">3 待ち</text>
+        <rect x="240" width="70" height="34" rx="8" class="svg-mute" opacity=".5"/><text x="275" y="22" text-anchor="middle" class="svg-mono">4 待ち</text>
+        <text x="330" y="22" class="svg-txt">← 2の再送が届くまで、3と4を受け取っていても使えない</text>
+      </g>
+      <text x="20" y="120" class="svg-txt b">届かなくてよい（UDP的）</text>
+      <g transform="translate(20,132)">
+        <rect x="0" width="70" height="30" rx="8" class="svg-acc2" opacity=".85"/><text x="35" y="20" text-anchor="middle" class="svg-mono" fill="#000">1</text>
+        <rect x="80" width="70" height="30" rx="8" fill="none" class="svg-serr" stroke-width="2" stroke-dasharray="5 4"/><text x="115" y="20" text-anchor="middle" class="svg-mono">2 消えた</text>
+        <rect x="160" width="70" height="30" rx="8" class="svg-acc2" opacity=".85"/><text x="195" y="20" text-anchor="middle" class="svg-mono" fill="#000">3 すぐ使う</text>
+        <text x="250" y="20" class="svg-txt">← 2は諦める（次の新しい情報が来るから）</text>
+      </g>
+    </svg></div>
+  </div>
+  <p class="mini rv" style="margin-top:12px">このゲームの通信部品（Unity Transport）は全部UDPの上に作られていて、送るたびに「確実に（Reliable）」か「届かなくてよい（Unreliable）」かを選べます。写真方式の写真は、差の積み重ねなので<b>Reliable</b>を選んでいます（<a href="#exact">工夫5</a>）。</p>
+  <div class="callout rv"><span class="ci">★</span><div><b>ここだけ覚える</b>：確実に届けると、抜けたときに後ろが待たされる。だから「抜けたら困るもの」だけ確実にし、「次が来れば要らないもの」は届かなくてよい送り方にする。</div></div>
+</section>
+
+<section id="b4" data-nav="講4 確実に届ける仕組み">
+  <div class="eyebrow rv">L4 / Reliability</div>
+  <div class="lesson-head rv"><h2>「確実に届ける」の<em>中身と限界</em></h2><span class="lv">LEVEL 2</span></div>
+  <p class="lead rv">確実な送り方は、ざっくり言うと「番号をつけて送る → 受け取った側が<b>受け取りました（ACK）</b>と返す → 返事が来なければ送り直す」です。</p>
+  <ul class="dots rv">
+    <li><b>連番（シーケンス番号）</b>：小包に1, 2, 3…と番号を振る。抜けや順番の入れ替わりが分かる。</li>
+    <li><b>ACK</b>：受け取った番号を相手に伝える返事。</li>
+    <li><b>再送</b>：一定時間ACKが来なければもう一度送る。</li>
+    <li><b>送信窓（ウィンドウ）</b>：ACKを待たずに「先に送ってよい数」。Unity Transport では最大64パケット。</li>
+  </ul>
+  <div class="figure rv">
+    <div class="scroll"><svg viewBox="0 0 760 120" role="img" aria-label="送信窓の考え方">
+      <text x="20" y="28" class="svg-txt b">1往復（RTT）の間に送れるのは、窓の分だけ</text>
+      <g transform="translate(20,44)">
+        <rect width="420" height="34" rx="10" class="svg-acc" opacity=".22"/>
+        <text x="210" y="22" text-anchor="middle" class="svg-mono">64パケット × 約1,400バイト ≒ 90KB</text>
+        <text x="440" y="22" class="svg-txt">→ 返事が来るまで次を送れない</text>
+      </g>
+      <text x="20" y="108" class="svg-txt">1秒に送れる量 ≒ 窓の大きさ ÷ RTT 　（RTT 20ms なら 約4.5MB/秒、40ms なら 約2.2MB/秒）</text>
+    </svg></div>
+  </div>
+  <div class="callout warn rv"><span class="ci">!</span><div><b>このゲームで実際に効いた話</b>：RTTには「相手がパケットを処理するまでの待ち時間（フレームの長さ）」も含まれます。1台のPCで4つ動かすとフレームが遅くなってRTTが延び、送れる量が減って、一斉投入直後に写真が遅れました（<a href="#adaptive">工夫9</a>）。<b>回線ではなくPCの重さで通信が遅くなる</b>ことがあります。</div></div>
+  <div class="callout rv"><span class="ci">★</span><div><b>ここだけ覚える</b>：確実な送り方の速さの上限は「窓の大きさ ÷ 往復時間」。往復時間は回線だけでなくPCの重さでも延びる。</div></div>
+</section>
+
+<section id="b5" data-nav="講5 誰が正しい？">
+  <div class="eyebrow rv">L5 / Topology &amp; authority</div>
+  <div class="lesson-head rv"><h2>つなぎ方と「<em>誰が正しいか</em>」</h2><span class="lv">LEVEL 2</span></div>
+  <div class="cards three">
+    <div class="card feat rv"><div class="ic">🕸️</div><h3>P2P（全員どうし）</h3><p>全員が全員とつながる。サーバーが要らないが、人数が増えると線が増え、「誰の結果が正しいか」が決めにくい。</p></div>
+    <div class="card feat rv" style="--c:var(--acc2)"><div class="ic">🏢</div><h3>専用サーバー</h3><p>遊ばない専用のPCが全部計算する。公平で強いが、サーバーを用意する手間とお金がかかる。</p></div>
+    <div class="card feat rv" style="--c:var(--acc3)"><div class="ic">🏠</div><h3>Host（このゲーム）</h3><p>プレイヤーの1人のPCがサーバーも兼ねる（listen server）。LANのパーティーゲーム向き。Hostが落ちると全員切れる（引き継ぎは今後の課題）。</p></div>
+  </div>
+  <p class="lead rv" style="margin-top:24px"><b>権威（Authority）</b>とは「最終的にどの結果を正しいとするか」を決める役のこと。このゲームは <b>Host権威</b>：当たり判定・敵の生死・コアのダメージは全部Hostが決め、Clientはそれに従います。Clientが勝手に「倒した」と決められないので、ずれやズルが起きにくくなります。</p>
+  <div class="callout rv"><span class="ci">★</span><div><b>ここだけ覚える</b>：同期の設計は「誰が正しいか（権威）」を最初に決めるところから。このゲームは Host が正しい。</div></div>
+</section>
+
+<section id="b6" data-nav="講6 同期の方式の地図">
+  <div class="eyebrow rv">L6 / Replication strategies</div>
+  <div class="lesson-head rv"><h2>同期の方式の<em>地図</em></h2><span class="lv">LEVEL 3</span></div>
+  <p class="lead rv">「全員の画面を同じにする」やり方は、大きく5つあります。どれにも得意・不得意があり、ゲームの性質で選びます。</p>
+  <div class="ptable-wrap rv"><div class="ptable-cap">主な同期方式の比較</div><div class="ptable-scroll"><table class="params">
+    <tr><th>方式</th><th>送る物</th><th>見た目の遅れ</th><th>通信量</th><th>弱点</th><th>向いているゲーム</th></tr>
+    <tr><td>ロックステップ</td><td>入力だけ（ボタン・握力など）</td><td>入力が全員分そろうまで</td><td class="up">とても少ない</td><td>全PCの計算が<b>完全に同じ</b>でないと破綻。1人が遅いと全員待つ</td><td>RTS、格闘ゲーム</td></tr>
+    <tr><td>スナップショット補間</td><td>状態（写真）</td><td>写真1〜2枚分＋通信</td><td>多い（圧縮で減らす）</td><td>必ず少し遅れる</td><td>FPS、アクション全般</td></tr>
+    <tr><td>クライアント予測＋サーバー補正</td><td>入力と状態</td><td>自分の操作は遅れない</td><td>中</td><td>予測が外れると巻き戻しが必要で複雑</td><td>FPSの自分のキャラ</td></tr>
+    <tr><td>各自計算＋補正（以前の群衆）</td><td>ときどき正しい位置</td><td>ほぼ無し</td><td class="up">少ない</td><td>ずれる。密集物では混ぜると震える</td><td>少数の、ぶつからない物</td></tr>
+    <tr><td><b>スナップショット＋外挿（今の群衆）</b></td><td>状態（差分圧縮）</td><td><b>通信の時間だけ</b></td><td>中（圧縮で約1/9）</td><td>予想が外れる瞬間がある（見た目で隠す）。確実に届ける必要</td><td><b>大量の物が滑らかに動く場面</b></td></tr>
+  </table></div></div>
+  <div class="split">
+    <div class="card rv"><h4>なぜロックステップにしなかった？</h4><p class="mini" style="margin-top:6px">通信は一番少なくて済みます。でも3万体の押し合いでは、小数の計算のほんのわずかな違い（CPUの種類で起こり得る）が、すぐに大きなずれに育ちます（カオス）。会場のPCが全部同じ機種とは限らないので、危険と判断しました。</p></div>
+    <div class="card rv"><h4>なぜ補間にしなかった？</h4><p class="mini" style="margin-top:6px">補間（2枚の間をつなぐ）は一番安全で滑らかです。ただし写真1〜2枚分（0.03〜0.1秒）必ず遅れます。ユーザーの「遅れも震えもない方法」という希望に合わせ、外挿＋見た目の平滑化を選びました。</p></div>
+  </div>
+  <div class="callout rv"><span class="ci">★</span><div><b>ここだけ覚える</b>：「入力を送る（ロックステップ）」か「状態を送る（スナップショット）」かが最初の分かれ道。状態を送るなら、次は「待って補間（遅れる・安全）」か「先読みで外挿（遅れない・外れる）」か。</div></div>
+</section>
+
+<section id="b7" data-nav="講7 時間を合わせる">
+  <div class="eyebrow rv">L7 / Time</div>
+  <div class="lesson-head rv"><h2>ネットワークゲームは<em>時間</em>のゲーム</h2><span class="lv">LEVEL 3</span></div>
+  <p class="lead rv">同期で一番やっかいなのは「時間」です。PCごとに時計もフレームの長さも違い、届く時間も毎回ばらつきます。</p>
+  <ul class="dots rv">
+    <li><b>フレーム</b>：画面を1回描く単位。PCが重いと長くなる（60FPSなら約16.7ms）。</li>
+    <li><b>ティック</b>：通信や計算を一定間隔で区切る単位。このゲームの写真は1秒30回（約33ms）。</li>
+    <li><b>時計のずれ</b>：PCの時計は合っていない前提で考える。「相手の時刻」は、届いた情報から<b>推定</b>する。</li>
+    <li><b>補間（Interpolation）</b>：2つの分かっている点の<b>間</b>を埋める。安全だが、2点目を待つ分遅れる。</li>
+    <li><b>外挿（Extrapolation）</b>：最後の点から<b>先</b>を予想する。遅れないが、外れることがある。</li>
+    <li><b>ジッターバッファ</b>：届く時間のばらつきを吸収するため、わざと少し待ってから使う仕組み（補間方式で使う）。</li>
+  </ul>
+  <div class="card rv" style="margin-top:20px"><h4>時計の差を推定するコツ（写真方式で使った方法）</h4><p class="mini" style="margin-top:6px">「受け取った自分の時刻 − 相手が送った時刻」は、本当の時計の差に「その回の届くまでの時間」が足された値です。届くまでの時間はいつもプラスで、ばらつきます。だから<b>一番小さかった値</b>が、一番余計な遅れの少ない＝本当の差に一番近い値になります。インターネットの時刻合わせ（NTP）も同じ考え方を使っています。</p></div>
+  <div class="callout rv"><span class="ci">★</span><div><b>ここだけ覚える</b>：時計は合っていない前提。相手の時刻は「届いた値の最小」で推定する。補間は遅れる・外挿は外れる、の二択を理解しておく。</div></div>
+</section>
+
+<section id="b8" data-nav="講8 データを小さく">
+  <div class="eyebrow rv">L8 / Compression</div>
+  <div class="lesson-head rv"><h2>データを小さくする<em>4つの道具</em></h2><span class="lv">LEVEL 3</span></div>
+  <p class="lead rv">通信量を減らす技は、この順番で考えると整理できます。写真方式は4つ全部を使っています。</p>
+  <div class="steps">
+    <div class="step rv"><div class="n">1</div><div><h3>要らない物を送らない</h3><p>変わっていない物、相手が自分で計算できる物は送らない。写真方式では「速度」を送らず、Clientが位置の差から計算しています。</p></div></div>
+    <div class="step rv"><div class="n">2</div><div><h3>量子化（細かさを決める）</h3><p>小数（4バイト）を、必要な細かさの整数（2バイトなど）に変える。0.002刻みで十分なら、それ以上の細かさは捨てる。<b>「目に見えない細かさ」は捨ててよい。</b></p></div></div>
+    <div class="step rv"><div class="n">3</div><div><h3>予測と差分</h3><p>前の値から予想して、外れた分だけ送る。当たるほど差は0に近づく。予想を送り手と受け手で<b>完全に同じ</b>にするのが鉄則。</p></div></div>
+    <div class="step rv"><div class="n">4</div><div><h3>エントロピー符号化</h3><p>よく出る値（0付近）を短い符号に、まれな値を長い符号にする。指数ゴロム符号、ハフマン符号、算術符号などがある。「よく出る物を短く」はモールス信号（Eは「・」1つ）と同じ発想。</p></div></div>
+  </div>
+  <div class="callout rv"><span class="ci">i</span><div><b>圧縮には限界がある</b>：本当に予想できない情報（ランダムな動き）は縮みません。一斉投入直後の混乱期に写真が重くなるのはこのためです（1体約20ビット）。</div></div>
+  <div class="callout rv"><span class="ci">★</span><div><b>ここだけ覚える</b>：送らない → 細かさを決める → 予想との差にする → 短い符号で書く。</div></div>
+</section>
+
+<section id="b9" data-nav="講9 信頼性の設計">
+  <div class="eyebrow rv">L9 / Designing reliability</div>
+  <div class="lesson-head rv"><h2>キーフレームと差分、<em>壊れたら直す</em></h2><span class="lv">LEVEL 3</span></div>
+  <p class="lead rv">差分方式は軽い代わりに、1つ狂うと以後全部が狂います。動画と同じく「全部入りの1枚（キーフレーム）」と「差の1枚」を組み合わせ、壊れたことに気付ける仕組みを入れるのが定石です。</p>
+  <div class="ptable-wrap rv"><div class="ptable-cap">データごとに送り方を選ぶ（このゲームの例）</div><div class="ptable-scroll"><table class="params">
+    <tr><th>データ</th><th>送り方</th><th>理由</th></tr>
+    <tr><td>群衆の写真（差）</td><td>Reliable・順番どおり</td><td>前の写真が前提。1枚でも抜けると復元できない</td></tr>
+    <tr><td>全員分の写真（キーフレーム）</td><td>Reliable・順番どおり</td><td>以後の差の出発点</td></tr>
+    <tr><td>Clientの「遅れ」の報告</td><td>Unreliable</td><td>0.25秒ごとに新しい値が来るので、1回抜けても困らない</td></tr>
+    <tr><td>握力の入力</td><td>Unreliable（連番つき）</td><td>常に最新が大事。古いのは捨てる</td></tr>
+  </table></div></div>
+  <ul class="dots rv">
+    <li><b>連番</b>：写真に番号を振り、飛んだら気付く。</li>
+    <li><b>チェックサム</b>：中身から計算した「確かめ用の値」を一緒に送り、受け手も計算して比べる。</li>
+    <li><b>冪等（べきとう）</b>：同じ物が2回届いても結果が変わらないように作る（例：「出現」が2回届いても2体にしない）。</li>
+  </ul>
+  <div class="callout rv"><span class="ci">★</span><div><b>ここだけ覚える</b>：データごとに「抜けたら困るか」で送り方を選ぶ。差分を使うなら、キーフレーム・連番・チェックサムをセットで。</div></div>
+</section>
+
+<section id="b10" data-nav="講10 Unityの道具">
+  <div class="eyebrow rv">L10 / Unity tools</div>
+  <div class="lesson-head rv"><h2>このプロジェクトの<em>通信の道具箱</em></h2><span class="lv">LEVEL 3</span></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">登場する部品</div><div class="ptable-scroll"><table class="params">
+    <tr><th>名前</th><th>何をする</th><th>このゲームでの使い方</th></tr>
+    <tr><td>NGO（Netcode for GameObjects）</td><td>Unity公式のネット対戦の土台</td><td>接続・承認・NetworkObject・RPC・メッセージ</td></tr>
+    <tr><td>Unity Transport（UTP）</td><td>UDPの上で、確実な送り方・分割・再送を担当</td><td>送信窓64、MTU 1,400バイト。Unreliableは1回1,296バイトまで</td></tr>
+    <tr><td>D-Drive</td><td>外部パッケージ。接続の開始などをまとめる</td><td>Host/Clientの開始（<code>FortressNetworkBootstrap</code> から）</td></tr>
+    <tr><td>NetworkObject / NetworkBehaviour</td><td>ネットに乗る物・その部品</td><td>シーンの <code>[Fortress] NetSync</code> 1個に同期係（Hub）を集めている</td></tr>
+    <tr><td>RPC</td><td>相手のPCの関数を呼ぶ</td><td>小さい通知（全員分の写真を頼む、遅れの報告）</td></tr>
+    <tr><td>名前なしメッセージ</td><td>自由な中身のバイト列を送る</td><td>大きいデータ（写真）。GCが出ない</td></tr>
+    <tr><td>Jobs / Burst / NativeArray</td><td>並列・高速計算と、GCに関係ないメモリ</td><td>群衆の計算、写真の作成・復元</td></tr>
+  </table></div></div>
+  <div class="callout rv"><span class="ci">★</span><div><b>ここだけ覚える</b>：小さい通知はRPC、大きいデータは名前なしメッセージ。重い計算はBurstのジョブ。</div></div>
+</section>
+
+<section id="b11" data-nav="講11 測る技術">
+  <div class="eyebrow rv">L11 / Measuring</div>
+  <div class="lesson-head rv"><h2>測れない物は<em>直せない</em></h2><span class="lv">LEVEL 4</span></div>
+  <p class="lead rv">ネットワークの改善は、ほぼ「測る → 仮説 → 直す → 測る」のくり返しです。このプロジェクトでは、起動引数で自動計測するしくみ（<code>bench_*.bat</code>）を最初に作りました。</p>
+  <div class="numbers rv">
+    <div><div class="v">FPS / 最悪フレーム</div><div class="k">カクつきは平均ではなく「一番遅いフレーム」に出る</div></div>
+    <div><div class="v">送受信 KB/秒</div><div class="k">回線に収まるか</div></div>
+    <div><div class="v">ズレ（平均・最大）</div><div class="k">見た目の正しさ</div></div>
+    <div><div class="v">瞬間移動の数</div><div class="k">目に見える破綻</div></div>
+    <div><div class="v">遅れ（lagMs）</div><div class="k">詰まっていないか</div></div>
+    <div><div class="v">GC / メモリ確保</div><div class="k">一瞬止まる原因</div></div>
+  </div>
+  <ul class="dots rv">
+    <li><b>比べるときは条件を1つだけ変える</b>（A/Bテスト）。起動引数で設定を切り替えられるようにしておくと楽。</li>
+    <li><b>測り方の偏りに注意</b>：「ずれていそうな敵を優先して直す」方式で、直した敵のずれを平均すると、当然大きく出る。偏らない抜き取りで測る必要があった。</li>
+    <li><b>1台のPCで複数起動すると、CPUの取り合いで実際より悪く出る</b>。FPSや投入直後の挙動は、実機で確かめる。</li>
+    <li><b>数字だけで判断しない</b>：震えは「ずれの平均」では見えなかった。必ず画面を目で見る。</li>
+  </ul>
+  <div class="callout rv"><span class="ci">★</span><div><b>ここだけ覚える</b>：計測の仕組みを先に作る。条件は1つずつ変える。測り方の偏りを疑う。最後は目で見る。</div></div>
+</section>
+
+<section id="b12" data-nav="講12 落とし穴集">
+  <div class="eyebrow rv">L12 / Pitfalls</div>
+  <div class="lesson-head rv"><h2>実際に踏んだ<em>落とし穴</em></h2><span class="lv">LEVEL 4</span></div>
+  <div class="faq rv">
+    <details><summary>Unreliable で大きい配列を送ったら、何も届かなかった</summary><div class="a">NGOの「届かなくてよい」送り方は分割されず、1回1,296バイトが上限。超えると例外が出て送られない。ログを見ないと気付かない。→ 上限に収まる数に分けて送る（<code>NetMessageLimits</code>）。</div></details>
+    <details><summary>PCが重いだけなのに「回線が混んでいる」と判断してしまった</summary><div class="a">RTTにはフレームの長さが含まれる。一斉投入でFPSが下がると、LAN内でもRTTが1→20ms以上に延びた。→ RTTはならして使い、基準も早めに忘れる。判定の幅を広くとる。</div></details>
+    <details><summary>送る回数を減らしたら、むしろ悪くなった</summary><div class="a">先読みの距離が延びて外れが増えた。→ 減らすなら「目に見えない細かさ」の方。</div></details>
+    <details><summary>小数の計算は全PCで同じになると思っていた</summary><div class="a">CPUの命令（FMAなど）や最適化で最後の桁が変わり得る。差分や同じ計算を前提にする所は、整数にするか、照合して立て直せるようにする。</div></details>
+    <details><summary>同じフレームで「消す」と「出す」をしたら、両方消えた</summary><div class="a">番号で消す仕組みが、同じ番号の新しい敵も消してしまった。→ 同じ写真で出直した敵は消さずに使う。</div></details>
+    <details><summary>受信した配列を、計算中のジョブが読んでいた</summary><div class="a">受信は計算の途中でも起きる。→ 受信側の配列と計算用の配列を分け、計算が止まっている間に写す。</div></details>
+    <details><summary>配列のRPCや文字列でカクついた</summary><div class="a">送受信のたびにゴミ（GC）が出ていた。→ 名前なしメッセージと一時メモリに。OnGUIの表示も確保の元。</div></details>
+  </div>
+</section>
+
+<section id="b13" data-nav="講13 練習問題">
+  <div class="eyebrow rv">L13 / Quiz</div>
+  <div class="lesson-head rv"><h2>腕試し — <em>練習問題</em></h2><span class="lv">CHECK</span></div>
+  <p class="lead rv">答えはクリックで開きます。全問説明できれば、このゲームの通信について一人前に議論できます。</p>
+  <div class="quiz rv">
+    <details><summary>2万体を1体6バイト、1秒20回送ると、Client1人あたり何Mbps？</summary><div class="ans">20,000 × 6 × 20 ＝ 2,400,000 バイト/秒 ＝ 2.4MB/秒 ＝ 約19.2Mbps（× 8）。</div></details>
+    <details><summary>写真をUnreliableで送るとどうなる？</summary><div class="ans">1枚抜けると、次の差が「抜けた写真」を前提にしているので復元できない。毎回キーフレームを送るなら別だが、重くなる。だからReliableにしている。</div></details>
+    <details><summary>先読みを「2枚の間の補間」に変えると、何が良くなり何が悪くなる？</summary><div class="ans">外れ（瞬間移動）が無くなり、より安全になる。代わりに写真1〜2枚分（約0.03〜0.07秒）遅れて見える。</div></details>
+    <details><summary>位置の細かさを0.002から0.008にしても、ずれが溜まらないのはなぜ？</summary><div class="ans">Hostが「Clientが復元する位置（丸めた後）」を次の予想の元にしているから（閉ループ）。毎回の差はClientの手元の位置との差になり、誤差は半刻み以内に収まる。</div></details>
+    <details><summary>回線が混んで写真が遅れるとき、枚数を減らすのがダメなのはなぜ？</summary><div class="ans">写真の間隔が延びると、先読みする時間も延びて外れが大きくなる。特に動きが不規則な場面で悪化する。細かさを粗くすれば、間隔を保ったまま軽くできる。</div></details>
+    <details><summary>Clientの時計の差を「平均」ではなく「最小」で推定するのはなぜ？</summary><div class="ans">届くまでの時間はいつもプラスでばらつく。最小値が一番余計な遅れが少なく、本当の時計の差に近い。平均だとばらつきの分ずれ、揺れも表示に出る。</div></details>
+    <details><summary>このゲームでロックステップを選ばなかった理由は？</summary><div class="ans">3万体の押し合いはカオスで、PCごとのわずかな小数の計算の違いがすぐ大きなずれに育つ。全PCを同じ機種にできる保証がない。</div></details>
+  </div>
+</section>
+
+<section id="gloss" data-nav="用語集">
+  <div class="eyebrow rv">Glossary</div>
+  <h2 class="rv"><em>用語集</em></h2>
+  <dl class="gloss">
+    <div class="rv"><dt>Host <small>ホスト</small></dt><dd>部屋を立てたPC。サーバー役も兼ね、全ての結果を決める（権威）。</dd></div>
+    <div class="rv"><dt>Client <small>クライアント</small></dt><dd>Hostに参加するPC。Hostの結果を受け取って表示する。</dd></div>
+    <div class="rv"><dt>権威 <small>Authority</small></dt><dd>どの結果を正しいとするかを決める役。このゲームはHost。</dd></div>
+    <div class="rv"><dt>パケット</dt><dd>データの小包。約1,500バイト以内（MTU）。</dd></div>
+    <div class="rv"><dt>MTU</dt><dd>1個のパケットに入る最大の大きさ。Unity Transportでは1,400バイトを使う。</dd></div>
+    <div class="rv"><dt>帯域</dt><dd>1秒に運べる量。Mbps（ビット）で言うことが多い。1MB/秒＝8Mbps。</dd></div>
+    <div class="rv"><dt>遅延 / RTT</dt><dd>届くまでの時間 / 往復の時間。RTTにはPCの処理待ちも含まれる。</dd></div>
+    <div class="rv"><dt>ジッター</dt><dd>遅延のばらつき。</dd></div>
+    <div class="rv"><dt>Reliable / Unreliable</dt><dd>確実に（再送・順番どおり）送る / 届かなくてよい送り方。</dd></div>
+    <div class="rv"><dt>ACK</dt><dd>「受け取りました」の返事。来なければ再送する。</dd></div>
+    <div class="rv"><dt>送信窓</dt><dd>返事を待たずに先に送ってよい数。Unity Transportは64パケット。</dd></div>
+    <div class="rv"><dt>スナップショット <small>写真</small></dt><dd>ある瞬間の状態を丸ごと記録したもの。</dd></div>
+    <div class="rv"><dt>キーフレーム</dt><dd>差ではなく全部を入れた写真。途中参加・立て直しの出発点。</dd></div>
+    <div class="rv"><dt>差分 / 予測符号化</dt><dd>予想との違いだけを送ること。</dd></div>
+    <div class="rv"><dt>量子化</dt><dd>小数を決まった刻みの整数にすること。刻みより細かい情報は捨てる。</dd></div>
+    <div class="rv"><dt>ZigZag</dt><dd>0,−1,1,−2,2… を 0,1,2,3,4… に並べ替え、マイナスも小さい数のまま扱う変換。</dd></div>
+    <div class="rv"><dt>指数ゴロム符号</dt><dd>小さい数ほど短い可変長の符号。次数kで長さの配分を変えられる。</dd></div>
+    <div class="rv"><dt>チェックサム</dt><dd>中身から計算する確かめ用の値。送り手と受け手で比べて壊れを見つける。</dd></div>
+    <div class="rv"><dt>補間 / 外挿</dt><dd>2点の間を埋める（遅れる）/ 最後の点から先を予想する（外れる）。</dd></div>
+    <div class="rv"><dt>推測航法 <small>Dead Reckoning</small></dt><dd>最後に分かった位置と速度から今の位置を推定すること。</dd></div>
+    <div class="rv"><dt>ロックステップ</dt><dd>入力だけを送り、全PCが同じ計算をする方式。計算が完全に同じである必要がある。</dd></div>
+    <div class="rv"><dt>GC</dt><dd>C#が使い終わったメモリを集める処理。走ると一瞬止まる。</dd></div>
+    <div class="rv"><dt>Burst / Jobs</dt><dd>Unityの高速・並列計算の仕組み。</dd></div>
+    <div class="rv"><dt>瞬間移動 <small>snap</small></dt><dd>先読みの外れが大きすぎ（2以上）、滑らかにせずその場で合わせたこと。</dd></div>
+  </dl>
+</section>
+
+<!-- ================================================================ DEV ZONE -->
+<div class="devzone"></div>
+
+<section id="code" data-nav="コードの地図" data-dev>
+  <div class="eyebrow rv">DEV / Code map</div>
+  <h2 class="rv">コードの<em>地図</em></h2>
+  <div class="ptable-wrap rv"><div class="ptable-cap">ファイルと役割 <span class="src">Assets/_Game/Fortress/Runtime/</span></div><div class="ptable-scroll"><table class="params">
+    <tr><th>ファイル</th><th>役割</th></tr>
+    <tr><td>Net/Swarm/SwarmNetworkHub.cs</td><td>同期係。Host：写真を撮って送る・全員分の写真・遅れに応じて細かさを変える。Client：受け取って復元・出現/消滅の反映・時計の差の推定・遅れの報告</td></tr>
+    <tr><td>Net/Swarm/SwarmSnapshotCodec.cs</td><td>圧縮・復元の本体。<code>SwarmSnapshotMath</code>（予想・丸め・ZigZag・符号長・チェックサム、テスト対象）、<code>SwarmBitWriter/Reader</code>、<code>SwarmSnapshotEncodeJob</code>／<code>KeyframeJob</code>／<code>DecodeJob</code>／<code>KeyframeApplyJob</code></td></tr>
+    <tr><td>Net/Swarm/SwarmSnapshotQualityController.cs</td><td>遅れに応じて細かさの段階を決める（テスト対象）</td></tr>
+    <tr><td>Net/Swarm/SwarmNetMessages.cs</td><td><code>SwarmNetEvent</code>（出現/消滅1件・14バイト）、<code>SwarmNetQuantize</code></td></tr>
+    <tr><td>Net/FortressNetMessages.cs</td><td>名前なしメッセージの送受信口（先頭1バイトで種類を分ける：写真=4、全員分=5）</td></tr>
+    <tr><td>Swarm/SwarmSystem.Net.cs</td><td>群衆側の入口：番号（netId）、消えた通知、Clientモード、写真の受け取り、先読みジョブの予約</td></tr>
+    <tr><td>Swarm/SwarmSnapshotFollowJob.cs</td><td>Client：写真を先読みして置く（<code>SwarmSnapshotFollowJob</code>）、向き・アニメの更新（<code>SwarmReplicaFinalizeJob</code>）</td></tr>
+    <tr><td>Swarm/SwarmReplicaStatsJob.cs</td><td>先読みの外れの集計（計測用）</td></tr>
+    <tr><td>Net/Bench/*</td><td>計測：起動引数、1秒ごとのログ、通信量の統計</td></tr>
+  </table></div></div>
+  <div class="tabs rv" role="tablist" aria-label="主要なコード">
+    <button class="tab" role="tab" aria-selected="true" aria-controls="cd1" id="t1">予想</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="cd2" id="t2">丸め</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="cd3" id="t3">指数ゴロム符号</button>
+  </div>
+  <div class="panel rv" id="cd1" role="tabpanel" aria-labelledby="t1"><div class="codebox"><button class="copy" type="button">copy</button><pre>
+// 前の2枚(h1=直前、h2=その前)から、今回の位置を予想する(整数のみ)。ratioQ = 間隔の比 × 1024
+public static int2 Predict(int2 h1, int2 h2, int ratioQ)
+{
+    var delta = h1 - h2;
+    return h1 + ((delta * ratioQ + 512) &gt;&gt; 10);
+}</pre></div></div>
+  <div class="panel" id="cd2" role="tabpanel" aria-labelledby="t2"><div class="codebox"><button class="copy" type="button">copy</button><pre>
+// 差を 2^shift 単位に丸める(四捨五入。負の数もシフトだけで計算し、HostとClientで必ず一致させる)。
+public static int QuantizeResidual(int residual, int shift)
+{
+    return (residual + ((1 &lt;&lt; shift) &gt;&gt; 1)) &gt;&gt; shift;
+}
+
+// 予想に丸めた差を足して位置を戻す。Hostもこの値を次の予想の元にする(誤差が溜まらない)。
+public static int2 Reconstruct(int2 predicted, int2 quantizedResidual, int shift)
+{
+    return math.clamp(predicted + (quantizedResidual &lt;&lt; shift), short.MinValue, short.MaxValue);
+}</pre></div></div>
+  <div class="panel" id="cd3" role="tabpanel" aria-labelledby="t3"><div class="codebox"><button class="copy" type="button">copy</button><pre>
+// k次の指数ゴロム符号: (n-k)個の0、1、続いて w=value+2^k の下位nビット(nはwの最上位ビットの位置)。
+// ビットは下位から詰める(LSB-first)。読み手は0の数を数えて長さを知る。
+public void WriteExpGolomb(uint value, int k)
+{
+    var w = (ulong)value + (1UL &lt;&lt; k);
+    var n = 63 - math.lzcnt(w);
+    Write(0u, n - k);
+    Write(1u, 1);
+    Write((uint)(w &amp; ((1UL &lt;&lt; n) - 1UL)), n);
+}</pre></div></div>
+</section>
+
+<section id="format" data-nav="通信の中身" data-dev>
+  <div class="eyebrow rv">DEV / Wire format</div>
+  <h2 class="rv">写真1枚の<em>中身</em>（バイト並び）</h2>
+  <p class="lead rv">名前なしメッセージ、<code>ReliableFragmentedSequenced</code> で、写真を受け取る全Clientに同じバイト列を送ります。NGO自身の見出しはこの外側に付きます。</p>
+  <div class="ptable-wrap rv"><div class="ptable-cap">写真（FortressNetChannel.SwarmSnapshot = 4）</div><div class="ptable-scroll"><table class="params layout">
+    <tr><th>順</th><th>型</th><th>名前</th><th>意味</th></tr>
+    <tr><td>0</td><td>byte</td><td>channel</td><td>4（名前なしメッセージの種類）</td></tr>
+    <tr><td>1</td><td>uint</td><td>serial</td><td>写真の番号。前回＋1でなければ立て直し</td></tr>
+    <tr><td>2</td><td>double</td><td>hostTime</td><td>撮った時刻（Hostの時計、秒）</td></tr>
+    <tr><td>3</td><td>float</td><td>hostDelta</td><td>前の写真からの秒数（速度の計算に使う）</td></tr>
+    <tr><td>4</td><td>int</td><td>ratioQ</td><td>間隔の比 × 1024（0〜4096）</td></tr>
+    <tr><td>5</td><td>byte</td><td>shift</td><td>差を丸める単位 2^shift（普段2、遅れたら最大4）</td></tr>
+    <tr><td>6</td><td>byte ×2</td><td>kx, ky</td><td>x軸・y軸の指数ゴロム符号の次数（0〜7）</td></tr>
+    <tr><td>7</td><td>int</td><td>continuing</td><td>続いている敵の数（照合用）</td></tr>
+    <tr><td>8</td><td>uint</td><td>checksum</td><td>全員の位置から作る確かめ用の値</td></tr>
+    <tr><td>9</td><td>int + 14×n</td><td>despawns</td><td>消えた敵（番号・理由）</td></tr>
+    <tr><td>10</td><td>int + 14×n</td><td>spawns</td><td>新しく出た敵（番号・種類・今の位置・速さのばらつき・アニメ位置・向き）</td></tr>
+    <tr><td>11</td><td>int + bytes</td><td>bits</td><td>続いている敵の差のビット列（番号の小さい順、x→y）</td></tr>
+  </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">全員分の写真（FortressNetChannel.SwarmKeyframe = 5）</div><div class="ptable-scroll"><table class="params layout">
+    <tr><th>順</th><th>型</th><th>名前</th><th>意味</th></tr>
+    <tr><td>0〜3</td><td>byte, uint, double, float</td><td>channel, serial, hostTime, hostDelta</td><td>写真と同じ</td></tr>
+    <tr><td>4</td><td>uint</td><td>layoutHash</td><td>敵の種類の並びの指紋（違うビルドを検出）</td></tr>
+    <tr><td>5</td><td>uint</td><td>checksum</td><td>照合用</td></tr>
+    <tr><td>6</td><td>int + 18×n</td><td>entries</td><td>全員分：出現の情報（直前の位置）＋その1枚前の位置</td></tr>
+  </table></div></div>
+  <div class="callout rv"><span class="ci">i</span><div>処理の順番は Host・Client とも「消えた敵 → 続いている敵（番号の小さい順にビット列）→ 新しく出た敵」。この順番がずれると、ビット列の読み位置がずれて全部壊れます（照合で必ず検出されます）。</div></div>
+</section>
+
+<section id="params" data-nav="調整できる値" data-dev>
+  <div class="eyebrow rv">DEV / Parameters</div>
+  <h2 class="rv">Inspector で<em>調整できる値</em></h2>
+  <p class="lead rv">シーンの <code>[Fortress] NetSync</code> › <b>Swarm Network Hub</b>。</p>
+  <div class="ptable-wrap rv"><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>Snapshot Rate</td><td>1秒に送る写真の枚数</td><td class="up">先読みの外れが小さい</td><td class="down">通信は減るが外れが増える（減らすのは非推奨）</td><td class="def">30</td></tr>
+    <tr><td>Snapshot Sharpness</td><td>外れを見た目で直す速さ</td><td class="up">早く合う（滑って見えやすい）</td><td class="down">ゆっくり合う</td><td class="def">15</td></tr>
+    <tr><td>Snapshot Snap Distance</td><td>これ以上外れたらその場で合わせる距離</td><td class="up">瞬間移動が減る（大きく滑る）</td><td class="down">瞬間移動が増える</td><td class="def">2</td></tr>
+    <tr><td>Snapshot Lead Seconds</td><td>測れない最短の遅れの見込み</td><td class="up">より先を描く</td><td class="down">少し過去寄り</td><td class="def">0.01</td></tr>
+    <tr><td>Max Extrapolation Seconds</td><td>写真が途切れたときに先読みする上限</td><td class="up">途切れても動き続ける</td><td class="down">早めに止まる</td><td class="def">0.2</td></tr>
+    <tr><td>Snapshot Precision Shift</td><td>位置の細かさ（2^値 × 0.002）</td><td class="up">軽い・粗い</td><td class="down">重い・細かい</td><td class="def">2（0.008）</td></tr>
+    <tr><td>Adaptive Snapshot Quality</td><td>遅れたら自動で粗くするか</td><td colspan="2">OFFにすると常に Precision Shift のまま</td><td class="def">ON</td></tr>
+    <tr><td>Max Snapshot Quality Level</td><td>自動で粗くする段階の上限</td><td class="up">もっと軽くできる</td><td class="down">粗くならない</td><td class="def">2（最大0.032）</td></tr>
+    <tr><td>Snapshot Lag High Ms</td><td>粗くし始める遅れ</td><td class="up">粗くなりにくい</td><td class="down">粗くなりやすい</td><td class="def">80</td></tr>
+    <tr><td>Snapshot Lag Low Ms</td><td>戻し始める遅れ</td><td class="up">戻りやすい</td><td class="down">戻りにくい</td><td class="def">40</td></tr>
+  </table></div></div>
+</section>
+
+<section id="measure" data-nav="計測のしかた" data-dev>
+  <div class="eyebrow rv">DEV / Benchmark</div>
+  <h2 class="rv"><em>計測</em>のしかた</h2>
+  <ol class="nums rv">
+    <li>Unityでビルドを <code>Builds\TestBuild</code> に出す（Development Build）。</li>
+    <li><code>Tools\NetTest\bench_2p.bat</code>（2人）、<code>bench_4p.bat</code>（4人）、<code>bench_4p_latejoin.bat</code>（途中参加）をダブルクリック。3万体を自動で湧かせ、50秒前後で自動終了します。</li>
+    <li>ログは <code>Builds\TestBuild\logs\</code>。<code>[Bench]</code> で始まる1秒ごとの行を見ます。</li>
+  </ol>
+  <div class="ptable-wrap rv"><div class="ptable-cap">ログの主な項目</div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>どこ</th><th>意味・目安</th></tr>
+    <tr><td>resyncs</td><td>Client</td><td>復元がHostと合わず立て直した回数。<b>0であるべき</b></td></tr>
+    <tr><td>errAvg / errMax / snaps</td><td>Client</td><td>新しい写真が届いた瞬間の先読みの外れ（平均・最大）と瞬間移動の数。普段 0.04前後・0</td></tr>
+    <tr><td>leadMs</td><td>Client</td><td>今の先読みの量（10〜40ms程度）</td></tr>
+    <tr><td>lagMs</td><td>両方</td><td>写真がいつもよりどれだけ遅れて届いたか</td></tr>
+    <tr><td>snapKB / bpa</td><td>Host</td><td>写真1枚の大きさ / 1体あたりのビット数（普段 約7）</td></tr>
+    <tr><td>snapShift / qualitySteps</td><td>Host</td><td>今の細かさ / 粗くした回数</td></tr>
+    <tr><td>sentKBs / recvKBs</td><td>両方</td><td>送受信量（KB/秒）</td></tr>
+  </table></div></div>
+  <div class="codebox rv" data-plain><button class="copy" type="button">copy</button><pre>
+rem 実機の4台で測る（HostのPC）
+run_instance.bat host 0 - -fortress-bench -fortress-bench-burst 30000 -fortress-bench-clients 3 -fortress-bench-quit 60 -fortress-bench-no-wave
+rem 各ClientのPC（番号は1・2・3をPCごとに変える）
+run_instance.bat client 1 &lt;HostのIP&gt; -fortress-bench -fortress-bench-quit 60 -fortress-bench-no-wave</pre></div>
+  <p class="mini rv" style="margin-top:10px">調整用の起動引数：<code>-fortress-swarm-snapshot-rate N</code>、<code>-fortress-swarm-snapshot-shift N</code>、<code>-fortress-swarm-snapshot-adaptive 0|1</code>、<code>-fortress-swarm-snapshot-lead 秒</code>。</p>
+</section>
+
+<section id="links" data-nav="関連資料">
+  <div class="eyebrow rv">Related</div>
+  <h2 class="rv">関連<em>資料</em></h2>
+  <div class="links rv">
+    <a class="lk" href="MultiplayerProgress.md"><span class="ti">マルチプレイ化 進捗</span><span class="ds">計測の全記録・決めたこと・宿題（2台・4台でのテスト）</span></a>
+    <a class="lk" href="../Tools/FortressDesigner_ガイド.html"><span class="ti">要塞デザイナー ガイド</span><span class="ds">群衆・敵・砲台の調整（ネット対戦のよくある質問つき）</span></a>
+    <a class="lk" href="../Tools/FortressDesigner_AI_Reference.md"><span class="ti">要塞デザイナー AI向けリファレンス</span><span class="ds">実装の詳細（英語・AI向け）</span></a>
+    <a class="lk" href="../Tools/D-Drive_ガイド.html"><span class="ti">D-Drive ガイド</span><span class="ds">接続の土台になっている外部パッケージ</span></a>
+  </div>
+  <footer><span>群衆同期 写真方式 — 解説</span><span>2026-10-05 時点 / Assets/_Game/Fortress/Runtime/Net/Swarm</span></footer>
+</section>
+</main>
+</div>
+
+<script src="../Tools/assets/guide.js"></script>
+<script>
+(function () {
+  "use strict";
+  var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- exp-Golomb playground ---------- */
+  var egV = document.getElementById("egValue"), egK = document.getElementById("egK");
+  function zig(v) { return v >= 0 ? 2 * v : -2 * v - 1; }
+  function renderEg() {
+    var v = parseInt(egV.value, 10); if (isNaN(v)) v = 0;
+    v = Math.max(-100000, Math.min(100000, v));
+    var k = parseInt(egK.value, 10) || 0;
+    document.getElementById("egKLabel").textContent = k;
+    var z = zig(v), w = z + Math.pow(2, k), bin = w.toString(2), n = bin.length - 1;
+    var zeros = new Array(n - k + 1).join("0");
+    var html = '<span class="z">' + zeros + '</span><span class="o">1</span><span class="s">' + bin.slice(1) + "</span>";
+    document.getElementById("egZig").textContent = z;
+    document.getElementById("egLen").textContent = (2 * n - k + 1) + " ビット";
+    document.getElementById("egBits").innerHTML = html;
+  }
+  if (egV && egK) { egV.addEventListener("input", renderEg); egK.addEventListener("input", renderEg); renderEg(); }
+
+  /* ---------- bandwidth calculator ---------- */
+  var ids = ["bwCount", "bwBytes", "bwRate", "bwClients"];
+  function num(id) { var x = parseFloat(document.getElementById(id).value); return isNaN(x) || x < 0 ? 0 : x; }
+  function fmt(bytesPerSec) {
+    var mb = bytesPerSec / 1e6, mbps = bytesPerSec * 8 / 1e6;
+    return mb.toFixed(mb < 1 ? 2 : 1) + " MB/秒（" + mbps.toFixed(1) + " Mbps）";
+  }
+  function renderBw() {
+    var per = num("bwCount") * num("bwBytes") * num("bwRate");
+    var total = per * Math.max(1, num("bwClients"));
+    document.getElementById("bwPer").textContent = fmt(per);
+    document.getElementById("bwTotal").textContent = fmt(total);
+    document.getElementById("bwShare").textContent = Math.round(total * 8 / 1e6) + " %";
+  }
+  if (document.getElementById("bwCount")) {
+    ids.forEach(function (id) { document.getElementById(id).addEventListener("input", renderBw); });
+    Array.prototype.forEach.call(document.querySelectorAll("[data-preset]"), function (b) {
+      b.addEventListener("click", function () { document.getElementById("bwBytes").value = b.getAttribute("data-preset"); renderBw(); });
+    });
+    renderBw();
+  }
+
+  /* ---------- mixing vs snapshot demo (illustration only) ---------- */
+  var cvA = document.getElementById("cvMix"), cvB = document.getElementById("cvSnap"), playBtn = document.getElementById("mixPlay");
+  if (!cvA || !cvB || !cvA.getContext) return;
+  var ctxA = cvA.getContext("2d"), ctxB = cvB.getContext("2d");
+  var W = cvA.width, H = cvA.height, sp = 20, cols = Math.ceil(W / sp) + 1, rows = 11, R = 6.2, period = cols * sp;
+  var agents = [], seed = 7;
+  function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+  for (var r = 0; r < rows; r++) for (var c = 0; c < cols; c++) {
+    agents.push({ bx: c * sp + (r % 2) * sp * 0.5, by: 20 + r * sp + 10, ph: rnd() * 6.283, err: { x: 0, y: 0 }, next: rnd() * 0.25, kick: { x: 0, y: 0 } });
+  }
+  var t = 0, playing = !reduce, last = 0;
+  function truth(a, time) {
+    // 横に流れて、右端から出た点は左端から入る(列の間隔がつなぎ目でも変わらないよう、周期を列の幅の整数倍にする)。
+    var x = ((a.bx + time * 34) % period) - sp;
+    var y = a.by + Math.sin(time * 1.3 + a.bx * 0.03) * 4;
+    return { x: x, y: y };
+  }
+  function color(ctx, name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || "#fff"; }
+  function draw(ctx, getPos) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = color(ctx, "--acc");
+    for (var i = 0; i < agents.length; i++) {
+      var p = getPos(agents[i], i);
+      ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, 6.283); ctx.fill();
+    }
+  }
+  function step(dt) {
+    t += dt;
+    for (var i = 0; i < agents.length; i++) {
+      var a = agents[i];
+      // 以前の方式: 自分の計算のずれが少しずつ溜まり、ばらばらの時刻に「正しい位置」へ直される → 直された瞬間に隣とぶつかって弾ける
+      a.err.x += (rnd() - 0.5) * 60 * dt; a.err.y += (rnd() - 0.5) * 60 * dt;
+      a.next -= dt;
+      if (a.next <= 0) {
+        a.next = 0.15 + rnd() * 0.2;
+        a.kick.x = (rnd() - 0.5) * sp * 0.9; a.kick.y = (rnd() - 0.5) * sp * 0.9;
+        a.err.x = 0; a.err.y = 0;
+      }
+      a.kick.x *= Math.exp(-dt * 9); a.kick.y *= Math.exp(-dt * 9);
+    }
+  }
+  function frame(ts) {
+    var dt = last ? Math.min(0.05, (ts - last) / 1000) : 0.016; last = ts;
+    if (playing) step(dt);
+    draw(ctxA, function (a) { var p = truth(a, t); return { x: p.x + a.err.x + a.kick.x, y: p.y + a.err.y + a.kick.y }; });
+    draw(ctxB, function (a) { return truth(a, t); });
+    requestAnimationFrame(frame);
+  }
+  function setBtn() { playBtn.textContent = playing ? "❚❚ 一時停止" : "▶ 再生"; playBtn.classList.toggle("on", playing); }
+  playBtn.addEventListener("click", function () { playing = !playing; setBtn(); });
+  setBtn();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

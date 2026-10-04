@@ -20,7 +20,7 @@
 | 1 | 砲台（握力→Host計算→全員に表示）、自分のゲージ | ✅ 完了・確認済み |
 | 2 | 破壊可能物・スマッシュボール（誰が割ったか含む） | ✅ 完了・確認済み |
 | 3 | Actorの敵（ボスなど） | ✅ 完了・確認済み（今のゲームにActorの敵の種類はまだ無い） |
-| 4 | 群衆（最大3万体）: 各PCで計算＋Hostの位置で補正 | ✅ 動作確認済み。**性能改善中（下の3章）** |
+| 4 | 群衆（最大3万体）: **写真方式**（Hostが全員の位置を1秒30回、圧縮した写真で送り、Clientは先読みして表示） | ✅ 完了・ユーザーが見た目を確認。経緯は3章、仕組みの解説は `Docs/Multiplayer/群衆同期_写真方式_解説.html` |
 | 5 | コアHP・勝敗・ラウンド進行（`NetworkGameManager` 新設） | ⬜ 未着手（今はコアHPがHostでしか減らない） |
 | 6 | ホスト引き継ぎ（Host離脱時に番号最小の人が引き継ぐ） | ⬜ 未着手 |
 
@@ -28,7 +28,7 @@
 - 各PCのセンサーは、そのPCでは常にP1（番号0、キーボードならQ）として読む。
 - Phase 1〜3の間の当たり判定はHostだけ。自分のレーザーはHost確定のみ（予測なし）。ゲージは自分の分だけ。
 - ドロップ品は「未定（今は見た目扱い、各PCで別々に出す）」。
-- 群衆は「各PCで計算＋Hostで補正」方式（通信量がHostの位置をそのまま配る方式の約1/10）。
+- 群衆は最初「各PCで計算＋Hostで補正」方式だったが、密集するとClientの敵が震えて隙間だらけになるため、2026-10-05に「写真方式」（Hostの写真を先読みして表示）に変更し、補正方式のコードは削除した（ユーザー決定）。
 - 握力入力: 実機とキーボードを合成（`CompositeGripTransport`）。デバイスが無いPCでもキーボードで動く。
 - 演出（エフェクト・効果音、2026-10-04）: 通信はしない。各PCが「Hostから届いた状態の変化」と「自分のPCでの当たり判定（見た目用）・群衆の計算」を見て自分で鳴らす。レーザーの発射口・着弾点・群衆の敵に当たった瞬間、破壊可能物・スマッシュボールの演出がこの方式。素材はD-Driveの番号札で、VFXの Flags › Net は Local のまま（Cosmeticにすると二重に出る）。群衆ヒットは全レーザー合計で1秒60個まで（PCごとに数える）。
 
@@ -50,7 +50,8 @@
 | 4b | Hostの時刻基準で正確に先読み | 🔶 段階5で「往復時間の半分」を先読みに足す形で実装（時刻の同期まではしない） |
 | 5 | 画面内・レーザー付近・コア付近・ズレていそうな敵を優先して補正（Clientごとに優先度を貯めて上から送る）、回線の混み具合（往復時間）とズレで送信量を自動調整、補正に速度を載せる切り替え | ✅ 実装・1回目計測済み（下記） |
 | 5b | 1回目の計測で見つかった問題の修正: 画面の範囲をカメラから求める／RTTの誤判定対策／偏らないズレの計測（抜き取り検査） | ✅ 実装・計測済み（下記）。**優先度つきを既定に、速度は載せない（既定OFFのまま）** |
-| 6 | **写真方式**（ユーザー決定 2026-10-05）: Clientの群衆が震えて隙間だらけになる問題の根本対策。全員の位置を同じ瞬間の写真として1秒30回、前の2枚からの予想との差だけ数ビットに圧縮して送る。Clientは押し合いを計算せず、最新の写真を届くまでの遅れの分だけ先読みして置く | ✅ 実装・計測済み（下記）。補正方式（段階1〜5）は `-fortress-swarm-replication corrections` で比較用に残す。6b（投入直後の先読みの速度に上限）も計測済み。**ユーザーが見た目を確認: 「ほぼ完璧で問題なさそう」（2026-10-05）** |
+| 6 | **写真方式**（ユーザー決定 2026-10-05）: Clientの群衆が震えて隙間だらけになる問題の根本対策。全員の位置を同じ瞬間の写真として1秒30回、前の2枚からの予想との差だけ数ビットに圧縮して送る。Clientは押し合いを計算せず、最新の写真を届くまでの遅れの分だけ先読みして置く | ✅ 実装・計測済み（下記）。補正方式（段階1〜5）は段階7で削除。6b（投入直後の先読みの速度に上限）も計測済み。**ユーザーが見た目を確認: 「ほぼ完璧で問題なさそう」（2026-10-05）** |
+| 7 | 補正方式（段階1〜5）のコードを削除（`SwarmNetEventQueue`, `SwarmCorrection*`, `SwarmNetCorrection*`, 関連の起動引数・計測項目）。HubはSwarmNetworkHub.cs 1ファイルに統合 | ✅ 完了（2026-10-05、ユーザー依頼） |
 
 ### 計測結果（2026-10-04、1台のPCでHost+Client、3万体一斉投入。Hostは裏のウィンドウ）
 
@@ -180,6 +181,22 @@
 | 3〜30秒 | 0.044 ／ 2.9 ／ 51 | **0.037 ／ 1.6 ／ 0** |
 
 立て直しは両方とも0回。投入直後の瞬間移動は約94%減り、落ち着いた後は0回。
+
+4人の確認（2026-10-05、1台でHost+Client3人。`bench_4p.bat` / `bench_4p_latejoin.bat`）:
+- 正しさ: 3人とも立て直し0回、落ち着いた後のズレは全員 約0.04（2人のときと同じ）、瞬間移動0回。
+- 途中参加: 3万体がいる中でP4が参加 → 最初の1秒で約2.4万体を受け取り、ズレ0.05・瞬間移動0回で追従。
+- 通信量: Hostの送信は普段 約2.8MB/秒（3人分、1人あたり約900KB/秒）。
+- 課題: 投入直後の2〜3秒、裏のウィンドウのClient（P2・P3）が最大0.2秒遅れ、瞬間移動が1〜1.6万回出た（2人のときは約1千回）。この間の写真は1枚約60KB（押し合いで敵が大きく動き、圧縮が効きにくい）で、1人あたり約2MB/秒。NGOの確実な届け方は「同時に送れるのは64パケットまで」で、1台に4つ起動するとフレームが遅くなって往復時間が延び、それを下回った。実機の4台なら余裕が増える見込みだが、Wi-Fiや遅いPCでも崩れないよう、遅れを検知して写真の枚数を自動で減らす対策を入れた（6c、下記）。
+- FPS（1台に4つなのであくまで参考）: Host 約96（投入後）、前面のClient 約270、裏のClient 約120。
+
+6c 写真の枚数の自動調整（2026-10-05、ユーザー了承）: 各Clientが「写真がいつも（一番速く届いたとき）よりどれだけ遅れて届いたか」を0.25秒ごとにHostへ知らせ、遅れが60msを超えたらHostが1秒の枚数を減らす（下限10枚）。
+- 結果: **逆効果**。遅れは減り（最大0.2秒→約0.1秒）、通信も減った（1人あたり約2MB/秒→約0.75MB/秒）が、投入後1〜2秒の瞬間移動が全Clientで約1万→約11万に増えた。投入直後は押し合いで敵が不規則に動くので、写真の間隔が0.1秒に延びると先読みが大きく外れるため。→ 枚数を減らす方式はやめた。
+
+6d 写真を軽くする（枚数は30枚のまま）: 位置の細かさを0.002→0.008（画面の約1/3ピクセル。見た目は変わらない）にし、遅れが出たときだけ0.016→0.032（約1ピクセル）まで粗くする（1段ごとに1体あたり約2ビット軽くなる）。丸めた後の位置をHostも次の予想に使うので、丸めの誤差は溜まらず、HostとClientは完全に一致したまま。
+6dの計測（2026-10-05）:
+- 2人（`bench_2p`）: 普段の受信量 886→**589KB/秒**（約1/3減、1体あたり約10→約7ビット）。落ち着いた後のズレ 0.037→0.039（変わらず）、立て直し0回。投入直後の瞬間移動 0〜1秒 3,509→3,221、1〜2秒 981→1,758、2〜3秒 1→0（ほぼ同じ）。投入直後の受信量も 約1.8→約1.27MB/秒。遅れ5ms前後なので、粗くするのは投入直後の1回だけですぐ戻った。
+- 4人（1台に4つ）: 普段の受信量 約870→約480KB/秒。ただしこの回は裏のClient2つがCPU不足でFPS 44〜58（前回は87〜96）に落ち、投入後1〜2秒に大量の瞬間移動が出た（前面のP4は前回並み）。1台に4つ起動すると、ネットワークではなくPCの処理能力が先に足りなくなるので、4人の投入直後の見た目は実機（4台）で確かめる必要がある。
+- 1台4起動では普段の遅れの揺れが20〜36msあり、粗くした段階が戻らなかった → 粗くする/戻す基準を 60/25ms → **80/40ms** に変更（次のビルドから）。
 - 先読みの量（leadMs）は10〜40ms（写真の間隔33ms＋届く時間。写真が届いた直後が一番小さい）。
 
 分かったこと: オフラインなら3万体でも軽い（FPS 260以上）。1台2起動ではHost（裏のウィンドウ）がCPUを取られて重い。毎秒3〜4回のGC（ゴミ集め）が常に起きている（段階3で対処予定）。
@@ -187,7 +204,9 @@
 計測のやり方（Claudeが自分で実行してよいとユーザー許可済み。ビルドだけはユーザーがUnityで行う）:
 - ビルド先: `<プロジェクト>\Builds\TestBuild`（Git管理外）。Development Build。
 - `Tools\NetTest\bench_2p.bat` … Host+Clientを起動し、Clientが全体の状態を受け取ったら3秒後にHostが3万体投入、1秒ごとに `[Bench]` 行をログへ、45秒で自動終了。ログは `Builds\TestBuild\logs\p0_host_bench.log` / `p1_client_bench.log`。
-- 改善前の設定で比べる: `bench_2p.bat -fortress-swarm-spawns-per-frame 0 -fortress-replica-separation -1 -fortress-net-packet-queue 128`（ログ名を変えたいときは先に `set LOGSUFFIX=_before`）。
+- `Tools\NetTest\bench_4p.bat` … Host+Client3人（P2〜P4）。3人そろってから3万体投入、50秒で終了。ログは `p0_host_bench4.log`〜`p3_client_bench4.log`。1台で4つ動かすのでFPSは実機より低い（正しさ・通信量・全員が同じに見えるかの確認用）。
+- `Tools\NetTest\bench_4p_latejoin.bat` … Host+Client2人で3万体投入し、約15秒後にP4が途中参加（3万体分の全員の写真を受け取ってから追従できるか）。ログは `*_latejoin.log`。
+- 改善前の設定で比べる: `bench_2p.bat -fortress-swarm-spawns-per-frame 0 -fortress-net-packet-queue 128`（ログ名を変えたいときは先に `set LOGSUFFIX=_before`）。
 - ネットワーク無しの基準: `bench_offline.bat`（`p0_ui_bench_offline.log`）。
 - 段階4の比較: 従来方式 `-fortress-swarm-smoothing blend -fortress-swarm-adaptive 0` / 新方式固定 `-fortress-swarm-adaptive 0` / 新方式＋自動調整（引数なし）/ 固定間隔 `-fortress-swarm-adaptive 0 -fortress-swarm-correction-cycle 0.25`（0.15 も）。
 - ⚠ 1台のPCで2つ起動すると、CPU/GPUを取り合うので本番より重く出る。
@@ -210,13 +229,14 @@
 - Host側PC: `run_instance.bat host 0 - -fortress-bench -fortress-bench-burst 30000 -fortress-bench-clients 1 -fortress-bench-quit 60 -fortress-bench-no-wave`
 - Client側PC: `run_instance.bat client 1 <HostのIP> -fortress-bench -fortress-bench-quit 60 -fortress-bench-no-wave`
 - 終わったら両方の `logs` フォルダのログ（`p0_host.log` / `p1_client.log`）をClaudeに渡す。PCごとに時計がずれるので、時刻ではなく `BURST` 行からの経過で比べる。
-- 4台そろうなら `-fortress-bench-clients 3` にして、Client側を `client 1` `client 2` `client 3` で起動する。
+- 4台そろうなら `-fortress-bench-clients 3` にして、Client側を `client 1` `client 2` `client 3` で起動する（各Client PCで1つずつ。1台に複数のClientを起動するとCPU不足で投入直後が崩れる。2026-10-05の1台4起動で確認）。
+- 確かめること: 立て直し（`resyncs`）が0、落ち着いた後のズレ（`errAvg`）が約0.04、投入直後の瞬間移動（`snaps`）と遅れ（`lagMs`）、Host送信量（`sentKBs`、Client3人で普段約1.5MB/秒の見込み）、各PCのFPS。
 
 ## 5. 既知の制限・注意
 
 - コアHPはHostでしか減らない（Phase 5で同期）。勝敗・ラウンド進行は未実装。
 - Host離脱時の引き継ぎは未実装（Phase 6）。今はHostが落ちると全員切断される。
-- Client側の群衆は補正の合間に少しずれる／すっと滑ることがある（段階4で改善予定）。
+- 群衆の写真は確実な届け方（取りこぼすと再送）で送る。取りこぼしの多い回線（混んだWi-Fiなど）では一瞬引っかかることがある。1台のPCで4つ起動すると、投入直後に裏のClientがCPU不足で乱れる（実機4台での確認が必要）。
 - 破壊可能物・敵の種類は「ウェーブ設定に入っている物」「シーン内の名前の並び」で番号を振る。HostとClientは必ず同じビルドを使う。
 - 要塞デザイナーのテストボタン（壊す・湧かせる・ストレステスト）はHost側で押す（Clientでは無効）。
 
@@ -226,8 +246,9 @@
 |---|---|
 | 接続・承認・起動引数 | `Assets/_Game/Fortress/Runtime/Net/FortressNetworkBootstrap.cs`, `FortressLaunchArgs.cs`, `FortressConnectUI.cs` |
 | 同期の中継役 | `Runtime/Net/TurretNetworkHub.cs`, `Destructibles/DestructibleNetworkHub.cs`, `Enemies/EnemyNetworkHub.cs`, `Swarm/SwarmNetworkHub.cs` |
-| 群衆のネット対応 | `Runtime/Swarm/SwarmSystem.Net.cs`, `SwarmCorrectionJob.cs`, `SwarmIdPool.cs` |
+| 群衆のネット対応 | `Runtime/Net/Swarm/SwarmNetworkHub.cs`（送受信）、`SwarmSnapshotCodec.cs`（写真の圧縮・復元）、`SwarmSnapshotQualityController.cs`、`SwarmNetMessages.cs`／`Runtime/Swarm/SwarmSystem.Net.cs`, `SwarmSnapshotFollowJob.cs`（先読みして配置）, `SwarmReplicaStatsJob.cs`, `SwarmIdPool.cs` |
+| 解説（人間向け） | `Docs/Multiplayer/群衆同期_写真方式_解説.html`（方式の全体像・工夫・ネットワークの基礎知識） |
 | 計測 | `Runtime/Net/Bench/NetBenchmarkRunner.cs`, `NetBenchmarkArgs.cs`, `NetTrafficStats.cs` |
 | シーンへの配置 | メニュー `Tools/要塞/ネットワーク/同期オブジェクトをシーンに配置`（`Editor/Net/FortressNetSceneSetup.cs`） |
-| 起動用bat | `Tools/NetTest/`（`launch_2p/4p`, `launch_ui_2p`, `launch_duplicate_test`, `bench_2p`, `bench_offline`, `run_instance`） |
+| 起動用bat | `Tools/NetTest/`（`launch_2p/4p`, `launch_ui_2p`, `launch_duplicate_test`, `bench_2p`, `bench_4p`, `bench_4p_latejoin`, `bench_offline`, `run_instance`） |
 | 画面のUI配置 | `Runtime/Hud/DebugOverlayLayout.cs`（左上の縦積み）、`LocalTurretGaugeHud.cs` |
