@@ -70,13 +70,26 @@ namespace MS2026.Fortress
             {
                 var avg = stats.replicaCorrections > 0 ? stats.replicaErrorSum / stats.replicaCorrections : 0f;
                 var viewAvg = stats.replicaViewCorrections > 0 ? stats.replicaViewErrorSum / stats.replicaViewCorrections : 0f;
-                text += NetTrafficStats.SwarmFullStateReceived
-                    ? $"\nHostとのズレ 平均 {avg:0.00} (画面内 {viewAvg:0.00}) / 最大 {stats.replicaErrorMax:0.0}"
-                    : $"\n全体の状態を受信中 (待機 {NetTrafficStats.SwarmBufferedEvents}件)";
+                if (!NetTrafficStats.SwarmFullStateReceived)
+                {
+                    text += $"\n全体の状態を受信中 (待機 {NetTrafficStats.SwarmBufferedEvents}件)";
+                }
+                else if (system.ReplicaUsesSnapshots)
+                {
+                    text += $"\n写真方式 先読み {system.ReplicaExtrapolationSeconds * 1000f:0}ms / 外れ 平均 {avg:0.000} 最大 {stats.replicaErrorMax:0.00}";
+                }
+                else
+                {
+                    text += $"\nHostとのズレ 平均 {avg:0.00} (画面内 {viewAvg:0.00}) / 最大 {stats.replicaErrorMax:0.0}";
+                }
             }
             else
             {
-                if (NetTrafficStats.SwarmCorrectionBudgetKBs > 0f)
+                if (NetTrafficStats.SwarmSnapshotsSent > 0)
+                {
+                    text += $"\n写真方式 1枚 {NetTrafficStats.SwarmSnapshotBytes / 1024f:0.0}KB ({NetTrafficStats.SwarmSnapshotBitsPerAgent:0.0}ビット/体)";
+                }
+                else if (NetTrafficStats.SwarmCorrectionBudgetKBs > 0f)
                 {
                     text += NetTrafficStats.SwarmReportedError >= 0f
                         ? $"\n補正 {NetTrafficStats.SwarmCorrectionBudgetKBs:0} KB/s・優先度順 (Clientのズレ {NetTrafficStats.SwarmReportedError:0.00})"

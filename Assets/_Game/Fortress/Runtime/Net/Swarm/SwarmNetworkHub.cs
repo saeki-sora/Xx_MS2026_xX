@@ -43,8 +43,34 @@ namespace MS2026.Fortress.Net
     /// ・sendVelocity=ONなら速度も送り、ClientはHostの速度で先読みしてその速度を引き継ぐ(1体6→10バイト)。
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class SwarmNetworkHub : NetworkBehaviour
+    public sealed partial class SwarmNetworkHub : NetworkBehaviour
     {
+        [Header("同期方式(2026-10-05)")]
+        [Tooltip("Snapshot=全員の位置を同じ瞬間の写真として送り、Clientは先読みして置く(既定。震え・隙間が出ない)。" +
+                 "Corrections=Clientも動きを計算してHostの位置で補正する(段階5まで。比較用)。")]
+        public SwarmReplicationMode replicationMode = SwarmReplicationMode.Snapshot;
+
+        [Header("写真方式")]
+        [Tooltip("1秒に撮って送る写真の枚数。多いほど先読みの外れが小さいが、通信が増える(3万体・30枚で1人あたり約6〜9Mbps)。")]
+        [Min(5f)]
+        public float snapshotRate = 30f;
+
+        [Tooltip("Clientで、新しい写真が届いたときの先読みの外れを見た目で直す速さ。大きいほど早く合うが、滑るように見えやすい。")]
+        [Min(0.1f)]
+        public float snapshotSharpness = 15f;
+
+        [Tooltip("先読みがこれ以上外れていたら、滑らせずにその場で合わせる距離(ワールド単位)。")]
+        [Min(0.1f)]
+        public float snapshotSnapDistance = 2f;
+
+        [Tooltip("届くまでの一番短い遅れ(時計の差に含まれて測れない分)の見込み(秒)。この分さらに先読みする。")]
+        [Min(0f)]
+        public float snapshotLeadSeconds = 0.01f;
+
+        [Tooltip("写真が途切れたときに先へ進める上限(秒)。")]
+        [Min(0f)]
+        public float maxExtrapolationSeconds = 0.2f;
+
         [Header("出現・消滅")]
         [Tooltip("出現・消滅をまとめて送る回数(回/秒)。")]
         [Min(1f)]
@@ -311,6 +337,11 @@ namespace MS2026.Fortress.Net
                     _gatheredIndices = new NativeList<int>(4096, Allocator.Persistent);
                 }
 
+                if (UsesSnapshots)
+                {
+                    BeginSnapshotHost();
+                }
+
                 _swarm.AgentsSpawned += OnAgentsSpawned;
                 _swarm.AgentsRemoved += OnAgentsRemoved;
                 _swarm.StorageReadable += OnStorageReadable;
@@ -330,12 +361,23 @@ namespace MS2026.Fortress.Net
             _auditErrorCount = 0;
             _auditErrorSum = 0f;
             _swarm.SetReplicaSeparationIterations(replicaSeparationIterations);
+            if (UsesSnapshots)
+            {
+                BeginSnapshotClient();
+            }
+            else
+            {
+                _swarm.SetReplicaSource(SwarmReplicaSource.Corrections);
+            }
+
             _swarm.BeginReplica();
             NetTrafficStats.SwarmFullStateReceived = false;
 
             FortressNetMessages.Register(NetworkManager, FortressNetChannel.SwarmEvents, OnEventsMessage);
             FortressNetMessages.Register(NetworkManager, FortressNetChannel.SwarmFullState, OnFullStateMessage);
             FortressNetMessages.Register(NetworkManager, FortressNetChannel.SwarmCorrections, OnCorrectionsMessage);
+            FortressNetMessages.Register(NetworkManager, FortressNetChannel.SwarmSnapshot, OnSnapshotMessage);
+            FortressNetMessages.Register(NetworkManager, FortressNetChannel.SwarmKeyframe, OnKeyframeMessage);
             RequestFullStateRpc();
         }
 
@@ -344,9 +386,12 @@ namespace MS2026.Fortress.Net
             FortressNetMessages.Unregister(FortressNetChannel.SwarmEvents);
             FortressNetMessages.Unregister(FortressNetChannel.SwarmFullState);
             FortressNetMessages.Unregister(FortressNetChannel.SwarmCorrections);
+            FortressNetMessages.Unregister(FortressNetChannel.SwarmSnapshot);
+            FortressNetMessages.Unregister(FortressNetChannel.SwarmKeyframe);
 
             if (_swarm == null)
             {
+                DisposeSnapshotState();
                 return;
             }
 
@@ -361,6 +406,7 @@ namespace MS2026.Fortress.Net
             _swarm.EndReplica();
             Array.Clear(_alive, 0, _alive.Length);
             _bufferedEvents.Clear();
+            DisposeSnapshotState();
         }
 
         public override void OnDestroy()
@@ -372,6 +418,7 @@ namespace MS2026.Fortress.Net
             }
 
             DisposeClientStates();
+            DisposeSnapshotState();
             base.OnDestroy();
         }
 
@@ -395,8 +442,17 @@ namespace MS2026.Fortress.Net
 
             if (!IsServer)
             {
-                ReportErrorPeriodically();
+                if (!UsesSnapshots)
+                {
+                    ReportErrorPeriodically();
+                }
+
                 return;
+            }
+
+            if (UsesSnapshots)
+            {
+                return; // 写真方式では出現・消滅も写真で送る(SnapshotHostTick)。
             }
 
             _eventCooldown -= Time.unscaledDeltaTime;
@@ -419,7 +475,7 @@ namespace MS2026.Fortress.Net
 
         private void OnAgentsSpawned(IReadOnlyList<SwarmSystem.SpawnRecord> records)
         {
-            if (!HasRemoteClients())
+            if (UsesSnapshots || !HasRemoteClients())
             {
                 return; // 後から来たClientには全体の状態で伝わる。
             }
@@ -455,6 +511,12 @@ namespace MS2026.Fortress.Net
 
         private void OnAgentsRemoved(IReadOnlyList<SwarmSystem.RemovalRecord> records)
         {
+            if (UsesSnapshots)
+            {
+                RecordRemovalsForSnapshot(records);
+                return;
+            }
+
             if (!HasRemoteClients())
             {
                 return;
@@ -469,6 +531,12 @@ namespace MS2026.Fortress.Net
         // SwarmSystemの計算が止まっている瞬間。途中参加者への全体の状態と、位置の補正はここで読む。
         private void OnStorageReadable()
         {
+            if (UsesSnapshots)
+            {
+                SnapshotHostTick();
+                return;
+            }
+
             if (_fullStateRequests.Count > 0)
             {
                 var snapshot = CaptureAll();

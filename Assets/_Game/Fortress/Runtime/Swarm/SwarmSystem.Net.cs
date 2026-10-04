@@ -88,6 +88,28 @@ namespace MS2026.Fortress
         private float _correctionLeadSeconds = 0.05f;
         private SwarmReplicaSmoothing _smoothing = SwarmReplicaSmoothing.RenderOffset;
         private float _measuredLeadSeconds;
+        private SwarmReplicaSource _replicaSource = SwarmReplicaSource.Snapshots;
+
+        // 写真方式: 届いた写真(番号ごとの位置と速度)。受信側の配列を、ジョブが動いていない間にここへ写してから使う。
+        private NativeArray<float2> _snapPos;
+        private NativeArray<float2> _snapVel;
+        private NativeArray<float2> _submittedSnapPos;
+        private NativeArray<float2> _submittedSnapVel;
+        private bool _snapshotSubmitted;
+        private bool _hasSnapshot;
+        private bool _newSnapshot;
+        private double _submittedSnapshotHostTime;
+        private double _snapshotHostTime;
+        private double _replicaClockOffset;
+        private float _snapshotLeadBias;
+        private float _snapshotSharpness = 15f;
+        private float _snapshotSnapDistance = 2f;
+        private float _maxExtrapolationSeconds = 0.2f;
+        private double _lastFollowTime = -1d;
+
+        /// <summary>Client(写真方式): 今の先読みの秒数(計測用)。</summary>
+        public float ReplicaExtrapolationSeconds { get; private set; }
+
         private float4 _replicaView;
         private bool _hasReplicaView;
         private int _lastBeamCount;
@@ -112,7 +134,51 @@ namespace MS2026.Fortress
             _smoothing = smoothing;
         }
 
-        private bool UsesRenderOffset => IsReplica && _smoothing == SwarmReplicaSmoothing.RenderOffset;
+        private bool UsesRenderOffset => IsReplica && (UsesSnapshots || _smoothing == SwarmReplicaSmoothing.RenderOffset);
+
+        private bool UsesSnapshots => IsReplica && _replicaSource == SwarmReplicaSource.Snapshots;
+
+        /// <summary>Clientで、敵の動きをHostの写真で決めている(写真方式)。</summary>
+        public bool ReplicaUsesSnapshots => UsesSnapshots;
+
+        /// <summary>Client: 敵の動きを写真で決めるか、自分で計算して補正するか。BeginReplica の前に決める。</summary>
+        public void SetReplicaSource(SwarmReplicaSource source)
+        {
+            _replicaSource = source;
+        }
+
+        /// <summary>
+        /// Client(写真方式): sharpness=先読みの外れを見た目で直す速さ、snapDistance=これ以上外れたら滑らせずに合わせる距離、
+        /// maxExtrapolation=写真が途切れたときに先へ進める上限(秒)。
+        /// </summary>
+        public void ConfigureReplicaSnapshots(float sharpness, float snapDistance, float maxExtrapolationSeconds)
+        {
+            _snapshotSharpness = Mathf.Max(0.1f, sharpness);
+            _snapshotSnapDistance = Mathf.Max(0.1f, snapDistance);
+            _maxExtrapolationSeconds = Mathf.Max(0f, maxExtrapolationSeconds);
+        }
+
+        /// <summary>
+        /// Client(写真方式): 復元した最新の写真を渡す(番号ごとの位置と速度、MaxNetIds個)。配列は次に呼ぶまで書き換えないこと
+        /// (ジョブが動いていない間に、こちらの配列へ写す)。hostTime はHostの時計での写真の時刻。
+        /// </summary>
+        public void SubmitReplicaSnapshot(NativeArray<float2> positions, NativeArray<float2> velocities, double hostTime)
+        {
+            _submittedSnapPos = positions;
+            _submittedSnapVel = velocities;
+            _submittedSnapshotHostTime = hostTime;
+            _snapshotSubmitted = true;
+        }
+
+        /// <summary>
+        /// Client(写真方式): Hostの時計との差(自分の時刻 − Hostの時刻、届くまでの一番短い遅れを含む)と、さらに先へ進める秒数。
+        /// 表示する時刻(Hostの時計) = 自分の時刻 − offset + leadBias。
+        /// </summary>
+        public void SetReplicaClock(double localMinusHostSeconds, float leadBiasSeconds)
+        {
+            _replicaClockOffset = localMinusHostSeconds;
+            _snapshotLeadBias = leadBiasSeconds;
+        }
 
         /// <summary>
         /// Client: 実測した届くまでの遅れ(秒。往復時間の半分)。ConfigureReplicaCorrection の leadSeconds に足して先読みする(段階5)。
@@ -152,7 +218,17 @@ namespace MS2026.Fortress
             _pendingCorrections.Clear();
             _pendingCorrectionsV.Clear();
             _pendingAudit.Clear();
+            ResetSnapshotState();
             ClearAll();
+        }
+
+        private void ResetSnapshotState()
+        {
+            _snapshotSubmitted = false;
+            _hasSnapshot = false;
+            _newSnapshot = false;
+            _lastFollowTime = -1d;
+            ReplicaExtrapolationSeconds = 0f;
         }
 
         /// <summary>Clientをやめる(切断時など)。Hostの敵は今後更新されないので全て消す。</summary>
@@ -169,6 +245,7 @@ namespace MS2026.Fortress
             _pendingCorrections.Clear();
             _pendingCorrectionsV.Clear();
             _pendingAudit.Clear();
+            ResetSnapshotState();
             ClearAll();
         }
 
@@ -277,6 +354,8 @@ namespace MS2026.Fortress
             _jobCorrectionsV = new NativeList<SwarmNetCorrectionV>(4096, Allocator.Persistent);
             _pendingAudit = new NativeList<SwarmNetCorrection>(1024, Allocator.Persistent);
             _jobAudit = new NativeList<SwarmNetCorrection>(1024, Allocator.Persistent);
+            _snapPos = new NativeArray<float2>(MaxNetIds, Allocator.Persistent);
+            _snapVel = new NativeArray<float2>(MaxNetIds, Allocator.Persistent);
         }
 
         private void DisposeNet()
@@ -295,6 +374,8 @@ namespace MS2026.Fortress
             DisposeArray(ref _removedReasons);
             DisposeArray(ref _correctionErrors);
             DisposeArray(ref _correctionAudit);
+            DisposeArray(ref _snapPos);
+            DisposeArray(ref _snapVel);
             DisposeArray(ref _correctionStats);
 
             if (_pendingCorrections.IsCreated)
@@ -462,6 +543,18 @@ namespace MS2026.Fortress
             _pendingCorrectionsV.Clear();
             _jobAudit.CopyFrom(_pendingAudit);
             _pendingAudit.Clear();
+
+            // 写真方式: 新しい写真が届いていれば、ジョブ用の配列へ写す(受信側はジョブと関係なく次の写真を書けるように)。
+            _newSnapshot = false;
+            if (_snapshotSubmitted && _submittedSnapPos.IsCreated && _submittedSnapVel.IsCreated)
+            {
+                _snapshotSubmitted = false;
+                NativeArray<float2>.Copy(_submittedSnapPos, _snapPos);
+                NativeArray<float2>.Copy(_submittedSnapVel, _snapVel);
+                _snapshotHostTime = _submittedSnapshotHostTime;
+                _hasSnapshot = true;
+                _newSnapshot = true;
+            }
             var targetCount = _jobCorrections.Length + _jobCorrectionsV.Length + _jobAudit.Length;
             if (_correctionTargets.Capacity < targetCount)
             {
@@ -488,11 +581,65 @@ namespace MS2026.Fortress
             }
         }
 
+        // 写真方式: 最新の写真を、届くまでの遅れの分だけ先へ進めた位置に置く(押し合いは計算しない)。
+        private JobHandle ScheduleReplicaFollow(JobHandle dependsOn, int count)
+        {
+            var now = Time.realtimeSinceStartupAsDouble;
+            var advance = _lastFollowTime < 0d ? 0f : (float)(now - _lastFollowTime);
+            _lastFollowTime = now;
+            if (!_hasSnapshot)
+            {
+                _correctionStatsScheduled = false;
+                return dependsOn;
+            }
+
+            var displayHostTime = now - _replicaClockOffset + _snapshotLeadBias;
+            var lead = Mathf.Clamp((float)(displayHostTime - _snapshotHostTime), 0f, _maxExtrapolationSeconds);
+            ReplicaExtrapolationSeconds = lead;
+
+            var followed = new SwarmSnapshotFollowJob
+            {
+                netId = Storage.netId,
+                snapPos = _snapPos,
+                snapVel = _snapVel,
+                typeIdx = Storage.typeIdx,
+                types = _typeParams,
+                pos = Storage.pos,
+                vel = Storage.vel,
+                correction = Storage.correction,
+                errorOut = _correctionErrors,
+                auditOut = _correctionAudit,
+                lead = lead,
+                advance = advance,
+                blend = 1f - Mathf.Exp(-_snapshotSharpness * advance),
+                snapDistanceSq = _snapshotSnapDistance * _snapshotSnapDistance,
+                newSnapshot = _newSnapshot ? 1 : 0
+            }.Schedule(count, 256, dependsOn);
+
+            _correctionStatsScheduled = true;
+            return new SwarmCorrectionStatsJob
+            {
+                errors = _correctionErrors,
+                audit = _correctionAudit,
+                pos = Storage.pos,
+                stats = _correctionStats,
+                count = count,
+                snapDistance = _snapshotSnapDistance,
+                view = _replicaView,
+                hasView = _hasReplicaView ? 1 : 0
+            }.Schedule(followed);
+        }
+
         private JobHandle ScheduleReplicaCorrection(JobHandle dependsOn, int count, float dt)
         {
             if (!IsReplica)
             {
                 return dependsOn;
+            }
+
+            if (UsesSnapshots)
+            {
+                return ScheduleReplicaFollow(dependsOn, count);
             }
 
             var targets = new SwarmCorrectionTargetsJob

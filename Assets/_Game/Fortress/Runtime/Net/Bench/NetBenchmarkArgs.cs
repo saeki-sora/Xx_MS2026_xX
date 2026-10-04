@@ -29,6 +29,9 @@ namespace MS2026.Fortress.Net
     ///   -fortress-swarm-velocity 0|1            補正に速度を載せない/載せる
     ///   -fortress-swarm-budget-kbs N            優先度つきの補正の普段の通信量(Client1人あたり、KB/秒)
     ///   -fortress-swarm-max-budget-kbs N        同、ズレが大きい間の上限(KB/秒)
+    ///   -fortress-swarm-replication snapshot|corrections  群衆の同期方式(写真方式/補正方式)
+    ///   -fortress-swarm-snapshot-rate N         写真方式で1秒に送る写真の枚数
+    ///   -fortress-swarm-snapshot-lead S         写真方式で、届く遅れの見込みとしてさらに先読みする秒数
     /// </summary>
     public struct NetBenchmarkArgs
     {
@@ -53,6 +56,9 @@ namespace MS2026.Fortress.Net
         public bool? SendVelocity;
         public float? BudgetKBps;
         public float? MaxBudgetKBps;
+        public SwarmReplicationMode? Replication;
+        public float? SnapshotRate;
+        public float? SnapshotLeadSeconds;
 
         public bool AnyBenchmark => LogEnabled || BurstCount > 0 || QuitAfterSeconds > 0f || StopWaves;
 
@@ -132,10 +138,38 @@ namespace MS2026.Fortress.Net
                     case "-fortress-swarm-max-budget-kbs":
                         result.MaxBudgetKBps = NextFloat(args, ref i);
                         break;
+                    case "-fortress-swarm-replication":
+                        result.Replication = NextReplication(args, ref i);
+                        break;
+                    case "-fortress-swarm-snapshot-rate":
+                        result.SnapshotRate = NextFloat(args, ref i);
+                        break;
+                    case "-fortress-swarm-snapshot-lead":
+                        result.SnapshotLeadSeconds = NextFloat(args, ref i);
+                        break;
                 }
             }
 
             return result;
+        }
+
+        private static SwarmReplicationMode? NextReplication(string[] args, ref int i)
+        {
+            if (i + 1 >= args.Length)
+            {
+                return null;
+            }
+
+            i++;
+            switch (args[i].ToLowerInvariant())
+            {
+                case "snapshot":
+                    return SwarmReplicationMode.Snapshot;
+                case "corrections":
+                    return SwarmReplicationMode.Corrections;
+                default:
+                    return null;
+            }
         }
 
         private static SwarmReplicaSmoothing? NextSmoothing(string[] args, ref int i)

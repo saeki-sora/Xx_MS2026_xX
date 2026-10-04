@@ -33,6 +33,8 @@ namespace MS2026.Fortress.Net
         private long _eventsReceivedAtWindowStart;
         private long _correctionsSentAtWindowStart;
         private long _correctionsReceivedAtWindowStart;
+        private long _snapshotsSentAtWindowStart;
+        private long _snapshotsReceivedAtWindowStart;
         private int _corrections;
         private float _errorSum;
         private float _errorMax;
@@ -121,6 +123,21 @@ namespace MS2026.Fortress.Net
                 if (args.MaxBudgetKBps.HasValue)
                 {
                     hub.maxBudgetKBps = Mathf.Max(16f, args.MaxBudgetKBps.Value);
+                }
+
+                if (args.Replication.HasValue)
+                {
+                    hub.replicationMode = args.Replication.Value;
+                }
+
+                if (args.SnapshotRate.HasValue)
+                {
+                    hub.snapshotRate = Mathf.Max(5f, args.SnapshotRate.Value);
+                }
+
+                if (args.SnapshotLeadSeconds.HasValue)
+                {
+                    hub.snapshotLeadSeconds = Mathf.Max(0f, args.SnapshotLeadSeconds.Value);
                 }
             }
 
@@ -352,6 +369,8 @@ namespace MS2026.Fortress.Net
             _eventsReceivedAtWindowStart = NetTrafficStats.SwarmEventsReceived;
             _correctionsSentAtWindowStart = NetTrafficStats.SwarmCorrectionsSent;
             _correctionsReceivedAtWindowStart = NetTrafficStats.SwarmCorrectionsReceived;
+            _snapshotsSentAtWindowStart = NetTrafficStats.SwarmSnapshotsSent;
+            _snapshotsReceivedAtWindowStart = NetTrafficStats.SwarmSnapshotsReceived;
             _corrections = 0;
             _errorSum = 0f;
             _errorMax = 0f;
@@ -409,6 +428,25 @@ namespace MS2026.Fortress.Net
             {
                 _line.Append(" budgetKBs=").Append(NetTrafficStats.SwarmCorrectionBudgetKBs.ToString("0", inv));
                 _line.Append(" backoffs=").Append(NetTrafficStats.SwarmCorrectionBackoffs);
+            }
+
+            var snapshotsSent = NetTrafficStats.SwarmSnapshotsSent - _snapshotsSentAtWindowStart;
+            var snapshotsReceived = NetTrafficStats.SwarmSnapshotsReceived - _snapshotsReceivedAtWindowStart;
+            if (snapshotsSent > 0)
+            {
+                _line.Append(" snapSent=").Append(snapshotsSent);
+                _line.Append(" snapKB=").Append((NetTrafficStats.SwarmSnapshotBytes / 1024f).ToString("0.0", inv));
+                _line.Append(" bpa=").Append(NetTrafficStats.SwarmSnapshotBitsPerAgent.ToString("0.0", inv));
+            }
+
+            if (snapshotsReceived > 0 || NetTrafficStats.SwarmSnapshotResyncs > 0)
+            {
+                _line.Append(" snapRecv=").Append(snapshotsReceived);
+                _line.Append(" resyncs=").Append(NetTrafficStats.SwarmSnapshotResyncs);
+                if (swarm != null)
+                {
+                    _line.Append(" leadMs=").Append((swarm.ReplicaExtrapolationSeconds * 1000f).ToString("0", inv));
+                }
             }
 
             if (NetTrafficStats.SwarmRttMs >= 0f)

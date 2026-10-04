@@ -44,6 +44,20 @@ namespace MS2026.Fortress.Net
         /// <summary>Host(優先度つきの補正): 回線の混み具合で通信量を下げた回数(全Clientの累計)。</summary>
         public static int SwarmCorrectionBackoffs;
 
+        /// <summary>写真方式: 送った/受け取った写真の枚数(累計)。</summary>
+        public static long SwarmSnapshotsSent;
+
+        public static long SwarmSnapshotsReceived;
+
+        /// <summary>Host(写真方式): 直前の写真1枚の大きさ(バイト)。</summary>
+        public static int SwarmSnapshotBytes;
+
+        /// <summary>Host(写真方式): 直前の写真で、続いている敵1体の位置に使ったビット数(平均)。</summary>
+        public static float SwarmSnapshotBitsPerAgent;
+
+        /// <summary>Client(写真方式): 復元がHostと合わず、全員分の写真で立て直した回数(累計)。0であるべき。</summary>
+        public static int SwarmSnapshotResyncs;
+
         public static void Sent(long bytes)
         {
             BytesSent += bytes;
@@ -66,6 +80,10 @@ namespace MS2026.Fortress.Net
             SwarmCorrectionBudgetKBs = 0f;
             SwarmRttMs = -1f;
             SwarmCorrectionBackoffs = 0;
+            SwarmSnapshotsSent = SwarmSnapshotsReceived = 0;
+            SwarmSnapshotBytes = 0;
+            SwarmSnapshotBitsPerAgent = 0f;
+            SwarmSnapshotResyncs = 0;
         }
     }
 }

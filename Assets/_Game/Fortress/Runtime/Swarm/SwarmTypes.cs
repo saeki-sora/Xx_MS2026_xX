@@ -25,6 +25,16 @@ namespace MS2026.Fortress
         LingerAndAttack = 1
     }
 
+    /// <summary>ネット対戦のClientで、敵の動きを何で決めるか(2026-10-05)。</summary>
+    public enum SwarmReplicaSource
+    {
+        /// <summary>Hostから届く全員の写真(同じ瞬間の位置と速度)を先読みして置く。押し合いは計算しない(既定)。</summary>
+        Snapshots = 0,
+
+        /// <summary>自分でも動き(経路・押し合い)を計算し、Hostから届いた位置で補正する(段階5まで。比較用)。</summary>
+        Corrections = 1
+    }
+
     /// <summary>ネット対戦のClientで、Hostの位置へどう寄せるか。</summary>
     public enum SwarmReplicaSmoothing
     {

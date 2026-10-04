@@ -9,7 +9,9 @@ namespace MS2026.Fortress.Net
         None = 0,
         SwarmEvents = 1,
         SwarmFullState = 2,
-        SwarmCorrections = 3
+        SwarmCorrections = 3,
+        SwarmSnapshot = 4,
+        SwarmKeyframe = 5
     }
 
     /// <summary>

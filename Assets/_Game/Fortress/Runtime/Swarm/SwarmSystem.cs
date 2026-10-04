@@ -567,6 +567,30 @@ namespace MS2026.Fortress
                 Mark(ref handle, 1);
             }
 
+            if (UsesSnapshots)
+            {
+                // 写真方式のClient: 位置と速度は写真で決まっているので、押し合いを計算せず、向き・アニメ・到着だけ進める。
+                handle = new SwarmReplicaFinalizeJob
+                {
+                    pos = Storage.pos,
+                    vel = Storage.vel,
+                    typeIdx = Storage.typeIdx,
+                    state = Storage.state,
+                    types = _typeParams,
+                    goals = _goals,
+                    goalCount = _goalCount,
+                    facing = Storage.facing,
+                    animTime = Storage.animTime,
+                    flash = Storage.flash,
+                    goalOf = Storage.goalOf,
+                    dt = dt,
+                    flashDecay = 1f / _settings.hitFlashDuration,
+                    arrivalRadius = _settings.arrivalRadius
+                }.Schedule(count, 128, handle);
+                Mark(ref handle, 4);
+                return ScheduleCompactionAndRender(handle, count);
+            }
+
             handle = new SwarmSteerJob
             {
                 pos = Storage.pos,
@@ -663,7 +687,12 @@ namespace MS2026.Fortress
                 arrivalRadius = _settings.arrivalRadius
             }.Schedule(count, 128, handle);
             Mark(ref handle, 4);
+            return ScheduleCompactionAndRender(handle, count);
+        }
 
+        // 消す敵を除いて詰め直し(〜Bの配列へ)、描画データを作る。
+        private JobHandle ScheduleCompactionAndRender(JobHandle handle, int count)
+        {
             handle = new SwarmCompactScanJob
             {
                 order = Grid.CellItems,
