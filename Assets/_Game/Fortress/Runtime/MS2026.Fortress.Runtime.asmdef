@@ -3,9 +3,16 @@
     "rootNamespace": "MS2026.Fortress",
     "references": [
         "MS2026.GripInputBridge.Runtime",
+        "DDrive.Runtime",
+        "DDrive.Generated",
+        "DDrive.Foundation",
+        "Unity.Netcode.Runtime",
         "Unity.Burst",
         "Unity.Mathematics",
-        "Unity.Collections"
+        "Unity.Collections",
+        "Unity.InputSystem",
+        "UnityEngine.UI",
+        "DDrive.Runtime.Ngo"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

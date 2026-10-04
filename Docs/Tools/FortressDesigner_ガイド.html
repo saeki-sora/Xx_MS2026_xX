@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>要塞デザイナー ガイド</title>
+<meta name="description" content="「握れ、灼ける前に」の砲台・敵・障害物・カメラをコードなしで調整する要塞デザイナーの使い方">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/guide.css">
+<style>
+:root{--acc:#4de2ff;--acc-ink:#03161b;--acc2:#c6ff3d;--acc3:#ff4d8d}
+:root[data-theme="light"]{--acc:#007f99;--acc-ink:#ffffff;--acc2:#5f8a00;--acc3:#c8185a}
+.pc1{color:#ff5d6c}.pc2{color:#4da3ff}.pc3{color:#5fe39a}.pc4{color:#ffd24d}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<div class="orbs" aria-hidden="true"><div class="orb a"></div><div class="orb b"></div></div>
+
+<div class="shell">
+<nav class="side" aria-label="目次">
+  <a class="back" href="index.html">← ツール一覧</a>
+  <a class="brand" href="#top"><span class="mark">要</span><span class="t">要塞デザイナー</span></a>
+  <ol id="toc"></ol>
+  <div class="foot">
+    <button class="themebtn" id="themeBtn" type="button"><span aria-hidden="true">◐</span><span data-label>ライト表示</span></button>
+    <div class="meta mono">Assets/_Game/Fortress<br>2026-10-03 時点</div>
+  </div>
+</nav>
+
+<main id="top">
+<!-- ============ HERO ============ -->
+<header class="hero">
+  <div class="tags">
+    <span class="pill hot">エディタ専用ツール</span>
+    <span class="pill">タブ 9 枚</span>
+    <span class="pill">コード不要</span>
+    <span class="pill">握力センサー不要</span>
+  </div>
+  <h1 class="mega jp" aria-label="要塞デザイナー"><span class="o">FORTRESS</span><span class="f">要塞デザイナー</span></h1>
+  <p class="subname">ゲーム「<b>握れ、灼ける前に</b>」の調整卓 — <b>Fortress Designer</b></p>
+  <div class="hero-row">
+    <div>
+      <p class="oneword">砲台・敵・障害物・カメラを、<br><span class="hl">数字をいじって</span> <span class="hl">Play で即確認</span>。<br>これを繰り返すための道具。</p>
+      <p class="analogy">たとえるなら「音響さんのミキサー卓」。ゲームの中身（レーザーの太さ、敵の数、画面の見え方…）のつまみが全部ここに並んでいて、つまみを回しながら実際の画面で確かめられます。</p>
+    </div>
+    <div class="facts"><dl>
+      <dt>誰が使う</dt><dd>プランナー・デザイナー・プログラマー全員</dd>
+      <dt>開き方</dt><dd><span class="mp">Tools<i>›</i>要塞<i>›</i>要塞デザイナーを開く</span></dd>
+      <dt>必要なもの</dt><dd>Unity エディタだけ。握力センサーが無くても、キーボードの <kbd>Q</kbd><kbd>W</kbd><kbd>O</kbd><kbd>P</kbd> で 4 人分を代用できます</dd>
+      <dt>保存先</dt><dd>数値は <code>Assets/_Game/Fortress/Presets/</code> の設定ファイルに保存。置いた物はシーンに保存（<kbd>Ctrl</kbd>+<kbd>S</kbd>）</dd>
+    </dl></div>
+  </div>
+  <div class="marquee" aria-hidden="true"><div class="track" id="mq" data-words="砲台配置|敵ウェーブ|経路・障害物|破壊可能物|スマッシュボール|群衆|カメラ|テスト"></div></div>
+</header>
+
+<!-- ============ WHAT ============ -->
+<section id="what" data-nav="何ができる？">
+  <div class="rv">
+    <div class="eyebrow">01 — What you can do</div>
+    <h2>9 枚のタブで、<br><em>ゲームの土台</em>を全部いじれる。</h2>
+    <p class="lead">ウィンドウ上部のタブを切り替えて使います。それぞれ「ゲームのどの部分を担当しているか」で覚えると迷いません。</p>
+  </div>
+  <div class="cards">
+    <div class="card feat rv" style="--c:#4de2ff"><div class="ic">🔫</div><h3>砲台配置</h3><p>4 基の砲台の回転と、レーザーの太さ・熱・オーバーヒートの数値。</p><p class="ex"><b>例</b> 全力で握ったら何秒で灼け落ちる？を決める</p></div>
+    <div class="card feat rv" style="--c:#ff4d8d"><div class="ic">👾</div><h3>敵ウェーブ</h3><p>いつ・どこから・どの敵を・何体出すかの表と、敵が湧く地点。</p><p class="ex"><b>例</b> 開始 10 秒後に北から小型ドローン 30 体</p></div>
+    <div class="card feat rv" style="--c:#ffb547"><div class="ic">🧱</div><h3>経路・障害物</h3><p>壁・壊せるブロック・泥地帯を置き、敵がどう回り込むかを矢印で見る。</p><p class="ex"><b>例</b> 細い通路を作って渋滞させる</p></div>
+    <div class="card feat rv" style="--c:#c6ff3d"><div class="ic">📦</div><h3>破壊可能物</h3><p>レーザーで壊せて時間で戻る物を、Scene をクリックして配置。耐久・見た目・音も。</p><p class="ex"><b>例</b> 木箱・岩・ガラスを並べる</p></div>
+    <div class="card feat rv" style="--c:#b98cff"><div class="ic">🔮</div><h3>スマッシュボール</h3><p>壊せる物を「誰が割ったか記録されるボール」に変える。ふわふわ浮遊も。</p><p class="ex"><b>例</b> 割った人の画面だけ大きく揺らす</p></div>
+    <div class="card feat rv" style="--c:#5fe39a"><div class="ic">🐜</div><h3>群衆</h3><p>数千〜数万体の敵の押し合い・渋滞の具合、敵の種類（大きさ・重さ・絵）、負荷テスト。</p><p class="ex"><b>例</b> 「どろどろ」に詰まる群れにする</p></div>
+    <div class="card feat rv" style="--c:#4da3ff"><div class="ic">🎥</div><h3>カメラ</h3><p>4 人それぞれの画面の見え方と、揺れ・寄りの演出。4 人分の画面を並べてプレビュー。</p><p class="ex"><b>例</b> 全員「自分の砲台が画面の下」にする</p></div>
+    <div class="card feat rv" style="--c:#ff5d6c"><div class="ic">🧪</div><h3>テスト</h3><p>Play 中に 4 人分の握力・熱・砲台の状態をリアルタイムで見て、ウェーブを再生/停止。ボスなど「Actor」の敵をその場で湧かせることも。</p><p class="ex"><b>例</b> 熱ゲージの溜まり方を目で確認</p></div>
+    <div class="card feat rv" style="--c:#8b91a5"><div class="ic">👋</div><h3>はじめに</h3><p>このツールの使い方の要約と、テスト用シーンを 1 クリックで作るボタン。</p><p class="ex"><b>例</b> まっさらな状態から遊べるシーンを作る</p></div>
+  </div>
+</section>
+
+<!-- ============ FIRST 5 MIN ============ -->
+<section id="start" data-nav="はじめての 5 分">
+  <div class="rv">
+    <div class="eyebrow">02 — First 5 minutes</div>
+    <h2>まずは <em>レーザーを撃って</em>、<br>太さを変えてみる。</h2>
+    <p class="lead">この 5 ステップで「数値を変える → すぐ画面に出る」感覚がつかめます。迷ったらここに戻ってきてください。</p>
+  </div>
+  <div class="steps">
+    <div class="step rv"><div class="n">1</div><div class="step-body">
+      <div><h3>ウィンドウを開く</h3>
+        <p>Unity 上部のメニューから <span class="mp">Tools<i>›</i>要塞<i>›</i>要塞デザイナーを開く</span>。Inspector の隣にドラッグしてくっつけておくと便利です。</p>
+        <p class="small muted" style="margin-top:8px">最初は「はじめに」タブが開きます。9 枚のタブはボタンにマウスを乗せると説明が出ます。</p>
+      </div>
+      <div><div class="mock" aria-label="要塞デザイナーの画面イメージ">
+        <div class="mock-title">要塞デザイナー</div>
+        <div class="mock-tabs"><span class="on">はじめに</span><span>砲台配置</span><span>敵ウェーブ</span><span>経路・障害物</span><span>破壊可能物</span><span>スマッシュボール</span><span>群衆</span><span>カメラ</span><span>テスト</span></div>
+        <div class="mock-body">
+          <h5>要塞デザイナーへようこそ</h5>
+          <div class="help">数値をいじってPlay Modeで即確認する、を繰り返す想定です。</div>
+          <h5 style="margin-top:6px">1. シーンを準備する</h5>
+          <div><span class="mbtn pri">テストシーンを自動生成</span> <span class="pin-inline" style="margin-left:6px">2</span></div>
+        </div>
+      </div><p class="mock-cap">画面イメージ（実物とは細部が違うことがあります）</p></div>
+    </div></div>
+    <div class="step rv"><div class="n">2</div><div>
+      <h3>遊べるシーンを用意する</h3>
+      <p>すでに <code>Game.unity</code> などのシーンを開いているならそのままで OK。何も無いときは「はじめに」タブの <b>テストシーンを自動生成</b>（= <span class="mp">Tools<i>›</i>要塞<i>›</i>フェーズ1テストシーンを生成</span>）を押すと、コア・4 基の砲台・敵の湧き位置・サンプルのウェーブが一式できます。</p>
+    </div></div>
+    <div class="step rv"><div class="n">3</div><div>
+      <h3>▶ Play して、キーボードで握る</h3>
+      <p>Unity の ▶ を押したら、キーボードの <kbd>Q</kbd> を押しっぱなしにします。<b class="pc1">P1</b> の握力がじわじわ上がり、レーザーが出ます（離すと下がる）。</p>
+      <ul><li><kbd>Q</kbd> = <b class="pc1">P1</b>、<kbd>W</kbd> = <b class="pc2">P2</b>、<kbd>O</kbd> = <b class="pc3">P3</b>、<kbd>P</kbd> = <b class="pc4">P4</b></li><li>この仕組みは別ツール「<a href="GripInputBridge_ガイド.html">握力入力ブリッジ</a>」のシミュレータです。実機センサーが無くても動きます。</li></ul>
+      <p class="done">レーザーが出たら成功</p>
+    </div></div>
+    <div class="step rv"><div class="n">4</div><div class="step-body">
+      <div><h3>「砲台配置」タブで太さを変える</h3>
+        <p>Play したまま「砲台配置」タブを開き、<b>レーザー・熱チューニング</b> の中の <span class="pin-inline">A</span><b>最大の太さ</b> を大きくしてみます。もう一度 <kbd>Q</kbd> を握ると、レーザーが太くなっています。</p>
+        <div class="callout"><span class="ci">!</span><div>この数値は 4 基共通の設定ファイル（<code>Default_LaserTuningConfig</code>）に入っているので、<b>Play を止めても変更は残ります</b>。試した値を元に戻したいときはメモしておきましょう。</div></div>
+      </div>
+      <div><div class="mock">
+        <div class="mock-title">要塞デザイナー</div>
+        <div class="mock-tabs"><span>はじめに</span><span class="on">砲台配置</span><span>敵ウェーブ</span><span>…</span></div>
+        <div class="mock-body">
+          <h5>レーザー・熱チューニング</h5>
+          <div class="help">太さ・熱</div>
+          <div class="mrow"><span>最小の太さ</span><div class="mslider"><div class="tr"><i style="width:10%"></i></div><div class="mf v">0.05</div></div></div>
+          <div class="mrow"><span><span class="pin-inline">A</span>最大の太さ</span><div class="mslider"><div class="tr"><i style="width:60%"></i></div><div class="mf v">0.6</div></div></div>
+          <div class="mrow"><span>熱上昇係数</span><div class="mslider"><div class="tr"><i style="width:20%"></i></div><div class="mf v">1</div></div></div>
+          <div class="mrow"><span>オーバーヒートしきい値</span><div class="mslider"><div class="tr"><i style="width:50%"></i></div><div class="mf v">10</div></div></div>
+          <div class="mrow"><span>沈黙時間(秒)</span><div class="mslider"><div class="tr"><i style="width:30%"></i></div><div class="mf v">3</div></div></div>
+        </div>
+      </div></div>
+    </div></div>
+    <div class="step rv"><div class="n">5</div><div>
+      <h3>「テスト」タブで熱の溜まり方を見る</h3>
+      <p>「テスト」タブでは 4 人分の <b>握力</b> と <b>熱</b> のバーが動きます。<kbd>Q</kbd> を握り続けると熱が溜まり、満タンになるとオーバーヒートして数秒沈黙します。ここでウェーブの <b>ウェーブ開始</b> / <b>停止</b> も押せます。</p>
+      <p class="done">これで基本は完了。あとは下の「やりたいこと逆引き」から必要な操作を探してください</p>
+    </div></div>
+  </div>
+</section>
+
+<!-- ============ RECIPES ============ -->
+<section id="recipes" data-nav="やりたいこと逆引き">
+  <div class="rv">
+    <div class="eyebrow">03 — Recipes</div>
+    <h2>「〜したい」から<br><em>探す</em>。</h2>
+    <p class="lead">よくある「やりたいこと」と、その手順です。キーワードで絞り込めます（例：「太さ」「渋滞」「揺れ」）。</p>
+  </div>
+  <label class="search rv"><span aria-hidden="true">🔍</span><span class="sr">やりたいことを検索</span><input id="recipeSearch" type="search" placeholder="例：オーバーヒート、敵を増やす、カメラ"></label>
+  <div class="chips rv" id="recipeChips" role="group" aria-label="カテゴリ">
+    <button class="chip" aria-pressed="true" data-f="all">すべて</button>
+    <button class="chip" aria-pressed="false" data-f="turret">砲台・レーザー</button>
+    <button class="chip" aria-pressed="false" data-f="enemy">敵</button>
+    <button class="chip" aria-pressed="false" data-f="stage">障害物・ステージ</button>
+    <button class="chip" aria-pressed="false" data-f="camera">カメラ・演出</button>
+    <button class="chip" aria-pressed="false" data-f="test">テスト</button>
+  </div>
+  <div class="recipes">
+    <details class="recipe" data-tags="test enemy"><summary><span class="q">ボスなど「Actor」の敵をその場で湧かせて試したい</span><span class="who">テスト</span></summary><div class="a">
+      <div class="where"><span class="mp">テスト<i>›</i>Actorの敵を湧かせる（テスト）</span></div>
+      <ol><li>Play 中に「テスト」タブを開きます。</li><li><b>敵の種類</b> を選び（最初はウェーブに入っている種類が選ばれています）、<b>数</b> を決めて <b>Actorとして湧かせる</b>。湧き位置のどれかに出ます。群衆の種類を選んでも、その場だけ Actor として湧きます（種類の設定は変わりません）。</li><li><b>Actorの敵を全て消す</b> で片付けられます。</li><li>ネット対戦では <b>Host 側</b>で押します。Client の画面にも同じ位置で現れ、倒れれば同時に消えます。ウェーブに入っていない種類は Client に表示されません（警告が出ます）。</li></ol>
+    </div></details>
+    <details class="recipe" data-tags="test"><summary><span class="q">ネット対戦で砲台を動かしたい（2〜4 人）</span><span class="who">メニュー</span></summary><div class="a">
+      <div class="where"><span class="mp">Tools<i>›</i>要塞<i>›</i>ネットワーク<i>›</i>同期オブジェクトをシーンに配置</span></div>
+      <ol><li>Play していない状態でメニューを実行します。砲台・破壊可能物・スマッシュボールを同期する「[Fortress] NetSync」と、自分のゲージ「[Fortress] LocalTurretHud」が追加されます（既にあれば何もしません）。</li><li><kbd>Ctrl</kbd>+<kbd>S</kbd> でシーンを保存してから、ビルドします（保存しないとビルドに入りません）。</li><li><code>Tools/NetTest/launch_2p.bat</code> で 2 つ起動し、操作したいウィンドウをクリックして <kbd>Q</kbd> を押します。<b>ネット対戦中はどの PC でも自分の砲台は Q（センサー 1 番）で動きます</b>（各 PC にセンサーが 1 台ずつのため）。</li><li>両方の画面で、同じ向き・同じ太さのレーザーが見えれば OK。画面下に自分の熱ゲージが出ます。</li></ol>
+    </div></details>
+    <details class="recipe" data-tags="turret"><summary><span class="q">レーザーを太く／細くしたい</span><span class="who">砲台配置</span></summary><div class="a">
+      <div class="where"><span class="mp">砲台配置<i>›</i>レーザー・熱チューニング<i>›</i>太さ・熱</span></div>
+      <ol><li><b>最大の太さ</b>＝全力（握力 100%）で握ったときの太さ。<b>最小の太さ</b>＝少しだけ握ったときの太さ。</li><li>握力と太さの関係を「曲線」で変えたいときは、設定ファイル <code>Default_LaserTuningConfig</code> の <b>Grip To Thickness Curve</b> を Inspector で編集します（例：弱く握ってもすぐ太くなる）。</li></ol>
+    </div></details>
+    <details class="recipe" data-tags="turret"><summary><span class="q">すぐオーバーヒートしすぎる／全然しない</span><span class="who">砲台配置</span></summary><div class="a">
+      <p>熱は <b>「握力 × 握力 × 熱上昇係数」が 1 秒ごとに溜まり</b>、<b>オーバーヒートしきい値</b>に届くと灼け落ちます。今の値（係数 1・しきい値 10）だと：</p>
+      <ul><li>全力（100%）で握り続ける → 1 秒に 1 溜まる → <b>約 10 秒</b>でオーバーヒート</li><li>半分（50%）で握り続ける → 1 秒に 0.25 → <b>約 40 秒</b></li></ul>
+      <p>早すぎるなら <b>熱上昇係数を下げる</b> か <b>しきい値を上げる</b>。握っていない間は <b>熱冷却速度</b>（1 秒あたり）だけ下がります。</p>
+    </div></details>
+    <details class="recipe" data-tags="turret"><summary><span class="q">オーバーヒート後の「撃てない時間」を変えたい</span><span class="who">砲台配置</span></summary><div class="a"><p><span class="mp">砲台配置<i>›</i>レーザー・熱チューニング<i>›</i>沈黙時間(秒)</span> を変えます。沈黙中の砲台の回転は <span class="mp">回転（自動で360度）<i>›</i>オーバーヒート中の速度倍率</span>（0 で停止）。</p></div></details>
+    <details class="recipe" data-tags="turret"><summary><span class="q">「溜めてから撃つ」方式にしたい</span><span class="who">砲台配置</span></summary><div class="a">
+      <ol><li><span class="mp">砲台配置<i>›</i>チャージ発射<i>›</i>チャージ発射を使う</span> を ON。</li><li><b>チャージ時間(秒)</b>：この秒数だけ強く握り続けると発射開始。</li><li><b>チャージ判定しきい値</b>：この割合以上で握っている間だけ溜まる（1.0 = 完全な全力のみ。今は 0.95）。</li></ol>
+      <p>OFF に戻すと、握った瞬間から撃てる元の方式になります。</p>
+    </div></details>
+    <details class="recipe" data-tags="turret"><summary><span class="q">砲台の回るスピードや向きを変えたい</span><span class="who">砲台配置</span></summary><div class="a">
+      <ul><li>4 基まとめて：<span class="mp">砲台配置<i>›</i>回転（自動で360度）<i>›</i>通常の回転速度(度/秒)</span>。射出中は <b>射出中の速度倍率</b>（曲線）に従って強さに応じて減速します。</li><li>1 基だけ：「シーン内の砲台」の各行で <b>自動回転</b> の ON/OFF、<b>時計回り／反時計回り</b>、<b>速度倍率</b>。</li></ul>
+    </div></details>
+    <details class="recipe" data-tags="turret stage"><summary><span class="q">砲台の位置を動かしたい／配置案を保存したい</span><span class="who">シーン</span></summary><div class="a">
+      <ol><li>位置は Scene で砲台の GameObject を選んで普通に動かすだけ（「シーン内の砲台」の <b>シーンで選択</b> で選べます）。</li><li>配置案として保存：Hierarchy で <code>FortressLayoutController</code> の付いたオブジェクトを選び、Inspector の <b>現在の配置をプリセットに保存</b>。別案は <b>読み込むプリセット</b> → <b>プリセットを適用</b> で切り替え。</li></ol>
+      <div class="callout warn"><span class="ci">!</span><div>Play 中にシーン上の物を動かしても、<b>Play を止めると元に戻ります</b>（Unity の仕様）。配置は Play していないときに。</div></div>
+    </div></details>
+    <details class="recipe" data-tags="enemy"><summary><span class="q">敵の数・出るタイミングを変えたい</span><span class="who">敵ウェーブ</span></summary><div class="a">
+      <ol><li>「敵ウェーブ」タブの <b>編集対象のウェーブ</b> に、編集するウェーブ（例：<code>Default_EnemyWaveConfig</code>）を入れる。</li><li><b>湧きエントリ</b> の 1 行が「1 回の出現」です：<b>発生時刻(秒)</b>・<b>湧き位置</b>・<b>敵の種類</b>・<b>数</b>・<b>間隔(秒)</b>。</li><li>行の並び順は気にしなくて OK（時刻順に自動で再生）。</li><li>ずっと繰り返したいなら <b>ループ再生</b> を ON、<b>ループ間隔(秒)</b> で次の周回までの待ち時間。</li></ol>
+    </div></details>
+    <details class="recipe" data-tags="enemy stage"><summary><span class="q">敵が湧く場所を増やしたい／円形に並べたい</span><span class="who">敵ウェーブ</span></summary><div class="a">
+      <ul><li>1 個ずつ：「敵ウェーブ」タブの湧き位置リストで <b>＋ 追加</b>。<b>ドラッグ編集</b> ON なら Scene 上でハンドルを掴んで動かせます。</li><li>円形にまとめて：<b>リング状に自動配置</b> で <b>個数</b>・<b>半径</b>・<b>中心座標</b>・<b>開始角度</b> を決めて <b>リングを生成</b>（既存の湧き位置は置き換えられます）。</li></ul>
+    </div></details>
+    <details class="recipe" data-tags="enemy"><summary><span class="q">新しい敵の種類を作りたい（大きい敵・速い敵）</span><span class="who">群衆</span></summary><div class="a">
+      <ol><li><span class="mp">群衆<i>›</i>敵の種類<i>›</i>＋ 新しい敵の種類を作成</span>。</li><li><b>体の大きさ（当たり半径）</b>・<b>重さ</b>（重いと軽い敵を押しのける）・<b>移動速度</b>・<b>体力</b>・<b>コアに与えるダメージ</b> などを決める。</li><li>作った種類を「敵ウェーブ」の <b>敵の種類</b> 欄で選べば出てきます。</li></ol>
+      <p class="small muted">大きい敵が細い隙間を通れないようにするには、敵の種類の <b>経路プロファイル</b> に Navigation Profile アセット（Create › Fortress › Navigation Profile）を割り当てます。</p>
+    </div></details>
+    <details class="recipe" data-tags="enemy"><summary><span class="q">敵の絵（スプライト）を差し替えたい</span><span class="who">群衆</span></summary><div class="a">
+      <p>敵の種類の <b>スプライトシート（空=仮絵）</b> に 1 枚の画像を入れ、<b>アニメのコマ数（横）</b>・<b>向きの数（縦: 1/2/4/8）</b> を合わせます。画像は次の格子で作ってください：</p>
+      <ul><li><b>横</b>＝アニメのコマ（左→右）。例：10 コマなら横 10 分割</li><li><b>縦</b>＝向き。上から <b>右・右上・上・左上・左・左下・下・右下</b>（8 方向）</li></ul>
+      <p>空のままなら自動生成の仮絵（丸＋足）で動きます。</p>
+    </div></details>
+    <details class="recipe" data-tags="enemy"><summary><span class="q">敵の群れを「詰まりやすく」「さらさら流れる」ようにしたい</span><span class="who">群衆</span></summary><div class="a">
+      <p><span class="mp">群衆<i>›</i>群衆の設定（流体らしさ）</span> のプリセットから選び、数値で微調整します。Play 中でもすぐ反映されます。</p>
+      <ul><li><b>標準</b>：バランスの取れた押し合い</li><li><b>どろどろ</b>：粘り気があり、密集すると強く減速</li><li><b>さらさら</b>：押されると流れるように動き、詰まりにくい</li><li><b>ぎゅうぎゅう</b>：密度が高く、詰まって溜まりやすい</li></ul>
+    </div></details>
+    <details class="recipe" data-tags="stage"><summary><span class="q">壁を置いて、敵に回り道をさせたい</span><span class="who">経路・障害物</span></summary><div class="a">
+      <ol><li>「経路・障害物」タブで、まだ無ければ <b>経路フィールドを作成</b>。</li><li>下のボタンで障害物を追加：<b>＋ 壊れない壁</b> / <b>＋ 破壊可能ブロック</b>（レーザーで壊れて時間で戻る）/ <b>＋ 通行コスト地帯</b>（通れるが遅くなり、敵が避けたがる泥地）。</li><li>Scene に出る <b>進行方向の矢印</b> と <b>湧き位置→コアの予想ルート</b>（緑=到達可、赤=到達不可）で確認。</li></ol>
+      <div class="callout"><span class="ci">i</span><div><b>到達チェック</b> 欄が「全ての湧き位置からコアへ到達できます。」になっていれば OK。赤い湧き位置は、敵がコアにたどり着けない配置です。</div></div>
+    </div></details>
+    <details class="recipe" data-tags="stage"><summary><span class="q">レーザーで壊せる箱を好きな場所に置きたい</span><span class="who">破壊可能物</span></summary><div class="a">
+      <ol><li>「破壊可能物」タブを開く。プリセットが無ければ <b>サンプルを作る（木箱・岩・ガラス）</b>。</li><li><b>配置する種類</b> を選び、<b>▶ Sceneをクリック/ドラッグして配置</b> を押す。</li><li>Scene を <b>クリック</b>＝既定の大きさで 1 個、<b>ドラッグ</b>＝ドラッグした範囲の大きさで 1 個。<kbd>Esc</kbd> で配置モード終了。</li></ol>
+      <p>置いた物はリストに並び、<b>複製</b>・<b>削除</b>・角のハンドルでのサイズ変更ができます。</p>
+    </div></details>
+    <details class="recipe" data-tags="stage"><summary><span class="q">壊れにくくしたい／壊れた後の復活時間を変えたい</span><span class="who">破壊可能物</span></summary><div class="a"><p>リストで選んで、<span class="mp">選択中の破壊可能物<i>›</i>耐久・再生</span> の <b>耐久値</b>・<b>受けるダメージの倍率</b>・再生の設定を変えます。同じ種類を全部変えたいならプリセットを編集して <b>選択中に適用</b>。レーザー側の効きは「砲台配置」の <b>障害物へのダメージ倍率</b>。</p></div></details>
+    <details class="recipe" data-tags="stage camera"><summary><span class="q">壊れたときのエフェクトや効果音を付けたい</span><span class="who">破壊可能物</span></summary><div class="a"><p><span class="mp">選択中の破壊可能物<i>›</i>演出（エフェクト・効果音）</span> に、被弾・破壊・再生などの出来事ごとのエフェクト Prefab と効果音を入れます。破壊時が空のままなら「仮の破片」が飛びます（<b>仮の破片を出す</b>）。</p></div></details>
+    <details class="recipe" data-tags="stage"><summary><span class="q">「最初は壊せない」「まとめて壊れる」仕掛けを作りたい</span><span class="who">破壊可能物</span></summary><div class="a"><p>その個体を選んで <b>連動（この個体のみ）</b> でグループ・連鎖爆発、<b>無敵条件（この個体のみ）</b> で「〜が壊れるまで無敵」などを設定します。<b>連動の線・連鎖範囲</b> を ON にすると Scene に線と円で表示されます。</p></div></details>
+    <details class="recipe" data-tags="stage camera"><summary><span class="q">スマッシュボールを作りたい</span><span class="who">スマッシュボール</span></summary><div class="a">
+      <ol><li>先に「破壊可能物」タブで壊せる物を置いておく。</li><li>「スマッシュボール」タブのリストで、その行の <b>スマッシュボール化</b>。</li><li><b>浮遊</b> を ON にすると画面内をふわふわ漂います。漂う範囲（経路フィールド）が画面より広くても、<b>画面外に出ても少し経つと戻ってくる</b>（既定 ON・1 秒）ので見失いません。Scene ビューでボールを選ぶと、水色の枠で「画面内」とみなす範囲が出ます。<b>同時出現の抑制（ローテーション）</b> で「同じグループは 1 個ずつ順番に出る」にもできます。</li><li>Play 中に <b>P1が割る</b> などのボタンで試し割り。<b>履歴</b> に「誰が何秒前に割ったか」が出ます。</li></ol>
+      <p class="small muted">割ったときに「何が起こるか（能力発動など）」はまだ記録・演出だけです。ゲーム効果はプログラマーが割れたイベントを拾って追加します。</p>
+    </div></details>
+    <details class="recipe" data-tags="camera"><summary><span class="q">4 人それぞれの画面の見え方を決めたい</span><span class="who">カメラ</span></summary><div class="a">
+      <ol><li>「カメラ」タブ上部の <b>編集する視点</b> で P1〜P4（または全体）を選ぶ。</li><li><b>見る場所(画面の中心)</b>・<b>画面の回転(度)</b>・<b>映す広さ</b>（ズーム）を調整。<b>寄る (-10%)</b> / <b>引く (+10%)</b> ボタンも便利。</li><li>まとめて：<b>全員「自分の砲台が画面の下」になるよう回転</b>、<b>全員フィット</b>（コアと砲台が収まるよう自動ズーム）。</li><li><b>4人の画面プレビュー</b> で並べて確認。欠けていると警告が出ます（例：「自分の砲台が安全域の外…」）。</li></ol>
+    </div></details>
+    <details class="recipe" data-tags="camera"><summary><span class="q">斜め見下ろしにして、キャラを立たせたい（立体っぽく）</span><span class="who">カメラ</span></summary><div class="a"><p>「カメラ」タブの <b>絵を立たせる（ビルボード）</b> で <b>斜め見下ろし用のプリセットを作る（今のプリセットを複製）</b>。元のプリセットは残るので、真上視点にいつでも戻せます。立たせる物（敵・コア・砲台・破壊可能物）や立ち上がり具合もここで選びます。</p></div></details>
+    <details class="recipe" data-tags="camera"><summary><span class="q">スマッシュボールを割った・コアが攻撃された時に画面を揺らしたい</span><span class="who">カメラ</span></summary><div class="a">
+      <ol><li>「カメラ」タブの <b>演出（揺れ・寄り）</b> を開く（無ければ <b>足りない部品を追加</b>）。</li><li>出来事（スマッシュボール破壊・コア被弾・オーバーヒート）ごとに、<b>鳴らす画面</b>（全員／関係者だけ／関係者以外）、<b>揺れ</b>、<b>寄り</b> を設定。</li><li>Play 中は <b>試し撃ち</b> で確認。視点を P1〜P4 に切り替えながら撃つと、画面ごとの出し分けが分かります。</li></ol>
+      <p class="small muted">揺れは「簡易揺れ（アセット不要）」か「D-Drive の揺れアセット」を選べます。D-Drive の揺れの作り方は <a href="D-Drive_ガイド.html">D-Drive ガイド</a> へ。</p>
+    </div></details>
+    <details class="recipe" data-tags="camera test"><summary><span class="q">Play 中に他のプレイヤーの画面で見たい</span><span class="who">キーボード</span></summary><div class="a"><p>Play 中に <kbd>F1</kbd>〜<kbd>F4</kbd> で P1〜P4 の視点、<kbd>F5</kbd> で全体、<kbd>F6</kbd> で自動に戻す、<kbd>F7</kbd> で構図ガイドの表示切替（エディタと開発ビルドのみ）。カメラタブの <b>他の人の視点で見る</b> でも同じことができます。</p></div></details>
+    <details class="recipe" data-tags="test enemy"><summary><span class="q">敵を何体まで出しても重くならないか測りたい</span><span class="who">群衆</span></summary><div class="a"><p>Play 中に <span class="mp">群衆<i>›</i>ストレステスト</span> で <b>一斉投入の数</b> を決めて <b>範囲の中心に一斉投入</b>、または <b>連続投入 (体/秒)</b>。<b>ライブ計測</b> にフレーム時間（16.6ms 以下なら 60FPS）が出ます。<b>ゲーム画面にHUD…を表示</b> を ON にするとビルドでも確認できます。</p></div></details>
+    <details class="recipe" data-tags="test"><summary><span class="q">センサー無しで 4 人分テストしたい</span><span class="who">テスト</span></summary><div class="a"><p>キーボードの <kbd>Q</kbd><kbd>W</kbd><kbd>O</kbd><kbd>P</kbd> がそれぞれ P1〜P4 の握力です。「そっと／しっかり／渾身」を自動で握らせたいときは、<a href="GripInputBridge_ガイド.html">握力入力ブリッジ</a> の <b>波形プリセット</b> を使います（テストタブの <b>握力入力ブリッジ（シミュレータ）を開く</b> から開けます）。</p></div></details>
+    <p class="noresult">見つかりませんでした。別の言葉で探すか、下の「画面の見かた」を見てください。</p>
+  </div>
+</section>
+
+<!-- ============ SCREEN GUIDE ============ -->
+<section id="screens" data-nav="画面の見かた">
+  <div class="rv">
+    <div class="eyebrow">04 — Every tab</div>
+    <h2>タブごとに、<br><em>いつ使う・何がある</em>。</h2>
+    <p class="lead">左のタブ名を選ぶと説明が切り替わります。</p>
+  </div>
+  <div class="tabguide rv">
+    <div class="tg-list" role="tablist" aria-label="タブの説明">
+      <button role="tab" aria-selected="true" aria-controls="tg-turret"><span class="em">🔫</span>砲台配置</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-wave"><span class="em">👾</span>敵ウェーブ</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-nav"><span class="em">🧱</span>経路・障害物</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-dest"><span class="em">📦</span>破壊可能物</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-smash"><span class="em">🔮</span>スマッシュボール</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-swarm"><span class="em">🐜</span>群衆</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-cam"><span class="em">🎥</span>カメラ</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-test"><span class="em">🧪</span>テスト</button>
+    </div>
+    <div>
+      <div class="tg-panel" id="tg-turret" role="tabpanel"><h3>砲台配置</h3><div class="when">⏱ レーザーの手触り・難しさを決めたいとき</div>
+        <p>上が「シーン内の砲台」（1 基ずつの設定）、下が「レーザー・熱チューニング」（4 基共通の設定ファイル）です。</p>
+        <ul class="points"><li><b>シーン内の砲台</b>：各砲台の自動回転 ON/OFF・向き・速度倍率、<b>シーンで選択</b>、仮の見た目（砲身など）の作成。</li><li><b>チャージ発射</b>：溜めてから撃つ方式の ON/OFF と秒数。</li><li><b>太さ・熱</b>：最小/最大の太さ、熱上昇係数、熱冷却速度、オーバーヒートしきい値、沈黙時間。</li><li><b>射程・最大秒間ダメージ・貫通</b>：レーザーの強さ。<b>敵を貫通する</b> を OFF にすると先頭の 1 体だけに当たる。</li><li><b>照準表示</b>：撃っていない間に出る、向きを示す細い線（照準線の長さ・太さ・濃さ）。</li><li><b>通常の回転速度(度/秒)</b>・<b>射出中の速度倍率</b>・<b>チャージ中／オーバーヒート中の速度倍率</b>：自動回転の速さ。</li><li>一番下の <b>この設定が未割り当ての砲台に適用</b> で、設定ファイルの付け忘れを直せます。</li></ul></div>
+      <div class="tg-panel" id="tg-wave" role="tabpanel"><h3>敵ウェーブ</h3><div class="when">⏱ 敵の出方（量・テンポ・方角）を決めたいとき</div>
+        <ul class="points"><li><b>編集対象のウェーブ</b>：編集するウェーブの設定ファイル。<b>新規ウェーブを作成</b> で増やせます。</li><li><b>湧きエントリ</b>：1 行 = 「○秒後に、どこから、どの敵を、何体、何秒おきに」。上部のタイムラインで時刻の分布が見えます。</li><li><b>ループ再生</b> / <b>ループ間隔(秒)</b>：最後まで出したら最初から繰り返す。</li><li><b>湧き位置</b>：一覧・追加・複製・削除・グリッドに揃える・<b>リング状に自動配置</b>。</li></ul>
+        <p class="small muted">Play 開始時に自動で再生されます。止めたいときは「テスト」タブの <b>停止</b>。</p></div>
+      <div class="tg-panel" id="tg-nav" role="tabpanel"><h3>経路・障害物</h3><div class="when">⏱ マップの形と、敵の通り道を作りたいとき</div>
+        <p>敵は障害物を避けてコアに向かいます。障害物が壊れたり戻ったりするたびに、通り道は自動で計算し直されます。</p>
+        <ul class="points"><li><b>経路フィールド</b>：通り道を計算する範囲。<b>範囲を自動フィット</b> で湧き位置・砲台・コア・障害物が全部収まる大きさに。</li><li><b>表示の切り替え</b>：通行不可・コスト地帯・<b>距離ヒートマップ</b>（コアに近いほど青）・<b>進行方向の矢印</b>・<b>予想ルート</b>（緑=到達可／赤=到達不可）。</li><li><b>到達チェック</b>：コアにたどり着けない湧き位置を自動で警告。</li><li><b>障害物</b>：＋ 破壊可能ブロック / ＋ 壊れない壁 / ＋ 通行コスト地帯。</li></ul>
+        <div class="callout warn"><span class="ci">!</span><div>「セル数が多く…重くなる可能性」と出たら、グリッド 1 マスを大きくするか範囲を絞ってください。</div></div></div>
+      <div class="tg-panel" id="tg-dest" role="tabpanel"><h3>破壊可能物</h3><div class="when">⏱ 壊せるオブジェクトを並べたいとき</div>
+        <ul class="points"><li><b>プリセット</b>：「耐久・見た目・演出・ドロップ・当たり判定」の一式（＝種類）。位置・大きさ・連動・無敵は含まない。<b>選択中を新しいプリセットとして保存</b> もできる。</li><li><b>配置</b>：配置する種類・大きさ・グリッドスナップを決めて、Scene をクリック／ドラッグ。</li><li><b>一覧</b>：検索・全選択・同じ種類を選択・複製・削除。</li><li><b>選択中の破壊可能物</b>：耐久・再生、見た目（Prefab 差し替え／ダメージ段階／壊れた後）、耐久ゲージ、演出、ドロップ、当たり判定、連動、無敵条件。</li><li><b>Play中のテスト</b>：<b>壊す</b>・<b>直す（全快）</b>・<b>ダメージ10</b>・<b>無敵を解除</b>。</li></ul></div>
+      <div class="tg-panel" id="tg-smash" role="tabpanel"><h3>スマッシュボール</h3><div class="when">⏱ 「割った人が得する」特別な物を仕込みたいとき</div>
+        <ul class="points"><li><b>一覧</b>：破壊可能物の一覧に <b>スマッシュボール化</b>／<b>解除</b> ボタン。状態は「出現中」「待機中」。</li><li><b>選択中のスマッシュボール</b>：名札、<b>浮遊</b>（ふわふわ移動）、<b>割れたときの演出</b>、履歴の記録、<b>保護</b>（復活直後の無敵秒数）、<b>同時出現の抑制（ローテーション）</b>。</li><li><b>Play中のテスト</b>：<b>P1が割る</b>〜<b>P4が割る</b>、<b>直す（全快・再出現）</b>。</li><li><b>履歴</b>：Play 中に誰が割ったかが並ぶ。</li></ul>
+        <p class="small muted">耐久や見た目は「破壊可能物」側の設定です。ここではスマッシュボール固有の項目だけを扱います。</p></div>
+      <div class="tg-panel" id="tg-swarm" role="tabpanel"><h3>群衆</h3><div class="when">⏱ 大量の敵の動き方・重さを調整したいとき</div>
+        <p>数千体の敵をまとめて計算・描画して 60FPS で動かす仕組み（SwarmSystem）の調整画面です。</p>
+        <ul class="points"><li><b>容量</b>・<b>到達した敵の扱い</b>（コアに着いたら消える／張り付く）・<b>手前の敵を上に描く</b>。</li><li><b>群衆の設定（流体らしさ）</b>：標準／どろどろ／さらさら／ぎゅうぎゅう ＋ 細かい数値。</li><li><b>敵の種類</b>：表示名・体の大きさ・重さ・スプライトシート。<b>＋ 新しい敵の種類を作成</b>。</li><li><b>ライブ計測</b>：敵の数・フレーム時間・処理時間のグラフ（Play 中）。<b>詳細計測</b> で原因の内訳も。</li><li><b>ストレステスト</b>：大量投入・連続投入・全削除。</li><li><b>密度ヒートマップ</b>：敵が集まっている所ほど赤く表示。</li></ul></div>
+      <div class="tg-panel" id="tg-cam" role="tabpanel"><h3>カメラ</h3><div class="when">⏱ 4 人の画面の見え方・演出を決めたいとき</div>
+        <ul class="points"><li><b>セットアップ</b>：<b>カメラリグをセットアップ</b> / <b>足りない部品を追加</b>（既にある物には触らない）。</li><li><b>視点プリセット</b>：4 人分の視点セット。<b>複製して編集</b> で案を比較、<b>なめらかに切替</b> で Play 中の切り替え確認。</li><li><b>編集する視点</b>：見る場所・回転・正投影/透視投影・映す広さ/視野角・距離・見下ろしの傾き。<b>コピー</b>／<b>貼り付け</b>。</li><li><b>まとめて設定</b>：全員の砲台を下に回転・ズームだけ全員にそろえる・<b>全員フィット</b>。</li><li><b>4人の画面プレビュー</b>：本番解像度・安全域・中心の十字・三分割線のガイド付き。</li><li><b>映り込みチェック</b>：コア・自分の砲台が映っていない／端で欠ける、を警告。</li><li><b>絵を立たせる（ビルボード）</b>、<b>演出（揺れ・寄り）</b>、<b>Play中のカメラ</b>（他の人の視点で見る）。</li></ul></div>
+      <div class="tg-panel" id="tg-test" role="tabpanel"><h3>テスト</h3><div class="when">⏱ Play 中に、全体がちゃんと動いているか見たいとき</div>
+        <ul class="points"><li><b>砲台の状態</b>：4 人分の握力・熱のバー、チャージ中／チャージ完了の表示。</li><li><b>敵ウェーブ再生</b>：対象ウェーブ、状態（再生中○秒経過／停止中）、<b>ウェーブ開始</b>／<b>停止</b>。</li><li><b>コアクリスタル HP</b>。</li><li><b>握力入力ブリッジ（シミュレータ）を開く</b>：キーボード以外の握り方（波形）を試すとき。</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PARAMS ============ -->
+<section id="params" data-nav="数値の意味">
+  <div class="rv">
+    <div class="eyebrow">05 — Numbers</div>
+    <h2>数値を変えると、<br><em>何が起こる？</em></h2>
+    <p class="lead">よく触る数値の一覧です。「上げると／下げると」で効き方が分かります。カッコ内は今の初期値。</p>
+  </div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">🔫 レーザー・熱 <span class="src">砲台配置タブ ／ Presets/Default_LaserTuningConfig.asset（4 基共通）</span></div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>最小の太さ</td><td>少しだけ握ったときのレーザーの太さ</td><td class="up">弱く握っても目立つ</td><td class="down">弱い握りは細い糸に</td><td class="def">0.05</td></tr>
+    <tr><td>最大の太さ</td><td>全力で握ったときの太さ</td><td class="up">全力の爽快感 UP</td><td class="down">差が小さくなる</td><td class="def">0.6</td></tr>
+    <tr><td>熱上昇係数</td><td>握るほど溜まる熱の速さ（握力²×係数×秒）</td><td class="up">すぐ灼ける（難しい）</td><td class="down">長く撃てる</td><td class="def">1</td></tr>
+    <tr><td>熱冷却速度</td><td>握っていない間に熱が下がる速さ（/秒）</td><td class="up">休めばすぐ回復</td><td class="down">一度溜めると戻りにくい</td><td class="def">0.6</td></tr>
+    <tr><td>オーバーヒートしきい値</td><td>灼け落ちる熱の量</td><td class="up">長く撃てる</td><td class="down">すぐ灼ける</td><td class="def">10</td></tr>
+    <tr><td>沈黙時間(秒)</td><td>灼けた後に撃てない時間</td><td class="up">罰が重い</td><td class="down">すぐ復帰</td><td class="def">3</td></tr>
+    <tr><td>チャージ発射を使う</td><td>溜めてから撃つ方式か</td><td colspan="2">ON＝溜め撃ち ／ OFF＝握った瞬間に発射</td><td class="def">OFF</td></tr>
+    <tr><td>チャージ時間(秒)</td><td>強く握り続けて発射までの時間</td><td class="up">溜めが長い</td><td class="down">すぐ撃てる</td><td class="def">1</td></tr>
+    <tr><td>チャージ判定しきい値</td><td>どれだけ強く握れば溜まるか（0〜1）</td><td class="up">全力でないと溜まらない</td><td class="down">ゆるく握っても溜まる</td><td class="def">0.95</td></tr>
+    <tr><td>通常の回転速度(度/秒)</td><td>砲台が自動で回る速さ（度/秒。360 で 1 秒 1 周）</td><td class="up">狙いにくい</td><td class="down">ゆっくり狙える</td><td class="def">45</td></tr>
+    <tr><td>射程</td><td>レーザーが届く距離</td><td class="up">遠くまで届く</td><td class="down">近くだけ</td><td class="def">20</td></tr>
+    <tr><td>最大秒間ダメージ</td><td>最大の太さのときの 1 秒あたりダメージ（太さに比例）</td><td class="up">敵がすぐ倒れる</td><td class="down">倒しにくい</td><td class="def">20</td></tr>
+    <tr><td>敵を貫通する／貫通数の上限</td><td>ビーム上の敵全員に当たるか／何体まで（0=無制限）</td><td colspan="2">OFF なら先頭の 1 体だけ</td><td class="def">ON／0</td></tr>
+    <tr><td>障害物へのダメージ倍率</td><td>壊せる物への効き（1 で敵と同じ）</td><td class="up">壁がすぐ壊れる</td><td class="down">壁が固い</td><td class="def">1</td></tr>
+  </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">👾 敵ウェーブの 1 行 <span class="src">敵ウェーブタブ ／ Presets/Default_EnemyWaveConfig.asset</span></div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>意味</th><th colspan="2">メモ</th><th>初期値</th></tr>
+    <tr><td>発生時刻(秒)</td><td>ウェーブ開始から何秒後に出すか</td><td colspan="2">行の順番は自由（時刻順に自動で並ぶ）</td><td class="def">0</td></tr>
+    <tr><td>湧き位置</td><td>どの湧き位置から出すか</td><td colspan="2">一覧から選択（タイプミス防止）</td><td class="def">—</td></tr>
+    <tr><td>敵の種類</td><td>出す敵</td><td colspan="2">「群衆」タブで作った種類</td><td class="def">—</td></tr>
+    <tr><td>数</td><td>何体出すか</td><td colspan="2"></td><td class="def">1</td></tr>
+    <tr><td>間隔(秒)</td><td>2 体以上のとき 1 体ずつの間隔</td><td colspan="2">0 なら同時に出る</td><td class="def">0.3</td></tr>
+    <tr><td>ループ再生／ループ間隔</td><td>最後まで出したら繰り返すか／待ち時間</td><td colspan="2"></td><td class="def">OFF／5</td></tr>
+  </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">🐜 敵の種類 <span class="src">群衆タブ › 敵の種類 ／ Presets/Default_EnemyType.asset など</span></div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>体の大きさ（当たり半径）</td><td>押し合いの基準になる大きさ</td><td class="up">場所を取る・詰まりやすい</td><td class="down">隙間をすり抜ける</td><td class="def">0.22</td></tr>
+    <tr><td>重さ</td><td>押し合いの強さ</td><td class="up">他の敵を押しのけて進む</td><td class="down">押し流される</td><td class="def">1</td></tr>
+    <tr><td>移動速度</td><td>歩く速さ</td><td class="up">速い</td><td class="down">遅い</td><td class="def">2</td></tr>
+    <tr><td>体力</td><td>倒すのに必要なダメージ</td><td class="up">硬い</td><td class="down">柔らかい</td><td class="def">10</td></tr>
+    <tr><td>コアに与えるダメージ</td><td>コアに着いたときのダメージ</td><td class="up">危険な敵</td><td class="down">弱い敵</td><td class="def">1</td></tr>
+    <tr><td>速度のばらつき</td><td>個体ごとの速さの差（±割合）</td><td class="up">群れがばらける</td><td class="down">足並みがそろう</td><td class="def">0.15</td></tr>
+    <tr><td>画面上の大きさ／コマ数／向きの数／アニメ速度</td><td>スプライトシートの表示</td><td colspan="2">向きの数は 1・2・4・8 のどれか</td><td class="def">0.7／10／8／12</td></tr>
+  </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">🌊 群衆の流体らしさ（よく触るもの） <span class="src">群衆タブ › 群衆の設定 ／ Presets/Default_SwarmSettings.asset</span></div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>密集時の減速の強さ</td><td>混んだときにどれだけ遅くなるか</td><td class="up">細い通路で渋滞</td><td class="down">混んでも進む</td><td class="def">0.55</td></tr>
+    <tr><td>押されて流れる度合い</td><td>押された分をそのまま速度にする割合</td><td class="up">さらさら流れる</td><td class="down">どろどろ粘る</td><td class="def">0.6</td></tr>
+    <tr><td>敵同士が保つ距離の倍率</td><td>敵同士が保つ距離（1＝体の大きさちょうど）</td><td class="up">間隔が空く</td><td class="down">ぎゅうぎゅうに詰まる</td><td class="def">1</td></tr>
+    <tr><td>押し戻しの強さ</td><td>重なりを許さない度合い（0〜1）</td><td class="up">硬い群れ</td><td class="down">重なりやすい</td><td class="def">0.85</td></tr>
+    <tr><td>障害物を事前に避ける度合い</td><td>壁を見越して避けるか</td><td class="up">早めに回り込む</td><td class="down">ぶつかってから壁沿いに流れる</td><td class="def">0.1</td></tr>
+    <tr><td>最大同時敵数（再Playで反映）</td><td>容量（変えたら Play し直し）</td><td class="up">大量に出せる（メモリ増）</td><td class="down">軽い</td><td class="def">40000</td></tr>
+  </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">🔮 スマッシュボール <span class="src">スマッシュボールタブ › 選択中のスマッシュボール</span></div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>意味</th><th colspan="2">メモ</th><th>初期値</th></tr>
+    <tr><td>名札</td><td>履歴・デバッグ表示での名前</td><td colspan="2">空ならオブジェクト名</td><td class="def">空</td></tr>
+    <tr><td>浮遊</td><td>画面内をふわふわ動くか</td><td colspan="2">浮遊中は敵の通り道の壁にならない</td><td class="def">—</td></tr>
+    <tr><td>画面外に出ても少し経つと戻ってくる</td><td>全員の画面に映る範囲から出たら戻ってくるか</td><td colspan="2">範囲はカメラの視点セット（4 人分の共通部分）から自動計算。再出現も画面内の空いている場所になる</td><td class="def">ON</td></tr>
+    <tr><td>画面外にいてよい時間(秒)</td><td>はみ出してから戻り始めるまで</td><td colspan="2">0 ならはみ出した瞬間に戻る</td><td class="def">1</td></tr>
+    <tr><td>画面の端からの余白</td><td>この距離より内側を「画面内」とみなす</td><td colspan="2">半分見切れた状態を画面内と数えないため</td><td class="def">1</td></tr>
+    <tr><td>戻るときの速さの倍率</td><td>戻る間だけ漂う速さに掛ける</td><td colspan="2"></td><td class="def">1.5</td></tr>
+    <tr><td>割れたときの演出</td><td>割った瞬間に出す派手なエフェクトと消すまでの秒数</td><td colspan="2">通常の破壊演出に追加で鳴る</td><td class="def">3 秒</td></tr>
+    <tr><td>復活直後の無敵(秒)</td><td>復活した瞬間に連続で割られないための保護</td><td colspan="2"></td><td class="def">1</td></tr>
+    <tr><td>ローテーション／グループ名／次が出るまで(秒)</td><td>同じグループは 1 個ずつ順番に出す</td><td colspan="2"></td><td class="def">OFF／空／3</td></tr>
+  </table></div></div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section id="faq" data-nav="困ったとき">
+  <div class="rv">
+    <div class="eyebrow">06 — Troubleshooting</div>
+    <h2>困ったときは<br><em>ここ</em>。</h2>
+  </div>
+  <div class="faq rv">
+    <details><summary>Play を止めたら、置いた物や動かした物が元に戻った</summary><div class="a">Unity の仕様で、<b>Play 中にシーン上の物を変えた内容は Play 終了で元に戻ります</b>。配置・移動・破壊可能物の設定は Play していないときに行い、<kbd>Ctrl</kbd>+<kbd>S</kbd> でシーンを保存してください。一方、設定ファイル（レーザー・熱、ウェーブ、群衆の設定、敵の種類、カメラのプリセット）の数値は Play 中に変えても残ります。</div></details>
+    <details><summary>キーを押してもレーザーが出ない</summary><div class="a"><ol><li>Play 中か確認（Play していないと握力は動きません）。</li><li>Game ビューをクリックしてフォーカスを当ててからキーを押す。</li><li>オーバーヒート中（熱が満タン）なら沈黙時間が終わるまで待つ。</li><li>チャージ発射が ON なら、強く握り続けないと出ません。</li><li>「砲台配置」で「砲台(LaserTurret)が1つも見つかりません。」なら、シーンに砲台がありません → 「はじめに」の <b>テストシーンを自動生成</b>。</li></ol></div></details>
+    <details><summary>ネット対戦で、Client 側の画面だと敵が倒れない</summary><div class="a">シーンに群衆の同期が入っていない可能性があります。メニュー <b>Tools › 要塞 › ネットワーク › 同期オブジェクトをシーンに配置</b> → 保存 → ビルドし直してください。同期が入っていれば、群衆・Actor の敵・破壊可能物・スマッシュボールは全て Host の結果が全員の画面に届きます（倒れるのは Host の判定から一瞬遅れます）。</div></details>
+    <details><summary>ネット対戦で、Client 側の群衆が少しずれて見える・すっと滑る</summary><div class="a">仕様です。Client も群衆の動きを自分で計算し、Host の位置で少しずつ補正しています（通信量を 1/10 にするため）。ずれが気になるときは、NetSync の <b>Swarm Network Hub</b> の <b>Correction Cycle Seconds</b>（全員を補正する間隔）を小さくすると正確になります（通信は増えます）。どの敵を倒したか・コアに届いたかは Host が決めるので、勝敗には影響しません。</div></details>
+    <details><summary>画面の左上に計測表示がいくつも出ている／重なっていないか心配</summary><div class="a">左上には上から順に「D-Drive の通信状態（Development Build のみ）」「群衆の計測表示」「カメラの視点表示（F7）」が、表示中の物だけ詰めて並びます（重なりません）。右上は接続画面、下中央は自分のゲージです。D-Drive の左下の手動接続画面は使わないので隠しています。</div></details>
+    <details><summary>一斉投入すると重い／Client 側の到着が遅い（ネット対戦）</summary><div class="a">群衆の設定の <b>1フレームに湧かせる上限</b>（既定 3000）で、一斉投入を数フレームに分けて追加しています。負荷の計測は <code>Tools/NetTest/bench_2p.bat</code>（Host と Client を起動し、自動で 3 万体投入して 1 秒ごとの数値をログに残し、45 秒で終了）で行えます。改善の進み具合は <code>Docs/Multiplayer/MultiplayerProgress.md</code>。</div></details>
+    <details><summary>Client 側で群衆の「ストレステスト」が押せない</summary><div class="a">正常です。ネット対戦の Client では群衆は Host から届くので、投入・削除は Host 側で行います（結果が全員に届きます）。</div></details>
+    <details><summary>ネット対戦中、Client 側で「壊す」「P1が割る」などのテストボタンが効かない</summary><div class="a">正常です。ネット対戦中の Client では、破壊可能物は Host の結果を映すだけになっています。テストボタンは Host 側の Unity で押してください（結果が全員に届きます）。</div></details>
+    <details><summary>Console に「破壊可能物の並びがHostと一致しません」と出る</summary><div class="a">Host と Client でシーンの中身が違います（片方だけ古いビルド、など）。同じビルドを使ってください。この状態では破壊可能物は同期されず、各 PC で別々に動きます。</div></details>
+    <details><summary>ネット対戦で、自分の砲台がキーを押しても動かない</summary><div class="a"><ol><li>押すキーは <kbd>Q</kbd> です（プレイヤー番号に関係なく、各 PC のセンサー 1 番で自分の砲台が動きます）。</li><li>操作したいウィンドウをクリックしてから押します（裏にあるウィンドウにはキーが届きません）。</li><li>シーンに「[Fortress] NetSync」が無いと同期されません → メニュー <b>Tools › 要塞 › ネットワーク › 同期オブジェクトをシーンに配置</b> → 保存 → ビルドし直し。</li></ol></div></details>
+    <details><summary>敵がコアにたどり着けない／その場で止まる</summary><div class="a">「経路・障害物」タブの <b>到達チェック</b> を見てください。赤い湧き位置は、壁で囲まれてコアに行けません。壁を減らすか、経路フィールドの範囲が湧き位置を含んでいるか（<b>範囲を自動フィット</b>）を確認します。</div></details>
+    <details><summary>敵がいきなり重くなる（カクつく）</summary><div class="a">「群衆」タブの <b>ライブ計測</b> を見ます。「1つのセルに敵が集中しています」と出ていたら、一か所に密集しすぎです。<b>詳細計測</b> を ON にすると、どの処理が重いか分かります。</div></details>
+    <details><summary>カメラタブに「〜がシーンにありません」と出る</summary><div class="a"><b>足りない部品を追加</b> を押せば、演出・構図ガイド・デバッグキー用の部品が追加されます（既にある物には触りません）。カメラ自体が無い場合は <b>カメラリグをセットアップ</b>。Play 中はセットアップできないので止めてから押します。</div></details>
+    <details><summary>揺れアセットが未設定と出る</summary><div class="a">D-Drive の揺れアセットが無い間は、自動で「簡易揺れ」で代用されるので動作は問題ありません。本格的な揺れにしたいときは、D-Drive の Asset Browser で Shake を作って選びます（<a href="D-Drive_ガイド.html">D-Drive ガイド</a>）。</div></details>
+    <details><summary>どの設定ファイルを編集すればいいか分からない</summary><div class="a">基本は <code>Assets/_Game/Fortress/Presets/</code> にあります：<code>Default_LaserTuningConfig</code>（レーザー・熱）、<code>Default_EnemyWaveConfig</code>（ウェーブ）、<code>Default_EnemyType</code>（敵）、<code>Default_SwarmSettings</code>（群衆）、<code>Camera/</code>（視点と揺れ）、<code>Destructibles/</code>（破壊可能物の種類）。タブから編集すれば自動でこれらが書き換わります。</div></details>
+  </div>
+</section>
+
+<!-- ============ GLOSSARY ============ -->
+<section id="glossary" data-nav="用語集">
+  <div class="rv">
+    <div class="eyebrow">07 — Words</div>
+    <h2>分からない言葉は<br><em>ここで引く</em>。</h2>
+  </div>
+  <dl class="gloss">
+    <div class="rv"><dt>コア <small>Core Crystal</small></dt><dd>マップ中央の守るべきクリスタル。敵がたどり着くとダメージを受ける。</dd></div>
+    <div class="rv"><dt>砲台 <small>Laser Turret</small></dt><dd>プレイヤー 1 人に 1 基。自動で回り続け、握力でレーザーを撃つ。</dd></div>
+    <div class="rv"><dt>熱・オーバーヒート</dt><dd>強く握るほど溜まるゲージ。満タンで砲台が「灼け落ちて」数秒撃てなくなる。</dd></div>
+    <div class="rv"><dt>ウェーブ</dt><dd>敵の出現スケジュール 1 本分。「○秒後に△から□を×体」の表。</dd></div>
+    <div class="rv"><dt>湧き位置 <small>Spawn Point</small></dt><dd>敵が出てくる地点のマーカー。</dd></div>
+    <div class="rv"><dt>経路フィールド</dt><dd>敵の通り道を計算する範囲と仕組み。マス目ごとに「コアへどっちに進むか」を持つ。</dd></div>
+    <div class="rv"><dt>通行コスト地帯</dt><dd>通れるけど遅くなる場所（泥・水たまり）。敵はなるべく避ける。</dd></div>
+    <div class="rv"><dt>破壊可能物</dt><dd>レーザーで壊せて、時間で元に戻る物。壊れている間は敵の通り道が開く。</dd></div>
+    <div class="rv"><dt>プリセット</dt><dd>設定一式を保存したファイル。同じ種類の物を量産したり、案を比べたりするのに使う。</dd></div>
+    <div class="rv"><dt>スマッシュボール</dt><dd>割ると「誰が割ったか」が記録される特別な破壊可能物。</dd></div>
+    <div class="rv"><dt>群衆 <small>Swarm</small></dt><dd>数千体の敵を軽く動かす仕組み。1 体ずつの GameObject を作らない。</dd></div>
+    <div class="rv"><dt>視点プリセット</dt><dd>4 人分＋全体の「画面の見え方」をまとめたファイル。案ごとに複数持てる。</dd></div>
+    <div class="rv"><dt>正投影／透視投影</dt><dd>正投影＝遠近感なし（2D っぽい）。透視投影＝遠くが小さく見える（3D っぽい）。</dd></div>
+    <div class="rv"><dt>ビルボード</dt><dd>地面に寝ている平らな絵を、カメラの方へ立たせる表示方法。</dd></div>
+    <div class="rv"><dt>安全域</dt><dd>モニターの縁で切れずに確実に見える画面内の範囲。</dd></div>
+    <div class="rv"><dt>設定ファイル <small>ScriptableObject / .asset</small></dt><dd>数値を保存するファイル。シーンとは別なので、Play を止めても変更が残る。</dd></div>
+  </dl>
+</section>
+
+<!-- ============ DEV ============ -->
+<div class="devzone"></div>
+<section id="dev" data-nav="データと構成" data-dev>
+  <div class="rv">
+    <div class="eyebrow">08 — For programmers</div>
+    <h2>データの<br><em>置き場所と構成</em>。</h2>
+    <p class="lead">ツールは <code>MS2026.Fortress.Editor</code>（<code>Assets/_Game/Fortress/Editor/FortressDesignerWindow/</code>）、ゲーム本体は <code>MS2026.Fortress.Runtime</code>。ツールは「ランタイムのコンポーネントと設定アセットを編集するだけ」で、独自の保存形式は持ちません。</p>
+  </div>
+  <div class="tree rv"><span class="d">Assets/_Game/Fortress/</span>
+├─ <span class="d">Editor/FortressDesignerWindow/</span>  <span class="c"># 9 タブ。1 タブ = 1 TabView + 複数 Panel</span>
+│  ├─ <span class="h">FortressDesignerWindow.cs</span>    <span class="c"># Tools/要塞/要塞デザイナーを開く</span>
+│  └─ <span class="d">Camera/ Destructibles/ SmashBall/ Swarm/</span>
+├─ <span class="d">Editor/SceneBootstrap/</span>          <span class="c"># Tools/要塞/フェーズ1テストシーンを生成</span>
+├─ <span class="d">Presets/</span>                         <span class="c"># 設定アセット（ツールが作成・編集）</span>
+│  ├─ Default_LaserTuningConfig / Default_EnemyWaveConfig
+│  ├─ Default_EnemyType / Default_SwarmSettings
+│  ├─ <span class="d">Camera/</span>  CameraViewPreset_* / CameraFeedbackConfig*
+│  └─ <span class="d">Destructibles/</span>  DestructiblePreset（木箱・岩・ガラス…）
+└─ <span class="d">Runtime/</span>  Laser · Spawning · Swarm · Navigation · Obstacles · Camera · Billboard · Net</div>
+  <div class="split">
+    <div class="card rv"><h4>主な設定アセット（CreateAssetMenu: Fortress/…）</h4><p class="small" style="margin-top:8px;color:var(--ink2)"><code>LaserTuningConfig</code>・<code>EnemyWaveConfig</code>・<code>EnemyTypeDefinition</code>・<code>SwarmSettings</code>・<code>NavigationProfile</code>・<code>FortressLayoutConfig</code>・<code>DestructiblePreset</code>・<code>CameraViewPreset</code>・<code>CameraFeedbackConfig</code></p></div>
+    <div class="card rv"><h4>起動引数（1 台で 4 窓テスト）</h4><p class="small" style="margin-top:8px;color:var(--ink2)"><code>-fortress-start host|client</code> <code>-fortress-player 0-3</code> <code>-fortress-address IP</code> <code>-fortress-tile</code>（ウィンドウを 4 分割に並べる）。D-Drive の <code>-ddrive-net</code> は PlayerIndex を載せないので使わない。接続承認（同じプレイヤー番号の二重参加を弾く）は、シーンの NetworkManager の設定に関係なく接続開始時に自動で ON になる。<br>起動用の bat はプロジェクトの <code>Tools/NetTest/</code> にある（<code>launch_2p.bat</code>＝2 人、<code>launch_4p.bat</code>＝4 人、<code>launch_ui_2p.bat</code>＝手動接続、<code>launch_duplicate_test.bat</code>＝同じ番号の二重参加チェック）。ビルドは <code>Builds/TestBuild</code>（Git 管理外）か <code>Downloads\TestBuild</code> に出力すれば自動で見つける。ログはビルドフォルダの <code>logs</code> に出る。</p></div>
+    <div class="card rv"><h4>ネット対戦での砲台（Phase 1）</h4><p class="small" style="margin-top:8px;color:var(--ink2)"><code>TurretNetworkHub</code>（シーンに 1 つ、NetworkObject 付き）が 4 台をまとめて同期。Client は自分の PC のセンサー（<code>localGripSensorIndex</code>、既定 0）の握力を Host へ送るだけで、砲台は Host から届いた状態を表示する。Host が 4 台とも計算し、ダメージも Host だけが与える（<code>FortressNet.HasSimulationAuthority</code>）。通信していないときは今まで通り。自分のゲージは <code>LocalTurretGaugeHud</code>（差し替え用の欄に自作 UI を割り当て可。未設定なら仮ゲージを自動生成）。</p></div>
+    <div class="card rv"><h4>ネット対戦での群衆（Phase 4）</h4><p class="small" style="margin-top:8px;color:var(--ink2)"><code>SwarmNetworkHub</code>（NetSync に同居）。Host が全てを計算し（湧く・倒れる・コア到達・コアへのダメージ）、出現と消滅を確実に送る（3 万体が一斉に湧いても回線があふれないよう 1 秒 4 万件まで）。Client も群衆の動きを自分で計算しつつ、Host の位置を「全員を 0.5 秒に 1 回」のペースで受け取って少しずつ寄せる。被弾の白いフラッシュは Client でも出る。3 万体で Client 1 人あたり約 2.9Mbps（有線 LAN 前提の既定値）。補正の頻度・寄せる速さは Inspector で調整できる。</p></div>
+    <div class="card rv"><h4>ネット対戦での Actor の敵（Phase 3）</h4><p class="small" style="margin-top:8px;color:var(--ink2)"><code>EnemyNetworkHub</code>（NetSync に同居）。Actor の敵は Host だけが湧かせて動かし、出現・消滅（倒された／コア到達）と位置・速度を毎秒 20 回配る。Client は同じ Prefab から「表示だけの敵」を作って滑らかに動かす（倒されたときは <code>OnDeath</code> も発火）。敵の Prefab に NetworkObject を付ける必要はない。種類はウェーブ設定に入っている物だけ同期できる。群衆の敵は Phase 4 まで各 PC で湧く。向きやアニメーションは <code>EnemyController.Velocity</code> を見れば Client でも正しく動く。</p></div>
+    <div class="card rv"><h4>ネット対戦での破壊可能物・スマッシュボール（Phase 2）</h4><p class="small" style="margin-top:8px;color:var(--ink2)"><code>DestructibleNetworkHub</code>（NetSync に同居）が全ての破壊可能物を同期。Host で起きたダメージ・破壊・再生・無敵・表示の切り替えを、起きた順に毎秒 20 回まとめて送り、Client は同じイベントとして発火する（見た目・演出・スマッシュボールの記録・ドロップは無改修で全員に出る）。「誰が割ったか」もプレイヤー番号で届く。浮遊するスマッシュボールは Host の位置を毎秒 15 回送って補間。接続直後に今の状態をまとめて受け取る。ドロップ品は今は見た目扱い（各 PC で別々に出る）。</p></div>
+  </div>
+</section>
+<section id="api" data-nav="コードから使う" data-dev>
+  <div class="rv">
+    <div class="eyebrow">09 — Hooks</div>
+    <h2>ゲーム側から<br><em>拾えるイベント</em>。</h2>
+  </div>
+  <div class="tabs rv" role="tablist" aria-label="コード例">
+    <button class="tab" role="tab" aria-selected="true" aria-controls="cp-smash">スマッシュボール</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="cp-turret">砲台・コア</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="cp-swarm">群衆・ウェーブ</button>
+  </div>
+  <div class="panel" id="cp-smash" role="tabpanel">
+    <div class="codebox"><div class="cap"><span>SmashBallModule.AnyBroken</span><button class="copy" type="button">copy</button></div><pre>
+using MS2026.Fortress;
+
+void OnEnable()  => SmashBallModule.AnyBroken += OnBroken;
+void OnDisable() => SmashBallModule.AnyBroken -= OnBroken;
+
+void OnBroken(SmashBallBreakInfo info)
+{
+    int player = info.Attacker.PlayerIndex;   // 割ったプレイヤー (0-3)
+    var pos    = info.WorldPosition;          // 割れた場所
+    // ここに「能力発動」などのゲーム効果を書く
+}</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">設計</span>SmashBallModule は「誰が割ったかを記録・通知する」だけ。何が起こるかは購読側が決める。個体単位なら <code>Broken</code> イベント。</div><div class="note"><span class="lbl">履歴</span><code>SmashBallHistory</code> が直近 N 件を保持（Play 開始でリセット）。</div></div>
+  </div>
+  <div class="panel" id="cp-turret" role="tabpanel">
+    <div class="codebox"><div class="cap"><span>LaserTurret / CoreCrystalController</span><button class="copy" type="button">copy</button></div><pre>
+// 砲台の状態: Idle / Charging / Firing / Overheated
+turret.OnStateChanged += state => { /* ... */ };
+float heat01 = turret.HeatRatio01;          // 熱 (0-1)
+float thick  = turret.CurrentThickness01;   // レーザーの太さ (0-1)
+
+// コア
+core.OnHealthChanged += (current, max) => { /* HUD 更新 */ };
+core.OnCoreDestroyed += () => { /* ゲームオーバー */ };</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">握力</span>砲台は <code>GripInputBridge.Provider</code> の <code>IsGripping</code> / <code>GetGripValue(playerIndex)</code> を毎フレーム読む。<a href="GripInputBridge_ガイド.html">握力入力ブリッジ</a>参照。</div><div class="note"><span class="lbl">SE</span><code>LaserTurretAudio</code> が Firing 突入時に <code>Audio.PlaySe(SEID.Se)</code>（D-Drive）。</div><div class="note"><span class="lbl">ネット</span>Client では <code>turret.IsReplica</code> が true（Host から届いた状態を表示中）。<code>OnStateChanged</code> は Client でも発火するので、SE・演出は無改修で全員に出る。ダメージなど結果に関わる処理は <code>FortressNet.HasSimulationAuthority</code> で囲む。</div></div>
+  </div>
+  <div class="panel" id="cp-swarm" role="tabpanel">
+    <div class="codebox"><div class="cap"><span>SwarmSystem / EnemySpawnDirector</span><button class="copy" type="button">copy</button></div><pre>
+swarm.Spawn(enemyType, position);                       // 1 体
+swarm.SpawnBurst(enemyType, center, radius, count);     // まとめて
+swarm.ClearAll();
+
+spawnDirector.StartWave();   // autoStartOnPlay=false のとき手動で
+spawnDirector.StopWave();
+bool playing = spawnDirector.IsPlaying;</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">群衆</span>Jobs + Burst + GPU インスタンシング。敵は GameObject を持たない。ボス等は <code>EnemySimulationMode.Actor</code>。</div><div class="note"><span class="lbl">詳細</span>より深い情報は AI 向けリファレンス <code>Docs/Tools/FortressDesigner_AI_Reference.md</code>。</div></div>
+  </div>
+</section>
+
+<section id="more" data-nav="関連ツール">
+  <div class="rv">
+    <div class="eyebrow">10 — Related</div>
+    <h2>一緒に使う<br><em>ツール</em>。</h2>
+  </div>
+  <div class="links">
+    <a class="lk rv" href="GripInputBridge_ガイド.html"><span class="ti">握力入力ブリッジ</span><span class="ds">握力センサー・キーボード代用・キャリブレーション。</span></a>
+    <a class="lk rv" href="D-Drive_ガイド.html"><span class="ti">D-Drive</span><span class="ds">効果音・エフェクト・揺れアセットの管理。</span></a>
+    <a class="lk rv" href="ShaderFX_ガイド.html"><span class="ti">ShaderFX</span><span class="ds">被弾フラッシュ・ディゾルブなどの見た目エフェクト。</span></a>
+    <a class="lk rv" href="index.html"><span class="ti">ツール一覧</span><span class="ds">このプロジェクトの全ツール。</span></a>
+  </div>
+  <footer><span>Fortress Designer Guide · Xx_MS2026_xX</span><span>2026-10-03 時点のコードに基づく</span></footer>
+</section>
+</main>
+</div>
+<script src="assets/guide.js"></script>
+</body>
+</html>

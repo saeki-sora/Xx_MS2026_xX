@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ShaderFX ガイド</title>
+<meta name="description" content="リムライト・ディゾルブ・被弾フラッシュなどの見た目エフェクトを、設定ファイルに積むだけで付けられる ShaderFX の使い方">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/guide.css">
+<style>
+:root{--acc:#b98cff;--acc-ink:#12061f;--acc2:#ff4d8d;--acc3:#4de2ff}
+:root[data-theme="light"]{--acc:#6d3fc0;--acc-ink:#ffffff;--acc2:#c8185a;--acc3:#007f99}
+.fx{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-top:26px}
+.fx .card{padding:16px}
+.swatch{height:84px;border-radius:12px;margin-bottom:10px;position:relative;overflow:hidden;background:#20222b}
+.swatch::after{content:"";position:absolute;inset:18px 30%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8a8fa3,#3b3e4a 70%)}
+.sw-rim::after{box-shadow:0 0 0 3px #4de2ff,0 0 22px 4px #4de2ff}
+.sw-diss::after{-webkit-mask:repeating-radial-gradient(circle at 70% 70%,#000 0 6px,transparent 6px 9px);mask:repeating-radial-gradient(circle at 70% 70%,#000 0 6px,transparent 6px 9px);box-shadow:0 0 14px #ff8c1a}
+.sw-flash::after{background:#fff;box-shadow:0 0 30px #fff}
+.sw-emi::after{background:radial-gradient(circle,#fff6b0,#ffb547 60%);box-shadow:0 0 30px #ffb547;animation:pulse 1.6s ease-in-out infinite}
+.sw-fire::after{background:radial-gradient(circle at 50% 80%,#fff2a0,#ff7a1a 45%,#b8200c 80%);box-shadow:0 -8px 24px #ff5a1a}
+.sw-frost::after{background:radial-gradient(circle at 35% 30%,#e9f7ff,#8ccaf0 70%);box-shadow:0 0 16px #bfe8ff}
+.sw-holo::after{background:repeating-linear-gradient(0deg,rgba(77,226,255,.65) 0 2px,rgba(77,226,255,.15) 2px 5px);box-shadow:0 0 18px #4de2ff;opacity:.85}
+.sw-glitch::after{background:linear-gradient(90deg,#ff2d55 0 33%,#8a8fa3 33% 66%,#2d9bff 66%);transform:skewX(-8deg)}
+.sw-uv::after{background:repeating-linear-gradient(0deg,#3b3e4a 0 8px,#ffb347 8px 10px);animation:scroll 1.4s linear infinite}
+.sw-toon::after{background:linear-gradient(135deg,#a3a8bc 0 50%,#5a5e72 50%)}
+.sw-gray{filter:grayscale(1)}
+.sw-poster::after{background:linear-gradient(135deg,#ff4d8d 0 33%,#ffd24d 33% 66%,#4de2ff 66%)}
+.sw-pix::after{background:conic-gradient(#8a8fa3 25%,#5a5e72 0 50%,#8a8fa3 0 75%,#5a5e72 0);background-size:12px 12px;border-radius:0}
+.sw-outline::after{box-shadow:0 0 0 3px #000,0 0 0 4px #fff}
+.sw-shock{background:radial-gradient(circle,transparent 30%,rgba(255,255,255,.35) 34%,transparent 40%),#20222b}
+.sw-sflash{background:#ff3b4f}
+@keyframes pulse{50%{filter:brightness(1.5)}}
+@keyframes scroll{to{background-position:0 20px}}
+.fx h4{font-size:15px}.fx p{font-size:12.5px;color:var(--ink2);margin-top:4px;line-height:1.65}
+.badge2d{font-family:var(--mono);font-size:10px;padding:1px 6px;border-radius:999px;border:1px solid var(--line2);color:var(--mute);margin-left:6px;vertical-align:2px}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<div class="orbs" aria-hidden="true"><div class="orb a"></div><div class="orb b"></div></div>
+
+<div class="shell">
+<nav class="side" aria-label="目次">
+  <a class="back" href="index.html">← ツール一覧</a>
+  <a class="brand" href="#top"><span class="mark">FX</span><span class="t">ShaderFX</span></a>
+  <ol id="toc"></ol>
+  <div class="foot">
+    <button class="themebtn" id="themeBtn" type="button"><span aria-hidden="true">◐</span><span data-label>ライト表示</span></button>
+    <div class="meta mono">Packages/com.ms2026.shaderfx<br>v0.1.0 · 2026-10-03 時点</div>
+  </div>
+</nav>
+
+<main id="top">
+<header class="hero">
+  <div class="tags">
+    <span class="pill hot">見た目のエフェクト</span>
+    <span class="pill">2D / 3D 両対応</span>
+    <span class="pill">16 種類</span>
+    <span class="pill">プリセット 21 種</span>
+  </div>
+  <h1 class="mega" aria-label="ShaderFX"><span class="o">SHADER</span><span class="f">FX</span></h1>
+  <p class="subname">MS2026 ShaderFX — <b>光る・溶ける・凍る・燃える を「後付け」する</b></p>
+  <div class="hero-row">
+    <div>
+      <p class="oneword">「光る縁」「溶けて消える」「被弾で白く光る」を、<br><span class="hl">設定ファイルに積むだけ</span>で付けられる。</p>
+      <p class="analogy">たとえるなら「写真アプリのフィルター」。1 つの設定ファイル（Effect Profile）にフィルターを好きなだけ重ねておき、それをキャラや物に貼ると見た目が変わります。同じ設定を何千体に貼っても重くならないように作られています。</p>
+    </div>
+    <div class="facts"><dl>
+      <dt>誰が使う</dt><dd>デザイナー・プランナー（見た目づくり）、プログラマー（被弾など出来事との連動）</dd>
+      <dt>作り方</dt><dd>Project で右クリック <span class="mp">Create<i>›</i>ShaderFX<i>›</i>Effect Profile</span></dd>
+      <dt>一覧</dt><dd><span class="mp">Tools<i>›</i>シェーダーFX<i>›</i>プロファイルブラウザ</span></dd>
+      <dt>今の使用状況</dt><dd>パッケージは導入済み。ゲーム本編ではまだ未使用（デモが <code>Assets/ShaderFX_Demo/</code> にあります）</dd>
+    </dl></div>
+  </div>
+  <div class="marquee" aria-hidden="true"><div class="track" id="mq" data-words="リムライト|ディゾルブ|被弾フラッシュ|発光|発火|氷結|ホログラム|グリッチ|UVスクロール|トゥーン影|白黒化|ドット絵化|輪郭線|衝撃波|画面フラッシュ"></div></div>
+</header>
+
+<section id="what" data-nav="仕組みを 30 秒で">
+  <div class="rv">
+    <div class="eyebrow">01 — How it works</div>
+    <h2>登場人物は<br><em>3 つだけ</em>。</h2>
+  </div>
+  <div class="flow rv">
+    <div class="flow-title">PROFILE → TARGET → DIRECTOR</div>
+    <div class="pipe">
+      <div class="node hl"><div class="k">設定ファイル</div><div class="v">Effect Profile</div><div class="s">効果を積み重ねたレシピ。「+ Add Effect」で足していく。</div></div>
+      <div class="arrow"></div>
+      <div class="node"><div class="k">貼るシール</div><div class="v">Effect Target</div><div class="s">キャラや物に付ける部品。どの Profile を使うかを持つだけ。</div></div>
+      <div class="arrow"></div>
+      <div class="node"><div class="k">裏方（自動）</div><div class="v">Effect Director</div><div class="s">シーンに自動で現れて、全員にまとめて効果をかける。触らなくていい。</div></div>
+    </div>
+    <div class="callout"><span class="ci">!</span><div>効果が見えるには、その物の<b>マテリアルのシェーダーが <code>ShaderFX/Uber</code>（3D）か <code>ShaderFX/Uber Sprite</code>（2D スプライト）</b>である必要があります。ここだけは最初に一度設定してください。</div></div>
+  </div>
+</section>
+
+<section id="effects" data-nav="エフェクト図鑑">
+  <div class="rv">
+    <div class="eyebrow">02 — Catalog</div>
+    <h2>使えるエフェクト<br><em>16 種類</em>。</h2>
+    <p class="lead">上の 10 種は「その物だけ」にかかる <b>オブジェクト系</b>、下の 6 種は「画面全体」にかかる <b>画面系</b>。見本は雰囲気を伝えるイメージです。</p>
+  </div>
+  <div class="fx">
+    <div class="card rv"><div class="swatch sw-rim"></div><h4>リムライト <span class="badge2d">2D/3D</span></h4><p>輪郭（縁）を光らせる。アニメ調キャラの定番。</p></div>
+    <div class="card rv"><div class="swatch sw-diss"></div><h4>ディゾルブ <span class="badge2d">2D/3D</span></h4><p>模様状に溶けて消える。<b>消える進み具合</b>を 0→1 で動かす。</p></div>
+    <div class="card rv"><div class="swatch sw-flash"></div><h4>被弾フラッシュ <span class="badge2d">2D/3D</span></h4><p>一瞬だけ色を差し替えて光らせる。白で定番の被弾表現。</p></div>
+    <div class="card rv"><div class="swatch sw-emi"></div><h4>発光（エミッション） <span class="badge2d">2D/3D</span></h4><p>自分で光る。点滅の速さも設定可能。</p></div>
+    <div class="card rv"><div class="swatch sw-fire"></div><h4>発火（ファイア） <span class="badge2d">2D/3D</span></h4><p>揺らめく炎のグロー。色を変えれば毒炎・魔法の炎。</p></div>
+    <div class="card rv"><div class="swatch sw-frost"></div><h4>氷結（フロスト） <span class="badge2d">2D/3D</span></h4><p>青みがかった凍った質感＋きらめき。</p></div>
+    <div class="card rv"><div class="swatch sw-holo"></div><h4>ホログラム <span class="badge2d">2D/3D</span></h4><p>縁の発光＋走査線＋ちらつき。SF の敵に。</p></div>
+    <div class="card rv"><div class="swatch sw-glitch"></div><h4>グリッチ <span class="badge2d">2D/3D</span></h4><p>ブロック状のずれ＋色ズレ。故障・ハッキング表現。模様のある絵でないと見えにくい。</p></div>
+    <div class="card rv"><div class="swatch sw-uv"></div><h4>UV スクロール <span class="badge2d">2D/3D</span></h4><p>筋状の光が流れる。溶岩・魔法陣・エネルギーライン。</p></div>
+    <div class="card rv"><div class="swatch sw-toon"></div><h4>トゥーン影 <span class="badge2d">3D のみ</span></h4><p>陰影を段階的にくっきり。2D スプライトでは変化なし。</p></div>
+    <div class="card rv"><div class="swatch sw-gray"><span style="position:absolute;inset:18px 30%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff8fb3,#b8205c 70%)"></span></div><h4>白黒化 <span class="badge2d">画面</span></h4><p>画面全体をモノクロに。回想シーンなど。</p></div>
+    <div class="card rv"><div class="swatch sw-poster"></div><h4>ポスタリゼーション <span class="badge2d">画面</span></h4><p>色数を減らして劇画・レトロ調に。</p></div>
+    <div class="card rv"><div class="swatch sw-pix"></div><h4>ドット絵化 <span class="badge2d">画面</span></h4><p>モザイク状に。「敵だけドット絵」も可能（要プログラマー）。</p></div>
+    <div class="card rv"><div class="swatch sw-outline"></div><h4>アウトライン <span class="badge2d">画面・3D</span></h4><p>コミック風の輪郭線。2D スプライトには付かない。</p></div>
+    <div class="card rv"><div class="swatch sw-shock"></div><h4>衝撃波 <span class="badge2d">画面</span></h4><p>画面上の 1 点から輪状に歪みが広がる。ボス登場など。</p></div>
+    <div class="card rv"><div class="swatch sw-sflash"></div><h4>画面フラッシュ <span class="badge2d">画面</span></h4><p>画面全体を一色に。被弾で赤、回復で白。</p></div>
+  </div>
+</section>
+
+<section id="start" data-nav="はじめての 5 分">
+  <div class="rv">
+    <div class="eyebrow">03 — First 5 minutes</div>
+    <h2>キャラの縁を<br><em>光らせてみる</em>。</h2>
+  </div>
+  <div class="steps">
+    <div class="step rv"><div class="n">1</div><div>
+      <h3>Effect Profile を作る</h3>
+      <p>Project ウィンドウで右クリック → <span class="mp">Create<i>›</i>ShaderFX<i>›</i>Effect Profile</span>。名前は「Profile_敵_通常」のように用途が分かる名前に。</p>
+    </div></div>
+    <div class="step rv"><div class="n">2</div><div class="step-body">
+      <div><h3>「+ Add Effect」で効果を足す</h3>
+        <p>作った Profile を選ぶと Inspector に <b>+ Add Effect</b> ボタンがあります。<span class="mp">オブジェクト系<i>›</i>リムライト</span> を選び、<b>色</b>・<b>強さ</b> などを調整。</p>
+        <p class="small muted" style="margin-top:8px">迷ったら <span class="mp">プリセット<i>›</i>オブジェクト系<i>›</i>アニメ調キャラ標準</span> を選ぶと、完成形の組み合わせがまとめて入ります。</p>
+      </div>
+      <div><div class="mock">
+        <div class="mock-title">Inspector — Profile_敵_通常 (Effect Profile)</div>
+        <div class="mock-body">
+          <div style="display:flex;justify-content:flex-end"><span class="mbtn">+ Add Effect ▾</span></div>
+          <div class="mf" style="justify-content:space-between"><span><span class="mtoggle on"></span>&nbsp; リムライト</span><span class="help">色 #4DE6FF · 強さ 1.5</span><span>×</span></div>
+          <div class="mrow"><span>Color</span><div class="mf" style="background:#4de6ff;border-color:#4de6ff"></div></div>
+          <div class="mrow"><span>Power</span><div class="mslider"><div class="tr"><i style="width:40%"></i></div><div class="mf v">3</div></div></div>
+          <div class="mrow"><span>Intensity</span><div class="mslider"><div class="tr"><i style="width:30%"></i></div><div class="mf v">1.5</div></div></div>
+        </div>
+      </div><p class="mock-cap">効果は折りたたみ式。✓ で ON/OFF、× で削除</p></div>
+    </div></div>
+    <div class="step rv"><div class="n">3</div><div>
+      <h3>見せたい物のマテリアルを ShaderFX 用にする</h3>
+      <p>その物のマテリアル（無ければ新しく作る）の <b>Shader</b> を、3D なら <code>ShaderFX/Uber</code>、2D スプライトなら <code>ShaderFX/Uber Sprite</code> に変える。</p>
+    </div></div>
+    <div class="step rv"><div class="n">4</div><div>
+      <h3>Effect Target を付けて Profile を入れる</h3>
+      <p>その物に <span class="mp">Add Component<i>›</i>ShaderFX<i>›</i>Effect Target</span> を付け、<b>Profile</b> 欄に 1 で作ったファイルを入れます。<b>Play しなくても、その場で Scene に反映されます。</b></p>
+      <p class="done">縁が光ったら成功。Profile の数値を変えると、それを使っている全員が一斉に変わります</p>
+    </div></div>
+  </div>
+</section>
+
+<section id="recipes" data-nav="やりたいこと逆引き">
+  <div class="rv">
+    <div class="eyebrow">04 — Recipes</div>
+    <h2>「〜したい」から<br><em>探す</em>。</h2>
+  </div>
+  <label class="search rv"><span aria-hidden="true">🔍</span><span class="sr">やりたいことを検索</span><input id="recipeSearch" type="search" placeholder="例：被弾、消える、エリア、白黒"></label>
+  <div class="chips rv" id="recipeChips" role="group" aria-label="カテゴリ">
+    <button class="chip" aria-pressed="true" data-f="all">すべて</button>
+    <button class="chip" aria-pressed="false" data-f="look">見た目づくり</button>
+    <button class="chip" aria-pressed="false" data-f="event">出来事と連動</button>
+    <button class="chip" aria-pressed="false" data-f="screen">画面全体</button>
+  </div>
+  <div class="recipes">
+    <details class="recipe" data-tags="look"><summary><span class="q">完成形の組み合わせから始めたい</span><span class="who">プリセット</span></summary><div class="a"><p><b>+ Add Effect</b> の <b>プリセット</b> から選ぶと、組み合わせがまとめて入ります。オブジェクト系 13 種（アニメ調キャラ標準・聖なる守護者・ホログラム敵・サイバーステルス・氷結・呪われたアンデッド・発火・炎の魔物・パワーアップ状態・トゥーン標準・ディゾルブ消滅・被弾フラッシュ・グリッチ故障）、画面系 8 種（回想シーン・レトロゲーム風・ドット絵フィルター・コミック風輪郭線・被弾赤フラッシュ・回復白フラッシュ・衝撃波・気絶暗転）。入れた後も自由に調整できます。</p></div></details>
+    <details class="recipe" data-tags="look"><summary><span class="q">同じ見た目をたくさんの物に使い回したい</span><span class="who">Profile</span></summary><div class="a"><p>同じ Profile を全員の Effect Target に入れるだけ。何百体に入れても、Profile の種類が増えない限り重くなりません。見た目を変えたいときは Profile を 1 か所直せば全員変わります。</p></div></details>
+    <details class="recipe" data-tags="look"><summary><span class="q">プロジェクト内の Profile を一覧で見たい</span><span class="who">ブラウザ</span></summary><div class="a"><p><span class="mp">Tools<i>›</i>シェーダーFX<i>›</i>プロファイルブラウザ</span>。<b>Search</b> で絞り込み、<b>Ping</b> で場所を表示、<b>Select</b> で選択。</p></div></details>
+    <details class="recipe" data-tags="look"><summary><span class="q">このエリアに入った物だけ凍らせたい</span><span class="who">Effect Volume</span></summary><div class="a"><ol><li>空の GameObject に <b>Collider</b>（2D なら <b>Collider2D</b>）を付け、範囲を決める。</li><li><span class="mp">Add Component<i>›</i>ShaderFX<i>›</i>Effect Volume</span>（Is Trigger は自動で ON）。</li><li><b>Overlay Profile</b> に「氷結」の Profile を入れる。</li></ol><p>入った Effect Target に氷結が重なり、出ると元に戻ります。物理の仕様上、どちらかに Rigidbody が必要です。</p></div></details>
+    <details class="recipe" data-tags="event"><summary><span class="q">敵が攻撃を受けた瞬間に白く光らせたい</span><span class="who">要プログラマー</span></summary><div class="a"><p>Profile に <b>被弾フラッシュ</b>（強さ 0）を入れておき、被弾の瞬間にコードで <code>PlayHitFlash(1, 0, 0.2)</code> を呼んでもらいます（0.2 秒で 1→0）。演出の作り込み（色・時間）は Profile 側で調整できます。</p></div></details>
+    <details class="recipe" data-tags="event"><summary><span class="q">倒したときに溶けて消えるようにしたい</span><span class="who">Timeline / 要プログラマー</span></summary><div class="a"><p>Profile に <b>ディゾルブ</b>（消える進み具合 0）を入れておき、倒れたときに <code>PlayDissolve(0, 1, 0.5)</code> を呼びます。カットシーンなら Timeline の <b>ShaderFXParameterTrack</b> で、コード無しで動かせます。</p></div></details>
+    <details class="recipe" data-tags="screen"><summary><span class="q">画面全体を白黒・レトロ調にしたい</span><span class="who">画面系</span></summary><div class="a"><p>Profile に画面系の効果（白黒化・ポスタリゼーション・ドット絵化など）を入れ、<b>シーン内のどれか 1 つ</b>の Effect Target にその Profile を入れれば、画面全体にかかります。画面系は「シーンで 1 つの設定」なので、複数あると最後に処理されたものが勝ちます。</p></div></details>
+    <details class="recipe" data-tags="look"><summary><span class="q">2D スプライトに使いたい</span><span class="who">2D</span></summary><div class="a"><p>手順は 3D と同じで、マテリアルのシェーダーを <code>ShaderFX/Uber Sprite</code> にするだけ。トゥーン影は効かず、アウトラインの輪郭検出にも入りません。影も落としません。</p></div></details>
+    <p class="noresult">見つかりませんでした。別の言葉で探してください。</p>
+  </div>
+  <div class="callout warn rv"><span class="ci">!</span><div><b>このゲームでの注意</b><br>・<b>群衆（数千体の敵）には使えません。</b>群衆の敵は 1 体ずつの GameObject を持たない特別な描き方をしているため、Effect Target を付けられません。使えるのはコア・砲台・破壊可能物・個別に置いた敵などです。<br>・要塞デザイナーの <b>「絵を立たせる（ビルボード）」と同じ絵に使うと、その絵は立たなくなります</b>（ShaderFX のマテリアルが優先されるため）。</div></div>
+</section>
+
+<section id="params" data-nav="数値の意味">
+  <div class="rv">
+    <div class="eyebrow">05 — Numbers</div>
+    <h2>よく触る<br><em>パラメータ</em>。</h2>
+    <p class="lead">Inspector の項目は英語表記ですが、マウスを乗せると日本語の説明が出ます。主なものを抜き出しました。</p>
+  </div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">オブジェクト系</div><div class="ptable-scroll"><table class="params">
+    <tr><th>効果</th><th>項目</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>リムライト</td><td>Power（縁の鋭さ）／Intensity（強さ）</td><td class="up">細く鋭い縁／明るい</td><td class="down">広くぼんやり／控えめ</td><td class="def">3 ／ 1.5</td></tr>
+    <tr><td>ディゾルブ</td><td>Amount（消える進み具合）</td><td class="up">消えていく（1 で完全に消える）</td><td class="down">元に戻る</td><td class="def">0</td></tr>
+    <tr><td>ディゾルブ</td><td>Edge Width ／ Edge Color ／ Noise Scale</td><td class="up">縁が太い／模様が細かい</td><td class="down">縁が細い／大きな塊で消える</td><td class="def">0.08 ／ 橙 ／ 12</td></tr>
+    <tr><td>被弾フラッシュ</td><td>Color ／ Amount</td><td class="up">フラッシュ色一色に</td><td class="down">通常表示</td><td class="def">白 ／ 0</td></tr>
+    <tr><td>発光</td><td>Intensity ／ Pulse Speed</td><td class="up">強く光る／速く点滅</td><td class="down">弱く／0 で点滅なし</td><td class="def">1 ／ 0</td></tr>
+    <tr><td>発火</td><td>Intensity ／ Scroll Speed ／ Noise Scale</td><td class="up">強く燃える／激しく揺れる</td><td class="down">穏やか</td><td class="def">2 ／ 1.5 ／ 24</td></tr>
+    <tr><td>氷結</td><td>Amount ／ Sparkle Threshold</td><td class="up">氷に覆われる／きらめき減</td><td class="down">通常色／きらめき増</td><td class="def">0.7 ／ 0.85</td></tr>
+    <tr><td>ホログラム</td><td>Fresnel Power ／ Scanline Density ／ Flicker Intensity</td><td class="up">縁だけ光る／線が細かい／激しく明滅</td><td class="down">全体が光る／線が粗い／明滅しない</td><td class="def">2.5 ／ 60 ／ 0.15</td></tr>
+    <tr><td>グリッチ</td><td>Amount ／ RGB Split</td><td class="up">強く乱れる／色ズレ大</td><td class="down">通常表示</td><td class="def">0.5 ／ 0.02</td></tr>
+    <tr><td>UV スクロール</td><td>Direction ／ Speed ／ Sharpness</td><td class="up">速く流れる／細い筋</td><td class="down">ゆっくり／太い筋</td><td class="def">(0,1) ／ 1 ／ 0.6</td></tr>
+    <tr><td>トゥーン影</td><td>Steps ／ Shade Color</td><td class="up">なめらかな段階</td><td class="down">2 でくっきり明暗</td><td class="def">2</td></tr>
+  </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">画面系</div><div class="ptable-scroll"><table class="params">
+    <tr><th>効果</th><th>項目</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>白黒化</td><td>Intensity</td><td class="up">完全な白黒</td><td class="down">カラーに近づく</td><td class="def">1</td></tr>
+    <tr><td>ポスタリゼーション</td><td>Levels（色の段階数）</td><td class="up">元の見た目に近い</td><td class="down">くっきり劇画調</td><td class="def">4</td></tr>
+    <tr><td>ドット絵化</td><td>Block Size</td><td class="up">粗いドット</td><td class="down">細かいドット</td><td class="def">8</td></tr>
+    <tr><td>アウトライン</td><td>Thickness ／ Depth・Normal Threshold</td><td class="up">太い線／線が減る</td><td class="down">細い線／線が増える</td><td class="def">1.5 ／ 0.05・0.4</td></tr>
+    <tr><td>衝撃波</td><td>Progress ／ Strength ／ Width</td><td class="up">輪が広がる／大きく歪む</td><td class="down">中心付近／弱い</td><td class="def">0 ／ 0.05 ／ 0.15</td></tr>
+    <tr><td>画面フラッシュ</td><td>Color ／ Amount</td><td class="up">一色に染まる</td><td class="down">通常表示</td><td class="def">白 ／ 0</td></tr>
+  </table></div></div>
+</section>
+
+<section id="faq" data-nav="困ったとき">
+  <div class="rv"><div class="eyebrow">06 — Troubleshooting</div><h2>困ったときは<br><em>ここ</em>。</h2></div>
+  <div class="faq rv">
+    <details><summary>Profile を入れたのに見た目が変わらない</summary><div class="a"><ol><li>マテリアルのシェーダーが <code>ShaderFX/Uber</code> / <code>ShaderFX/Uber Sprite</code> になっているか。</li><li>Effect Target に「Effect Profile が未設定です」「Renderer が見つかりません」と出ていないか（Renderer を持つ物に付ける）。</li><li>効果の ✓（enabled）が ON か。ディゾルブ・被弾フラッシュは <b>強さ 0 だと見えない</b>のが正常。</li><li>グリッチは単色の物だとずらす模様が無く見えません。</li></ol></div></details>
+    <details><summary>保存したら見た目が戻った／マテリアルが壊れた気がする</summary><div class="a">エディタでのプレビューは一時的なマテリアルを使っていて、保存の瞬間だけ元に戻してから書き込む安全装置があります。保存後は自動で再適用されるので、ファイルは壊れていません。</div></details>
+    <details><summary>画面系の効果が 2 つ同時にかからない</summary><div class="a">画面系の設定はシーンで 1 つです。複数の Effect Target が別々の画面系 Profile を持つと、最後に処理されたものが勝ちます。1 つの Profile にまとめてください。</div></details>
+  </div>
+</section>
+
+<section id="glossary" data-nav="用語集">
+  <div class="rv"><div class="eyebrow">07 — Words</div><h2>分からない言葉は<br><em>ここで引く</em>。</h2></div>
+  <dl class="gloss">
+    <div class="rv"><dt>シェーダー</dt><dd>物の表面をどう描くかの計算。ShaderFX の効果はシェーダーの中で動く。</dd></div>
+    <div class="rv"><dt>マテリアル</dt><dd>シェーダー＋色や画像の設定。物に貼る「塗装」。</dd></div>
+    <div class="rv"><dt>Effect Profile</dt><dd>効果を積み重ねた設定ファイル（レシピ）。</dd></div>
+    <div class="rv"><dt>Effect Target</dt><dd>物に付ける部品。「この物にはこのレシピ」を指定する。</dd></div>
+    <div class="rv"><dt>オーバーレイ</dt><dd>本来のレシピを残したまま、一時的に別の効果を上に重ねること。外せば元通り。</dd></div>
+    <div class="rv"><dt>オブジェクト系／画面系</dt><dd>その物だけにかかる効果／カメラの絵全体にかかる効果。</dd></div>
+    <div class="rv"><dt>Tween</dt><dd>値を時間をかけて変化させること（例：0.5 秒で 0→1）。</dd></div>
+  </dl>
+</section>
+
+<div class="devzone"></div>
+<section id="dev" data-nav="コードから使う" data-dev>
+  <div class="rv">
+    <div class="eyebrow">08 — For programmers</div>
+    <h2>出来事との<br><em>連動はコードで</em>。</h2>
+    <p class="lead">名前空間 <code>MS2026.ShaderFX</code>。<code>EffectDirector</code> はシーンに自動生成されます（Edit Mode でも非表示で生成）。</p>
+  </div>
+  <div class="tabs rv" role="tablist" aria-label="コード例">
+    <button class="tab" role="tab" aria-selected="true" aria-controls="cp-tween">個体の演出</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="cp-group">まとめて適用</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="cp-module">効果を増やす</button>
+  </div>
+  <div class="panel" id="cp-tween" role="tabpanel">
+    <div class="codebox"><div class="cap"><span>EffectTarget</span><button class="copy" type="button">copy</button></div><pre>
+using MS2026.ShaderFX;
+
+var fx = GetComponent&lt;EffectTarget&gt;();
+fx.PlayHitFlash(1f, 0f, 0.2f, ShaderFXEase.OutQuad);     // 被弾
+fx.PlayDissolve(0f, 1f, 0.5f, ShaderFXEase.OutQuad,
+                () =&gt; Destroy(gameObject));             // 消滅
+fx.SetInstanceDissolveAmount(0.3f);   // この 1 体だけ（GPU Instancing でまとめ描き）
+fx.ClearInstanceOverrides();</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">前提</span>対象モジュール（HitFlash 等）が Profile 側で有効になっていること。API は値を書くだけで ON/OFF はしない。</div><div class="note"><span class="lbl">性能</span><code>_DissolveAmount</code>/<code>_HitFlashAmount</code> 以外の任意プロパティはインスタンシング対象外。</div></div>
+  </div>
+  <div class="panel" id="cp-group" role="tabpanel">
+    <div class="codebox"><div class="cap"><span>EffectDirector</span><button class="copy" type="button">copy</button></div><pre>
+var d = EffectDirector.Instance;
+d.ApplyToGroup(EffectGroup.Enemy, hitFlashProfile);   // Group で一括
+d.RemoveFromGroup(EffectGroup.Enemy);
+d.ApplyToTag("Enemy", dissolveProfile);               // EffectTarget 無しの物にも
+d.NotifySpawned(spawned);                             // Instantiate 直後
+d.PushOverlay(target, "HitFlash", profile, priority: 10);
+d.PopOverlay(target, "HitFlash");</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">EffectGroup</span><code>Runtime/EffectGroup.cs</code>（Player/Enemy/Stage/Pickup/UI3D）。プロジェクトに合わせて書き換えてよい。</div></div>
+  </div>
+  <div class="panel" id="cp-module" role="tabpanel">
+    <div class="codebox"><div class="cap"><span>EffectModule</span><button class="copy" type="button">copy</button></div><pre>
+[Serializable]
+[EffectModuleInfo("My Effect", "オブジェクト系")]
+public sealed class MyEffectModule : EffectModule
+{
+    public override string Keyword =&gt; "_FX_MYEFFECT";
+    public override void ApplyTo(Material m) { /* m.SetFloat(...) */ }
+    public override int ComputeParameterHash() =&gt; HashCode.Combine(/* params */);
+    public override string GetSummary() =&gt; "一行サマリー";
+}</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">必須</span>キーワード分岐を <code>ShaderFXUber.shader</code> と <code>ShaderFXUberSprite.shader</code> の<b>両方</b>に追加。片方だけだと黙って効かない。</div><div class="note"><span class="lbl">詳細</span><code>Docs/Tools/ShaderFX_AI_Reference.md</code> と パッケージの <code>README.md</code>。</div></div>
+  </div>
+</section>
+
+<section id="more" data-nav="関連ツール">
+  <div class="rv"><div class="eyebrow">09 — Related</div><h2>一緒に使う<br><em>ツール</em>。</h2></div>
+  <div class="links">
+    <a class="lk rv" href="FortressDesigner_ガイド.html"><span class="ti">要塞デザイナー</span><span class="ds">ビルボード（絵を立たせる）との関係に注意。</span></a>
+    <a class="lk rv" href="SpriteAnim_ガイド.html"><span class="ti">SpriteAnim</span><span class="ds">2D スプライトのコマアニメを再生するツール。</span></a>
+    <a class="lk rv" href="index.html"><span class="ti">ツール一覧</span><span class="ds">このプロジェクトの全ツール。</span></a>
+  </div>
+  <footer><span>ShaderFX Guide · Xx_MS2026_xX</span><span>2026-10-03 時点のコードに基づく</span></footer>
+</section>
+</main>
+</div>
+<script src="assets/guide.js"></script>
+</body>
+</html>

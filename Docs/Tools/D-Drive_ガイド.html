@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>D-Drive ガイド</title>
+<meta name="description" content="音・エフェクト・演出を番号札（ID）で管理する D-Drive（com.ddrive.core v1.2.1）の、このプロジェクトでの使い方">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/guide.css">
+<style>
+:root{--acc:#c6ff3d;--acc-ink:#0a0c03;--acc2:#4de2ff;--acc3:#ff4d8d}
+:root[data-theme="light"]{--acc:#5f8a00;--acc-ink:#ffffff;--acc2:#007f99;--acc3:#c8185a}
+/* claim-ticket metaphor */
+.ticket{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:28px}
+.ticket .card{text-align:center;padding:22px 18px}
+.ticket .big{font-size:38px;line-height:1}
+.ticket h3{margin-top:10px;font-size:17px}
+.ticket p{font-size:13.5px;color:var(--ink2);margin-top:6px}
+.ticket .tag{display:inline-block;margin-top:10px;font-family:var(--mono);font-size:12px;padding:3px 10px;border-radius:8px;background:color-mix(in srgb,var(--acc) 14%,transparent);border:1px solid color-mix(in srgb,var(--acc) 40%,transparent)}
+/* presentation timeline demo */
+.tl{margin-top:26px;border:1px solid var(--line2);border-radius:20px;background:var(--bg2);overflow:hidden}
+.tl-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line)}
+.tl-head .t{font-family:var(--mono);font-size:12.5px;color:var(--ink2)}
+.tl-head .t b{color:var(--acc)}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{all:unset;cursor:pointer;font-size:13px;font-weight:700;padding:7px 14px;border-radius:10px;border:1px solid var(--line2);color:var(--ink);transition:.2s}
+.btn.primary{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+.btn.sig{border-color:var(--acc3);color:var(--acc3)}
+.btn.sig.armed{background:var(--acc3);color:#fff;animation:pulse 1.2s infinite}
+.btn[aria-disabled="true"]{opacity:.35;cursor:not-allowed;animation:none}
+.btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+@keyframes pulse{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--acc3) 25%,transparent)}}
+.tl-body{position:relative;padding:12px 18px 18px}
+.ruler,.lane{display:grid;grid-template-columns:130px 1fr}
+.ruler{font-family:var(--mono);font-size:10.5px;color:var(--mute)}
+.ruler .ticks{position:relative;height:22px;border-bottom:1px solid var(--line)}
+.ruler .ticks span{position:absolute;transform:translateX(-50%)}
+.lane{align-items:center;height:42px;border-bottom:1px dashed var(--line)}
+.lane .ln{font-size:12px;color:var(--ink2);display:flex;align-items:center;gap:8px}
+.lane .ln i{width:8px;height:8px;border-radius:2px;background:var(--c)}
+.lane .area{position:relative;height:100%}
+.clip{position:absolute;top:8px;height:26px;border-radius:7px;background:color-mix(in srgb,var(--c) 22%,transparent);border:1px solid color-mix(in srgb,var(--c) 60%,transparent);font-family:var(--mono);font-size:10.5px;color:var(--ink);padding:0 8px;display:flex;align-items:center;white-space:nowrap;overflow:hidden;transition:background .2s,box-shadow .2s}
+.clip.fired{background:var(--c);color:#0b0c10;box-shadow:0 0 22px -2px var(--c)}
+.clip.wait{border-style:dashed;background:transparent;color:var(--c)}
+.playhead{position:absolute;top:12px;bottom:18px;width:2px;background:var(--acc);box-shadow:0 0 14px var(--acc);pointer-events:none}
+.tl-log{border-top:1px solid var(--line);padding:10px 18px;font-family:var(--mono);font-size:12px;color:var(--mute);min-height:44px;max-height:110px;overflow:auto}
+.tl-log .s{color:var(--acc3)}.tl-log .g{color:var(--acc)}
+@media (max-width:920px){.ticket{grid-template-columns:1fr}.ruler,.lane{grid-template-columns:84px 1fr}.lane .ln{font-size:10.5px}}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<div class="orbs" aria-hidden="true"><div class="orb a"></div><div class="orb b"></div></div>
+
+<div class="shell">
+<nav class="side" aria-label="目次">
+  <a class="back" href="index.html">← ツール一覧</a>
+  <a class="brand" href="#top"><span class="mark">D</span><span class="t">D-Drive</span></a>
+  <ol id="toc"></ol>
+  <div class="foot">
+    <button class="themebtn" id="themeBtn" type="button"><span aria-hidden="true">◐</span><span data-label>ライト表示</span></button>
+    <div class="meta mono">com.ddrive.core v1.2.1<br>Unity 6000.3+ · URP</div>
+  </div>
+</nav>
+
+<main id="top">
+<header class="hero">
+  <div class="tags">
+    <span class="pill hot">v1.2.1</span>
+    <span class="pill">外部パッケージ</span>
+    <span class="pill">音・エフェクト・演出</span>
+    <span class="pill">コード不要の作業が中心</span>
+  </div>
+  <h1 class="mega" aria-label="D-Drive"><span class="o">D-</span><span class="f">DRIVE</span></h1>
+  <p class="subname"><b>D</b>esigner-<b>D</b>riven <b>R</b>e: <b>I</b>DE <b>V</b>isual <b>E</b>nvironment</p>
+  <div class="hero-row">
+    <div>
+      <p class="oneword">音・エフェクト・演出を<br><span class="hl">「番号札（ID）」で預かる倉庫</span>。<br>中身はいつでも <span class="hl">入れ替えられる</span>。</p>
+      <p class="analogy">たとえるなら「クローク（荷物預かり）」。プログラマーは「この場面で SEID.TurretFire の札の物を出して」とだけ書きます。札の中身（どんな音か・音量・エフェクトの見た目）はデザイナーやプランナーが専用の画面で作り、後から何度差し替えてもコードを直す必要がありません。</p>
+    </div>
+    <div class="facts"><dl>
+      <dt>誰が使う</dt><dd>デザイナー・プランナー（中身を作る）／プログラマー（札を使う 1 行を書く）</dd>
+      <dt>入口</dt><dd><span class="mp">Tools<i>›</i>D-Drive<i>›</i>Asset Browser</span>（全部ここから）</dd>
+      <dt>置き場所</dt><dd><code>Assets/_Game/DDrive/</code>（素材の投入口は <code>SourceAssets/</code>）</dd>
+      <dt>今の登録数</dt><dd>効果音 1 個だけ（「和太鼓でドン」＝ <code>SEID.Se</code>。砲台がレーザーを撃った瞬間に鳴る）</dd>
+    </dl></div>
+  </div>
+  <div class="marquee" aria-hidden="true"><div class="track" id="mq" data-words="効果音|BGM|エフェクト|出す位置|モデル|アニメ|マテリアル|Prefab|UI画面|UIの動き|演出|画面の揺れ|振動|カットシーン"></div></div>
+</header>
+
+<section id="what" data-nav="仕組みを 30 秒で">
+  <div class="rv">
+    <div class="eyebrow">01 — The idea</div>
+    <h2>3 人の分業で<br><em>作業がぶつからない</em>。</h2>
+  </div>
+  <div class="ticket">
+    <div class="card rv"><div class="big">🎫</div><h3>番号札（ID）</h3><p>素材を作ると自動で付く名前。ファイル名から作られます。</p><span class="tag">SEID.TurretFire</span></div>
+    <div class="card rv"><div class="big">🗄️</div><h3>倉庫の中身（Data）</h3><p>デザイナー・プランナーが専用の画面で作る。音そのもの、音量、出す位置…。</p><span class="tag">SE_Turret_Fire.asset</span></div>
+    <div class="card rv"><div class="big">⌨️</div><h3>呼び出し（コード）</h3><p>プログラマーは札を渡して「鳴らして」と書くだけ。</p><span class="tag">Audio.PlaySe(…)</span></div>
+  </div>
+  <div class="callout rv"><span class="ci">!</span><div><b>中身がまだ無くても、ゲームは止まりません。</b>札だけあって中身が空だと、無音やピンクの仮の球（Placeholder）で代わりに動きます。「音が鳴らない」「ピンク色の球が出る」は、たいてい<b>中身の登録漏れ</b>です（→ <a href="#faq">困ったとき</a>）。</div></div>
+</section>
+
+<section id="types" data-nav="何を入れられる？">
+  <div class="rv">
+    <div class="eyebrow">02 — What goes in</div>
+    <h2>倉庫に入れられる<br><em>18 種類</em>。</h2>
+    <p class="lead">太字が、このゲームでまず使いそうなもの。それぞれに専用の編集画面があります。</p>
+  </div>
+  <div class="cards three">
+    <div class="card feat rv" style="--c:#4de2ff"><div class="ic">🔊</div><h3>サウンド</h3><p><b>効果音（SE）</b>・BGM。音量・ピッチ・聞こえる距離・連打防止。<b>環境音</b>を場所に置くことも。</p></div>
+    <div class="card feat rv" style="--c:#ff4d8d"><div class="ic">✨</div><h3>ビジュアル</h3><p><b>エフェクト（VFX）</b>・出す位置（Anchor）・配置セット（並べて一斉に出す）・マテリアル・テクスチャ。</p></div>
+    <div class="card feat rv" style="--c:#c6ff3d"><div class="ic">🎬</div><h3>演出</h3><p><b>演出（Presentation）</b>＝SE・エフェクト・揺れ・ヒットストップを 1 本にまとめた物。<b>画面の揺れ</b>・パッドの振動・カットシーン。</p></div>
+    <div class="card feat rv" style="--c:#ffb547"><div class="ic">🧍</div><h3>キャラ・物</h3><p>モデル・3D アニメ・2D アニメ・Prefab（弾やギミックなど、ゲーム中に出す物）。</p></div>
+    <div class="card feat rv" style="--c:#b98cff"><div class="ic">🖥️</div><h3>UI</h3><p>UI 画面（Canvas）・UI の動き（59 種のプリセット）・ボタン／スライダーの見た目。</p></div>
+    <div class="card feat rv" style="--c:#8b91a5"><div class="ic">🔢</div><h3>調整値</h3><p>Web の発注ツールで管理する数値をゲームに取り込む（使う場合のみ）。</p></div>
+  </div>
+</section>
+
+<section id="start" data-nav="はじめての 5 分">
+  <div class="rv">
+    <div class="eyebrow">03 — First 5 minutes</div>
+    <h2>効果音を 1 つ<br><em>登録して鳴らす</em>。</h2>
+  </div>
+  <div class="steps">
+    <div class="step rv"><div class="n">1</div><div class="step-body">
+      <div><h3>音のファイルを「投入口」に置く</h3>
+        <p>音のファイル（.wav / .mp3 / .ogg）を <code>Assets/_Game/DDrive/SourceAssets/Se/</code> の下の、<b>分類用のフォルダ</b>に入れます。例：<code>SourceAssets/Se/Turret/Fire.wav</code></p>
+        <p style="margin-top:8px">数秒待つと、倉庫の中身（<code>SE_Turret_Fire.asset</code>）と番号札（<code>SEID.TurretFire</code>）が<b>自動で</b>作られます。</p>
+        <div class="callout warn"><span class="ci">!</span><div><b>ファイル名は英語で。</b>日本語だけの名前（例：<code>和太鼓でドン.mp3</code>）だと札の名前が作れず、全部「Se」になってぶつかります。日本語名は後で「Display Name」に付けられます。</div></div>
+      </div>
+      <div class="tree" style="margin-top:0"><span class="d">Assets/_Game/DDrive/</span>
+├─ <span class="d">SourceAssets/</span>   <span class="c"># ← ここに素材を置く</span>
+│  ├─ <span class="d">Se/</span>
+│  │  └─ <span class="d">Turret/</span>
+│  │     └─ <span class="h">Fire.wav</span>   <span class="c"># 置いた</span>
+│  ├─ <span class="d">Bgm/ Vfx/ Model/ …</span>
+├─ <span class="d">GameData/</span>       <span class="c"># 自動で作られる中身</span>
+│  └─ <span class="d">Audio/SE/Turret/</span>
+│     └─ <span class="h">SE_Turret_Fire.asset</span>
+└─ <span class="d">Generated/</span>      <span class="c"># 番号札の一覧（触らない）</span></div>
+    </div></div>
+    <div class="step rv"><div class="n">2</div><div>
+      <h3>Asset Browser で試聴して、名前と音量を整える</h3>
+      <p><span class="mp">Tools<i>›</i>D-Drive<i>›</i>Asset Browser</span> を開き、一覧から選んで下の <b>▶ 再生</b>。ゲームを動かさずに鳴ります。Inspector で <b>Display Name</b> を「砲台の発射音」のような日本語に、<b>Volume</b>（0〜1）で音量を調整。</p>
+      <p class="small muted" style="margin-top:8px">Asset Browser に音のファイルを直接ドラッグ＆ドロップしても登録できます（表示名と英語の識別子を入力）。</p>
+    </div></div>
+    <div class="step rv"><div class="n">3</div><div>
+      <h3>Validation で確認する</h3>
+      <p><span class="mp">Tools<i>›</i>D-Drive<i>›</i>Validation<i>›</i>Run All</span>。<b>赤（Error）</b>が無ければ OK。よく出る黄色（Warning）は「Mixer が未割当」。<b>修正</b> ボタンが出ている物は押すだけで直ります（<kbd>Ctrl</kbd>+<kbd>Z</kbd> で戻せる）。</p>
+    </div></div>
+    <div class="step rv"><div class="n">4</div><div>
+      <h3>プログラマーに札の名前を伝える</h3>
+      <p>「砲台の発射音は <code>SEID.TurretFire</code> です」と伝えれば、プログラマーがその札を鳴らす 1 行を書きます。<b>すでに鳴らす場所が決まっている札なら、中身を差し替えるだけでコード修正は不要</b>です。</p>
+      <p class="done">これで登録の流れは全部です。エフェクトや演出も「作る → 調整 → Validation」の同じ流れです</p>
+    </div></div>
+  </div>
+</section>
+
+<section id="recipes" data-nav="やりたいこと逆引き">
+  <div class="rv"><div class="eyebrow">04 — Recipes</div><h2>「〜したい」から<br><em>探す</em>。</h2></div>
+  <label class="search rv"><span aria-hidden="true">🔍</span><span class="sr">やりたいことを検索</span><input id="recipeSearch" type="search" placeholder="例：差し替え、揺れ、エフェクト、ピンク"></label>
+  <div class="chips rv" id="recipeChips" role="group" aria-label="カテゴリ">
+    <button class="chip" aria-pressed="true" data-f="all">すべて</button>
+    <button class="chip" aria-pressed="false" data-f="sound">音</button>
+    <button class="chip" aria-pressed="false" data-f="visual">エフェクト・揺れ</button>
+    <button class="chip" aria-pressed="false" data-f="pres">演出</button>
+    <button class="chip" aria-pressed="false" data-f="manage">管理・確認</button>
+  </div>
+  <div class="recipes">
+    <details class="recipe" data-tags="sound"><summary><span class="q">今の効果音（和太鼓）を別の音に差し替えたい</span><span class="who">Asset Browser</span></summary><div class="a"><p>Asset Browser で「和太鼓でドン」を選び、Inspector の <b>Clips</b> の音を新しい音のファイルに差し替えます。札（<code>SEID.Se</code>）は変わらないので、砲台の発射音がそのまま新しい音になります。音を切り詰めたいときは <b>▶ 〜 Editor で開く</b>（Audio Editor）で波形を見ながらトリミング。</p></div></details>
+    <details class="recipe" data-tags="sound"><summary><span class="q">毎回少しずつ違う音にしたい</span><span class="who">SE の設定</span></summary><div class="a"><ul><li><b>Clips</b> に複数の音を入れ、<b>Select Mode</b> を <b>Random</b>（毎回ランダム）か <b>RoundRobin</b>（順番に）。</li><li><b>Pitch Range</b> を例えば 0.95〜1.05 にすると、鳴るたびに少し高さが変わります。</li></ul></div></details>
+    <details class="recipe" data-tags="sound"><summary><span class="q">連打で音が重なりすぎる／逆に鳴らないことがある</span><span class="who">SE の設定</span></summary><div class="a"><ul><li><b>Max Concurrent</b>：同じ音が同時に鳴れる数（既定 8）。超えると一番古い音が止まる。</li><li><b>Cooldown Sec</b>：この秒数以内の連続再生は無視（既定 0.03 秒）。「鳴らないことがある」なら小さく。</li></ul></div></details>
+    <details class="recipe" data-tags="sound"><summary><span class="q">近づくと聞こえる環境音を置きたい</span><span class="who">SeEmitter</span></summary><div class="a"><ol><li>その音の <b>Loop</b> を ON、<b>Spatial</b> を <b>Anchor</b>、<b>Min / Max Distance</b> で聞こえる範囲を決める。</li><li>Hierarchy で右クリック <span class="mp">D-Drive<i>›</i>SeEmitter</span> を置き、<b>Se Id</b> 欄で音を選ぶ。プログラム不要で、その物がある間鳴り続けます。</li></ol></div></details>
+    <details class="recipe" data-tags="visual"><summary><span class="q">エフェクトを登録したい</span><span class="who">VFX</span></summary><div class="a"><p>エフェクトの Prefab を <code>SourceAssets/Vfx/分類/英語名.prefab</code> に置くか、Asset Browser の <b>新規</b> で VFX を作って Prefab を割り当てます。<b>VFX Editor</b> ではシーンで再生しながら位置・色を調整できます。<b>Life Mode</b>（一回で終わる／ループ／秒数指定）にも注意。</p></div></details>
+    <details class="recipe" data-tags="visual"><summary><span class="q">スマッシュボールを割ったときなどの「画面の揺れ」を作りたい</span><span class="who">Shake</span></summary><div class="a"><ol><li>Asset Browser の <b>新規</b> で揺れ（Shake）を作る。</li><li><span class="mp">Tools<i>›</i>D-Drive<i>›</i>Editors<i>›</i>Shake / Haptics</span> で波形を見ながら揺れ幅・周波数を調整し、実際に揺らして確認。</li><li><a href="FortressDesigner_ガイド.html">要塞デザイナー</a>の「カメラ › 演出（揺れ・寄り）」で揺らし方を <b>D-Driveの揺れアセット</b> にして、作った揺れを選ぶ。</li></ol></div></details>
+    <details class="recipe" data-tags="pres"><summary><span class="q">「斬撃」のように、音・エフェクト・揺れをまとめた演出を作りたい</span><span class="who">Presentation Editor</span></summary><div class="a"><ol><li><span class="mp">Tools<i>›</i>D-Drive<i>›</i>Presentation Editor</span> を開き、<b>＋ 新規作成</b>。</li><li>Asset Browser から SE・VFX・揺れなどをタイムラインへドラッグ＆ドロップ。種類ごとのレーンに並びます。</li><li>各トラックの <b>Trigger</b> を「開始から ○ 秒後（At Time）」か「コードから合図が来たら（On Signal）」に。</li><li>「モデル選択」→「配置」→ <b>▶ 再生</b> で、全部まとめて確認。On Signal は再生中に <b>Signal レーン</b> のボタンで試せます。</li></ol><p>下の「<a href="#pres">演出を体験</a>」で動きをイメージできます。</p></div></details>
+    <details class="recipe" data-tags="pres"><summary><span class="q">オンライン対戦で、相手の画面にも演出を出したい</span><span class="who">演出の設定</span></summary><div class="a"><p>演出の <b>Flags › Net</b> を <b>Cosmetic</b> に（既定の Local だと自分の画面だけ）。揺れ・振動・ヒットストップを関係者だけにしたいときは、そのトラックの <b>Scope</b> を <b>Participants Only</b> に。</p></div></details>
+    <details class="recipe" data-tags="manage"><summary><span class="q">ゲームで音が鳴らない／ピンクの球が出る</span><span class="who">Validation</span></summary><div class="a"><p>まず <span class="mp">Validation<i>›</i>Run All</span>。「カタログ未登録」「Addressables 未登録」「Placeholder」が出ていたら <b>修正</b>。Project 上でコピーしたり、別の場所から持ってきたデータでよく起きます。</p></div></details>
+    <details class="recipe" data-tags="manage"><summary><span class="q">どこからも使われていない素材を片付けたい</span><span class="who">未使用アセット</span></summary><div class="a"><p><span class="mp">Tools<i>›</i>D-Drive<i>›</i>未使用アセット</span>（Asset Browser の <b>未使用...</b> ボタンも同じ）。削除は Asset Browser の <b>削除...</b> から行うと、使っている場所を確認しながら安全に消せます。Project ウィンドウで直接消さないでください。</p></div></details>
+    <details class="recipe" data-tags="manage"><summary><span class="q">名前を日本語で分かりやすくしたい</span><span class="who">Display Name</span></summary><div class="a"><p>Inspector の <b>Display Name</b> は日本語で自由に付けられます（検索にも使われる）。ファイル名や札の名前はツールが決めるので、手で変えないでください。</p></div></details>
+    <details class="recipe" data-tags="manage"><summary><span class="q">D-Drive 公式の詳しいマニュアルを読みたい</span><span class="who">マニュアル</span></summary><div class="a"><p><span class="mp">Tools<i>›</i>D-Drive<i>›</i>マニュアルを開く</span>。再生ボタンの右の <b>？ マニュアル</b> ボタンでも開けます（見当たらないときはツールバーの空きを右クリック →「D-Drive/Manual」にチェック）。<b>マニュアル内の <code>Assets/GameData</code> などは、このプロジェクトでは <code>Assets/_Game/DDrive/GameData</code> に読み替え</b>てください。</p></div></details>
+    <p class="noresult">見つかりませんでした。別の言葉で探してください。</p>
+  </div>
+</section>
+
+<section id="pres" data-nav="演出を体験">
+  <div class="rv">
+    <div class="eyebrow">05 — Try a presentation</div>
+    <h2>演出（Presentation）は<br><em>こう動く</em>。</h2>
+    <p class="lead">「剣攻撃」の演出の例です。<b>▶ 再生</b> を押し、途中で <b>⚡ 当たった！</b> を押してみてください。点線のトラックは「合図待ち」で、合図が来た瞬間に鳴ります。</p>
+  </div>
+  <div class="tl rv">
+    <div class="tl-head">
+      <div class="t">PRESENTID.<b>SwordSlash</b> <span class="muted">— 全体 1.20 秒</span></div>
+      <div class="btns"><button class="btn primary" id="tlPlay" type="button">▶ 再生</button><button class="btn sig" id="tlSig" type="button" aria-disabled="true">⚡ 当たった！</button></div>
+    </div>
+    <div class="tl-body" id="tlBody"><div class="ruler"><div></div><div class="ticks" id="ticks"></div></div><div id="lanes"></div><div class="playhead" id="ph"></div></div>
+    <div class="tl-log" id="tlLog"><div>▶ を押すと「開始から ○ 秒後」のトラックが順に鳴ります。</div></div>
+  </div>
+  <div class="split">
+    <div class="card rv"><h4>実線 ＝ At Time（開始から ○ 秒後）</h4><p class="small" style="color:var(--ink2);margin-top:6px">振りかぶりのアニメ・剣の軌跡エフェクト・風切り音など、必ず決まったタイミングで出るもの。</p></div>
+    <div class="card rv"><h4>点線 ＝ On Signal（合図が来たら）</h4><p class="small" style="color:var(--ink2);margin-top:6px">「当たった」はゲームが判定するので、コードから合図（hit）が来たときだけ、ヒットストップ・打撃音・揺れ・振動を出す。</p></div>
+  </div>
+  <div class="callout warn rv"><span class="ci">!</span><div>合図待ちのトラックだけで作った演出は、<b>Total Duration</b>（全体の長さ）を入れないと 0 秒ですぐ終わってしまいます。</div></div>
+</section>
+
+<section id="screens" data-nav="画面の見かた">
+  <div class="rv"><div class="eyebrow">06 — Screens</div><h2>覚える画面は<br><em>4 つ</em>。</h2></div>
+  <div class="tabguide rv">
+    <div class="tg-list" role="tablist" aria-label="画面の説明">
+      <button role="tab" aria-selected="true" aria-controls="tg-ab"><span class="em">🗂️</span>Asset Browser</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-ed"><span class="em">🛠️</span>専用エディタ</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-pe"><span class="em">🎬</span>Presentation Editor</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-va"><span class="em">✅</span>Validation</button>
+    </div>
+    <div>
+      <div class="tg-panel" id="tg-ab" role="tabpanel"><h3>Asset Browser</h3><div class="when">⏱ 素材を探す・作る・試聴する（すべての入口）</div>
+        <ul class="points"><li><b>検索欄</b>：日本語の表示名・カテゴリ・タグ・説明文でも探せる。</li><li><b>種別メニュー</b>：All／Se／Bgm／Vfx…で絞り込み。</li><li><b>新規</b>：新しい素材を作る（名前・置き場所・登録を全部自動で）。</li><li><b>未使用...</b>：どこからも使われていない素材。<b>削除...</b>：安全に削除。</li><li><b>プレビューバー</b>（一番下）：音の ▶ 再生・■ 停止・ループ・速度。</li><li>行をダブルクリックで専用エディタが開く。</li></ul></div>
+      <div class="tg-panel" id="tg-ed" role="tabpanel"><h3>専用エディタ</h3><div class="when">⏱ 中身を作り込むとき</div>
+        <p>素材を選ぶと Inspector の一番上に <b>▶ 〜 Editor で開く</b> ボタンが出ます。迷ったらこれ。全部 <span class="mp">Tools<i>›</i>D-Drive<i>›</i>Editors</span> にもあります。</p>
+        <ul class="points"><li><b>Audio</b>：波形を見ながらトリミング・試聴・3D の聞こえ方。</li><li><b>VFX</b>：シーンで再生しながら位置・色を調整。</li><li><b>Shake / Haptics</b>：揺れ・振動の波形を見て、実際に揺らす。</li><li><b>Anchor / Anchor Group</b>：エフェクトや音を「どこに」出すか。</li><li>ほかに Model・Prefab・Animation・Material・Canvas・UI Tween・Skin。</li></ul></div>
+      <div class="tg-panel" id="tg-pe" role="tabpanel"><h3>Presentation Editor</h3><div class="when">⏱ 演出を組むとき（<span class="mp">Tools<i>›</i>D-Drive<i>›</i>Presentation Editor</span>）</div>
+        <ul class="points"><li><b>タイムライン</b>：素材をドラッグ＆ドロップすると種類別のレーンに並ぶ。左右にドラッグで時間調整。</li><li><b>トラック一覧</b>：Trigger・時間・合図名・対象（本人／相手）・出す位置・Stop On Cancel。</li><li><b>統合プレビュー</b>：モデルを配置して ▶。アニメ・音・エフェクト・揺れ・振動が同時に再生。速度 0.1x〜2x、ループ。</li><li><b>Signal レーン</b>：再生中に合図を手動で送る。</li></ul></div>
+      <div class="tg-panel" id="tg-va" role="tabpanel"><h3>Validation（自動チェック）</h3><div class="when">⏱ 作業の区切り・「出てこない」とき</div>
+        <ul class="points"><li><b>赤 Error</b>：そのままだと出てこない・動かない → 必ず直す。</li><li><b>黄 Warning</b>：動くが意図とずれやすい → 読んで判断。</li><li><b>青 Info</b>：お知らせ。</li><li><b>修正</b> ボタンで自動修正（<kbd>Ctrl</kbd>+<kbd>Z</kbd> で戻せる）。</li><li>各専用エディタの下の「検証」欄では、その素材 1 件分だけを確認できる。</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section id="params" data-nav="数値の意味">
+  <div class="rv"><div class="eyebrow">07 — Numbers</div><h2>効果音（SE）の<br><em>主な設定</em>。</h2><p class="lead">一番よく触る効果音の設定です（Inspector の英語表記のまま載せています）。</p></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">🔊 SE <span class="src">GameData/Audio/SE/*.asset</span></div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>Volume</td><td>基準の音量（0〜1）</td><td class="up">大きい</td><td class="down">小さい</td><td class="def">1</td></tr>
+    <tr><td>Pitch Range</td><td>鳴るたびの音の高さの幅（最小〜最大）</td><td class="up">高く・ばらつく</td><td class="down">低く</td><td class="def">1〜1</td></tr>
+    <tr><td>Clips ／ Select Mode</td><td>鳴らす音（複数可）と選び方</td><td colspan="2">Random（毎回ランダム）／RoundRobin（順番）／First（常に先頭）</td><td class="def">Random</td></tr>
+    <tr><td>Start Offset Sec</td><td>音の途中から鳴らす位置（秒）</td><td class="up">頭を飛ばす</td><td class="down">最初から</td><td class="def">0</td></tr>
+    <tr><td>Loop</td><td>鳴りっぱなしにするか</td><td colspan="2">環境音は ON</td><td class="def">OFF</td></tr>
+    <tr><td>Spatial</td><td>聞こえ方</td><td colspan="2">None＝どこでも同じ／Anchor＝物について動く／AtPosition＝決まった場所から</td><td class="def">None</td></tr>
+    <tr><td>Min ／ Max Distance</td><td>減衰しない距離／聞こえなくなる距離</td><td class="up">遠くまで聞こえる</td><td class="down">近くだけ</td><td class="def">1 ／ 30</td></tr>
+    <tr><td>Max Concurrent</td><td>同じ音の同時再生数</td><td class="up">重なって厚くなる</td><td class="down">古い音が止まりやすい</td><td class="def">8</td></tr>
+    <tr><td>Cooldown Sec</td><td>連打で無視する間隔（秒）</td><td class="up">連打が鳴りにくい</td><td class="down">全部鳴る</td><td class="def">0.03</td></tr>
+    <tr><td>Mixer</td><td>出力先の音のグループ</td><td colspan="2">未設定だと Validation で黄色の警告</td><td class="def">未設定</td></tr>
+  </table></div></div>
+</section>
+
+<section id="faq" data-nav="困ったとき">
+  <div class="rv"><div class="eyebrow">08 — Troubleshooting</div><h2>困ったときは<br><em>ここ</em>。</h2></div>
+  <div class="faq rv">
+    <details><summary>ゲームで音が鳴らない／ピンクの球が出る</summary><div class="a"><ol><li><span class="mp">Validation<i>›</i>Run All</span> で「未登録」「Placeholder」が出ていたら <b>修正</b>。</li><li>中身（Clips や Prefab）が空になっていないか。</li><li>Volume が 0 になっていないか。</li><li>連打なら Cooldown Sec / Max Concurrent。</li><li>ゲーム開始直後だけ鳴らないなら、プログラマーに「起動完了を待ってから鳴らす」対応を依頼。</li></ol></div></details>
+    <details><summary>SourceAssets に置いたのに何も作られない</summary><div class="a"><b>SourceAssets のすぐ下が種別フォルダ</b>（<code>Se</code>・<code>Bgm</code>・<code>Vfx</code> など。大文字小文字も一致）である必要があります。<code>SourceAssets/Fire.wav</code>（直置き）や <code>SourceAssets/新規/Se/Fire.wav</code>（間に別フォルダ）は認識されません。Console に案内が出ます。</div></details>
+    <details><summary>札の名前（SEID.○○）がプログラマーの画面に出てこない</summary><div class="a"><span class="mp">Tools<i>›</i>D-Drive<i>›</i>Generate<i>›</i>Regenerate Asset IDs</span> で一覧を作り直します。札の名前は「ファイル名から種別の頭文字を除いたもの」です（<code>SE_Turret_Fire</code> → <code>SEID.TurretFire</code>）。</div></details>
+    <details><summary>演出がすぐ終わる／Cancel しても止まらない</summary><div class="a">合図待ちだけの演出は <b>Total Duration</b> を入れる。止まらないのは <b>Interruptible</b> が OFF だから（最後まで見せる演出向けの設定）。</div></details>
+    <details><summary>Development Build で、左下の「[DDrive 手動接続]」が出ない／左上の通信状態の下に別の表示がある</summary><div class="a">このプロジェクトでは、左下の D-Drive の手動接続画面は<b>わざと隠しています</b>（そこから接続するとプレイヤー番号が送られず、接続を断られるため）。接続は右上の「D-Drive/NGO 接続」画面を使ってください。左上の D-Drive の通信状態表示はそのまま残し、ゲーム側の計測表示（群衆の HUD など）はその下に並びます。</div></details>
+    <details><summary>ファイルを移動・名前変更してしまった</summary><div class="a">番号札の中身の番号は変わりませんが、札の名前（<code>SEID.○○</code>）が変わってプログラムがエラーになることがあります。元に戻すか、プログラマーに連絡してください。</div></details>
+  </div>
+</section>
+
+<section id="glossary" data-nav="用語集">
+  <div class="rv"><div class="eyebrow">09 — Words</div><h2>分からない言葉は<br><em>ここで引く</em>。</h2></div>
+  <dl class="gloss">
+    <div class="rv"><dt>ID <small>番号札</small></dt><dd>素材を呼び出すための名前（<code>SEID.TurretFire</code> など）。自動で作られる。</dd></div>
+    <div class="rv"><dt>Data <small>中身</small></dt><dd>倉庫に入っている素材の設定ファイル（.asset）。</dd></div>
+    <div class="rv"><dt>SourceAssets <small>投入口</small></dt><dd>元の素材ファイルを置くフォルダ。置くだけで Data が作られる。</dd></div>
+    <div class="rv"><dt>Asset Browser</dt><dd>全素材の一覧・検索・作成・試聴ができる入口のウィンドウ。</dd></div>
+    <div class="rv"><dt>Placeholder</dt><dd>中身が無いときの代役（無音・ピンクの球）。ゲームを止めないため。</dd></div>
+    <div class="rv"><dt>カタログ／Addressables</dt><dd>倉庫の台帳と、ゲーム中に素材を読み込む仕組み。登録漏れは Validation が教えてくれる。</dd></div>
+    <div class="rv"><dt>Validation</dt><dd>設定ミスや登録漏れを自動で見つけるチェック。</dd></div>
+    <div class="rv"><dt>演出 <small>Presentation</small></dt><dd>音・エフェクト・揺れ・振動などを時間軸に並べた 1 本のまとまり。</dd></div>
+    <div class="rv"><dt>トラック</dt><dd>演出の中の 1 行。「いつ（Trigger）」「何を（Kind）」を決める。</dd></div>
+    <div class="rv"><dt>Signal <small>合図</small></dt><dd>「当たった」などをゲームから演出に伝える名前付きの合図。</dd></div>
+    <div class="rv"><dt>Anchor <small>出す位置</small></dt><dd>エフェクトや音を「どこに出すか」（右手・足元など）のデータ。</dd></div>
+    <div class="rv"><dt>ヒットストップ</dt><dd>当たった瞬間に一瞬時間を止める演出。</dd></div>
+  </dl>
+</section>
+
+<div class="devzone"></div>
+<section id="dev" data-nav="コードから使う" data-dev>
+  <div class="rv">
+    <div class="eyebrow">10 — For programmers</div>
+    <h2>呼び方は全部<br><em>同じ形</em>。</h2>
+    <p class="lead">「ID を渡して静的ファサードを呼ぶ」だけ。未登録・未起動でも例外にならず Placeholder で続行。Fortress のコードは <code>DDrive.Runtime</code> / <code>DDrive.Foundation</code> / <code>DDrive.Generated</code> を参照済み。</p>
+  </div>
+  <div class="tabs rv" role="tablist" aria-label="コード例">
+    <button class="tab" role="tab" aria-selected="true" aria-controls="cp-audio">Audio</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="cp-vfx">VFX / 揺れ</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="cp-pres">Presentation</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="cp-boot">起動</button>
+  </div>
+  <div class="panel" id="cp-audio" role="tabpanel">
+    <div class="codebox"><div class="cap"><span>DDrive.Runtime.Audio</span><button class="copy" type="button">copy</button></div><pre>
+using DDrive.Generated;
+using DDrive.Runtime.Audio;
+
+Audio.PlaySe(SEID.Se);                       // 2D
+Audio.PlaySe(SEID.Se, transform.position);   // その場所で 3D
+var h = Audio.PlaySe(SEID.Se, transform);    // 追従
+Audio.Stop(h, 0.2f);                         // 0.2 秒でフェードアウト
+Audio.PlayBgm(BGMID.Title);                  // 再生中なら自動クロスフェード</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">このプロジェクト</span><code>LaserTurretAudio</code> が Firing 突入時に <code>Audio.PlaySe(SEID.Se)</code>。</div><div class="note"><span class="lbl">ID 名</span>ファイル名から種別接頭辞を除いた PascalCase。カテゴリも含む。</div></div>
+  </div>
+  <div class="panel" id="cp-vfx" role="tabpanel">
+    <div class="codebox"><div class="cap"><span>Vfx / CameraFx / Haptics</span><button class="copy" type="button">copy</button></div><pre>
+using DDrive.Runtime.Vfx;
+using DDrive.Runtime.CameraShake;
+
+var v = Vfx.Spawn(VFXID.HitSpark, hitPoint, Quaternion.identity);
+v.SetParam("MainColor", Color.red);
+v.Stop();                                   // 自然に消える / Kill() で即時
+if (CameraFx.IsBound) CameraFx.Shake(SHAKEID.Hit, 0.8f);</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">このプロジェクト</span><code>CameraReactionPlayer</code> が D-Drive の揺れ（未起動なら簡易揺れ）を使う。</div></div>
+  </div>
+  <div class="panel" id="cp-pres" role="tabpanel">
+    <div class="codebox"><div class="cap"><span>DDrive.Runtime.Presentation</span><button class="copy" type="button">copy</button></div><pre>
+using DDrive.Runtime.Presentation;
+
+var ctx = new PlayContext { Self = transform, Target = enemy, OnSignal = key =&gt; { } };
+var h = Presentation.Play(PRESENTID.SwordSlash, in ctx);
+h.Signal("hit");      // OnSignal("hit") のトラックが発火
+h.Cancel();           // Interruptible=false なら無視</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">注意</span>時刻 0 のトラックは Play() 内で同期発火 → 後から Subscribe しても拾えない。<code>ctx.OnSignal</code> を使う。</div><div class="note"><span class="lbl">クラス名</span>生成クラスは <code>PRESENTID</code>（PRESID ではない）。</div></div>
+  </div>
+  <div class="panel" id="cp-boot" role="tabpanel">
+    <div class="codebox"><div class="cap"><span>DDriveRuntimeBootstrap</span><button class="copy" type="button">copy</button></div><pre>
+using Cysharp.Threading.Tasks;
+using DDrive.Runtime.Loop;
+
+async UniTaskVoid Start()
+{
+    await DDriveRuntimeBootstrap.Instance.WhenReady;   // カタログ登録待ち
+    Audio.PlayBgm(BGMID.Title);
+}</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">時間</span><code>Time.timeScale=0</code> では D-Drive は止まらない（PauseService を使う）。HitStop も timeScale を変えない。</div><div class="note"><span class="lbl">詳細</span>AI 向けの完全版：<code>Docs/Tools/DDrive_AI_Reference.md</code>。</div></div>
+  </div>
+</section>
+<section id="rules" data-nav="ルールと更新" data-dev>
+  <div class="rv"><div class="eyebrow">11 — Rules &amp; update</div><h2>壊さないための<br><em>約束</em>。</h2></div>
+  <div class="split">
+    <div class="card rv"><h4 style="color:var(--ok)">DO</h4><ul style="margin:8px 0 0 1.2em;font-size:14px;color:var(--ink2)"><li>作成は Asset Browser か SourceAssets から</li><li>コードからは静的ファサード経由（Audio / Vfx / Presentation…）</li><li>作業の区切りで Validation › Run All</li><li>ゲームのコードは自分の asmdef に置く</li></ul></div>
+    <div class="card rv"><h4 style="color:var(--err)">DON'T</h4><ul style="margin:8px 0 0 1.2em;font-size:14px;color:var(--ink2)"><li><code>Generated/</code> の生成コードを手で編集</li><li>Data を実行時に書き換え</li><li>D-Drive 管理の物を Instantiate / Resources.Load / AudioSource.Play で直接扱う</li><li>パッケージ本体（Library/PackageCache）を改造</li></ul></div>
+  </div>
+  <div class="callout rv"><span class="ci">↻</span><div><b>版を上げるとき</b>：<span class="mp">Tools<i>›</i>D-Drive<i>›</i>Update<i>›</i>更新ウィンドウ</span> で ①最新の版を確認 → manifest を更新 → 再コンパイル待ち → ④更新を適用 → Run All → コミット。その後、このガイドと <code>DDrive_AI_Reference.md</code> も更新してください。</div></div>
+</section>
+
+<section id="more" data-nav="関連ツール">
+  <div class="rv"><div class="eyebrow">12 — Related</div><h2>一緒に使う<br><em>ツール</em>。</h2></div>
+  <div class="links">
+    <a class="lk rv" href="FortressDesigner_ガイド.html"><span class="ti">要塞デザイナー</span><span class="ds">揺れアセットをカメラ演出に使う。</span></a>
+    <a class="lk rv" href="../../Library/PackageCache/com.ddrive.core@54dde12a3be3/Documentation~/DesignerManual/Readme.html"><span class="ti">D-Drive 公式マニュアル</span><span class="ds">全種別の詳しい操作（リンク切れ時は Unity メニューから）。</span></a>
+    <a class="lk rv" href="index.html"><span class="ti">ツール一覧</span><span class="ds">このプロジェクトの全ツール。</span></a>
+  </div>
+  <footer><span>D-Drive Guide · Xx_MS2026_xX</span><span>com.ddrive.core v1.2.1 · 2026-10-03</span></footer>
+</section>
+</main>
+</div>
+<script src="assets/guide.js"></script>
+<script>
+/* Presentation timeline demo (page-specific) */
+(function(){
+  var DUR=1.2, SIGPOS=.55;
+  var lanes=[
+    {n:"アニメ",c:"#ffb547",clips:[{t:0,d:.9,l:"振りかぶり"}]},
+    {n:"エフェクト",c:"#ff4d8d",clips:[{t:0,d:.45,l:"剣の軌跡"}]},
+    {n:"効果音",c:"#4de2ff",clips:[{t:.05,d:.3,l:"風切り音"},{t:null,d:.3,l:"打撃音"}]},
+    {n:"ヒットストップ",c:"#ffffff",clips:[{t:null,d:.12,l:"0.08秒"}]},
+    {n:"画面の揺れ",c:"#c6ff3d",clips:[{t:null,d:.35,l:"揺れ"}]},
+    {n:"振動",c:"#b98cff",clips:[{t:null,d:.25,l:"ブルッ"}]}
+  ];
+  var body=document.getElementById("tlBody"); if(!body) return;
+  var html="";
+  lanes.forEach(function(L,li){
+    html+='<div class="lane" style="--c:'+L.c+'"><div class="ln"><i></i>'+L.n+'</div><div class="area">';
+    L.clips.forEach(function(c,ci){var x=(c.t===null?SIGPOS:c.t)/DUR*100,w=c.d/DUR*100;
+      html+='<div class="clip'+(c.t===null?" wait":"")+'" id="c'+li+'_'+ci+'" style="left:'+x+'%;width:'+w+'%">'+(c.t===null?'合図待ち · ':'')+c.l+'</div>';});
+    html+='</div></div>';
+  });
+  document.getElementById("lanes").innerHTML=html;
+  var tk="";for(var s=0;s<=DUR+1e-6;s+=.2)tk+='<span style="left:'+(s/DUR*100)+'%">'+s.toFixed(1)+'s</span>';
+  document.getElementById("ticks").innerHTML=tk;
+  var ph=document.getElementById("ph"),log=document.getElementById("tlLog"),sig=document.getElementById("tlSig"),play=document.getElementById("tlPlay");
+  var raf=0,t0=0,cur=0,playing=false,fired={},signaled=false;
+  function geom(){var a=body.querySelector(".lane .area"),br=body.getBoundingClientRect(),ar=a.getBoundingClientRect();return{x:ar.left-br.left,w:ar.width};}
+  function setPH(t){var g=geom();ph.style.left=(g.x+g.w*Math.min(t,DUR)/DUR)+"px";}
+  function add(m,c){var d=document.createElement("div");if(c)d.className=c;d.textContent=m;log.appendChild(d);log.scrollTop=log.scrollHeight;}
+  function fire(li,ci,l){var el=document.getElementById("c"+li+"_"+ci);el.classList.add("fired");setTimeout(function(){el.classList.remove("fired");},380);add(cur.toFixed(2)+"秒  "+lanes[li].n+" · "+l,"g");}
+  function reset(){cancelAnimationFrame(raf);playing=false;cur=0;fired={};signaled=false;
+    lanes.forEach(function(L,li){L.clips.forEach(function(c,ci){if(c.t===null){var el=document.getElementById("c"+li+"_"+ci);el.classList.add("wait");el.style.left=(SIGPOS/DUR*100)+"%";el.textContent="合図待ち · "+c.l;}});});setPH(0);}
+  function tick(now){cur=(now-t0)/1000;
+    lanes.forEach(function(L,li){L.clips.forEach(function(c,ci){var k=li+"_"+ci;if(c.t!==null&&!fired[k]&&cur>=c.t){fired[k]=1;fire(li,ci,c.l);}});});
+    setPH(cur);
+    if(cur>=DUR){playing=false;sig.setAttribute("aria-disabled","true");sig.classList.remove("armed");play.textContent="▶ もう一度";add(signaled?"✓ 演出完了":"✓ 演出完了（合図が来なかったので点線のトラックは鳴らず）",signaled?"g":"");return;}
+    raf=requestAnimationFrame(tick);}
+  play.addEventListener("click",function(){reset();log.innerHTML="";add("演出スタート");playing=true;sig.setAttribute("aria-disabled","false");sig.classList.add("armed");play.textContent="▶ 再生中…";t0=performance.now();raf=requestAnimationFrame(tick);});
+  sig.addEventListener("click",function(){if(!playing||signaled)return;signaled=true;sig.classList.remove("armed");sig.setAttribute("aria-disabled","true");add("合図「hit」← ゲームが「当たった」と判定","s");
+    lanes.forEach(function(L,li){L.clips.forEach(function(c,ci){if(c.t===null){var el=document.getElementById("c"+li+"_"+ci);el.classList.remove("wait");el.style.left=(Math.min(cur,DUR-c.d)/DUR*100)+"%";el.textContent=c.l;fire(li,ci,c.l);}});});});
+  window.addEventListener("resize",function(){setPH(cur);});
+  setPH(0);
+})();
+</script>
+</body>
+</html>

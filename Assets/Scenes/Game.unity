@@ -587,6 +587,63 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &131760601
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 131760603}
+  - component: {fileID: 131760602}
+  m_Layer: 0
+  m_Name: '[Fortress] LocalTurretHud'
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &131760602
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 131760601}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff71a3ea53ce7594e98465de56148f29, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.Hud.LocalTurretGaugeHud
+  root: {fileID: 0}
+  heatFill: {fileID: 0}
+  chargeGaugeRoot: {fileID: 0}
+  chargeFill: {fileID: 0}
+  overheatIndicator: {fileID: 0}
+  playerColorTargets: []
+  playerLabel: {fileID: 0}
+  heatColor: {r: 1, g: 0.6, b: 0.15, a: 1}
+  dangerThreshold01: 0.8
+  dangerColor: {r: 1, g: 0.2, b: 0.15, a: 1}
+  chargeColor: {r: 0.4, g: 0.85, b: 1, a: 1}
+  defaultGaugeSize: {x: 520, y: 26}
+  defaultBottomMargin: 48
+--- !u!4 &131760603
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 131760601}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &152677632
 GameObject:
   m_ObjectHideFlags: 0
@@ -688,6 +745,135 @@ MonoBehaviour:
   - {fileID: 1342680662}
   fallbackEnemyPrefab: {fileID: 0}
   autoStartOnPlay: 1
+--- !u!1 &373009647
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 373009649}
+  - component: {fileID: 373009648}
+  - component: {fileID: 373009650}
+  - component: {fileID: 373009651}
+  - component: {fileID: 373009652}
+  - component: {fileID: 373009653}
+  m_Layer: 0
+  m_Name: '[Fortress] NetSync'
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &373009648
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 373009647}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 3382809901
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  m_InScenePlacedDisabledByDefault: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  m_InScenePlaced: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
+--- !u!4 &373009649
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 373009647}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &373009650
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 373009647}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 925aa08c383bbf342ac043c959fd8581, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.Net.TurretNetworkHub
+  ShowTopMostFoldoutHeaderGroup: 1
+  localGripSensorIndex: 0
+  gripSendRate: 30
+  remoteGripTimeoutSeconds: 0.5
+--- !u!114 &373009651
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 373009647}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54ace074dac266c4a917c3704fbda063, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.Net.DestructibleNetworkHub
+  ShowTopMostFoldoutHeaderGroup: 1
+  eventSendRate: 20
+  positionSendRate: 15
+--- !u!114 &373009652
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 373009647}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e231d8a2b422bbc48bec6e62f94361a8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.Net.EnemyNetworkHub
+  ShowTopMostFoldoutHeaderGroup: 1
+  eventSendRate: 20
+  positionSendRate: 20
+--- !u!114 &373009653
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 373009647}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02e67babcabb4cf4c9f9747738e0ece3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.Net.SwarmNetworkHub
+  ShowTopMostFoldoutHeaderGroup: 1
+  eventSendRate: 20
+  maxEventsPerSecond: 40000
+  correctionCycleSeconds: 0.5
+  correctionSendRate: 20
+  correctionSharpness: 8
+  snapDistance: 4
+  correctionLeadSeconds: 0.05
 --- !u!1 &385221081
 GameObject:
   m_ObjectHideFlags: 0
@@ -1684,6 +1870,7 @@ GameObject:
   - component: {fileID: 1377676879}
   - component: {fileID: 1377676878}
   - component: {fileID: 1377676889}
+  - component: {fileID: 1377676890}
   m_Layer: 0
   m_Name: Destructible_0
   m_TagString: Untagged
@@ -2040,6 +2227,10 @@ MonoBehaviour:
       useNavigationFieldBounds: 1
       fallbackAreaCenter: {x: 0, y: 0}
       fallbackAreaSize: {x: 20, y: 12}
+      returnToScreen: 1
+      maxSecondsOffScreen: 1
+      screenMargin: 1
+      returnSpeedMultiplier: 1.5
     onBroken:
       prefab: {fileID: 0}
       sound: {fileID: 0}
@@ -2052,6 +2243,151 @@ MonoBehaviour:
     exclusiveRotation: 0
     rotationGroupId: 
     rotationDelaySeconds: 3
+--- !u!114 &1377676890
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1377676876}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 316aebcb992f58f4785a1f3c1223b8c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.SmashBallFloater
+--- !u!1 &1451539718
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1451539721}
+  - component: {fileID: 1451539720}
+  - component: {fileID: 1451539719}
+  - component: {fileID: 1451539724}
+  - component: {fileID: 1451539723}
+  - component: {fileID: 1451539722}
+  m_Layer: 0
+  m_Name: '[D-Drive] Runtime'
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1451539719
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1451539718}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 325763d1a3e507848abe9d8f5fdba867, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DDrive.Runtime::DDrive.Runtime.Loop.DDriveRuntimeBootstrap
+  DefaultNetBridge: 1
+  DefaultNetStart: 1
+  DefaultHostAddress: 192.168.137.1
+  DefaultPort: 7777
+  ShowNetDebugOverlay: 1
+  ShowNetDebugOverlayInRelease: 0
+  ContentHashTimeoutSeconds: 5
+  Catalogs:
+  - {fileID: 11400000, guid: 4da8475b9c45bc944b67efdf2405354d, type: 2}
+  - {fileID: 11400000, guid: 8eaafafebf4232040ab6dfef69d9a566, type: 2}
+  - {fileID: 11400000, guid: 8d54b9290b7ba4843abcb38c56ee41a9, type: 2}
+  - {fileID: 11400000, guid: b854b755287d9be4b94bad91c00bbf56, type: 2}
+  - {fileID: 11400000, guid: c77ccefbb40b0164093d7b32e9c40b0f, type: 2}
+  - {fileID: 11400000, guid: cf3373a3e10d7bf4eb908030dd0cd6be, type: 2}
+  - {fileID: 11400000, guid: b52898ed6f0031d45bbfd5dc454471e8, type: 2}
+  - {fileID: 11400000, guid: 2be8f9b295ea34848ad9b282b5ae1909, type: 2}
+  - {fileID: 11400000, guid: a52a143026742de4dbd6edd878409239, type: 2}
+  - {fileID: 11400000, guid: 02ab22577c305a6409b5448121396066, type: 2}
+  - {fileID: 11400000, guid: 86b5f8e1b2ec58441a400fa9eef835fe, type: 2}
+  - {fileID: 11400000, guid: 4e5edc21c7595314dbae7b0a6683d374, type: 2}
+  - {fileID: 11400000, guid: ef4750bf9cd9d5940a15287e6072f8e6, type: 2}
+  CatalogLabel: DDriveCatalog
+  KeepAcrossScenes: 1
+  BindFacades: 1
+  LayerSettings: {fileID: 0}
+  TuningTable: {fileID: 0}
+--- !u!114 &1451539720
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1451539718}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9f5162ee8bee56468bc7c247955c78c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DDrive.Runtime::DDrive.Runtime.Loop.GameLoopDriver
+--- !u!4 &1451539721
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1451539718}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1451539722
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1451539718}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aaca0bb449ef77b4a96042ef0c308e8f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.Net.FortressConnectUI
+  bootstrap: {fileID: 1451539723}
+  localPlayerIndex: 0
+  joinAddress: 127.0.0.1
+  areaPosition: {x: -340, y: 20}
+  areaWidth: 320
+  anchorFromRightEdge: 1
+  referenceScreenHeight: 1080
+--- !u!114 &1451539723
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1451539718}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70adbcbc622367f4c8551b02245b2f43, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.Net.FortressNetworkBootstrap
+  ddriveBootstrap: {fileID: 0}
+  port: 7777
+--- !u!114 &1451539724
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1451539718}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e9a33825529f5c4489cfabcdd9b1daf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DDrive.Runtime.Ngo::DDrive.Runtime.Net.DDriveNgoBootstrapHook
+  NetworkManagerRef: {fileID: 1672034999}
+  NgoBridgeRef: {fileID: 1521422019}
 --- !u!1 &1457059465
 GameObject:
   m_ObjectHideFlags: 0
@@ -2101,6 +2437,79 @@ MonoBehaviour:
   detailedProfiling: 0
   spikeThresholdMs: 18
   captureCellCounts: 0
+--- !u!1 &1521422016
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1521422018}
+  - component: {fileID: 1521422017}
+  - component: {fileID: 1521422019}
+  m_Layer: 0
+  m_Name: NgoNetBridge
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1521422017
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1521422016}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 42339984
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  m_InScenePlacedDisabledByDefault: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  m_InScenePlaced: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
+--- !u!4 &1521422018
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1521422016}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.94421, y: -0, z: 98.35522}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1521422019
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1521422016}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09b0e7f890c23184d9f5d851c8772486, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DDrive.Runtime.Ngo::DDrive.Runtime.Net.NgoNetBridge
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &1598120341
 GameObject:
   m_ObjectHideFlags: 0
@@ -2146,6 +2555,112 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1126469824}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1672034997
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1672035000}
+  - component: {fileID: 1672034999}
+  - component: {fileID: 1672035001}
+  m_Layer: 0
+  m_Name: NetworkManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1672034999
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1672034997}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 593a2fe42fa9d37498c96f9a383b6521, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkManager
+  NetworkManagerExpanded: 0
+  NetworkConfig:
+    ProtocolVersion: 0
+    NetworkTransport: {fileID: 1672035001}
+    PlayerPrefab: {fileID: 0}
+    Prefabs:
+      NetworkPrefabsLists:
+      - {fileID: 11400000, guid: 5ce34291b815763449e3f6551a0dead8, type: 2}
+    TickRate: 30
+    ClientConnectionBufferTimeout: 10
+    ConnectionApproval: 0
+    ConnectionData: 
+    EnableTimeResync: 0
+    TimeResyncInterval: 30
+    EnsureNetworkVariableLengthSafety: 0
+    EnableSceneManagement: 1
+    ForceSamePrefabs: 1
+    RecycleNetworkIds: 1
+    NetworkIdRecycleDelay: 120
+    RpcHashSize: 0
+    LoadSceneTimeOut: 120
+    SpawnTimeout: 10
+    EnableNetworkLogs: 1
+    NetworkTopology: 0
+    UseCMBService: 0
+    AutoSpawnPlayerPrefabClientSide: 1
+    NetworkProfilingMetrics: 1
+    OldPrefabList: []
+  RunInBackground: 1
+  LogLevel: 1
+--- !u!4 &1672035000
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1672034997}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.94421, y: -0, z: 98.35522}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1672035001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1672034997}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6960e84d07fb87f47956e7a81d71c4e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Transports.UTP.UnityTransport
+  m_ProtocolType: 0
+  m_UseWebSockets: 0
+  m_UseEncryption: 0
+  m_MaxPacketQueueSize: 128
+  m_MaxPayloadSize: 6144
+  m_HeartbeatTimeoutMS: 500
+  m_ConnectTimeoutMS: 1000
+  m_MaxConnectAttempts: 60
+  m_DisconnectTimeoutMS: 30000
+  ConnectionData:
+    Address: 127.0.0.1
+    Port: 7777
+    WebSocketPath: /
+    ServerListenAddress: 127.0.0.1
+    ClientBindPort: 0
+  DebugSimulator:
+    PacketDelayMS: 0
+    PacketJitterMS: 0
+    PacketDropRate: 0
 --- !u!1 &1727559726
 GameObject:
   m_ObjectHideFlags: 0
@@ -2855,6 +3370,59 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &2123814595
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2123814597}
+  - component: {fileID: 2123814596}
+  m_Layer: 0
+  m_Name: Arduino
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2123814596
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2123814595}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 870a4ab18665d40479bf8e4166096517, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArduinoSerialReader
+  deviceConfig: {fileID: 0}
+  portName: COM5
+  baudRate: 9600
+  heartbeatTimeoutMs: 1000
+  centeredSensor: 1
+  sensorCenter01: 0.5
+  logValues: 1
+  logIntervalSeconds: 0.3
+  logPlayerCount: 2
+--- !u!4 &2123814597
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2123814595}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.94421, y: -0, z: 98.35522}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -2862,3 +3430,9 @@ SceneRoots:
   - {fileID: 11383753}
   - {fileID: 68315023}
   - {fileID: 1165466412}
+  - {fileID: 1451539721}
+  - {fileID: 1672035000}
+  - {fileID: 1521422018}
+  - {fileID: 2123814597}
+  - {fileID: 373009649}
+  - {fileID: 131760603}

@@ -1,3 +1,4 @@
+using MS2026.Fortress.Cameras;
 using UnityEditor;
 using UnityEngine;
 
@@ -8,6 +9,7 @@ namespace MS2026.Fortress.EditorTools
     public static class SmashBallFloatOverlay
     {
         private static readonly Color BoundsColor = new Color(1f, 0.55f, 0.9f, 0.9f);
+        private static readonly Color ScreenColor = new Color(0.45f, 0.9f, 1f, 0.9f);
 
         static SmashBallFloatOverlay()
         {
@@ -21,7 +23,7 @@ namespace MS2026.Fortress.EditorTools
                 return;
             }
 
-            Handles.color = BoundsColor;
+            FortressCameraRig rig = null;
             foreach (var module in SmashBallSelection.Get())
             {
                 var floater = module.GetComponent<SmashBallFloater>();
@@ -30,9 +32,23 @@ namespace MS2026.Fortress.EditorTools
                     continue;
                 }
 
+                Handles.color = BoundsColor;
                 var (center, size) = floater.GetWanderBounds();
                 DrawRect(center, size);
                 Handles.Label(center + new Vector2(0f, size.y * 0.5f + 0.3f), "浮遊範囲", EditorStyles.miniBoldLabel);
+
+                if (!module.settings.floating.returnToScreen)
+                {
+                    continue;
+                }
+
+                rig ??= FortressCameraRig.Active != null ? FortressCameraRig.Active : Object.FindFirstObjectByType<FortressCameraRig>();
+                if (floater.TryGetScreenArea(rig, out var screen))
+                {
+                    Handles.color = ScreenColor;
+                    DrawRect(screen.center, screen.size);
+                    Handles.Label(new Vector2(screen.xMin, screen.yMax + 0.3f), "画面内（ここから出ても戻ってくる）", EditorStyles.miniBoldLabel);
+                }
             }
         }
 

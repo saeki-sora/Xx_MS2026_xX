@@ -56,7 +56,11 @@ namespace MS2026.Fortress.EditorTools
                     new Field(S + "floating.avoidanceRadius", "避ける判定の半径(0=自動)", S + "floating.enabled"),
                     new Field(S + "floating.useNavigationFieldBounds", "経路フィールドの範囲内を漂う", S + "floating.enabled"),
                     new Field(S + "floating.fallbackAreaCenter", "漂う範囲の中心", S + "floating.useNavigationFieldBounds", shownWhenInverted: true),
-                    new Field(S + "floating.fallbackAreaSize", "漂う範囲の大きさ", S + "floating.useNavigationFieldBounds", shownWhenInverted: true)
+                    new Field(S + "floating.fallbackAreaSize", "漂う範囲の大きさ", S + "floating.useNavigationFieldBounds", shownWhenInverted: true),
+                    new Field(S + "floating.returnToScreen", "画面外に出ても少し経つと戻ってくる", S + "floating.enabled"),
+                    new Field(S + "floating.maxSecondsOffScreen", "画面外にいてよい時間(秒)", S + "floating.returnToScreen"),
+                    new Field(S + "floating.screenMargin", "画面の端からの余白", S + "floating.returnToScreen"),
+                    new Field(S + "floating.returnSpeedMultiplier", "戻るときの速さの倍率", S + "floating.returnToScreen")
                 }
             },
             new Section

@@ -22,6 +22,10 @@ namespace MS2026.Fortress
         [ReadOnly] public NativeArray<float> yRange;
         public int ySort;
 
+        /// <summary>ネット対戦のClientで、計算上の位置に足して描く「見た目だけのずらし」(SwarmCorrectionJob参照)。</summary>
+        [ReadOnly] public NativeArray<float2> renderOffset;
+        public int applyRenderOffset;
+
         [WriteOnly] public NativeArray<SwarmInstance> tmpInstances;
         [WriteOnly] public NativeArray<int> keyOf;
 
@@ -59,9 +63,10 @@ namespace MS2026.Fortress
                 ? 0
                 : (int)math.floor(angle / (math.PI * 2f / directions) + 0.5f) % directions;
 
+            var draw = applyRenderOffset != 0 ? p + renderOffset[i] : p;
             tmpInstances[i] = new SwarmInstance
             {
-                a = new float4(p.x, p.y, tp.spriteSize, math.saturate(flash[i])),
+                a = new float4(draw.x, draw.y, tp.spriteSize, math.saturate(flash[i])),
                 b = new float4(frame, dir, 1f, 0f)
             };
         }

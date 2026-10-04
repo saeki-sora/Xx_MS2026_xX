@@ -50,5 +50,22 @@ namespace MS2026.Fortress
 
         [Tooltip("経路フィールドが無いとき、またはONにしていないときに使う範囲の大きさ。")]
         public Vector2 fallbackAreaSize = new Vector2(20f, 12f);
+
+        [Header("画面内に戻る")]
+        [Tooltip("ONなら、全員の画面に映る範囲(カメラの視点セットから計算)の外へ出ても、少し経つと画面内へ戻ってくる。" +
+                 "浮遊する範囲が画面より広いときに、画面外を漂い続けて見えなくなるのを防ぐ。")]
+        public bool returnToScreen = true;
+
+        [Tooltip("画面外にいてよい時間(秒)。これを過ぎると画面内へ向かって戻り始める。0ならはみ出した瞬間に戻り始める。")]
+        [Min(0f)]
+        public float maxSecondsOffScreen = 1f;
+
+        [Tooltip("画面の端からこの距離(ワールド単位)より内側を「画面内」とみなす。ボールが半分見切れた状態を画面内と数えないため。")]
+        [Min(0f)]
+        public float screenMargin = 1f;
+
+        [Tooltip("画面内へ戻るときの速さの倍率(漂う速さに掛ける)。")]
+        [Min(0.1f)]
+        public float returnSpeedMultiplier = 1.5f;
     }
 }

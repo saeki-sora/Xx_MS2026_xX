@@ -14,12 +14,23 @@ namespace MS2026.GripInputBridge
     {
         private static GripInputProvider _provider;
         private static GripSessionRecorder _recorder;
+        private static SimulatedGripTransport _simulator;
 
         /// <summary>
         /// ゲームコードが実際に呼び出す窓口。未初期化の場合、既定でキーボードシミュレータを
         /// トランスポートとして自動生成する（実機が無くても即座に動作を確認できるようにするため）。
         /// </summary>
         public static IGripInputProvider Provider => _provider ??= CreateDefaultProvider();
+
+        /// <summary>
+        /// 全体で1つだけのキーボードシミュレータ。既定の入力元・実機との合成(<see cref="CompositeGripTransport"/>)・
+        /// エディタウィンドウの波形プリセットが、すべてこの同じインスタンスを使う
+        /// (別々に作ると、ウィンドウで設定したプリセットがゲームに届かない等の食い違いが起きるため)。
+        /// </summary>
+        public static SimulatedGripTransport Simulator => _simulator ??= new SimulatedGripTransport();
+
+        /// <summary>今の入力元。差し替えた本人が後片付けする際に「自分の物がまだ使われているか」を確かめるのに使う。</summary>
+        public static IGripTransport CurrentTransport => EnsureProvider().Transport;
 
         /// <summary>記録中のログファイルの絶対パス。記録していない場合はnull。</summary>
         public static string CurrentRecordingFilePath => _recorder?.FilePath;
@@ -93,7 +104,7 @@ namespace MS2026.GripInputBridge
 
         private static GripInputProvider CreateDefaultProvider()
         {
-            return new GripInputProvider(new SimulatedGripTransport());
+            return new GripInputProvider(Simulator);
         }
     }
 }

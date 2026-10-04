@@ -17,7 +17,7 @@ namespace MS2026.Fortress
     /// </summary>
     [DefaultExecutionOrder(100)]
     [DisallowMultipleComponent]
-    public sealed class SwarmSystem : MonoBehaviour
+    public sealed partial class SwarmSystem : MonoBehaviour
     {
         public const int HistoryLength = 180;
 
@@ -73,6 +73,9 @@ namespace MS2026.Fortress
             public float speed;
             public float animStart;
             public float2 face;
+
+            /// <summary>通信用の番号。-1ならHost(またはオフライン)として追加時に振る。Clientでは届いた番号。</summary>
+            public int id;
         }
 
         private SwarmSettings _settings;
@@ -170,6 +173,8 @@ namespace MS2026.Fortress
             _hitT = new NativeArray<float>(SwarmLimits.MaxPierceBuffer, Allocator.Persistent);
             _hitIdx = new NativeArray<int>(SwarmLimits.MaxPierceBuffer, Allocator.Persistent);
 
+            InitializeNet(capacity);
+
             _profiles.Add(null);
             _renderer = new SwarmRenderer(capacity);
             _stats.capacity = capacity;
@@ -191,6 +196,12 @@ namespace MS2026.Fortress
         {
             Initialize();
 
+            // ネット対戦のClientでは、敵はHostが湧かせて届ける(SpawnReplica)。
+            if (IsReplica)
+            {
+                return false;
+            }
+
             var type = RegisterType(definition);
             if (type < 0 || Storage.Count + _pending.Count >= Storage.Capacity)
             {
@@ -208,7 +219,8 @@ namespace MS2026.Fortress
                 hp = definition.maxHealth,
                 speed = 1f + UnityEngine.Random.Range(-1f, 1f) * definition.swarm.speedVariance,
                 animStart = UnityEngine.Random.value * Mathf.Max(1, definition.swarm.frameCount),
-                face = new float2(Mathf.Cos(angle), Mathf.Sin(angle))
+                face = new float2(Mathf.Cos(angle), Mathf.Sin(angle)),
+                id = -1
             });
 
             _stats.totalSpawned++;
@@ -256,7 +268,8 @@ namespace MS2026.Fortress
                 origin = origin,
                 end = end,
                 halfWidth = halfWidth,
-                damagePerSecond = damagePerSecond,
+                // ネット対戦のClientでは、ダメージはHostだけが与える。被弾フラッシュ(見た目)だけを出す。
+                damagePerSecond = IsReplica ? 0f : damagePerSecond,
                 maxHits = maxHits
             };
         }
@@ -310,6 +323,7 @@ namespace MS2026.Fortress
             _stats.drawBatches = _renderer.LastBatchCount;
 
             ApplyPendingCommands();
+            RaiseSpawnRecords();
 
             _refreshTimer -= Time.unscaledDeltaTime;
             if (_refreshTimer <= 0f)
@@ -329,6 +343,9 @@ namespace MS2026.Fortress
             _lastNavRebuilt = Navigation.BuiltVersion != versionBefore;
             _stats.navigationMs = Mathf.Lerp(_stats.navigationMs, _lastNavMs, 0.2f);
 
+            // ジョブが止まっていて配列を読める最後の瞬間。ネット同期(位置の配信・途中参加者への全体送信)はここで読む。
+            StorageReadable?.Invoke();
+
             ScheduleSimulation();
 
             _beamCount = 0;
@@ -343,27 +360,67 @@ namespace MS2026.Fortress
             if (_clearRequested)
             {
                 _clearRequested = false;
+                HandleStorageCleared();
                 Storage.Clear();
                 _renderTotal = 0;
             }
 
+            // 一斉投入でも1フレームに処理が集中しないよう、Host(とオフライン)の追加は1フレームの上限までにして、
+            // 残りは次のフレームへ回す。Clientの追加(番号つき)は、削除との順番が崩れないよう上限を設けない(Host側で既に分散済み)。
+            var limit = SpawnsPerFrameLimit;
+            var applied = 0;
+            var processed = 0;
             for (var i = 0; i < _pending.Count; i++)
             {
                 var spawn = _pending[i];
-                Storage.TryAdd(spawn.position, spawn.type, spawn.hp, spawn.speed, spawn.animStart, spawn.face);
+                if (spawn.id < 0 && limit > 0 && applied >= limit)
+                {
+                    break;
+                }
+
+                processed++;
+                if (spawn.id < 0)
+                {
+                    applied++;
+                }
+
+                var id = spawn.id >= 0 ? spawn.id : AllocateNetId();
+                if (id < 0)
+                {
+                    _stats.rejectedSpawns++;
+                    continue;
+                }
+
+                if (Storage.TryAdd(spawn.position, spawn.type, spawn.hp, spawn.speed, spawn.animStart, spawn.face, id))
+                {
+                    RecordSpawn(spawn, id);
+                }
+                else if (spawn.id < 0)
+                {
+                    ReleaseNetId(id);
+                }
             }
 
-            _pending.Clear();
+            _pending.RemoveRange(0, processed);
+            _stats.pendingSpawns = _pending.Count;
         }
 
         private void ScheduleSimulation()
         {
             var dt = Mathf.Min(Time.deltaTime, _settings.maxFrameDelta);
             var count = Storage.Count;
-            if (count <= 0 || dt <= 1e-5f)
+            if (count <= 0)
+            {
+                DiscardNetJobInputs();
+                return;
+            }
+
+            if (dt <= 1e-5f)
             {
                 return;
             }
+
+            PrepareNetJobInputs();
 
             for (var b = 0; b < _beamCount; b++)
             {
@@ -398,6 +455,7 @@ namespace MS2026.Fortress
             Storage.Count = _counters[0];
             Storage.Swap();
             _renderTotal = Storage.Count;
+            CollectRemovals();
 
             ApplyCoreDamage(_flightDt);
             _stats.totalKilled += _counters[1];
@@ -444,7 +502,10 @@ namespace MS2026.Fortress
             _stageWatch.Restart();
             _stageLast = 0d;
 
-            var handle = new SwarmCellIndexJob
+            // Clientでは最初に、Hostの位置とのズレを少し詰める(以降の押し合い等はその位置から計算する)。
+            var handle = ScheduleReplicaCorrection(default, count, dt);
+
+            handle = new SwarmCellIndexJob
             {
                 pos = Storage.pos,
                 cellOf = Grid.CellOf,
@@ -452,7 +513,7 @@ namespace MS2026.Fortress
                 invCell = hashInvCell,
                 width = Grid.Width,
                 height = Grid.Height
-            }.Schedule(count, 256);
+            }.Schedule(count, 256, handle);
 
             handle = new SwarmBuildGridJob
             {
@@ -531,7 +592,8 @@ namespace MS2026.Fortress
 
             var input = Storage.predA;
             var output = Storage.predB;
-            for (var iteration = 0; iteration < _settings.separationIterations; iteration++)
+            var separationIterations = SeparationIterations;
+            for (var iteration = 0; iteration < separationIterations; iteration++)
             {
                 handle = new SwarmSeparationJob
                 {
@@ -596,8 +658,13 @@ namespace MS2026.Fortress
                 typeIdx = Storage.typeIdx,
                 state = Storage.state,
                 types = _typeParams,
+                netId = Storage.netId,
+                removeIds = _removeIds,
                 count = count,
                 arrivalMode = (int)_settings.arrivalMode,
+                replicaMode = IsReplica ? 1 : 0,
+                removedIds = _removedIds,
+                removedReasons = _removedReasons,
                 keepList = _keepList,
                 counters = _counters,
                 goalDamage = _goalDamage,
@@ -620,6 +687,8 @@ namespace MS2026.Fortress
                 typeIdx = Storage.typeIdx,
                 state = Storage.state,
                 goalOf = Storage.goalOf,
+                netId = Storage.netId,
+                correction = Storage.correction,
                 posOut = Storage.posB,
                 velOut = Storage.velB,
                 facingOut = Storage.facingB,
@@ -629,7 +698,9 @@ namespace MS2026.Fortress
                 speedScaleOut = Storage.speedScaleB,
                 typeIdxOut = Storage.typeIdxB,
                 stateOut = Storage.stateB,
-                goalOfOut = Storage.goalOfB
+                goalOfOut = Storage.goalOfB,
+                netIdOut = Storage.netIdB,
+                correctionOut = Storage.correctionB
             }.Schedule(count, 256, handle);
             Mark(ref handle, 5);
 
@@ -645,6 +716,8 @@ namespace MS2026.Fortress
                 counters = _counters,
                 yRange = _yRange,
                 ySort = _settings.ySort ? 1 : 0,
+                renderOffset = Storage.correctionB,
+                applyRenderOffset = UsesRenderOffset ? 1 : 0,
                 tmpInstances = _tmpInstances,
                 keyOf = _keyOf
             }.Schedule(count, 256, handle);
@@ -680,6 +753,12 @@ namespace MS2026.Fortress
 
         private void ApplyCoreDamage(float dt)
         {
+            // コアへのダメージ(=勝敗に関わる)はHostだけが与える。
+            if (IsReplica)
+            {
+                return;
+            }
+
             var goals = Mathf.Min(_cores.Count, _goalCount);
             for (var g = 0; g < goals; g++)
             {
@@ -915,6 +994,7 @@ namespace MS2026.Fortress
             DisposeArray(ref _yRange);
             DisposeArray(ref _hitT);
             DisposeArray(ref _hitIdx);
+            DisposeNet();
         }
 
         private static void DisposeArray<T>(ref NativeArray<T> array) where T : struct

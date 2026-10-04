@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Globalization;
 
 namespace MS2026.GripInputBridge.Transports
@@ -7,6 +8,10 @@ namespace MS2026.GripInputBridge.Transports
     /// フォーマット: <c>G,&lt;player_index 0-3&gt;,&lt;raw_value 0-4095&gt;,&lt;device_timestamp_ms&gt;</c>
     /// 例: <c>G,0,2048,183920</c>
     ///
+    /// 簡易フォーマットとして、Arduino Uno の <c>Serial.println(analogRead(A0));</c> がそのまま出す
+    /// 「整数1つだけの行」(10bit ADC 0-1023)も受け付け、プレイヤー0の値として扱う。
+    /// カンマ区切りで複数並べた行(例: <c>512,300</c>)は <see cref="TryParseSamples"/> で先頭から順にP1, P2...として扱う。
+    ///
     /// SerialPort等のI/Oに一切依存しない純粋な文字列処理として切り出してあるため、
     /// 実機・仮想COMポートが無くても Edit Mode テストでロジックを検証できる。
     /// </summary>
@@ -14,6 +19,9 @@ namespace MS2026.GripInputBridge.Transports
     {
         /// <summary>設計書が前提とする12bit ADCの最大値。</summary>
         public const int RawValueMax = 4095;
+
+        /// <summary>簡易フォーマット(整数1つだけの行)が前提とする Arduino Uno の10bit ADCの最大値。</summary>
+        public const int SimpleFormatRawValueMax = 1023;
 
         public readonly struct ParsedSample
         {
@@ -42,6 +50,14 @@ namespace MS2026.GripInputBridge.Transports
                 return false;
             }
 
+            // Arduinoの println は "\r\n" で終わるため、ReadLine後に残る "\r" 等をここで落とす。
+            line = line.Trim();
+
+            if (TryParseSimpleValue(line, 0, out sample))
+            {
+                return true;
+            }
+
             var tokens = line.Split(',');
             if (tokens.Length != 4 || tokens[0] != "G")
             {
@@ -67,6 +83,64 @@ namespace MS2026.GripInputBridge.Transports
 
             var normalized = (float)rawAdcValue / RawValueMax;
             sample = new ParsedSample(playerIndex, normalized, timestampMs);
+            return true;
+        }
+
+        /// <summary>
+        /// 1行分の受信データを、含まれる全プレイヤー分のサンプルとしてパースする。
+        /// <see cref="TryParseLine"/> が扱う形式に加え、簡易フォーマットの複数値
+        /// (例: <c>512,300</c> → P1=512, P2=300。最大 <see cref="GripInputBridgeConstants.PlayerCount"/> 個)も受け付ける。
+        /// </summary>
+        /// <param name="samples">結果の格納先。呼び出しごとに Clear される(受信スレッドでの毎行アロケーションを避けるため使い回す)。</param>
+        public static bool TryParseSamples(string line, List<ParsedSample> samples)
+        {
+            samples.Clear();
+
+            if (TryParseLine(line, out var single))
+            {
+                samples.Add(single);
+                return true;
+            }
+
+            if (string.IsNullOrEmpty(line))
+            {
+                return false;
+            }
+
+            var tokens = line.Trim().Split(',');
+            if (tokens.Length > GripInputBridgeConstants.PlayerCount)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < tokens.Length; i++)
+            {
+                if (!TryParseSimpleValue(tokens[i], i, out var sample))
+                {
+                    samples.Clear();
+                    return false;
+                }
+
+                samples.Add(sample);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 簡易フォーマットの値1つ(0-1023の整数)をパースする。デバイス時刻は送られてこないため0とする。
+        /// </summary>
+        private static bool TryParseSimpleValue(string token, int playerIndex, out ParsedSample sample)
+        {
+            sample = default;
+
+            if (!int.TryParse(token, NumberStyles.Integer, CultureInfo.InvariantCulture, out var rawAdcValue)
+                || rawAdcValue < 0 || rawAdcValue > SimpleFormatRawValueMax)
+            {
+                return false;
+            }
+
+            sample = new ParsedSample(playerIndex, (float)rawAdcValue / SimpleFormatRawValueMax, 0L);
             return true;
         }
 

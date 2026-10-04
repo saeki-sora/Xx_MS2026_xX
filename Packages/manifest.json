@@ -1,6 +1,16 @@
 {
+  "scopedRegistries": [
+    {
+      "name": "Unity NuGet",
+      "url": "https://unitynuget-registry.openupm.com",
+      "scopes": ["org.nuget"]
+    }
+  ],
   "dependencies": {
     "com.coplaydev.unity-mcp": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main",
+    "com.cysharp.r3": "https://github.com/Cysharp/R3.git?path=src/R3.Unity/Assets/R3.Unity#1.3.1",
+    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask#2.5.11",
+    "com.ddrive.core": "git+https://github.com/wrenchsun/D-Drive.git?path=Packages/com.ddrive.core#v1.2.1",
     "com.ms2026.shaderfx": "0.1.0",
     "com.ms2026.spriteanim": "0.1.0",
     "com.unity.ai.assistant": "2.17.0-pre.1",
@@ -10,7 +20,9 @@
     "com.unity.ide.visualstudio": "2.0.26",
     "com.unity.inputsystem": "1.19.0",
     "com.unity.multiplayer.center": "1.0.1",
+    "com.unity.netcode.gameobjects": "2.13.2",
     "com.unity.render-pipelines.universal": "17.3.0",
+    "org.nuget.r3": "1.3.1",
     "com.unity.test-framework": "1.6.0",
     "com.unity.timeline": "1.8.12",
     "com.unity.ugui": "2.0.0",

@@ -1,0 +1,97 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03b221955062f7b42b19cd7e1ebd463a, type: 3}
+  m_Name: CameraFeedbackConfig
+  m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.Cameras.CameraFeedbackConfig
+  globalStrength: 1
+  reactions:
+  - eventType: 0
+    enabled: 1
+    audience: 0
+    othersStrength: 0.4
+    cooldownSeconds: 0
+    fullStrengthAmount: 0
+    minStrength: 0.3
+    shake:
+      enabled: 1
+      backend: 0
+      strength: 1
+      ddriveShake:
+        value: 0
+        type: 0
+      simple:
+        amplitude: 0.35
+        rollAmplitude: 0.8
+        frequency: 16
+        duration: 0.4
+    zoom:
+      enabled: 1
+      punch:
+        zoomAmount: 0.12
+        focusTowardSource: 0.25
+        attackSeconds: 0.08
+        holdSeconds: 0.12
+        releaseSeconds: 0.4
+  - eventType: 1
+    enabled: 1
+    audience: 0
+    othersStrength: 1
+    cooldownSeconds: 0.25
+    fullStrengthAmount: 10
+    minStrength: 0.3
+    shake:
+      enabled: 1
+      backend: 0
+      strength: 1
+      ddriveShake:
+        value: 0
+        type: 0
+      simple:
+        amplitude: 0.15
+        rollAmplitude: 0.3
+        frequency: 22
+        duration: 0.2
+    zoom:
+      enabled: 0
+      punch:
+        zoomAmount: 0.12
+        focusTowardSource: 0.2
+        attackSeconds: 0.08
+        holdSeconds: 0.1
+        releaseSeconds: 0.35
+  - eventType: 2
+    enabled: 1
+    audience: 1
+    othersStrength: 0.5
+    cooldownSeconds: 0
+    fullStrengthAmount: 0
+    minStrength: 0.3
+    shake:
+      enabled: 1
+      backend: 0
+      strength: 1
+      ddriveShake:
+        value: 0
+        type: 0
+      simple:
+        amplitude: 0.2
+        rollAmplitude: 0.5
+        frequency: 20
+        duration: 0.3
+    zoom:
+      enabled: 1
+      punch:
+        zoomAmount: 0.06
+        focusTowardSource: 0.15
+        attackSeconds: 0.06
+        holdSeconds: 0.05
+        releaseSeconds: 0.3

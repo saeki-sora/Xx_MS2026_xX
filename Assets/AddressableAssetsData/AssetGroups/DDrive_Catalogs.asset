@@ -1,0 +1,101 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: DDrive_Catalogs
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: DDrive_Catalogs
+  m_GUID: 33a2a4a56ac8cda4d84afd8bf97761f2
+  m_SerializeEntries:
+  - m_GUID: 02ab22577c305a6409b5448121396066
+    m_Address: PresentationCatalog
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DDriveCatalog
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2be8f9b295ea34848ad9b282b5ae1909
+    m_Address: ModelCatalog
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DDriveCatalog
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4da8475b9c45bc944b67efdf2405354d
+    m_Address: AnchorCatalog
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DDriveCatalog
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4e5edc21c7595314dbae7b0a6683d374
+    m_Address: UiTweenCatalog
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DDriveCatalog
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 86b5f8e1b2ec58441a400fa9eef835fe
+    m_Address: UiCatalog
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DDriveCatalog
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8d54b9290b7ba4843abcb38c56ee41a9
+    m_Address: AudioCatalog
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DDriveCatalog
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8eaafafebf4232040ab6dfef69d9a566
+    m_Address: AnimCatalog
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DDriveCatalog
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a52a143026742de4dbd6edd878409239
+    m_Address: PrefabCatalog
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DDriveCatalog
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b52898ed6f0031d45bbfd5dc454471e8
+    m_Address: MaterialCatalog
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DDriveCatalog
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b854b755287d9be4b94bad91c00bbf56
+    m_Address: CameraFxCatalog
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DDriveCatalog
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c77ccefbb40b0164093d7b32e9c40b0f
+    m_Address: CanvasCatalog
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DDriveCatalog
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cf3373a3e10d7bf4eb908030dd0cd6be
+    m_Address: CutsceneCatalog
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DDriveCatalog
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ef4750bf9cd9d5940a15287e6072f8e6
+    m_Address: VfxCatalog
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DDriveCatalog
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: b0944b922872ce54e9706c3315e61915, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 0a222a1ba13fd304da49a1734158d385, type: 2}
+    - {fileID: 11400000, guid: 905aa5ad88b356a4fb78dacb927f3cb5, type: 2}

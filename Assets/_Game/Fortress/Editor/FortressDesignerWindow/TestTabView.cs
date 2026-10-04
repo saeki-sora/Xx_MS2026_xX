@@ -12,6 +12,7 @@ namespace MS2026.Fortress.EditorTools
     public sealed class TestTabView : VisualElement
     {
         private readonly IMGUIContainer _imgui;
+        private readonly ActorSpawnTestPanel _actorSpawnPanel = new ActorSpawnTestPanel();
 
         public TestTabView()
         {
@@ -44,6 +45,8 @@ namespace MS2026.Fortress.EditorTools
             DrawGripAndTurretStatus();
             EditorGUILayout.Space(10);
             DrawWaveControls();
+            EditorGUILayout.Space(10);
+            _actorSpawnPanel.Draw();
         }
 
         private static void DrawGripAndTurretStatus()

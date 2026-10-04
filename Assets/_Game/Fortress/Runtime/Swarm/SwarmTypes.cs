@@ -22,6 +22,16 @@ namespace MS2026.Fortress
         LingerAndAttack = 1
     }
 
+    /// <summary>ネット対戦のClientで、Hostの位置へどう寄せるか。</summary>
+    public enum SwarmReplicaSmoothing
+    {
+        /// <summary>計算上の位置はその場でHostに合わせ、見た目だけを滑らかに追いつかせる(既定。ズレが溜まらない)。</summary>
+        RenderOffset = 0,
+
+        /// <summary>計算上の位置ごと、毎フレーム少しずつHostへ寄せる(従来の方式。比較用)。</summary>
+        BlendSimulation = 1
+    }
+
     /// <summary>ジョブから参照する、敵の種類ごとの数値（EnemyTypeDefinitionから毎フレーム作る）。</summary>
     public struct SwarmTypeParams
     {
@@ -73,6 +83,15 @@ namespace MS2026.Fortress
         public int gcCollections;
         public int maxCellCount;
         public float pairCheckEstimate;
+
+        // ネット対戦のClientで、直前のフレームに届いたHostの位置とのズレ(計測用)。
+        public int replicaCorrections;
+        public float replicaErrorSum;
+        public float replicaErrorMax;
+        public int replicaSnaps;
+
+        /// <summary>まだ追加していない(1フレームの上限を超えて次に回された)出現の数。</summary>
+        public int pendingSpawns;
     }
 
     /// <summary>フレーム時間が閾値を超えた瞬間の内訳。「群衆の中が原因か、外（エディタ・GC・他スクリプト）が原因か」を切り分ける。</summary>

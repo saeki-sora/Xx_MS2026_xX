@@ -6,6 +6,7 @@
 #if MS2026_GRIP_SERIAL_ENABLED
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Ports;
 using System.Threading;
@@ -39,8 +40,12 @@ namespace MS2026.GripInputBridge.Transports
         private readonly Stopwatch _clock = Stopwatch.StartNew();
 
         private readonly float[] _rawValues = new float[GripInputBridgeConstants.PlayerCount];
+        private readonly float[] _receivedValues = new float[GripInputBridgeConstants.PlayerCount];
         private readonly long[] _lastReceivedAtMs = new long[GripInputBridgeConstants.PlayerCount];
         private readonly bool[] _everConnected = new bool[GripInputBridgeConstants.PlayerCount];
+
+        // 受信スレッド専用。1行に複数プレイヤー分の値が入る簡易フォーマット用に使い回す。
+        private readonly List<GripSerialProtocol.ParsedSample> _parsedSamples = new List<GripSerialProtocol.ParsedSample>();
 
         private volatile bool _isRunning;
 
@@ -72,6 +77,9 @@ namespace MS2026.GripInputBridge.Transports
             }
         }
 
+        /// <summary>COMポートを開けて受信を始められたか。falseなら(ポートが無い・使用中など)この入力元からは何も届かない。</summary>
+        public bool IsPortOpen => _isRunning;
+
         public bool IsConnected(int playerIndex)
         {
             if (!IsValidIndex(playerIndex) || !_isRunning)
@@ -92,6 +100,15 @@ namespace MS2026.GripInputBridge.Transports
         public float GetRawValue(int playerIndex)
         {
             return IsValidIndex(playerIndex) ? Volatile.Read(ref _rawValues[playerIndex]) : 0f;
+        }
+
+        /// <summary>
+        /// マイコンから届いた値(0-1)を、<see cref="GripDeviceConfig.ToGripRawValue"/> で変換する前のまま返す。
+        /// センサーの中心値の確認など、診断表示用。
+        /// </summary>
+        public float GetReceivedValue(int playerIndex)
+        {
+            return IsValidIndex(playerIndex) ? Volatile.Read(ref _receivedValues[playerIndex]) : 0f;
         }
 
         /// <summary>スレッドの停止とCOMポートの解放を行う。トランスポートを差し替える際は必ず呼ぶこと。</summary>
@@ -167,18 +184,22 @@ namespace MS2026.GripInputBridge.Transports
                     continue;
                 }
 
-                if (!GripSerialProtocol.TryParseLine(line, out var sample))
+                if (!GripSerialProtocol.TryParseSamples(line, _parsedSamples))
                 {
                     continue; // 化けた1行はスキップする(設計書6.3)。
                 }
 
-                Volatile.Write(ref _rawValues[sample.PlayerIndex], sample.NormalizedRawValue);
-                Volatile.Write(ref _lastReceivedAtMs[sample.PlayerIndex], _clock.ElapsedMilliseconds);
-
-                if (!_everConnected[sample.PlayerIndex])
+                foreach (var sample in _parsedSamples)
                 {
-                    _everConnected[sample.PlayerIndex] = true;
-                    OnConnected?.Invoke(sample.PlayerIndex);
+                    Volatile.Write(ref _receivedValues[sample.PlayerIndex], sample.NormalizedRawValue);
+                    Volatile.Write(ref _rawValues[sample.PlayerIndex], _config.ToGripRawValue(sample.NormalizedRawValue));
+                    Volatile.Write(ref _lastReceivedAtMs[sample.PlayerIndex], _clock.ElapsedMilliseconds);
+
+                    if (!_everConnected[sample.PlayerIndex])
+                    {
+                        _everConnected[sample.PlayerIndex] = true;
+                        OnConnected?.Invoke(sample.PlayerIndex);
+                    }
                 }
             }
         }

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using MS2026.Fortress.Net;
 using UnityEngine;
 
 namespace MS2026.Fortress
@@ -155,20 +156,40 @@ namespace MS2026.Fortress
                 }
             }
 
-            var prefab = entry.enemyType.visualPrefab != null ? entry.enemyType.visualPrefab : fallbackEnemyPrefab;
-            var instance = prefab != null
-                ? Instantiate(prefab, spawnPoint.transform.position, Quaternion.identity)
-                : new GameObject(entry.enemyType.displayName);
-
-            instance.transform.position = spawnPoint.transform.position;
-
-            var enemy = instance.GetComponent<EnemyController>();
-            if (enemy == null)
+            // ネット対戦のClientでは、Actorの敵はHostが湧かせて届けるので自分では湧かせない。
+            // (群衆はPhase 4で同期するまでの間、各PCで湧かせる)
+            if (!FortressNet.HasSimulationAuthority)
             {
-                enemy = instance.AddComponent<EnemyController>();
+                return;
             }
 
-            enemy.definition = entry.enemyType;
+            EnemyActorFactory.Create(entry.enemyType, spawnPoint.transform.position, fallbackEnemyPrefab);
+        }
+
+        /// <summary>
+        /// 指定した種類をActorとして1体湧かせる(テスト・デバッグ用)。群衆モードの種類でもActorになる。
+        /// 湧く場所は湧き位置のどれか(無ければこのオブジェクトの位置)。ネット対戦のClientでは何もしない(nullを返す)。
+        /// </summary>
+        public EnemyController SpawnActorForTest(EnemyTypeDefinition type)
+        {
+            if (type == null || !FortressNet.HasSimulationAuthority)
+            {
+                return null;
+            }
+
+            if (_spawnPointsById == null)
+            {
+                RefreshSpawnPoints();
+            }
+
+            var position = transform.position;
+            if (_spawnPointsById != null && _spawnPointsById.Count > 0)
+            {
+                var points = _spawnPointsById.Values.ToArray();
+                position = points[Random.Range(0, points.Length)].transform.position;
+            }
+
+            return EnemyActorFactory.Create(type, position, fallbackEnemyPrefab);
         }
 
         private void OnDrawGizmosSelected()

@@ -46,7 +46,8 @@ namespace MS2026.Fortress.EditorTools
             }),
             ("湧き", new[]
             {
-                ("spawnJitter", "湧き位置のばらつき半径")
+                ("spawnJitter", "湧き位置のばらつき半径"),
+                ("maxSpawnsPerFrame", "1フレームに湧かせる上限(0=無制限)")
             }),
             ("描画", new[]
             {

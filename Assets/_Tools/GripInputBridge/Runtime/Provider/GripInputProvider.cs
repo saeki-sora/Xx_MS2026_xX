@@ -49,6 +49,9 @@ namespace MS2026.GripInputBridge.Provider
             SetCalibrationProfiles(calibrationProfiles);
         }
 
+        /// <summary>今の入力元。</summary>
+        public IGripTransport Transport => _transport;
+
         /// <summary>
         /// 入力元を差し替える（ホットスワップ）。実機/シミュレータ/記録再生のいずれでも、
         /// このメソッドを呼ぶだけで以後の <see cref="GetGripValue"/> 等の返り値が切り替わる。

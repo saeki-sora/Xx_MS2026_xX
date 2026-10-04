@@ -1,3 +1,4 @@
+using MS2026.Fortress.Net;
 using UnityEngine;
 
 namespace MS2026.Fortress
@@ -67,12 +68,15 @@ namespace MS2026.Fortress
                 }
             }
 
+            // ネット対戦のClientは見た目(当たった位置までの線)だけ描き、ダメージはHostの計算結果を受け取る。
+            var hasAuthority = FortressNet.HasSimulationAuthority;
+
             if (nearest >= 0)
             {
                 var hit = HitBuffer[nearest];
                 endPoint = hit.point;
 
-                var target = hit.collider.GetComponentInParent<ILaserTarget>();
+                var target = hasAuthority ? hit.collider.GetComponentInParent<ILaserTarget>() : null;
                 if (target != null)
                 {
                     var damage = _turret.tuning.maxDamagePerSecond * _turret.CurrentThickness01 * Time.deltaTime;
@@ -87,8 +91,9 @@ namespace MS2026.Fortress
                 }
             }
 
+            // 群衆がHostに従うClient(IsReplica)なら、ダメージ0で被弾フラッシュ(見た目)だけ出す(SwarmSystem側で0にする)。
             var swarm = SwarmSystem.Current;
-            if (swarm != null)
+            if (swarm != null && (hasAuthority || swarm.IsReplica))
             {
                 var tuning = _turret.tuning;
                 swarm.QueueBeam(

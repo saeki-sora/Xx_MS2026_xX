@@ -36,6 +36,13 @@ namespace MS2026.Fortress.EditorTools
                 return;
             }
 
+            // ネット対戦のClientでは群衆はHostの結果を映すだけ。ここで湧かせる・消すとHostとずれるので操作させない。
+            if (system.IsReplica)
+            {
+                EditorGUILayout.HelpBox("ネット対戦のClientでは、群衆はHostから届きます。ストレステストはHost側で行ってください（結果が全員に届きます）。", MessageType.Info);
+                return;
+            }
+
             _burstCount = EditorGUILayout.IntSlider(new GUIContent("一斉投入の数"), _burstCount, 100, 50000);
             _burstRadius = EditorGUILayout.Slider(new GUIContent("投入範囲の半径"), _burstRadius, 0.5f, 20f);
 

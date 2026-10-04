@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>握力入力ブリッジ ガイド</title>
+<meta name="description" content="握力センサーの値をゲームが使える0〜100%に整える入力基盤「握力入力ブリッジ」の使い方">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/guide.css">
+<style>
+:root{--acc:#ff6b6b;--acc-ink:#1c0505;--acc2:#4da3ff;--acc3:#ffd24d}
+:root[data-theme="light"]{--acc:#c8283a;--acc-ink:#ffffff;--acc2:#1f66c4;--acc3:#9a6a00}
+.p1{--c:#e5484d}.p2{--c:#348cf2}.p3{--c:#40b373}.p4{--c:#f2cc27}
+.pdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--c);margin-right:6px}
+.ptag{font-weight:800;color:var(--c)}
+.simrow{display:grid;grid-template-columns:auto 70px 1fr 40px;gap:8px;align-items:center}
+.simrow .mbar i{background:var(--c)}
+.flow .node .v small{font-weight:500;color:var(--mute);font-size:12px}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<div class="orbs" aria-hidden="true"><div class="orb a"></div><div class="orb b"></div></div>
+
+<div class="shell">
+<nav class="side" aria-label="目次">
+  <a class="back" href="index.html">← ツール一覧</a>
+  <a class="brand" href="#top"><span class="mark">握</span><span class="t">握力入力ブリッジ</span></a>
+  <ol id="toc"></ol>
+  <div class="foot">
+    <button class="themebtn" id="themeBtn" type="button"><span aria-hidden="true">◐</span><span data-label>ライト表示</span></button>
+    <div class="meta mono">Assets/_Tools/GripInputBridge<br>2026-10-03 時点</div>
+  </div>
+</nav>
+
+<main id="top">
+<header class="hero">
+  <div class="tags">
+    <span class="pill hot">入力の土台</span>
+    <span class="pill">4 人固定</span>
+    <span class="pill">キーボードで代用 OK</span>
+    <span class="pill">Arduino 対応</span>
+  </div>
+  <h1 class="mega jp" aria-label="握力入力ブリッジ"><span class="o">GRIP INPUT</span><span class="f">握力入力ブリッジ</span></h1>
+  <p class="subname">Grip Input Bridge ＆ Simulator — <b>握力センサーとゲームのあいだの通訳</b></p>
+  <div class="hero-row">
+    <div>
+      <p class="oneword">センサーの「生の値」を、<br>ゲームが使える <span class="hl">0〜100% の握力</span> に整える。<br><span class="hl">センサーが無くても</span> キーボードで動く。</p>
+      <p class="analogy">センサーは個体差もノイズもあるし、子どもと大人で握力も全然違います。それを毎回「この人にとっての 0〜100%」に通訳してゲームに渡すのがこのツールです。ゲーム側は通訳済みの数字だけを見ればいい、という仕組みです。</p>
+    </div>
+    <div class="facts"><dl>
+      <dt>誰が使う</dt><dd>全員（開発中のテスト）／本番当日の運営スタッフ（キャリブレーション・監視）</dd>
+      <dt>開き方</dt><dd><span class="mp">Tools<i>›</i>握力入力ブリッジ<i>›</i>ウィンドウを開く</span></dd>
+      <dt>キー</dt><dd><span class="ptag p1">P1</span> <kbd>Q</kbd>　<span class="ptag p2">P2</span> <kbd>W</kbd>　<span class="ptag p3">P3</span> <kbd>O</kbd>　<span class="ptag p4">P4</span> <kbd>P</kbd>（押しっぱなしで握力が上がる）</dd>
+      <dt>ウィンドウ無しでも</dt><dd>Play するだけでキーボード入力は自動で有効。ウィンドウは「見る・調整する」ための道具です</dd>
+    </dl></div>
+  </div>
+  <div class="marquee" aria-hidden="true"><div class="track" id="mq" data-words="シミュレータ|波形プリセット|キャリブレーション|診断|記録と再生|実機（Arduino）"></div></div>
+</header>
+
+<section id="what" data-nav="何ができる？">
+  <div class="rv">
+    <div class="eyebrow">01 — What it does</div>
+    <h2>握った力が<br><em>ゲームに届くまで</em>。</h2>
+    <p class="lead">握力は次の順番で「通訳」されて、最後にゲーム（砲台のレーザー）へ届きます。どの段階も、このツールで確認・調整できます。</p>
+  </div>
+  <div class="flow rv">
+    <div class="flow-title">FROM HAND TO LASER</div>
+    <div class="pipe">
+      <div class="node"><div class="k">1 · 入力元</div><div class="v">センサー <small>or</small> キーボード <small>or</small> 記録</div><div class="s">どこから値を取るか。いつでも切り替えられる。</div></div>
+      <div class="arrow"></div>
+      <div class="node"><div class="k">2 · ノイズ除去</div><div class="v">ガタつきを取る</div><div class="s">一瞬だけ跳ねた値などをならす（設定した場合）。</div></div>
+      <div class="arrow"></div>
+      <div class="node hl"><div class="k">3 · キャリブレーション</div><div class="v">その人の 0〜100% に</div><div class="s">その人の最大握力を 100% として換算。子どもも大人も対等に。</div></div>
+      <div class="arrow"></div>
+      <div class="node"><div class="k">4 · 判定</div><div class="v">握った／離した</div><div class="s">12% を超えたら「握った」、8% を下回ったら「離した」。</div></div>
+      <div class="arrow"></div>
+      <div class="node"><div class="k">5 · ゲーム</div><div class="v">レーザーの太さ・熱</div><div class="s">砲台がこの 0〜100% を毎フレーム読む。</div></div>
+    </div>
+  </div>
+  <div class="cards three">
+    <div class="card feat rv"><div class="ic">⌨️</div><h3>シミュレータ</h3><p>キーボードで 4 人分の握力を代用。押すと上がり、離すと下がる「握ってる感じ」の動き。</p><p class="ex"><b>使う場面</b> センサーが無い普段の開発</p></div>
+    <div class="card feat rv"><div class="ic">〰️</div><h3>波形プリセット</h3><p>「そっと／しっかり／渾身／リズムテスト」の握り方を自動で再生。手を使わずに試せる。</p><p class="ex"><b>使う場面</b> 渾身で何秒でオーバーヒートするか見る</p></div>
+    <div class="card feat rv"><div class="ic">🎯</div><h3>キャリブレーション</h3><p>プレイヤーごとに 3 秒全力で握ってもらい、その人の 100% を記録する。</p><p class="ex"><b>使う場面</b> 本番で来場者ごとに</p></div>
+    <div class="card feat rv"><div class="ic">🩺</div><h3>診断</h3><p>4 人分の接続状態と現在の値を一覧。ケーブル抜けなどにすぐ気づける。</p><p class="ex"><b>使う場面</b> 展示本番の監視</p></div>
+    <div class="card feat rv"><div class="ic">⏺️</div><h3>記録と再生</h3><p>握力の動きをファイルに記録して、あとで同じ動きを再生できる。</p><p class="ex"><b>使う場面</b> 本番で起きた不具合の再現</p></div>
+    <div class="card feat rv"><div class="ic">🔌</div><h3>実機（Arduino）</h3><p>USB でつないだマイコンのセンサー値を受け取る。最大 4 人分。</p><p class="ex"><b>使う場面</b> 筐体での実プレイ</p></div>
+  </div>
+</section>
+
+<section id="start" data-nav="はじめての 5 分">
+  <div class="rv">
+    <div class="eyebrow">02 — First 5 minutes</div>
+    <h2>キーボードで握って、<br><em>バーが動くのを見る</em>。</h2>
+  </div>
+  <div class="steps">
+    <div class="step rv"><div class="n">1</div><div>
+      <h3>ウィンドウを開く</h3>
+      <p><span class="mp">Tools<i>›</i>握力入力ブリッジ<i>›</i>ウィンドウを開く</span>。タブは <b>はじめに / シミュレータ / キャリブレーション / 診断</b> の 4 枚。上部の <b>入力元</b> は「シミュレータ」のままで OK です。</p>
+    </div></div>
+    <div class="step rv"><div class="n">2</div><div class="step-body">
+      <div><h3>▶ Play して「シミュレータ」タブを見る</h3>
+        <p>Game ビューを一度クリックしてから <kbd>Q</kbd> を押しっぱなしにすると、<span class="ptag p1">P1</span> のバーが上がっていきます（約 0.3 秒で 100%）。離すとゆっくり下がります（約 0.7 秒で 0%）。</p>
+        <ul class="pinlist"><li><span class="pin-inline">1</span><b>入力元</b>：シミュレータ／実機／記録再生 を切り替え</li><li><span class="pin-inline">2</span><b>● REC</b>：握力の動きを記録</li><li><span class="pin-inline">3</span><b>波形プリセット</b>：キーの代わりに自動で握らせる</li></ul>
+      </div>
+      <div><div class="mock" aria-label="握力入力ブリッジの画面イメージ">
+        <div class="mock-title">握力入力ブリッジ</div>
+        <div class="mock-tabs"><span>はじめに</span><span class="on">シミュレータ</span><span>キャリブレーション</span><span>診断</span></div>
+        <div class="mock-body">
+          <div class="mrow" style="grid-template-columns:auto 1fr auto"><span><span class="pin-inline">1</span>入力元:</span><div class="mf dd">シミュレータ</div><span class="mbtn"><span class="pin-inline">2</span>● REC</span></div>
+          <h5 style="margin-top:6px">シミュレータ</h5>
+          <div class="simrow p1"><span><span class="pdot"></span>P1</span><span class="help">Connected</span><div class="mbar"><i style="width:82%"></i></div><span>82%</span></div>
+          <div class="simrow p2"><span><span class="pdot"></span>P2</span><span class="help">Connected</span><div class="mbar"><i style="width:0%"></i></div><span>0%</span></div>
+          <div class="simrow p3"><span><span class="pdot"></span>P3</span><span class="help">Connected</span><div class="mbar"><i style="width:35%"></i></div><span>35%</span></div>
+          <div class="simrow p4"><span><span class="pdot"></span>P4</span><span class="help">Connected</span><div class="mbar"><i style="width:96%"></i></div><span>96%</span></div>
+          <div class="mrow"><span><span class="pin-inline">3</span>波形プリセット:</span><div class="mf dd">なし(キーボード操作)</div></div>
+          <div class="help">キーボード操作キー: Q</div>
+        </div>
+      </div><p class="mock-cap">画面イメージ（実物とは細部が違うことがあります）</p></div>
+    </div></div>
+    <div class="step rv"><div class="n">3</div><div>
+      <h3>波形プリセットで「渾身」を試す</h3>
+      <p><span class="ptag p4">P4</span> の波形プリセットを <b>渾身</b> にすると、手を使わなくても 90〜100% で握り続けます。<a href="FortressDesigner_ガイド.html">要塞デザイナー</a>の「テスト」タブで熱ゲージを見ると、何秒でオーバーヒートするかが分かります。</p>
+      <p class="done">ここまでで、普段の開発に必要な操作は完了です</p>
+    </div></div>
+  </div>
+</section>
+
+<section id="recipes" data-nav="やりたいこと逆引き">
+  <div class="rv">
+    <div class="eyebrow">03 — Recipes</div>
+    <h2>「〜したい」から<br><em>探す</em>。</h2>
+  </div>
+  <label class="search rv"><span aria-hidden="true">🔍</span><span class="sr">やりたいことを検索</span><input id="recipeSearch" type="search" placeholder="例：本番、実機、記録、キャリブレーション"></label>
+  <div class="chips rv" id="recipeChips" role="group" aria-label="カテゴリ">
+    <button class="chip" aria-pressed="true" data-f="all">すべて</button>
+    <button class="chip" aria-pressed="false" data-f="dev">普段の開発</button>
+    <button class="chip" aria-pressed="false" data-f="live">本番・展示</button>
+    <button class="chip" aria-pressed="false" data-f="hw">実機・配線</button>
+  </div>
+  <div class="recipes">
+    <details class="recipe" data-tags="dev"><summary><span class="q">4 人同時に握った状態を試したい</span><span class="who">シミュレータ</span></summary><div class="a"><p><kbd>Q</kbd><kbd>W</kbd><kbd>O</kbd><kbd>P</kbd> を同時に押しっぱなしにします。手が足りなければ、何人かを <b>波形プリセット</b>（そっと／しっかり／渾身）にして自動で握らせます。</p></div></details>
+    <details class="recipe" data-tags="dev"><summary><span class="q">「そっと」「しっかり」「渾身」の強さで試したい</span><span class="who">シミュレータ</span></summary><div class="a"><ul><li><b>そっと</b>：20〜30% をゆらゆら維持</li><li><b>しっかり</b>：50〜60% を維持</li><li><b>渾身</b>：90〜100% を維持（オーバーヒートの確認に）</li><li><b>リズムテスト</b>：0.4 秒ごとに 80% と 0% を交互に（握る／離すの繰り返し）</li></ul><p><b>なし(キーボード操作)</b> に戻すとキー入力に戻ります。</p></div></details>
+    <details class="recipe" data-tags="live"><summary><span class="q">本番で来場者ごとにキャリブレーションしたい</span><span class="who">キャリブレーション</span></summary><div class="a">
+      <ol><li>Play 中に「キャリブレーション」タブを開く。</li><li><b>プレイヤー</b> で P1〜P4 を選ぶ。</li><li><b>計測開始(3秒間、最大握力で握ってください)</b> を押し、カウントダウンの間ずっと全力で握ってもらう。</li><li>「計測結果(最大値): 0.xxx」が出たら <b>この結果を保存</b>。</li></ol>
+      <p>これでその人の全力が 100% になり、握力が弱い人でも太いレーザーが出せるようになります。</p>
+      <div class="callout warn"><span class="ci">!</span><div><b>今の仕様の注意</b>：保存した結果は「保存したその Play の間」だけ反映されます。Play をやり直したときや、ビルドしたゲームでは自動で読み込まれません（読み込みはまだ未実装）。その都度キャリブレーションし直してください。</div></div>
+    </div></details>
+    <details class="recipe" data-tags="live"><summary><span class="q">本番中にセンサーが抜けていないか見張りたい</span><span class="who">診断</span></summary><div class="a"><p>「診断」タブに 4 人分の <b>状態</b> と <b>現在の値</b> が並びます。<b>Connected</b> 以外（<b>Disconnected</b> など）が出たら要確認。実機は、一定時間（設定では 200ms、Arduino 用コンポーネントでは 1000ms）データが来ないと「切断」とみなします。</p></div></details>
+    <details class="recipe" data-tags="live hw"><summary><span class="q">センサーが壊れたので、その人だけキーボードで代用したい</span><span class="who">入力元</span></summary><div class="a"><p>上部の <b>入力元</b> を <b>シミュレータ</b> に切り替えると、Play を止めずに全員キーボード入力になります（切り替えは 4 人まとめて）。実機に戻すときは <b>実機</b> を選び直します。</p></div></details>
+    <details class="recipe" data-tags="live dev"><summary><span class="q">プレイ中の握力の動きを記録して、あとで再現したい</span><span class="who">REC / 記録再生</span></summary><div class="a">
+      <ol><li>上部の <b>● REC</b> を押すと記録開始（ボタンが <b>■ 停止</b> に変わる）。保存先は Console に表示されます。</li><li>もう一度押すと記録終了。ファイルはプロジェクト直下の <code>GripLogs/日付_時刻_session.jsonl</code>。</li><li>再現するときは <b>入力元</b> を <b>記録再生</b> にして、そのファイルを選ぶ。記録したときと同じタイミングで握力が再生されます。</li></ol>
+      <p class="small muted">再生されるのは「通訳前の生の値」なので、キャリブレーションや設定を変えて「同じ握り方で結果がどう変わるか」を比べられます。</p>
+    </div></details>
+    <details class="recipe" data-tags="hw"><summary><span class="q">Arduino のセンサーをつなぎたい</span><span class="who">実機</span></summary><div class="a">
+      <ol><li>Arduino IDE の <b>シリアルモニタは閉じる</b>（開いているとポートを取り合って Unity から読めません）。</li><li>シーンの適当な GameObject に <b>ArduinoSerialReader</b> コンポーネントを付ける。</li><li><b>Port Name</b> に COM ポート（Arduino IDE の「ツール › ポート」で確認、例 COM3）、<b>Baud Rate</b> にスケッチの <code>Serial.begin(…)</code> と同じ値（既定 9600）。</li><li>磁石で反応するホールセンサー（49E など）なら <b>Centered Sensor</b> を ON（何もしていないとき約 512 を出すタイプ）。</li><li>▶ Play。<b>Log Values</b> が ON なら Console に <code>P1: arduino=… raw=… grip=…</code> が流れます。</li></ol><p>実機につないでいる間もキーボード（Q/W/O/P）は効きます。COM ポートを開けなかったとき（デバイスを挿していない等）は「キーボードシミュレータのまま動かします」と警告が出て、キーボードだけで遊べます（デバイスが無い PC でも同じビルドが使えます）。</p>
+      <p>Arduino からは <code>Serial.println(analogRead(A0));</code> のように <b>1 行に数値 1 つ</b>（P1）、または <code>512,300</code> のように <b>カンマ区切りで最大 4 つ</b>（P1〜P4）を送れば OK です。</p>
+    </div></details>
+    <details class="recipe" data-tags="hw"><summary><span class="q">何もしていないのに「握っている」になる</span><span class="who">実機</span></summary><div class="a"><ul><li>ホールセンサーなら <b>Centered Sensor</b> が ON か確認。OFF だと、何もしていないときの約 50% をそのまま握力と勘違いします。</li><li>ON なのにずれるなら、<b>Sensor Center 01</b>（何もしていないときの値。Uno の 512 なら 0.5）を Console の <code>arduino=</code> の値 ÷ 1023 に合わせます。</li><li>小さなノイズは 3% 以下を 0 とみなす「デッドゾーン」で吸収しています。</li></ul></div></details>
+    <details class="recipe" data-tags="hw"><summary><span class="q">ウィンドウの「入力元：実機」を使いたい</span><span class="who">入力元</span></summary><div class="a"><p>ウィンドウの <b>実機</b> は、プロジェクト内の <b>GripDeviceConfig</b> アセットの設定で接続します。まだ無いので、Project ウィンドウで右クリック › <span class="mp">Create<i>›</i>MS2026<i>›</i>Grip Input Bridge<i>›</i>Device Config</span> で作り、<b>Serial Port Name</b>・<b>Baud Rate</b>（既定 115200）などを設定してください。普段の配線テストは上の ArduinoSerialReader の方が手軽です。</p></div></details>
+    <p class="noresult">見つかりませんでした。別の言葉で探してください。</p>
+  </div>
+</section>
+
+<section id="screens" data-nav="画面の見かた">
+  <div class="rv">
+    <div class="eyebrow">04 — Every tab</div>
+    <h2>タブごとの<br><em>役割</em>。</h2>
+  </div>
+  <div class="tabguide rv">
+    <div class="tg-list" role="tablist" aria-label="タブの説明">
+      <button role="tab" aria-selected="true" aria-controls="tg-bar"><span class="em">⬆️</span>上部バー</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-sim"><span class="em">⌨️</span>シミュレータ</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-cal"><span class="em">🎯</span>キャリブレーション</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-diag"><span class="em">🩺</span>診断</button>
+    </div>
+    <div>
+      <div class="tg-panel" id="tg-bar" role="tabpanel"><h3>上部バー（常に表示）</h3><div class="when">⏱ 握力をどこから取るか決めるとき</div>
+        <ul class="points"><li><b>入力元</b>：<b>シミュレータ</b>（キーボード・波形）／<b>実機</b>（GripDeviceConfig の設定でシリアル接続。キーボードも併用可）／<b>記録再生</b>（ファイルを選ぶ）。Play を止めずに切り替えられます。実機につなげなかったときは、確認画面が出て今の入力元のままになります。</li><li><b>● REC</b>：記録の開始／停止。</li></ul>
+        <div class="callout"><span class="ci">i</span><div>ウィンドウを<b>開いただけでは入力元は変わりません</b>。シーンの ArduinoSerialReader が実機につないでいれば「実機」と表示されます。<b>「実機」のときもキーボード（Q/W/O/P）と波形プリセットは使えます</b>（実機とキーボードの大きい方が使われる）。</div></div></div>
+      <div class="tg-panel" id="tg-sim" role="tabpanel"><h3>シミュレータ</h3><div class="when">⏱ 普段の開発・テスト</div>
+        <ul class="points"><li>P1〜P4 の <b>接続状態の点</b>（色付き=接続中／灰色=未接続）、<b>状態</b>、<b>握力バー</b>（0〜100%、ゲームが実際に使う値）。</li><li><b>波形プリセット</b>：なし(キーボード操作)／そっと／しっかり／渾身／リズムテスト。</li><li><b>キーボード操作キー</b> の表示（P1=Q、P2=W、P3=O、P4=P）。</li></ul></div>
+      <div class="tg-panel" id="tg-cal" role="tabpanel"><h3>キャリブレーション</h3><div class="when">⏱ 本番で来場者が替わるたび（Play 中のみ）</div>
+        <ul class="points"><li><b>プレイヤー</b>：P1〜P4 を選ぶ。</li><li><b>計測開始(3秒間、最大握力で握ってください)</b>：3 秒のカウントダウン中の最大値を記録。</li><li><b>この結果を保存</b>：<code>Assets/_Tools/GripInputBridge/CalibrationProfiles/P1_CalibrationProfile.asset</code> などに保存して、すぐ反映。</li></ul></div>
+      <div class="tg-panel" id="tg-diag" role="tabpanel"><h3>診断</h3><div class="when">⏱ 展示本番中の見張り</div>
+        <ul class="points"><li>4 人分の <b>状態</b>（Connected / Disconnected）と <b>現在の値</b> の一覧。入力元が実機のときは「実機 接続中」／「実機なし(キーボード)」と表示され、実機が来ていない人の行が警告色になります。</li><li>Connected 以外が出たら、ケーブル・電源・COM ポートを確認。</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section id="params" data-nav="数値の意味">
+  <div class="rv">
+    <div class="eyebrow">05 — Numbers</div>
+    <h2>知っておくと<br><em>話が早い数字</em>。</h2>
+  </div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">⌨️ シミュレータと判定 <span class="src">コード内の既定値</span></div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>意味</th><th colspan="2">メモ</th><th>値</th></tr>
+    <tr><td>上がる速さ</td><td>キーを押している間、1 秒に上がる量</td><td colspan="2">0% → 100% まで約 0.33 秒</td><td class="def">3.0 / 秒</td></tr>
+    <tr><td>下がる速さ</td><td>離している間、1 秒に下がる量</td><td colspan="2">100% → 0% まで約 0.67 秒</td><td class="def">1.5 / 秒</td></tr>
+    <tr><td>「握った」判定</td><td>この値を超えたら握り始め</td><td colspan="2">「離した」との間に<span class="term" tabindex="0" data-tip="ON と OFF の境目を少しずらしておくこと。境目付近で値がふらついても、握った／離したが何度も切り替わらない。">のりしろ</span>がある</td><td class="def">12%</td></tr>
+    <tr><td>「離した」判定</td><td>この値を下回ったら離した</td><td colspan="2"></td><td class="def">8%</td></tr>
+    <tr><td>デッドゾーン</td><td>これ以下は 0% とみなす</td><td colspan="2">センサーの小さなノイズを無視するため</td><td class="def">3%</td></tr>
+  </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">🔌 実機の設定 <span class="src">ArduinoSerialReader コンポーネント ／ GripDeviceConfig アセット</span></div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>意味</th><th colspan="2">メモ</th><th>既定</th></tr>
+    <tr><td>Port Name</td><td>COM ポート名</td><td colspan="2">デバイスマネージャー／Arduino IDE で確認</td><td class="def">COM3</td></tr>
+    <tr><td>Baud Rate</td><td>通信速度</td><td colspan="2">Arduino 側と同じにする</td><td class="def">9600 ／ 115200</td></tr>
+    <tr><td>Heartbeat Timeout Ms</td><td>この時間データが来ないと「切断」</td><td colspan="2">Arduino の送信間隔より長く</td><td class="def">1000 ／ 200</td></tr>
+    <tr><td>Centered Sensor</td><td>中心からの距離を握力にする</td><td colspan="2">ホールセンサー（49E 等）は ON</td><td class="def">ON ／ OFF</td></tr>
+    <tr><td>Sensor Center 01</td><td>何もしていないときの値（0〜1）</td><td colspan="2">Uno の 512 なら 0.5</td><td class="def">0.5</td></tr>
+  </table></div></div>
+  <p class="small muted rv" style="margin-top:12px">「既定」が 2 つあるものは「ArduinoSerialReader ／ GripDeviceConfig」の順。</p>
+</section>
+
+<section id="faq" data-nav="困ったとき">
+  <div class="rv">
+    <div class="eyebrow">06 — Troubleshooting</div>
+    <h2>困ったときは<br><em>ここ</em>。</h2>
+  </div>
+  <div class="faq rv">
+    <details><summary>キーを押してもバーが上がらない</summary><div class="a"><ol><li>Play 中か確認（Play していないと動きません）。</li><li>Game ビューをクリックしてから押す。</li><li>その人の <b>波形プリセット</b> が「なし(キーボード操作)」になっているか（プリセット中はキーを無視）。</li><li><b>入力元</b> がシミュレータか実機か確認（記録再生中はキーが効きません）。</li></ol></div></details>
+    <details><summary>実機の値が来ない（Disconnected のまま）</summary><div class="a"><ol><li>Arduino IDE のシリアルモニタを閉じる（ポートの取り合い）。</li><li>COM ポート名とボーレートが Arduino 側と一致しているか。</li><li>Console に「シリアルポート 'COM3' を開けませんでした」が出ていないか。</li><li>前の Play がポートを掴んだままのことがあります。Play を止めてもう一度 Play、それでもダメなら Unity を再起動。</li><li>Console に「キーボードシミュレータのまま動かします」と出ていたら、ポートを開けていません（上の 1〜3 を確認）。</li></ol></div></details>
+    <details><summary>Console に「実機通信が無効のため…」と出る</summary><div class="a">実機通信には <b>Project Settings › Player › Api Compatibility Level を「.NET Framework」</b>、<b>Scripting Define Symbols に <code>MS2026_GRIP_SERIAL_ENABLED</code></b> が必要です。このプロジェクトでは Standalone（PC）向けに設定済みなので、別のビルド対象に切り替えていないか確認してください。設定の変更はプログラマーに相談を。</div></details>
+    <details><summary>キャリブレーションしたのに、次に Play したら元に戻った</summary><div class="a">今の仕様です。保存したファイルは残りますが、次の Play では自動で読み込まれません。もう一度キャリブレーションするか、プログラマーに「起動時に読み込む処理」を追加してもらってください。</div></details>
+    <details><summary>値がガタガタ震える</summary><div class="a">ノイズ除去の設定ファイル（GripFilterSettings）は用意されていますが、<b>今は使われていません</b>（何も通さずにそのまま値が届いている状態）。ガタつきが気になる場合は、プログラマーにフィルタ設定の適用を依頼してください（おすすめは既定の「メディアン → EMA」）。</div></details>
+  </div>
+</section>
+
+<section id="glossary" data-nav="用語集">
+  <div class="rv">
+    <div class="eyebrow">07 — Words</div>
+    <h2>分からない言葉は<br><em>ここで引く</em>。</h2>
+  </div>
+  <dl class="gloss">
+    <div class="rv"><dt>生の値 <small>raw</small></dt><dd>センサーから来たままの値（0〜1 に換算済み）。人によって最大値がばらばら。</dd></div>
+    <div class="rv"><dt>握力値 <small>grip value</small></dt><dd>通訳後の 0〜100%（0〜1）。ゲームが使うのはこれ。</dd></div>
+    <div class="rv"><dt>キャリブレーション</dt><dd>その人の全力を測って 100% に合わせること。較正とも言う。</dd></div>
+    <div class="rv"><dt>デッドゾーン</dt><dd>ごく小さい値を 0 とみなす範囲。ノイズで勝手に握った判定にならないように。</dd></div>
+    <div class="rv"><dt>のりしろ <small>ヒステリシス</small></dt><dd>「握った」と「離した」の境目をずらしておくこと。境目でふらついても判定がバタつかない。</dd></div>
+    <div class="rv"><dt>入力元 <small>トランスポート</small></dt><dd>値をどこから取るか。シミュレータ・実機・記録再生の 3 種類。</dd></div>
+    <div class="rv"><dt>COM ポート</dt><dd>USB でつないだマイコンに Windows が付ける番号（COM3 など）。</dd></div>
+    <div class="rv"><dt>ボーレート</dt><dd>シリアル通信の速さ。送る側と受ける側で同じにしないと読めない。</dd></div>
+    <div class="rv"><dt>ハートビート</dt><dd>「生きてるよ」の定期的なデータ。一定時間途切れたら切断とみなす。</dd></div>
+    <div class="rv"><dt>ホールセンサー</dt><dd>磁石の近さで値が変わるセンサー。何もしないと中間の値を出す。</dd></div>
+  </dl>
+</section>
+
+<div class="devzone"></div>
+<section id="dev" data-nav="コードから使う" data-dev>
+  <div class="rv">
+    <div class="eyebrow">08 — For programmers</div>
+    <h2>ゲームから読むのは<br><em>この 1 行</em>。</h2>
+    <p class="lead">入口は静的クラス <code>MS2026.GripInputBridge.GripInputBridge</code> だけ。実機・シミュレータ・記録再生のどれでもゲーム側のコードは変わりません。</p>
+  </div>
+  <div class="tabs rv" role="tablist" aria-label="コード例">
+    <button class="tab" role="tab" aria-selected="true" aria-controls="cp-read">値を読む</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="cp-src">入力元を替える</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="cp-proto">シリアル形式</button>
+  </div>
+  <div class="panel" id="cp-read" role="tabpanel">
+    <div class="codebox"><div class="cap"><span>IGripInputProvider</span><button class="copy" type="button">copy</button></div><pre>
+using MS2026.GripInputBridge;
+
+var p = GripInputBridge.Provider;   // 未初期化ならキーボードシミュレータを自動生成
+float grip = p.GetGripValue(playerIndex);   // 0-1（ゲームが使う値）
+float raw  = p.GetRawValue(playerIndex);    // フィルタ・較正前
+bool  on   = p.IsGripping(playerIndex);     // 12%/8% のヒステリシス判定
+var   st   = p.GetStatus(playerIndex);      // Connected / Disconnected
+
+p.OnGripStarted  += i => { /* 握り始めの瞬間 */ };
+p.OnGripReleased += i => { /* 離した瞬間 */ };</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">更新</span>非表示の <code>GripInputBridgeRuntimeDriver</code>（実行順 -1000）が自動生成され、毎フレーム 1 回だけサンプリング。同フレーム内の読み取りは同じ値。</div><div class="note"><span class="lbl">使用箇所</span><code>LaserTurret</code>（Fortress）が <code>IsGripping</code> と <code>GetGripValue</code> を毎フレーム読む。ネット対戦中は <code>TurretNetworkHub</code> が、どの PC でもセンサー 1 番（番号 0）を自分の砲台の入力として読む。</div></div>
+  </div>
+  <div class="panel" id="cp-src" role="tabpanel">
+    <div class="codebox"><div class="cap"><span>Transports</span><button class="copy" type="button">copy</button></div><pre>
+using MS2026.GripInputBridge;
+using MS2026.GripInputBridge.Transports;
+using MS2026.GripInputBridge.Recording;
+
+GripInputBridge.SetTransport(GripInputBridge.Simulator);            // キーボード（全体で 1 つの共有インスタンス）
+var serial = new SerialGripTransport(deviceConfig);                 // 実機（要 define）
+if (serial.IsPortOpen)                                              // 開けなかったら差し替えない
+    GripInputBridge.SetTransport(new CompositeGripTransport(serial, GripInputBridge.Simulator)); // 実機＋キーボード
+GripInputBridge.SetTransport(new ReplayGripTransport(path));         // 記録再生
+
+GripInputBridge.SetCalibrationProfiles(profiles);   // 4 人分（null は既定）
+GripInputBridge.SetFilterSettings(filterSettings);  // 未呼び出しなら素通し
+GripInputBridge.StartRecording();  /* ... */  GripInputBridge.StopRecording();</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">注意</span><code>SerialGripTransport</code> は差し替え時に <code>Dispose()</code> 必須（COM ポート解放）。<code>#if MS2026_GRIP_SERIAL_ENABLED</code> 内。入力元は全体で 1 つ（最後に設定した人が勝つ）ので、元に戻すときは <code>GripInputBridge.CurrentTransport</code> が自分の設定したものか確かめてから戻す。</div><div class="note"><span class="lbl">詳細</span><code>Docs/Tools/GripInputBridge_AI_Reference.md</code>。設計意図は <code>GripInputBridge_設計仕様書.md</code>。</div></div>
+  </div>
+  <div class="panel" id="cp-proto" role="tabpanel">
+    <div class="codebox" data-plain><div class="cap"><span>1 行 = 1 サンプル（"\n" 区切り）</span><button class="copy" type="button">copy</button></div><pre>
+512                 ← 0-1023 の整数 1 つ = P1
+512,300             ← カンマ区切り最大 4 つ = P1, P2, ...
+G,0,2048,183920     ← 正式形式: G,プレイヤー(0-3),値(0-4095),機器時刻ms</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">堅牢性</span>化けた行は捨てて通信を続ける。受信は別スレッド、値は Volatile で受け渡し。</div></div>
+  </div>
+</section>
+
+<section id="more" data-nav="関連ツール">
+  <div class="rv"><div class="eyebrow">09 — Related</div><h2>一緒に使う<br><em>ツール</em>。</h2></div>
+  <div class="links">
+    <a class="lk rv" href="FortressDesigner_ガイド.html"><span class="ti">要塞デザイナー</span><span class="ds">握力がレーザーの太さ・熱にどう効くかを調整。</span></a>
+    <a class="lk rv" href="index.html"><span class="ti">ツール一覧</span><span class="ds">このプロジェクトの全ツール。</span></a>
+  </div>
+  <footer><span>Grip Input Bridge Guide · Xx_MS2026_xX</span><span>2026-10-03 時点のコードに基づく</span></footer>
+</section>
+</main>
+</div>
+<script src="assets/guide.js"></script>
+</body>
+</html>

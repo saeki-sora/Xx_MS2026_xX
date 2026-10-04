@@ -79,6 +79,13 @@ namespace MS2026.Fortress
         public bool IsDestroyed { get; private set; }
         public bool IsInvulnerable { get; private set; }
 
+        /// <summary>
+        /// trueの間は自分で状態を変えない(ダメージ・破壊・再生・無敵の変更・自己修復を無視する)。
+        /// ネット対戦のClient側で、Hostから届いた変化だけを ApplyReplicated〜 で反映するために使う。
+        /// 反映時も通常と同じイベントを発火するので、見た目・演出・連動などの購読側は区別しなくてよい。
+        /// </summary>
+        public bool IsReplica { get; private set; }
+
         /// <summary>これまでに壊された回数。</summary>
         public int DestroyCount { get; private set; }
 
@@ -131,6 +138,11 @@ namespace MS2026.Fortress
 
         public void ApplyDamage(float amount, DamageSource source, DestructibleAttacker attacker = default)
         {
+            if (IsReplica)
+            {
+                return;
+            }
+
             EnsureInitialized();
             if (IsDestroyed || IsInvulnerable || amount <= 0f)
             {
@@ -164,6 +176,14 @@ namespace MS2026.Fortress
         /// <summary>耐久に関係なく今すぐ壊す。</summary>
         public void DestroyNow(DamageSource source = DamageSource.Script, DestructibleAttacker attacker = default)
         {
+            if (!IsReplica)
+            {
+                DestroyCore(source, attacker);
+            }
+        }
+
+        private void DestroyCore(DamageSource source, DestructibleAttacker attacker)
+        {
             EnsureInitialized();
             if (IsDestroyed)
             {
@@ -190,6 +210,14 @@ namespace MS2026.Fortress
         /// <summary>壊れていれば再生し、壊れていなければ耐久を全快させる。</summary>
         public void Regenerate()
         {
+            if (!IsReplica)
+            {
+                RegenerateCore();
+            }
+        }
+
+        private void RegenerateCore()
+        {
             var wasDestroyed = IsDestroyed;
             IsDestroyed = false;
             DestroyedBy = DestructibleAttacker.None;
@@ -207,6 +235,14 @@ namespace MS2026.Fortress
 
         public void SetInvulnerable(bool value)
         {
+            if (!IsReplica)
+            {
+                SetInvulnerableCore(value);
+            }
+        }
+
+        private void SetInvulnerableCore(bool value)
+        {
             if (IsInvulnerable == value)
             {
                 return;
@@ -214,6 +250,100 @@ namespace MS2026.Fortress
 
             IsInvulnerable = value;
             InvulnerabilityChanged?.Invoke(this);
+        }
+
+        // ---- ネット対戦のClient側で、Hostから届いた変化を反映する入口(レプリカ中のみ呼ぶ) ----
+
+        /// <summary>レプリカ表示を始める。以後は自分で状態を変えず、ApplyReplicated〜だけで変わる。</summary>
+        public void BeginReplica()
+        {
+            IsReplica = true;
+        }
+
+        /// <summary>レプリカ表示をやめ、自分で計算する通常動作に戻す(切断時など)。</summary>
+        public void EndReplica()
+        {
+            IsReplica = false;
+        }
+
+        /// <summary>ダメージ(まとめて届く)。耐久はHostの値に合わせ、量が0より大きければDamagedも発火する。</summary>
+        public void ApplyReplicatedDamage(float health, float amount, DamageSource source, DestructibleAttacker attacker)
+        {
+            EnsureInitialized();
+            if (attacker.IsKnown)
+            {
+                LastAttacker = attacker;
+            }
+
+            _health = Mathf.Clamp(health, 0f, MaxHealth);
+            _secondsSinceDamage = 0f;
+
+            if (amount > 0f)
+            {
+                Damaged?.Invoke(this, amount, source);
+            }
+
+            HealthChanged?.Invoke(this);
+            RefreshStage();
+        }
+
+        /// <summary>ダメージ以外の耐久の変化(自己修復など)。</summary>
+        public void ApplyReplicatedHealth(float health)
+        {
+            EnsureInitialized();
+            _health = Mathf.Clamp(health, 0f, MaxHealth);
+            HealthChanged?.Invoke(this);
+            RefreshStage();
+        }
+
+        public void ApplyReplicatedDestroy(DamageSource source, DestructibleAttacker attacker)
+        {
+            DestroyCore(source, attacker);
+        }
+
+        public void ApplyReplicatedRegenerate()
+        {
+            RegenerateCore();
+        }
+
+        public void ApplyReplicatedInvulnerable(bool value)
+        {
+            SetInvulnerableCore(value);
+        }
+
+        /// <summary>
+        /// 途中参加時などに、Hostの今の状態へまとめて合わせる。壊れている/いないが違えば Destroyed/Regenerated も発火する
+        /// (見た目・当たり判定を切り替えるため。破壊時の演出も一度鳴る)。
+        /// </summary>
+        public void ApplyReplicatedSnapshot(float health, bool isDestroyed, bool isInvulnerable, int destroyCount,
+            DestructibleAttacker destroyedBy, DestructibleAttacker lastAttacker, float regenProgress01)
+        {
+            EnsureInitialized();
+            if (lastAttacker.IsKnown)
+            {
+                LastAttacker = lastAttacker;
+            }
+
+            if (isDestroyed && !IsDestroyed)
+            {
+                DestroyCore(DamageSource.Script, destroyedBy);
+            }
+            else if (!isDestroyed && IsDestroyed)
+            {
+                RegenerateCore();
+            }
+
+            if (isDestroyed)
+            {
+                DestroyedBy = destroyedBy;
+                _regenTimer = regenProgress01 * settings.durability.regenDelaySeconds;
+            }
+
+            DestroyCount = destroyCount;
+            _health = Mathf.Clamp(health, 0f, MaxHealth);
+            SetInvulnerableCore(isInvulnerable);
+            HealthChanged?.Invoke(this);
+            RefreshStage();
         }
 
         /// <summary>無敵を解除して壊せるようにする。</summary>
@@ -266,6 +396,17 @@ namespace MS2026.Fortress
         private void Update()
         {
             var durability = settings.durability;
+
+            if (IsReplica)
+            {
+                // 再生・自己修復はHostが決める。再生までの進み具合の表示(RegenProgress01)だけ手元で進めておく。
+                if (IsDestroyed && durability.regenerates)
+                {
+                    _regenTimer = Mathf.Min(_regenTimer + Time.deltaTime, durability.regenDelaySeconds);
+                }
+
+                return;
+            }
 
             if (IsDestroyed)
             {

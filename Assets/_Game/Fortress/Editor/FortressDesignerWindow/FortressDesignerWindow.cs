@@ -8,7 +8,7 @@ namespace MS2026.Fortress.EditorTools
     /// <summary>
     /// 「握れ、灼ける前に」の土台システム（砲台配置／握力とレーザーの連動／敵の湧き）を
     /// インスペクターの隣にタブとしてドッキングできる専用ツール。設計はGripInputBridgeWindowに揃えてある。
-    /// タブ構成: はじめに / 砲台配置 / 敵ウェーブ / 経路・障害物 / 破壊可能物 / スマッシュボール / 群衆 / テスト。
+    /// タブ構成: はじめに / 砲台配置 / 敵ウェーブ / 経路・障害物 / 破壊可能物 / スマッシュボール / 群衆 / カメラ / テスト。
     /// </summary>
     public sealed class FortressDesignerWindow : EditorWindow
     {
@@ -24,6 +24,7 @@ namespace MS2026.Fortress.EditorTools
             Destructibles,
             SmashBalls,
             Swarm,
+            Camera,
             Test
         }
 
@@ -38,6 +39,7 @@ namespace MS2026.Fortress.EditorTools
         private DestructiblesTabView _destructiblesTab;
         private SmashBallTabView _smashBallsTab;
         private SwarmTabView _swarmTab;
+        private CameraTabView _cameraTab;
         private TestTabView _testTab;
 
         [MenuItem("Tools/要塞/要塞デザイナーを開く")]
@@ -71,6 +73,7 @@ namespace MS2026.Fortress.EditorTools
             _destructiblesTab = new DestructiblesTabView();
             _smashBallsTab = new SmashBallTabView();
             _swarmTab = new SwarmTabView();
+            _cameraTab = new CameraTabView();
             _testTab = new TestTabView();
 
             rootVisualElement.Add(BuildTabBar());
@@ -96,6 +99,7 @@ namespace MS2026.Fortress.EditorTools
             AddTabButton(bar, Tab.Destructibles, "破壊可能物", "レーザーで壊せるオブジェクトを好きな場所・大きさで置き、耐久・見た目(Prefab差し替え)・演出・ドロップ・連動を調整します。");
             AddTabButton(bar, Tab.SmashBalls, "スマッシュボール", "破壊可能物にスマッシュボール機能を追加し、誰が割ったかの記録や専用演出を調整します。");
             AddTabButton(bar, Tab.Swarm, "群衆", "数千体の敵の計測・ストレステスト・押し合い（流体らしさ）の調整・敵の種類の編集をします。");
+            AddTabButton(bar, Tab.Camera, "カメラ", "4人それぞれの視点(位置・回転・ズーム・視野角)の調整、4人分の画面プレビュー、映り込みチェック、揺れ・寄りの演出を調整します。");
             AddTabButton(bar, Tab.Test, "テスト", "Play Mode中に握力・熱・ウェーブ再生をリアルタイムで確認します。");
 
             return bar;
@@ -129,6 +133,7 @@ namespace MS2026.Fortress.EditorTools
                 Tab.Destructibles => _destructiblesTab,
                 Tab.SmashBalls => _smashBallsTab,
                 Tab.Swarm => _swarmTab,
+                Tab.Camera => _cameraTab,
                 Tab.Test => _testTab,
                 _ => _gettingStartedTab
             };
@@ -164,6 +169,9 @@ namespace MS2026.Fortress.EditorTools
                 case Tab.Swarm:
                     _swarmTab.Refresh();
                     break;
+                case Tab.Camera:
+                    _cameraTab.Refresh();
+                    break;
                 case Tab.Test:
                     _testTab.Refresh();
                     break;
@@ -176,5 +184,6 @@ namespace MS2026.Fortress.EditorTools
         internal void SwitchToDestructiblesTab() => SwitchTab(Tab.Destructibles);
         internal void SwitchToSmashBallsTab() => SwitchTab(Tab.SmashBalls);
         internal void SwitchToSwarmTab() => SwitchTab(Tab.Swarm);
+        internal void SwitchToCameraTab() => SwitchTab(Tab.Camera);
     }
 }

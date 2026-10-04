@@ -76,7 +76,8 @@ namespace MS2026.Fortress
             Broken?.Invoke(info);
             AnyBroken?.Invoke(info);
 
-            if (settings.exclusiveRotation && isActiveAndEnabled)
+            // ネット対戦のClient(レプリカ)では、次のボールの出現・無敵の付け外しはHostが決めて届けるので自分では行わない。
+            if (settings.exclusiveRotation && isActiveAndEnabled && !obstacle.IsReplica)
             {
                 StartCoroutine(ActivateNextAfterDelay());
             }
@@ -84,6 +85,11 @@ namespace MS2026.Fortress
 
         private void OnRegenerated(DestructibleObstacle obstacle)
         {
+            if (obstacle.IsReplica)
+            {
+                return;
+            }
+
             if (settings.regenGraceInvulnerableSeconds > 0f)
             {
                 obstacle.SetInvulnerable(true);

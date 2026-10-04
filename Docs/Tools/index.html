@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MS2026 ツール一覧</title>
+<meta name="description" content="「握れ、灼ける前に」（Xx_MS2026_xX）に入っている自作ツール・導入ツールのガイド一覧">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/guide.css">
+<style>
+:root{--acc:#ffffff;--acc-ink:#0a0b10;--acc2:#4de2ff;--acc3:#ff4d8d}
+:root[data-theme="light"]{--acc:#121318;--acc-ink:#ffffff;--acc2:#007f99;--acc3:#c8185a}
+.mega .f{background:linear-gradient(100deg,#4de2ff 0%,#c6ff3d 30%,#ffb547 55%,#ff6b6b 75%,#b98cff 100%);-webkit-background-clip:text;background-clip:text;background-size:200% 100%}
+.tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:30px}
+.tool{display:flex;flex-direction:column;gap:12px;padding:24px;border-radius:22px;border:1px solid var(--line);background:var(--card);text-decoration:none;position:relative;overflow:hidden;transition:transform .35s cubic-bezier(.2,.8,.2,1),border-color .3s}
+.tool::after{content:"";position:absolute;width:220px;height:220px;border-radius:50%;background:var(--c);filter:blur(80px);opacity:.14;top:-90px;right:-90px;transition:opacity .4s}
+.tool:hover{transform:translateY(-5px);border-color:var(--c)}
+.tool:hover::after{opacity:.3}
+.tool .top{display:flex;align-items:center;gap:12px}
+.tool .logo{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;font-family:var(--display);font-weight:900;font-size:15px;background:var(--c);color:#0b0c10}
+.tool h3{font-size:20px;line-height:1.3}
+.tool h3 small{display:block;font-family:var(--mono);font-size:11px;font-weight:400;color:var(--mute);letter-spacing:.06em}
+.tool p{font-size:14px;color:var(--ink2);line-height:1.75}
+.tool .meta2{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto}
+.tool .meta2 span{font-size:11.5px;padding:3px 9px;border-radius:999px;border:1px solid var(--line2);color:var(--ink2)}
+.tool .open{font-weight:800;color:var(--c);font-size:14px}
+.which{margin-top:26px;display:flex;flex-direction:column;gap:8px}
+.which a{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 18px;border-radius:14px;border:1px solid var(--line);background:var(--card);text-decoration:none;font-size:15px;transition:.2s}
+.which a:hover{border-color:var(--c);background:var(--card2)}
+.which a b{font-weight:700;color:var(--ink)}
+.which a span.to{font-size:12.5px;font-weight:800;color:var(--c);white-space:nowrap}
+.mapflow{margin-top:24px}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<div class="orbs" aria-hidden="true"><div class="orb a" style="background:#4de2ff"></div><div class="orb b" style="background:#b98cff"></div></div>
+
+<div class="shell">
+<nav class="side" aria-label="目次">
+  <a class="brand" href="#top"><span class="mark">MS</span><span class="t">MS2026 Tools</span></a>
+  <ol id="toc"></ol>
+  <div class="foot">
+    <button class="themebtn" id="themeBtn" type="button"><span aria-hidden="true">◐</span><span data-label>ライト表示</span></button>
+    <div class="meta mono">Docs/Tools/<br>2026-10-03 時点</div>
+  </div>
+</nav>
+
+<main id="top">
+<header class="hero" style="min-height:76vh">
+  <div class="tags"><span class="pill hot">ツール 5 本</span><span class="pill">プランナーでも使える</span><span class="pill">AI 向け .md つき</span></div>
+  <h1 class="mega" aria-label="MS2026 TOOLS"><span class="o">MS2026</span><span class="f">TOOLS</span></h1>
+  <p class="subname">ゲーム「<b>握れ、灼ける前に</b>」の開発を支えるツールたちの取扱説明書</p>
+  <div class="hero-row">
+    <p class="oneword">知りたいツールを選ぶだけ。<br>どのガイドも <span class="hl">「ひとことで → 5 分体験 → 逆引き」</span><br>の順に読めます。</p>
+    <div class="facts"><dl>
+      <dt>まず読むなら</dt><dd><a href="FortressDesigner_ガイド.html"><b>要塞デザイナー</b></a>（ゲームの中身の調整はほぼここ）</dd>
+      <dt>キーボード</dt><dd><kbd>Q</kbd><kbd>W</kbd><kbd>O</kbd><kbd>P</kbd> で 4 人分の握力を代用</dd>
+      <dt>AI 向け</dt><dd>各ツールの <code>*_AI_Reference.md</code>（Claude Code 用の詳細資料）</dd>
+    </dl></div>
+  </div>
+</header>
+
+<section id="tools" data-nav="ツール一覧">
+  <div class="rv"><div class="eyebrow">01 — Tools</div><h2>入っている<br><em>ツール</em>。</h2></div>
+  <div class="tools">
+    <a class="tool rv" href="FortressDesigner_ガイド.html" style="--c:#4de2ff"><div class="top"><span class="logo">要</span><h3>要塞デザイナー<small>FORTRESS DESIGNER · 自作</small></h3></div><p>砲台・レーザーの熱・敵ウェーブ・障害物・スマッシュボール・群衆・4 人のカメラを、コードなしで調整して Play で確認する調整卓。</p><div class="meta2"><span>Tools › 要塞</span><span>プランナー向け</span></div><span class="open">ガイドを開く →</span></a>
+    <a class="tool rv" href="GripInputBridge_ガイド.html" style="--c:#ff6b6b"><div class="top"><span class="logo">握</span><h3>握力入力ブリッジ<small>GRIP INPUT BRIDGE · 自作</small></h3></div><p>握力センサーの値を「その人の 0〜100%」に通訳してゲームに渡す入力の土台。キーボード代用・キャリブレーション・記録再生。</p><div class="meta2"><span>Tools › 握力入力ブリッジ</span><span>本番運営にも</span></div><span class="open">ガイドを開く →</span></a>
+    <a class="tool rv" href="ShaderFX_ガイド.html" style="--c:#b98cff"><div class="top"><span class="logo">FX</span><h3>ShaderFX<small>SHADER FX · 自作パッケージ</small></h3></div><p>光る縁・溶けて消える・被弾フラッシュ・ホログラムなど 16 種類の見た目エフェクトを、設定ファイルに積むだけで付ける。</p><div class="meta2"><span>Create › ShaderFX</span><span>デザイナー向け</span></div><span class="open">ガイドを開く →</span></a>
+    <a class="tool rv" href="SpriteAnim_ガイド.html" style="--c:#ffb547"><div class="top"><span class="logo">SA</span><h3>SpriteAnim<small>SPRITE ANIM · 自作パッケージ</small></h3></div><p>スプライトシート 1 枚を切って並べるだけで 2D アニメに。名前で再生・なめらかな切り替え。</p><div class="meta2"><span>MS2026 › スプライトアニメ</span><span>デザイナー向け</span></div><span class="open">ガイドを開く →</span></a>
+    <a class="tool rv" href="D-Drive_ガイド.html" style="--c:#c6ff3d"><div class="top"><span class="logo">D</span><h3>D-Drive<small>D-DRIVE · 外部パッケージ v1.2.1</small></h3></div><p>効果音・エフェクト・演出・画面の揺れを「番号札（ID）」で管理する倉庫。中身はいつでも差し替えられる。</p><div class="meta2"><span>Tools › D-Drive</span><span>全員</span></div><span class="open">ガイドを開く →</span></a>
+  </div>
+</section>
+
+<section id="which" data-nav="どれを使う？">
+  <div class="rv"><div class="eyebrow">02 — Which one?</div><h2>やりたいことから<br><em>ツールを選ぶ</em>。</h2></div>
+  <div class="which">
+    <a class="rv" href="FortressDesigner_ガイド.html#recipes" style="--c:#4de2ff"><b>レーザーの太さ・オーバーヒートまでの時間を変えたい</b><span class="to">要塞デザイナー →</span></a>
+    <a class="rv" href="FortressDesigner_ガイド.html#recipes" style="--c:#4de2ff"><b>敵の数・出るタイミング・出る場所を変えたい</b><span class="to">要塞デザイナー →</span></a>
+    <a class="rv" href="FortressDesigner_ガイド.html#recipes" style="--c:#4de2ff"><b>壊せる箱や壁、スマッシュボールを置きたい</b><span class="to">要塞デザイナー →</span></a>
+    <a class="rv" href="FortressDesigner_ガイド.html#recipes" style="--c:#4de2ff"><b>4 人の画面の見え方・揺れを決めたい</b><span class="to">要塞デザイナー →</span></a>
+    <a class="rv" href="GripInputBridge_ガイド.html#recipes" style="--c:#ff6b6b"><b>センサー無しで握力をテストしたい／本番でキャリブレーションしたい</b><span class="to">握力入力ブリッジ →</span></a>
+    <a class="rv" href="D-Drive_ガイド.html#recipes" style="--c:#c6ff3d"><b>効果音を入れたい・差し替えたい</b><span class="to">D-Drive →</span></a>
+    <a class="rv" href="D-Drive_ガイド.html#recipes" style="--c:#c6ff3d"><b>音・エフェクト・揺れをまとめた演出を作りたい</b><span class="to">D-Drive →</span></a>
+    <a class="rv" href="ShaderFX_ガイド.html#recipes" style="--c:#b98cff"><b>キャラや物を光らせたい・溶かしたい・凍らせたい</b><span class="to">ShaderFX →</span></a>
+    <a class="rv" href="SpriteAnim_ガイド.html#recipes" style="--c:#ffb547"><b>2D キャラのコマアニメを作りたい</b><span class="to">SpriteAnim →</span></a>
+  </div>
+</section>
+
+<section id="map" data-nav="つながり">
+  <div class="rv"><div class="eyebrow">03 — How they connect</div><h2>ツール同士の<br><em>つながり</em>。</h2></div>
+  <div class="flow mapflow rv">
+    <div class="flow-title">HAND → GAME → LOOK &amp; SOUND</div>
+    <div class="pipe">
+      <div class="node"><div class="k">入力</div><div class="v">握力入力ブリッジ</div><div class="s">手の力を 0〜100% に。</div></div>
+      <div class="arrow"></div>
+      <div class="node hl"><div class="k">ゲーム本体</div><div class="v">要塞デザイナー</div><div class="s">握力 → レーザー・熱。敵・障害物・カメラ。</div></div>
+      <div class="arrow"></div>
+      <div class="node"><div class="k">音・演出</div><div class="v">D-Drive</div><div class="s">発射音・揺れアセット・演出。</div></div>
+      <div class="arrow"></div>
+      <div class="node"><div class="k">見た目</div><div class="v">ShaderFX ／ SpriteAnim</div><div class="s">エフェクトと 2D アニメ（本編では今後）。</div></div>
+    </div>
+  </div>
+  <div class="callout rv"><span class="ci">✎</span><div><b>このフォルダのルール</b>：ツールを変更・追加したら、同じ作業の中でそのツールの <code>*_ガイド.html</code> と <code>*_AI_Reference.md</code> も更新します（Claude Code にも <code>CLAUDE.md</code> で指示済み）。書き方は <code>Docs/Tools/DOCS_GUIDE.md</code>。</div></div>
+  <footer><span>MS2026 Tool Guides · Xx_MS2026_xX</span><span>2026-10-03</span></footer>
+</section>
+</main>
+</div>
+<script src="assets/guide.js"></script>
+</body>
+</html>

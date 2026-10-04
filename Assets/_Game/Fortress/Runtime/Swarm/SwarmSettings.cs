@@ -109,6 +109,11 @@ namespace MS2026.Fortress
         [Min(0f)]
         public float spawnJitter = 0.3f;
 
+        [Tooltip("1フレームに実際に追加する敵の上限。一斉投入でも数フレームに分けて追加し、その瞬間のカクつきを抑える。" +
+                 "超えた分は次のフレームに回る(数万体でも0.1〜0.2秒ほどで全員が出る)。0なら無制限(一度に全員出す)。")]
+        [Min(0)]
+        public int maxSpawnsPerFrame = 3000;
+
         [Header("描画")]
         [Tooltip("下（手前）にいる敵を上に描く。オフにすると少し軽くなるが、重なり方が不自然になる。")]
         public bool ySort = true;

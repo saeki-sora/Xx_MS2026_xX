@@ -42,10 +42,19 @@ namespace MS2026.GripInputBridge.EditorTools
         private VisualElement _contentRoot;
         private readonly Dictionary<Tab, Button> _tabButtons = new Dictionary<Tab, Button>();
 
-        // シミュレータタブ専用のトランスポート。入力元を実機/記録再生に切り替えても
-        // ここに保持しておくことで、いつでもシミュレータへ戻せる。
-        private readonly SimulatedGripTransport _simulatedTransport = new SimulatedGripTransport();
+        private const string SourceSimulator = "シミュレータ";
+        private const string SourceDevice = "実機";
+        private const string SourceReplay = "記録再生";
 
+        // シミュレータはGripInputBridge.Simulator(全体で1つ)を使う。ウィンドウ専用に作ると、
+        // 波形プリセットがゲームに届かない・シーン側の実機合成と別物になる等の食い違いが起きるため。
+
+        // このウィンドウの「実機」で開いたCOMポート。別の入力元へ切り替えた時・ウィンドウを閉じた時に解放する
+        // (シーンのArduinoSerialReaderが開いたポートは、そちらが自分で解放するので触らない)。
+        private IDisposable _ownedDevice;
+        private IGripTransport _ownedTransport;
+
+        private DropdownField _sourceDropdown;
         private Button _recordButton;
 
         private readonly Label[] _valueLabels = new Label[GripInputBridgeConstants.PlayerCount];
@@ -171,18 +180,22 @@ namespace MS2026.GripInputBridge.EditorTools
             };
             bar.Add(label);
 
-            var options = new List<string> { "シミュレータ" };
+            var options = new List<string> { SourceSimulator };
 #if MS2026_GRIP_SERIAL_ENABLED
-            options.Add("実機");
+            options.Add(SourceDevice);
 #endif
-            options.Add("記録再生");
+            options.Add(SourceReplay);
 
             var dropdown = new DropdownField(options, 0)
             {
-                tooltip = "実機/シミュレータ/記録再生を、Play Modeを止めずにいつでも切り替えられます（ホットスワップ）。"
+                tooltip = "実機/シミュレータ/記録再生を、Play Modeを止めずにいつでも切り替えられます（ホットスワップ）。\n" +
+                          "ウィンドウを開いただけでは切り替わりません。シーンのArduinoSerialReaderが実機にしている場合は「実機」と表示されます。\n" +
+                          "「実機」でもキーボード(Q/W/O/P)は併用できます。"
             };
+            dropdown.SetValueWithoutNotify(CurrentSourceLabel());
             dropdown.RegisterValueChangedCallback(evt => OnInputSourceChanged(evt.newValue));
             bar.Add(dropdown);
+            _sourceDropdown = dropdown;
 
             var recButton = new Button(ToggleRecording)
             {
@@ -193,29 +206,85 @@ namespace MS2026.GripInputBridge.EditorTools
             bar.Add(recButton);
             _recordButton = recButton;
 
-            // 既定はシミュレータ入力を使う。
-            GripInputBridge.SetTransport(_simulatedTransport);
+            // ここで入力元を切り替えてはいけない。ウィンドウはPlay開始時(ドメインリロード後)にも作り直されるため、
+            // 切り替えるとシーンのArduinoSerialReaderが設定した実機入力を上書きしてしまう(「ウィンドウを開いていると実機が反応しない」原因)。
 
             return bar;
         }
 
         private void OnInputSourceChanged(string selection)
         {
-            if (selection == "シミュレータ")
+            if (selection == SourceSimulator)
             {
-                GripInputBridge.SetTransport(_simulatedTransport);
-                return;
+                UseTransport(GripInputBridge.Simulator, null);
             }
-
-            if (selection == "実機")
+            else if (selection == SourceDevice)
             {
                 ActivateSerialTransport();
+            }
+            else if (selection == SourceReplay)
+            {
+                ActivateReplayTransport();
+            }
+
+            SyncSourceDropdown();
+        }
+
+        /// <summary>入力元を切り替え、このウィンドウが前に開いた実機ポートがあれば解放する。</summary>
+        private void UseTransport(IGripTransport transport, IDisposable ownedDevice)
+        {
+            GripInputBridge.SetTransport(transport);
+
+            var previous = _ownedDevice;
+            _ownedDevice = ownedDevice;
+            _ownedTransport = ownedDevice != null ? transport : null;
+            if (previous != null && !ReferenceEquals(previous, ownedDevice))
+            {
+                previous.Dispose();
+            }
+        }
+
+        private void OnDisable()
+        {
+            // ウィンドウを閉じる・ドメインリロードの前に、自分が開いたCOMポートを解放する。
+            if (_ownedDevice == null)
+            {
                 return;
             }
 
-            if (selection == "記録再生")
+            if (ReferenceEquals(GripInputBridge.CurrentTransport, _ownedTransport))
             {
-                ActivateReplayTransport();
+                GripInputBridge.SetTransport(GripInputBridge.Simulator);
+            }
+
+            _ownedDevice.Dispose();
+            _ownedDevice = null;
+            _ownedTransport = null;
+        }
+
+        private static string CurrentSourceLabel()
+        {
+            return GripInputBridge.CurrentTransport switch
+            {
+                ReplayGripTransport => SourceReplay,
+                CompositeGripTransport => SourceDevice,
+                SimulatedGripTransport => SourceSimulator,
+                _ => SourceDevice
+            };
+        }
+
+        // シーン側(ArduinoSerialReader等)が入力元を変えても表示が追従するよう、定期更新で合わせる。
+        private void SyncSourceDropdown()
+        {
+            if (_sourceDropdown == null)
+            {
+                return;
+            }
+
+            var label = CurrentSourceLabel();
+            if (_sourceDropdown.value != label)
+            {
+                _sourceDropdown.SetValueWithoutNotify(label);
             }
         }
 
@@ -235,7 +304,23 @@ namespace MS2026.GripInputBridge.EditorTools
 
             var configPath = AssetDatabase.GUIDToAssetPath(guids[0]);
             var deviceConfig = AssetDatabase.LoadAssetAtPath<GripDeviceConfig>(configPath);
-            GripInputBridge.SetTransport(new SerialGripTransport(deviceConfig));
+            var serial = new SerialGripTransport(deviceConfig);
+            if (!serial.IsPortOpen)
+            {
+                serial.Dispose();
+                EditorUtility.DisplayDialog(
+                    "実機に接続できません",
+                    $"シリアルポート '{deviceConfig.serialPortName}' を開けませんでした（詳細はConsole）。\n\n" +
+                    "・デバイスが挿さっていない\n" +
+                    "・ポート名が違う（設定: " + configPath + "）\n" +
+                    "・シーンのArduinoSerialReaderやArduino IDEのシリアルモニタが既に使っている\n\n" +
+                    "入力元は切り替えずに、今のままにします。",
+                    "OK");
+                return;
+            }
+
+            // 実機とキーボードを合成する(実機を挿したままでもキーボードで操作でき、実機が途切れてもキーボードで動く)。
+            UseTransport(new CompositeGripTransport(serial, GripInputBridge.Simulator), serial);
 #else
             EditorUtility.DisplayDialog(
                 "実機通信は無効です",
@@ -258,7 +343,7 @@ namespace MS2026.GripInputBridge.EditorTools
 
             try
             {
-                GripInputBridge.SetTransport(new ReplayGripTransport(path));
+                UseTransport(new ReplayGripTransport(path), null);
             }
             catch (Exception ex)
             {
@@ -417,13 +502,15 @@ namespace MS2026.GripInputBridge.EditorTools
             presetRow.Add(new Label("波形プリセット:"));
 
             var presetOptions = new List<string> { "なし(キーボード操作)", "そっと", "しっかり", "渾身", "リズムテスト" };
-            var presetDropdown = new DropdownField(presetOptions, 0)
+            var currentPreset = GripInputBridge.Simulator.GetPreset(playerIndex);
+            var presetDropdown = new DropdownField(presetOptions, Mathf.Max(0, presetOptions.IndexOf(LabelFromPreset(currentPreset))))
             {
-                tooltip = "キーボードの代わりに、企画書の「そっと/しっかり/渾身」やリズム判定テスト用の波形を自動再生します。"
+                tooltip = "キーボードの代わりに、企画書の「そっと/しっかり/渾身」やリズム判定テスト用の波形を自動再生します。\n" +
+                          "入力元が「実機」のときも、実機の値と大きい方が使われます。"
             };
             var capturedIndex = playerIndex;
             presetDropdown.RegisterValueChangedCallback(evt =>
-                _simulatedTransport.SetPreset(capturedIndex, PresetFromLabel(evt.newValue)));
+                GripInputBridge.Simulator.SetPreset(capturedIndex, PresetFromLabel(evt.newValue)));
             presetRow.Add(presetDropdown);
             panel.Add(presetRow);
 
@@ -443,6 +530,18 @@ namespace MS2026.GripInputBridge.EditorTools
                 "渾身" => GripWaveformPreset.Full,
                 "リズムテスト" => GripWaveformPreset.RhythmTestPulse,
                 _ => GripWaveformPreset.None
+            };
+        }
+
+        private static string LabelFromPreset(GripWaveformPreset preset)
+        {
+            return preset switch
+            {
+                GripWaveformPreset.Soft => "そっと",
+                GripWaveformPreset.Firm => "しっかり",
+                GripWaveformPreset.Full => "渾身",
+                GripWaveformPreset.RhythmTestPulse => "リズムテスト",
+                _ => "なし(キーボード操作)"
             };
         }
 
@@ -703,9 +802,20 @@ namespace MS2026.GripInputBridge.EditorTools
                 var status = GripInputBridge.Provider.GetStatus(i);
                 var value = GripInputBridge.Provider.GetGripValue(i);
 
-                _diagnosticsStatusLabels[i].text = status.ToString();
+                // 実機＋キーボードの合成中は、キーボードが常に繋がっている扱いのためConnectedになってしまう。
+                // 実機そのものが繋がっているかを別に示す。
+                var warning = status != GripDeviceStatus.Connected;
+                var statusText = status.ToString();
+                if (GripInputBridge.CurrentTransport is CompositeGripTransport composite)
+                {
+                    var deviceConnected = composite.IsDeviceConnected(i);
+                    statusText = deviceConnected ? "実機 接続中" : "実機なし(キーボード)";
+                    warning = !deviceConnected;
+                }
+
+                _diagnosticsStatusLabels[i].text = statusText;
                 _diagnosticsValueLabels[i].text = $"{value * 100f:F0}%";
-                _diagnosticsRows[i].EnableInClassList("gib-diagnostics-row--warning", status != GripDeviceStatus.Connected);
+                _diagnosticsRows[i].EnableInClassList("gib-diagnostics-row--warning", warning);
             }
         }
 
@@ -723,6 +833,8 @@ namespace MS2026.GripInputBridge.EditorTools
             {
                 TickCalibration(delta);
             }
+
+            SyncSourceDropdown();
 
             if (_currentTab == Tab.Simulator)
             {

@@ -69,12 +69,92 @@ namespace MS2026.Fortress
         /// <summary>砲台の向き。0度で真上、反時計回りが正。</summary>
         public float AimAngleDegrees => transform.eulerAngles.z;
 
+        /// <summary>
+        /// 握力の入力元の差し替え口。nullならGripInputBridgeを直接読む(オフライン)。
+        /// ネット対戦のHostではTurretNetworkHubが自分を設定し、他プレイヤーの握力をClientから届いた値で返す。
+        /// </summary>
+        public ITurretGripSource GripSourceOverride { get; set; }
+
+        /// <summary>
+        /// trueの間は自分で計算せず、<see cref="ApplySnapshot"/>で受け取った状態をそのまま見せる(ネット対戦のClient側)。
+        /// </summary>
+        public bool IsReplica { get; private set; }
+
+        // 受け取った向きへ追いつく速さ(大きいほど素早く補正する)。値が届く間隔(既定30Hz)より十分速くしておく。
+        private const float ReplicaAngleCorrection = 12f;
+
         private float _silenceRemaining;
         private float _chargeTimer;
         private bool _hasChargedThisGrip;
 
+        private bool _hasReplicaPose;
+        private float _replicaTargetAngle;
+        private float _replicaSignedSpeed;
+
+        /// <summary>レプリカ表示を始める。以後は<see cref="ApplySnapshot"/>で届いた状態だけを見せる。</summary>
+        public void BeginReplica()
+        {
+            IsReplica = true;
+            _hasReplicaPose = false;
+        }
+
+        /// <summary>レプリカ表示をやめ、自分で計算する通常動作に戻す(切断時など)。</summary>
+        public void EndReplica()
+        {
+            IsReplica = false;
+            _silenceRemaining = State == TurretState.Overheated && tuning != null ? tuning.overheatSilenceDuration : 0f;
+            _chargeTimer = 0f;
+            _hasChargedThisGrip = false;
+        }
+
+        /// <summary>今の状態を<see cref="TurretSnapshot"/>にまとめる(Hostが配信する値)。</summary>
+        public TurretSnapshot CaptureSnapshot()
+        {
+            var sign = rotationDirection == TurretRotationDirection.Clockwise ? -1f : 1f;
+            return new TurretSnapshot
+            {
+                State = (byte)State,
+                Heat = Heat,
+                Thickness01 = CurrentThickness01,
+                ThicknessMeters = CurrentThicknessMeters,
+                ChargeProgress01 = ChargeProgress01,
+                AngleDegrees = transform.eulerAngles.z,
+                SignedRotationSpeed = sign * CurrentRotationSpeed
+            };
+        }
+
+        /// <summary>Hostから届いた状態を反映する(レプリカ表示中のみ意味がある)。状態が変わればOnStateChangedも発火する。</summary>
+        public void ApplySnapshot(in TurretSnapshot snapshot)
+        {
+            Heat = snapshot.Heat;
+            CurrentThickness01 = snapshot.Thickness01;
+            CurrentThicknessMeters = snapshot.ThicknessMeters;
+            ChargeProgress01 = snapshot.ChargeProgress01;
+            CurrentRotationSpeed = Mathf.Abs(snapshot.SignedRotationSpeed);
+
+            var baseSpeed = tuning != null ? tuning.rotationSpeedDegPerSec * rotationSpeedScale : 0f;
+            CurrentRotationMultiplier = baseSpeed > 0f ? CurrentRotationSpeed / baseSpeed : 0f;
+
+            _replicaSignedSpeed = snapshot.SignedRotationSpeed;
+            _replicaTargetAngle = snapshot.AngleDegrees;
+            if (!_hasReplicaPose)
+            {
+                // 最初の1回は補間せずに合わせる(初期の向きが大きくずれていても一瞬で揃える)。
+                transform.Rotate(0f, 0f, Mathf.DeltaAngle(transform.eulerAngles.z, _replicaTargetAngle));
+                _hasReplicaPose = true;
+            }
+
+            SetState((TurretState)snapshot.State);
+        }
+
         private void Update()
         {
+            if (IsReplica)
+            {
+                TickReplica(Time.deltaTime);
+                return;
+            }
+
             if (tuning == null)
             {
                 return;
@@ -96,9 +176,18 @@ namespace MS2026.Fortress
 
         private void UpdateGripState(float dt)
         {
-            var provider = global::MS2026.GripInputBridge.GripInputBridge.Provider;
-            var isGripping = provider.IsGripping(playerIndex);
-            var grip = provider.GetGripValue(playerIndex);
+            bool isGripping;
+            float grip;
+            if (GripSourceOverride != null)
+            {
+                GripSourceOverride.GetGrip(playerIndex, out isGripping, out grip);
+            }
+            else
+            {
+                var provider = global::MS2026.GripInputBridge.GripInputBridge.Provider;
+                isGripping = provider.IsGripping(playerIndex);
+                grip = provider.GetGripValue(playerIndex);
+            }
 
             if (!isGripping)
             {
@@ -163,6 +252,23 @@ namespace MS2026.Fortress
             // Unityの回転は反時計回りが正。時計回りは負の向きに回す。
             var sign = rotationDirection == TurretRotationDirection.Clockwise ? -1f : 1f;
             transform.Rotate(0f, 0f, sign * CurrentRotationSpeed * dt);
+        }
+
+        /// <summary>
+        /// 次の値が届くまでは最後に届いた回転速度で回し続け、届いた向きとのズレは滑らかに詰める
+        /// (値は30Hz程度でしか届かないため、そのまま当てはめるとカクつく)。
+        /// </summary>
+        private void TickReplica(float dt)
+        {
+            if (!_hasReplicaPose)
+            {
+                return;
+            }
+
+            _replicaTargetAngle += _replicaSignedSpeed * dt;
+            var predicted = transform.eulerAngles.z + _replicaSignedSpeed * dt;
+            var correction = Mathf.DeltaAngle(predicted, _replicaTargetAngle) * (1f - Mathf.Exp(-ReplicaAngleCorrection * dt));
+            transform.Rotate(0f, 0f, _replicaSignedSpeed * dt + correction);
         }
 
         private float ResolveTargetRotationMultiplier()

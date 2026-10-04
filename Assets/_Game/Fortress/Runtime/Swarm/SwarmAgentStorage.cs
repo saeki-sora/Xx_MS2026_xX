@@ -24,6 +24,12 @@ namespace MS2026.Fortress
         public NativeArray<int> state;
         public NativeArray<int> goalOf;
 
+        /// <summary>ネット対戦で1体を見分ける番号(0〜65535)。詰め直しでも敵と一緒に移動する。Hostが振り、Clientは届いた番号を使う。</summary>
+        public NativeArray<int> netId;
+
+        /// <summary>Client側で、Hostの位置とのズレのうち、まだ詰め終わっていない分。毎フレーム少しずつ位置へ足し込む。</summary>
+        public NativeArray<float2> correction;
+
         // 詰め直し先（Swapで入れ替わる）
         public NativeArray<float2> posB;
         public NativeArray<float2> velB;
@@ -35,6 +41,8 @@ namespace MS2026.Fortress
         public NativeArray<int> typeIdxB;
         public NativeArray<int> stateB;
         public NativeArray<int> goalOfB;
+        public NativeArray<int> netIdB;
+        public NativeArray<float2> correctionB;
 
         // 押し合い計算の一時領域
         public NativeArray<float2> predA;
@@ -56,6 +64,8 @@ namespace MS2026.Fortress
             typeIdx = Alloc<int>(capacity);
             state = Alloc<int>(capacity);
             goalOf = Alloc<int>(capacity);
+            netId = Alloc<int>(capacity);
+            correction = Alloc<float2>(capacity);
 
             posB = Alloc<float2>(capacity);
             velB = Alloc<float2>(capacity);
@@ -67,12 +77,14 @@ namespace MS2026.Fortress
             typeIdxB = Alloc<int>(capacity);
             stateB = Alloc<int>(capacity);
             goalOfB = Alloc<int>(capacity);
+            netIdB = Alloc<int>(capacity);
+            correctionB = Alloc<float2>(capacity);
 
             predA = Alloc<float2>(capacity);
             predB = Alloc<float2>(capacity);
         }
 
-        public bool TryAdd(float2 position, int type, float health, float speed, float animStart, float2 face)
+        public bool TryAdd(float2 position, int type, float health, float speed, float animStart, float2 face, int id)
         {
             if (Count >= Capacity)
             {
@@ -90,6 +102,8 @@ namespace MS2026.Fortress
             typeIdx[i] = type;
             state[i] = 0;
             goalOf[i] = -1;
+            netId[i] = id;
+            correction[i] = float2.zero;
             return true;
         }
 
@@ -111,6 +125,8 @@ namespace MS2026.Fortress
             Exchange(ref typeIdx, ref typeIdxB);
             Exchange(ref state, ref stateB);
             Exchange(ref goalOf, ref goalOfB);
+            Exchange(ref netId, ref netIdB);
+            Exchange(ref correction, ref correctionB);
         }
 
         public void Dispose()
@@ -125,6 +141,8 @@ namespace MS2026.Fortress
             Free(ref typeIdx);
             Free(ref state);
             Free(ref goalOf);
+            Free(ref netId);
+            Free(ref correction);
 
             Free(ref posB);
             Free(ref velB);
@@ -136,6 +154,8 @@ namespace MS2026.Fortress
             Free(ref typeIdxB);
             Free(ref stateB);
             Free(ref goalOfB);
+            Free(ref netIdB);
+            Free(ref correctionB);
 
             Free(ref predA);
             Free(ref predB);

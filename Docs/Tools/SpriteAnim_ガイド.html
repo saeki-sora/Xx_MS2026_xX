@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SpriteAnim ガイド</title>
+<meta name="description" content="スプライトシート1枚から2Dアニメを作って再生・切り替えできる SpriteAnim（スプライトアニメスタジオ）の使い方">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/guide.css">
+<style>
+:root{--acc:#ffb547;--acc-ink:#1d1100;--acc2:#ff4d8d;--acc3:#c6ff3d}
+:root[data-theme="light"]{--acc:#a35a00;--acc-ink:#ffffff;--acc2:#c8185a;--acc3:#5f8a00}
+.sheet{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:10px;background:#14151b;border-radius:8px}
+.sheet i{aspect-ratio:1;border-radius:4px;display:grid;place-items:center;font-style:normal;font-size:11px;color:#0b0c10;font-weight:800}
+.sheet i.sel{outline:2px solid #fff;outline-offset:1px}
+.frames{display:flex;gap:4px;flex-wrap:wrap}
+.frames i{width:30px;height:30px;border-radius:4px;display:grid;place-items:center;font-style:normal;font-size:10px;color:#0b0c10;font-weight:800}
+.loopviz{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:22px}
+.loopviz .card{padding:18px}
+.loopviz .seq{font-family:var(--mono);font-size:13px;color:var(--acc);margin:8px 0 4px;letter-spacing:.05em}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<div class="orbs" aria-hidden="true"><div class="orb a"></div><div class="orb b"></div></div>
+
+<div class="shell">
+<nav class="side" aria-label="目次">
+  <a class="back" href="index.html">← ツール一覧</a>
+  <a class="brand" href="#top"><span class="mark">SA</span><span class="t">SpriteAnim</span></a>
+  <ol id="toc"></ol>
+  <div class="foot">
+    <button class="themebtn" id="themeBtn" type="button"><span aria-hidden="true">◐</span><span data-label>ライト表示</span></button>
+    <div class="meta mono">Packages/com.ms2026.spriteanim<br>v0.1.0 · 2026-10-03 時点</div>
+  </div>
+</nav>
+
+<main id="top">
+<header class="hero">
+  <div class="tags">
+    <span class="pill hot">2D コマアニメ</span>
+    <span class="pill">Animator 不要</span>
+    <span class="pill">SpriteRenderer / UI Image</span>
+    <span class="pill">GUI だけで完結</span>
+  </div>
+  <h1 class="mega" aria-label="SpriteAnim"><span class="o">SPRITE</span><span class="f">ANIM</span></h1>
+  <p class="subname">MS2026 SpriteAnim — <b>スプライトシート 1 枚から、歩く・攻撃する・切り替える</b></p>
+  <div class="hero-row">
+    <div>
+      <p class="oneword">デザイナーから届いた <span class="hl">スプライトシート 1 枚</span> を、<br>切って・並べて・<span class="hl">名前を付けるだけ</span>で<br>アニメになる。</p>
+      <p class="analogy">パラパラ漫画を作る道具です。シートを格子状に切ってコマにし、「Walk」「Attack」のように名前を付けたパラパラ漫画を何本も 1 冊（Animation Set）にまとめます。ゲームでは「Walk を再生して」と名前で呼ぶだけ。Unity 標準の Animator のような複雑な配線は要りません。</p>
+    </div>
+    <div class="facts"><dl>
+      <dt>誰が使う</dt><dd>デザイナー（アニメ作成・確認）／プログラマー（再生の呼び出し）</dd>
+      <dt>開き方</dt><dd><span class="mp">MS2026<i>›</i>スプライトアニメ<i>›</i>スプライトアニメスタジオ</span>（画面上部メニューの「MS2026」）</dd>
+      <dt>必要なもの</dt><dd>スプライトシート（まだ無ければテスト用シートを自動生成できる）</dd>
+      <dt>今の使用状況</dt><dd>パッケージは導入済み。ゲーム本編ではまだ未使用</dd>
+    </dl></div>
+  </div>
+  <div class="marquee" aria-hidden="true"><div class="track" id="mq" data-words="スライス|アニメーションセット|プレビュー|オニオンスキン|クロスフェード|遷移テスト|フレームイベント|定数クラス生成"></div></div>
+</header>
+
+<section id="what" data-nav="何ができる？">
+  <div class="rv">
+    <div class="eyebrow">01 — What you can do</div>
+    <h2>スタジオの<br><em>①〜⑤ を上から順に</em>。</h2>
+    <p class="lead">スプライトアニメスタジオは、上から ① → ⑤ の順に進めればアニメが完成する作りになっています。</p>
+  </div>
+  <div class="cards">
+    <div class="card feat rv"><div class="ic">✂️</div><h3>① スライス</h3><p>シートを「横○列 × 縦○行」で切ってコマにする。素材が無くてもテスト用シートを作れる。</p></div>
+    <div class="card feat rv"><div class="ic">📚</div><h3>② アニメーションセット</h3><p>キャラ 1 体分のアニメ（Walk・Attack・Idle…）をまとめる 1 冊のファイル。</p></div>
+    <div class="card feat rv"><div class="ic">▶️</div><h3>③ プレビュー</h3><p>その場で再生・一時停止・コマ送り・速度変更。前後のコマを透かすオニオンスキンも。</p></div>
+    <div class="card feat rv"><div class="ic">🔀</div><h3>④ 遷移テスト</h3><p>「歩き→攻撃」に切り替わるときの重なり（クロスフェード）の見た目と秒数を確認。</p></div>
+    <div class="card feat rv"><div class="ic">🧰</div><h3>⑤ ツール</h3><p>連番のスプライト（walk_0, walk_1…）からアニメを一括作成。アニメ名のコード定数も自動生成。</p></div>
+    <div class="card feat rv"><div class="ic">🎮</div><h3>ゲームで再生</h3><p>Sprite Animator 部品を付けてセットを入れるだけ。最初のアニメは自動で再生される。</p></div>
+  </div>
+</section>
+
+<section id="start" data-nav="はじめての 5 分">
+  <div class="rv">
+    <div class="eyebrow">02 — First 5 minutes</div>
+    <h2>素材が無くても、<br><em>5 分で 1 本作れる</em>。</h2>
+  </div>
+  <div class="steps">
+    <div class="step rv"><div class="n">1</div><div class="step-body">
+      <div><h3>スタジオを開いて、シートを切る</h3>
+        <p><span class="mp">MS2026<i>›</i>スプライトアニメ<i>›</i>スプライトアニメスタジオ</span>。<b>① スプライトシートを読み込んでスライス</b> の <b>Sprite Sheet</b> 欄に画像をドラッグし、<b>Columns</b>（横の数）と <b>Rows</b>（縦の数）を入れて <b>スライス実行</b>。</p>
+        <p style="margin-top:8px">素材がまだ無ければ <b>テスト用シートを生成 (実素材が無くても動作確認できます)</b>。色分け＋通し番号付きのシートができ、自動でスライスまでされます。</p>
+      </div>
+      <div><div class="mock">
+        <div class="mock-title">Sprite Anim Studio</div>
+        <div class="mock-body">
+          <h5>① スプライトシートを読み込んでスライス</h5>
+          <div class="mrow"><span>Sprite Sheet</span><div class="mf obj">TestSpriteSheet_4x2</div></div>
+          <div class="mrow"><span>Columns</span><div class="mf">4</div></div>
+          <div class="mrow"><span>Rows</span><div class="mf">2</div></div>
+          <div style="display:flex;gap:6px"><span class="mbtn pri">スライス実行</span><span class="mbtn">テスト用シートを生成</span></div>
+          <div class="sheet"><i class="sel" style="background:#f28b8b">1</i><i class="sel" style="background:#f2b98b">2</i><i class="sel" style="background:#f2e58b">3</i><i class="sel" style="background:#c4f28b">4</i><i style="background:#8bf2b0">5</i><i style="background:#8be2f2">6</i><i style="background:#8b9ef2">7</i><i style="background:#d08bf2">8</i></div>
+          <div class="help">スライス結果: 8 枚（クリックで選択、Shift/Ctrlで複数選択）</div>
+        </div>
+      </div></div>
+    </div></div>
+    <div class="step rv"><div class="n">2</div><div>
+      <h3>セットを作って、アニメを足す</h3>
+      <p><b>② アニメーションセット</b> の <b>新規セットを作成</b> で保存先を選ぶ（キャラ 1 体につき 1 つが目安）。<b>Animations</b> の <b>＋</b> で 1 本追加し、<b>Name</b> を <code>Walk</code> に。</p>
+    </div></div>
+    <div class="step rv"><div class="n">3</div><div class="step-body">
+      <div><h3>コマを選んで登録、速さをそろえる</h3>
+        <p>①のスライス結果でコマをクリック（<kbd>Shift</kbd>/<kbd>Ctrl</kbd> で複数）→ <b>選択した ○ 枚を現在のアニメーションにフレーム追加</b>。<b>FPS</b> に 12 などを入れて <b>全フレームに一括適用</b> すれば、コマごとに時間を打たなくて済みます。</p>
+        <p style="margin-top:8px"><b>Frames</b> はドラッグで並べ替えできます。</p>
+      </div>
+      <div><div class="mock">
+        <div class="mock-title">Sprite Anim Studio</div>
+        <div class="mock-body">
+          <h5>選択中のアニメーション</h5>
+          <div class="mrow"><span>Name</span><div class="mf">Walk</div></div>
+          <div class="mrow"><span>Loop Mode</span><div class="mf dd">Loop</div></div>
+          <div class="mrow" style="grid-template-columns:42% 1fr auto"><span>FPS</span><div class="mf">12</div><span class="mbtn">全フレームに一括適用</span></div>
+          <div class="help">Frames (ドラッグで並べ替え可能)</div>
+          <div class="frames"><i style="background:#f28b8b">1</i><i style="background:#f2b98b">2</i><i style="background:#f2e58b">3</i><i style="background:#c4f28b">4</i></div>
+        </div>
+      </div></div>
+    </div></div>
+    <div class="step rv"><div class="n">4</div><div>
+      <h3>③ プレビューで確認</h3>
+      <p>再生／一時停止、<b>|&lt;</b> <b>&gt;|</b> でコマ送り、スクラブ、再生速度、オニオンスキン。ゲームを動かさずに確認できます。</p>
+    </div></div>
+    <div class="step rv"><div class="n">5</div><div>
+      <h3>キャラに付けて動かす</h3>
+      <p>SpriteRenderer（または UI の Image）が付いた GameObject に <span class="mp">Add Component<i>›</i>MS2026<i>›</i>Sprite Anim<i>›</i>Sprite Animator</span> を付け、<b>Animation Set</b> に②のセット、<b>Default Animation</b> に <code>Walk</code> を選ぶ。▶ Play で歩き出します。</p>
+      <p class="done">Play 中は Inspector にテスト再生ボタンが出るので、他のアニメへの切り替えも試せます</p>
+    </div></div>
+  </div>
+</section>
+
+<section id="recipes" data-nav="やりたいこと逆引き">
+  <div class="rv"><div class="eyebrow">03 — Recipes</div><h2>「〜したい」から<br><em>探す</em>。</h2></div>
+  <label class="search rv"><span aria-hidden="true">🔍</span><span class="sr">やりたいことを検索</span><input id="recipeSearch" type="search" placeholder="例：一括、切り替え、足音、ポーズ"></label>
+  <div class="chips rv" id="recipeChips" role="group" aria-label="カテゴリ">
+    <button class="chip" aria-pressed="true" data-f="all">すべて</button>
+    <button class="chip" aria-pressed="false" data-f="make">作る</button>
+    <button class="chip" aria-pressed="false" data-f="tune">調整</button>
+    <button class="chip" aria-pressed="false" data-f="code">ゲームとつなぐ</button>
+  </div>
+  <div class="recipes">
+    <details class="recipe" data-tags="make"><summary><span class="q">バラバラの画像（walk_0, walk_1…）からまとめて作りたい</span><span class="who">⑤ ツール</span></summary><div class="a"><p>Project ウィンドウで画像を全部選んだ状態で <b>⑤ ツール</b> の <b>選択中のスプライトから自動でアニメーションを作成</b>。名前の「_数字」の前の部分ごと（walk / run …）にアニメが自動で作られ、数字順に並びます。</p></div></details>
+    <details class="recipe" data-tags="make"><summary><span class="q">シートの絵と絵の間にすき間がある</span><span class="who">① スライス</span></summary><div class="a"><p><b>Padding X / Y</b>（コマとコマの間の幅）と <b>Margin X / Y</b>（画像の外周の余白）をピクセルで入れてからスライス実行。<b>Pixels Per Unit</b> はゲーム内での大きさの基準です。</p></div></details>
+    <details class="recipe" data-tags="tune"><summary><span class="q">1 回だけ再生して止めたい／往復させたい</span><span class="who">Loop Mode</span></summary><div class="a"><p>アニメの <b>Loop Mode</b> を選びます（下の「数値の意味」に図解あり）：<b>Once</b>（最後で止まる）、<b>Loop</b>（繰り返す）、<b>PingPong</b>（行って戻る）、<b>ClampForever</b>（最後のコマで止まり続ける）。</p></div></details>
+    <details class="recipe" data-tags="tune"><summary><span class="q">特定のコマだけ長く見せたい（溜めポーズ）</span><span class="who">Frames</span></summary><div class="a"><p><b>Frames</b> の各行の時間（秒）を個別に書き換えます。FPS 一括適用の後で、溜めたいコマだけ長くするのが楽です。</p></div></details>
+    <details class="recipe" data-tags="tune"><summary><span class="q">歩き→攻撃の切り替わりを滑らかにしたい</span><span class="who">④ 遷移テスト</span></summary><div class="a"><ol><li><b>④ 遷移（クロスフェード）テスト</b> で <b>From</b>（例 Walk）と <b>To</b>（例 Attack）を選ぶ。</li><li><b>Cross Fade (sec)</b> を動かして <b>テスト実行</b>。ちょうどいい秒数を探す。</li><li>決まった秒数をセットの <b>Default Cross Fade (sec)</b> に入れる（全切り替えの既定値）。特定の組み合わせだけ変えたいときは、セットの Inspector の <b>Transition Rules</b>（from / to / 秒。<code>*</code> で「何でも」）。</li></ol></div></details>
+    <details class="recipe" data-tags="tune"><summary><span class="q">同じ敵が何体も並ぶとき、足並みがそろって不自然</span><span class="who">Sprite Animator</span></summary><div class="a"><p>Sprite Animator の <b>Randomize Start Frame</b> を ON。体ごとに開始コマがばらけます。</p></div></details>
+    <details class="recipe" data-tags="tune"><summary><span class="q">ポーズ中もメニューのアニメは動かしたい</span><span class="who">Sprite Animator</span></summary><div class="a"><p>Sprite Animator の <b>Use Unscaled Time</b> を ON にすると、ゲームの時間を止めても動き続けます。</p></div></details>
+    <details class="recipe" data-tags="code"><summary><span class="q">足音や攻撃判定を「このコマで」出したい</span><span class="who">フレームイベント</span></summary><div class="a"><p><b>Frames</b> の該当コマの行の右端の欄（イベント名。行は「スプライト・秒数・イベント名」の順）に <code>Footstep</code> などを書きます。そのコマに来ると Sprite Animator の <b>On Frame Event</b> が名前付きで呼ばれるので、Inspector で音を鳴らす処理などをつなぎます（プログラマーはコードから受け取れます）。</p></div></details>
+    <details class="recipe" data-tags="code"><summary><span class="q">アニメ名のタイプミスを防ぎたい</span><span class="who">⑤ ツール</span></summary><div class="a"><p><b>アニメーション名の定数クラスを生成 (C#)</b> で、セットのアニメ名をまとめたコードファイルが作られます（例：<code>PlayerAnims.Walk</code>）。プログラマーに渡すとタイプミスが起きません。</p></div></details>
+    <p class="noresult">見つかりませんでした。別の言葉で探してください。</p>
+  </div>
+  <div class="callout info rv"><span class="ci">i</span><div><b>このゲームの群衆の敵は別の仕組みです。</b>数千体の敵のアニメは要塞デザイナーの「群衆 › 敵の種類」でスプライトシートを指定して動かしています（SpriteAnim ではありません）。SpriteAnim はボス・UI・演出用キャラなど、個別に置くものに向いています。</div></div>
+</section>
+
+<section id="params" data-nav="数値の意味">
+  <div class="rv"><div class="eyebrow">04 — Numbers</div><h2>ループの種類と<br><em>主な設定</em>。</h2></div>
+  <div class="loopviz">
+    <div class="card rv"><h4>Once</h4><div class="seq">1 2 3 4 ■</div><p class="small" style="color:var(--ink2)">最後まで再生して止まる（完了イベントが出る）。攻撃・被弾など 1 回きりの動き。</p></div>
+    <div class="card rv"><h4>Loop</h4><div class="seq">1 2 3 4 1 2 3 4 …</div><p class="small" style="color:var(--ink2)">先頭に戻って繰り返す。歩き・待機。新規作成時の既定。</p></div>
+    <div class="card rv"><h4>PingPong</h4><div class="seq">1 2 3 4 3 2 1 2 …</div><p class="small" style="color:var(--ink2)">行って戻るを繰り返す。呼吸・揺れ。</p></div>
+    <div class="card rv"><h4>ClampForever</h4><div class="seq">1 2 3 4 4 4 4 …</div><p class="small" style="color:var(--ink2)">最後のコマで止まり続ける（再生中のまま）。倒れた後の姿勢など。</p></div>
+  </div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">Sprite Animator（キャラに付ける部品）</div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>意味</th><th colspan="2">メモ</th><th>初期値</th></tr>
+    <tr><td>Animation Set</td><td>使うセット</td><td colspan="2">必須</td><td class="def">—</td></tr>
+    <tr><td>Default Animation</td><td>最初に再生するアニメ</td><td colspan="2">ドロップダウンで選べる</td><td class="def">—</td></tr>
+    <tr><td>Play On Enable</td><td>有効になった瞬間に再生するか</td><td colspan="2"></td><td class="def">ON</td></tr>
+    <tr><td>Use Unscaled Time</td><td>ゲーム時間の停止を無視</td><td colspan="2">ポーズ中の UI 用</td><td class="def">OFF</td></tr>
+    <tr><td>Randomize Start Frame</td><td>開始コマをランダムに</td><td colspan="2">群れの同期崩し</td><td class="def">OFF</td></tr>
+    <tr><td>Speed</td><td>再生速度の倍率（0〜5）</td><td colspan="2">アニメ側の Speed とかけ算</td><td class="def">1</td></tr>
+  </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">アニメーション／セット</div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>意味</th><th colspan="2">メモ</th><th>初期値</th></tr>
+    <tr><td>Name</td><td>アニメの名前（コードから呼ぶ名前）</td><td colspan="2">英語推奨（Walk, Attack…）</td><td class="def">—</td></tr>
+    <tr><td>Speed</td><td>そのアニメだけの速度倍率</td><td colspan="2"></td><td class="def">1</td></tr>
+    <tr><td>Frames（時間・イベント名）</td><td>各コマの表示秒数と、そのコマで出す合図</td><td colspan="2">FPS 一括適用で全コマ同じ秒数に</td><td class="def">—</td></tr>
+    <tr><td>Default Cross Fade (sec)</td><td>切り替え時に重ねる秒数（セット全体）</td><td colspan="2">0 で即切り替え</td><td class="def">0.1</td></tr>
+  </table></div></div>
+</section>
+
+<section id="faq" data-nav="困ったとき">
+  <div class="rv"><div class="eyebrow">05 — Troubleshooting</div><h2>困ったときは<br><em>ここ</em>。</h2></div>
+  <div class="faq rv">
+    <details><summary>Play してもアニメしない</summary><div class="a"><ol><li>Sprite Animator の <b>Animation Set</b> と <b>Default Animation</b> が入っているか。</li><li>同じ GameObject に SpriteRenderer か Image があるか。</li><li>Console に「Animation Set が設定されていません」「アニメーション '…' が見つかりません」が出ていないか（名前の打ち間違い）。</li></ol></div></details>
+    <details><summary>加算で光る特殊なマテリアルのスプライトで、切り替え時に見た目が変わる</summary><div class="a">クロスフェードは「もう 1 枚重ねて透明度で混ぜる」方式なので、特殊な合成のマテリアルでは切り替えの一瞬だけ見え方が変わることがあります。気になる場合はその切り替えだけ Cross Fade を 0 に。</div></details>
+    <details><summary>Transition Rules の編集画面がない</summary><div class="a">専用 GUI はまだありません。セットのファイルを選び、Inspector の配列（Transition Rules）を直接編集してください。</div></details>
+  </div>
+</section>
+
+<section id="glossary" data-nav="用語集">
+  <div class="rv"><div class="eyebrow">06 — Words</div><h2>分からない言葉は<br><em>ここで引く</em>。</h2></div>
+  <dl class="gloss">
+    <div class="rv"><dt>スプライトシート</dt><dd>アニメのコマを 1 枚の画像に格子状に並べたもの。</dd></div>
+    <div class="rv"><dt>スライス</dt><dd>シートを格子で切り分けて、1 コマずつのスプライトにすること。</dd></div>
+    <div class="rv"><dt>アニメーションセット</dt><dd>キャラ 1 体分のアニメをまとめたファイル。</dd></div>
+    <div class="rv"><dt>クロスフェード</dt><dd>前のアニメを薄くしながら次のアニメを濃くして、なめらかに切り替えること。</dd></div>
+    <div class="rv"><dt>オニオンスキン</dt><dd>前後のコマを半透明で重ねて見せる表示。動きのつながりを確認できる。</dd></div>
+    <div class="rv"><dt>フレームイベント</dt><dd>特定のコマに来たときに出す名前付きの合図。足音・攻撃判定などに使う。</dd></div>
+    <div class="rv"><dt>FPS</dt><dd>1 秒あたりのコマ数。12 なら 1 コマ約 0.083 秒。</dd></div>
+  </dl>
+</section>
+
+<div class="devzone"></div>
+<section id="dev" data-nav="コードから使う" data-dev>
+  <div class="rv">
+    <div class="eyebrow">07 — For programmers</div>
+    <h2>呼ぶのは<br><em>名前だけ</em>。</h2>
+    <p class="lead">名前空間 <code>MS2026.SpriteAnim</code>。依存は <code>com.unity.ugui</code> のみの自己完結パッケージ。</p>
+  </div>
+  <div class="tabs rv" role="tablist" aria-label="コード例">
+    <button class="tab" role="tab" aria-selected="true" aria-controls="cp-play">再生</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="cp-evt">イベント</button>
+  </div>
+  <div class="panel" id="cp-play" role="tabpanel">
+    <div class="codebox"><div class="cap"><span>SpriteAnimator</span><button class="copy" type="button">copy</button></div><pre>
+using MS2026.SpriteAnim;
+
+var anim = GetComponent&lt;SpriteAnimator&gt;();
+anim.Play("Walk");                 // 同じアニメ再生中なら何もしない（毎フレーム呼んで安全）
+anim.Play("Attack", 0.1f);         // 0.1 秒クロスフェード（-1 でセット既定/遷移ルール）
+anim.PlayOneShot("Hit", "Idle");   // Hit を 1 回 → 終わったら Idle
+anim.Stop(); anim.Pause(); anim.Resume();
+bool has = anim.HasAnimation("Run");</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">見つからない名前</span>警告ログを出して何もしない（例外にしない）。</div><div class="note"><span class="lbl">実行順</span><code>[DefaultExecutionOrder(-1)]</code>。</div></div>
+  </div>
+  <div class="panel" id="cp-evt" role="tabpanel">
+    <div class="codebox"><div class="cap"><span>events</span><button class="copy" type="button">copy</button></div><pre>
+anim.AnimationStarted   += name =&gt; { };
+anim.AnimationCompleted += name =&gt; { };   // Once の最後
+anim.AnimationLooped    += name =&gt; { };
+anim.FrameEvent         += evt  =&gt; { if (evt == "Footstep") { /* ... */ } };
+// Inspector 用 UnityEvent: onAnimationStarted / onAnimationCompleted /
+//                          onAnimationLooped / onFrameEvent</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">詳細</span><code>Docs/Tools/SpriteAnim_AI_Reference.md</code> と パッケージの <code>README.md</code>。</div></div>
+  </div>
+</section>
+
+<section id="more" data-nav="関連ツール">
+  <div class="rv"><div class="eyebrow">08 — Related</div><h2>一緒に使う<br><em>ツール</em>。</h2></div>
+  <div class="links">
+    <a class="lk rv" href="ShaderFX_ガイド.html"><span class="ti">ShaderFX</span><span class="ds">光る・溶けるなどの見た目エフェクト。</span></a>
+    <a class="lk rv" href="FortressDesigner_ガイド.html"><span class="ti">要塞デザイナー</span><span class="ds">群衆の敵のスプライトシートはこちらで設定。</span></a>
+    <a class="lk rv" href="index.html"><span class="ti">ツール一覧</span><span class="ds">このプロジェクトの全ツール。</span></a>
+  </div>
+  <footer><span>SpriteAnim Guide · Xx_MS2026_xX</span><span>2026-10-03 時点のコードに基づく</span></footer>
+</section>
+</main>
+</div>
+<script src="assets/guide.js"></script>
+</body>
+</html>
