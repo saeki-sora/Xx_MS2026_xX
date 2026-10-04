@@ -66,7 +66,7 @@ namespace MS2026.Fortress
         {
             var info = new SmashBallBreakInfo(this, obstacle, obstacle.DestroyedBy, transform.position, Time.time);
 
-            DestructibleEffectPlayer.Play(settings.onBroken, transform.position, settings.effectLifetimeSeconds);
+            FortressEffectPlayer.PlayOnce(settings.onBroken, transform.position, Quaternion.identity, obstacle.DestroyedBy.PlayerIndex);
 
             if (settings.recordHistory)
             {

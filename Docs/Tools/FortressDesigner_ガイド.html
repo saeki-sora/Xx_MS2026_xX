@@ -26,7 +26,7 @@
   <ol id="toc"></ol>
   <div class="foot">
     <button class="themebtn" id="themeBtn" type="button"><span aria-hidden="true">◐</span><span data-label>ライト表示</span></button>
-    <div class="meta mono">Assets/_Game/Fortress<br>2026-10-03 時点</div>
+    <div class="meta mono">Assets/_Game/Fortress<br>2026-10-04 時点</div>
   </div>
 </nav>
 
@@ -64,7 +64,7 @@
     <p class="lead">ウィンドウ上部のタブを切り替えて使います。それぞれ「ゲームのどの部分を担当しているか」で覚えると迷いません。</p>
   </div>
   <div class="cards">
-    <div class="card feat rv" style="--c:#4de2ff"><div class="ic">🔫</div><h3>砲台配置</h3><p>4 基の砲台の回転と、レーザーの太さ・熱・オーバーヒートの数値。</p><p class="ex"><b>例</b> 全力で握ったら何秒で灼け落ちる？を決める</p></div>
+    <div class="card feat rv" style="--c:#4de2ff"><div class="ic">🔫</div><h3>砲台配置</h3><p>4 基の砲台の回転と、レーザーの太さ・熱・オーバーヒートの数値。発射口・着弾点・敵に当たった瞬間のエフェクトと音も。</p><p class="ex"><b>例</b> 全力で握ったら何秒で灼け落ちる？を決める</p></div>
     <div class="card feat rv" style="--c:#ff4d8d"><div class="ic">👾</div><h3>敵ウェーブ</h3><p>いつ・どこから・どの敵を・何体出すかの表と、敵が湧く地点。</p><p class="ex"><b>例</b> 開始 10 秒後に北から小型ドローン 30 体</p></div>
     <div class="card feat rv" style="--c:#ffb547"><div class="ic">🧱</div><h3>経路・障害物</h3><p>壁・壊せるブロック・泥地帯を置き、敵がどう回り込むかを矢印で見る。</p><p class="ex"><b>例</b> 細い通路を作って渋滞させる</p></div>
     <div class="card feat rv" style="--c:#c6ff3d"><div class="ic">📦</div><h3>破壊可能物</h3><p>レーザーで壊せて時間で戻る物を、Scene をクリックして配置。耐久・見た目・音も。</p><p class="ex"><b>例</b> 木箱・岩・ガラスを並べる</p></div>
@@ -138,9 +138,114 @@
 </section>
 
 <!-- ============ RECIPES ============ -->
+<!-- ============ EFFECTS (beginner walkthrough) ============ -->
+<section id="effects" data-nav="エフェクトを入れる">
+  <div class="rv">
+    <div class="eyebrow">03 — Add effects</div>
+    <h2>レーザーに<br><em>エフェクトを入れる</em>。</h2>
+    <p class="lead">撃った瞬間の光、壁に当たったときの火花、敵に当たったときの「パチッ」を入れる手順です。プログラムは使いません。上から順番にやれば終わります（10 分くらい）。</p>
+  </div>
+
+  <div class="card rv" style="margin-top:26px">
+    <h3 style="margin-bottom:10px">先に、言葉を 4 つだけ</h3>
+    <dl class="gloss" style="margin-top:0">
+      <div><dt>エフェクト</dt><dd>光・火花・煙などの「見た目の演出」。Unity では <b>Prefab（プレハブ）</b>という 1 つのファイルになっています。エフェクト担当の人に作ってもらうか、アセットストアなどから持ってきます。</dd></div>
+      <div><dt>効果音</dt><dd>音のファイル（.wav や .mp3）。</dd></div>
+      <div><dt>D-Drive（ディードライブ）</dt><dd>このプロジェクトの「素材の倉庫」。エフェクトや音は、一度この倉庫に預けてから使います。預けるのは、決まったフォルダにファイルを置くだけです。</dd></div>
+      <div><dt>演出欄</dt><dd>要塞デザイナーにある「ここで出す」という入力欄。倉庫に預けた素材を、一覧から選ぶだけです。</dd></div>
+    </dl>
+  </div>
+
+  <div class="cards three">
+    <div class="card feat rv" style="--c:#4de2ff"><div class="ic">💥</div><h3>発射口</h3><p>撃っている間ずっと、砲台の先に出ます。音は撃ち始めに 1 回。</p><p class="ex"><b>素材</b> 出しっぱなし用（手順 2 が必要）</p></div>
+    <div class="card feat rv" style="--c:#ffb547"><div class="ic">🔥</div><h3>着弾点</h3><p>レーザーが壁や箱に当たっている間、当たった場所に出ます。何も無い所や敵の群れでは出ません。</p><p class="ex"><b>素材</b> 出しっぱなし用（手順 2 が必要）</p></div>
+    <div class="card feat rv" style="--c:#ff4d8d"><div class="ic">✨</div><h3>敵に当たった瞬間</h3><p>敵の群れにレーザーが触れた瞬間に 1 回だけ出ます。出すぎないよう、1 秒に 60 個までに自動で減らします。</p><p class="ex"><b>素材</b> 1 回だけ用（手順 2 は不要）</p></div>
+  </div>
+
+  <div class="steps">
+    <div class="step rv"><div class="n">1</div><div class="step-body">
+      <div><h3>素材を倉庫の入口に置く</h3>
+        <ol><li>Unity 下の <b>Project</b> ウィンドウで <code>Assets › _Game › DDrive › SourceAssets › Vfx</code> を開く。</li><li>右クリック › <b>Create › Folder</b> で <code>Laser</code> という名前のフォルダを作る。</li><li>そのフォルダへ、エフェクトのファイル（Prefab）をドラッグして入れる。</li></ol>
+        <p style="margin-top:8px">数秒で倉庫に登録されます。音のファイルなら <code>SourceAssets › Se</code> の中に同じように置きます。</p>
+        <div class="callout warn"><span class="ci">!</span><div><b>ファイル名は英語で</b>（例：<code>MuzzleGlow</code>、<code>WallSpark</code>）。日本語だけの名前だと、倉庫の中で名前がぶつかって困ります。</div></div>
+      </div>
+      <div class="tree" style="margin-top:0"><span class="d">Assets/_Game/DDrive/SourceAssets/</span>
+├─ <span class="d">Vfx/</span>              <span class="c"># エフェクトはここ</span>
+│  └─ <span class="d">Laser/</span>          <span class="c"># 作ったフォルダ</span>
+│     ├─ <span class="h">MuzzleGlow</span>    <span class="c"># 発射口用</span>
+│     ├─ <span class="h">WallSpark</span>     <span class="c"># 着弾点用</span>
+│     └─ <span class="h">HitFlash</span>      <span class="c"># 敵に当たった瞬間用</span>
+└─ <span class="d">Se/</span>               <span class="c"># 音はここ</span>
+   └─ <span class="d">Laser/</span>
+      └─ <span class="h">Hit.wav</span></div>
+    </div></div>
+
+    <div class="step rv"><div class="n">2</div><div class="step-body">
+      <div><h3>発射口・着弾点に使うものだけ「出しっぱなし」にする</h3>
+        <p>そのままだと、エフェクトは 1 回出たら消えます。発射口・着弾点は「撃っている間ずっと」出したいので、設定を少し変えます。<b>敵に当たった瞬間用は、この手順はいりません。</b></p>
+        <ol><li>メニュー <span class="mp">Tools<i>›</i>D-Drive<i>›</i>Asset Browser</span> を開く。</li><li>上の検索欄の右にある種類のメニューを <b>Vfx</b> にして、手順 1 で入れたエフェクトをクリック。</li><li>右の Inspector で <b>Life Mode</b> を <b>Loop</b> にする。</li><li>同じ Inspector の <b>Flags</b> を開き、その中の <b>Pool</b> を開いて、<b>Kind</b> を <b>Pooled</b>、<b>Max Count</b> を <b>8</b> にする（出しっぱなしのエフェクトが増えすぎないための上限。これをしないと黄色の警告が出ます）。</li></ol>
+      </div>
+      <div><div class="mock">
+        <div class="mock-title">Inspector — VFX_Laser_MuzzleGlow</div>
+        <div class="mock-body">
+          <div class="mrow"><span>Prefab</span><div class="mf obj">MuzzleGlow</div></div>
+          <div class="mrow"><span><span class="pin-inline">3</span>Life Mode</span><div class="mf dd">Loop</div></div>
+          <div class="help">▼ Flags</div>
+          <div class="help" style="padding-left:12px">▼ Pool</div>
+          <div class="mrow" style="padding-left:24px"><span><span class="pin-inline">4</span>Kind</span><div class="mf dd">Pooled</div></div>
+          <div class="mrow" style="padding-left:24px"><span>Initial Count</span><div class="mf">0</div></div>
+          <div class="mrow" style="padding-left:24px"><span><span class="pin-inline">4</span>Max Count</span><div class="mf">8</div></div>
+        </div>
+      </div><p class="mock-cap">画面イメージ（番号は左の手順の番号）</p></div>
+    </div></div>
+
+    <div class="step rv"><div class="n">3</div><div class="step-body">
+      <div><h3>演出欄で選ぶ</h3>
+        <ol><li>要塞デザイナーの <b>砲台配置</b> タブを開き、一番下までスクロールして <b>演出（エフェクト・効果音）</b> を探す。</li><li>入れたい欄（例：<b>発射口（撃っている間）</b>）の左の小さな三角 ▶ を押して開く。</li><li><b>エフェクト(VFX)</b> の右のボタン（最初は <code>&lt;None&gt;</code> と書いてある）を押すと一覧が出るので、手順 1 で入れたエフェクトを選ぶ。上の検索欄に名前の一部を打つと探しやすいです。</li><li>音も入れたいときは、<b>効果音(SE)</b> で同じように選ぶ。</li></ol>
+        <p class="small muted" style="margin-top:8px">見出しの右に「エフェクト✓ 効果音✓」と出ていれば入っています。<b>プレイヤー色で色付け</b> はそのままで大丈夫です（エフェクトが対応していれば、P1 は赤・P2 は青…と自動で色が付きます）。</p>
+      </div>
+      <div><div class="mock">
+        <div class="mock-title">要塞デザイナー — 砲台配置</div>
+        <div class="mock-body">
+          <h5>演出（エフェクト・効果音）</h5>
+          <div class="mrow" style="grid-template-columns:1fr auto"><span><span class="pin-inline">2</span>▼ 発射口（撃っている間）</span><span class="help">エフェクト✓  効果音✓</span></div>
+          <div class="mrow" style="padding-left:14px"><span><span class="pin-inline">3</span>エフェクト(VFX)</span><div class="mf dd">MuzzleGlow</div></div>
+          <div class="mrow" style="padding-left:14px"><span><span class="pin-inline">4</span>効果音(SE)</span><div class="mf dd">和太鼓でドン</div></div>
+          <div class="mrow" style="padding-left:14px"><span>プレイヤー色で色付け</span><div><span class="mtoggle on"></span></div></div>
+          <div class="mrow" style="padding-left:14px"><span>色を入れる項目名</span><div class="mf">Color</div></div>
+          <div style="display:flex;gap:6px;padding-left:14px"><span class="mbtn">Asset Browser</span><span class="mbtn">VFX Editor</span><span class="mbtn pri">▶ 試す</span></div>
+          <div class="mrow"><span>▶ 着弾点（壁などに当たっている間）</span><span class="help">（未設定）</span></div>
+          <div class="mrow"><span>▶ 群衆の敵に当たった瞬間</span><span class="help">（未設定）</span></div>
+        </div>
+      </div><p class="mock-cap">画面イメージ（番号は左の手順の番号）</p></div>
+    </div></div>
+
+    <div class="step rv"><div class="n">4</div><div>
+      <h3>確かめる</h3>
+      <p>▶ Play して、Game 画面を一度クリックしてから <kbd>Q</kbd> を押しっぱなしにします（P1 の砲台が撃ちます）。手を使わずに見たいときは、Play 中に演出欄の <b>▶ 試す</b> を押すと、その場で 1 回鳴ります。</p>
+      <p class="done">出たら完成です。設定は自動で保存されます（心配なら File › Save Project）</p>
+      <p class="small muted" style="margin-top:6px">4 人とも同じ設定が使われます。マルチプレイでも全員の画面に出るので、特別な作業はいりません。</p>
+    </div></div>
+  </div>
+
+  <div class="ptable-wrap rv"><div class="ptable-cap">うまくいかないとき</div><div class="ptable-scroll"><table class="params">
+    <tr><th>こうなった</th><th colspan="3">こうする</th></tr>
+    <tr><td>何も出ない</td><td colspan="3">Play 中か確認。演出欄の名前が<b>赤い</b>ときは倉庫に入っていないので、手順 1 をやり直す。着弾点は、レーザーが壁や箱に当たっているときだけ出ます。</td></tr>
+    <tr><td>一瞬で消える（発射口・着弾点）</td><td colspan="3">手順 2 の <b>Life Mode</b> が <b>Loop</b> になっているか確認。</td></tr>
+    <tr><td>黄色の警告「Pool 上限が未設定です」</td><td colspan="3">手順 2 の 4 番（Pool の Kind を Pooled、Max Count を 8）。</td></tr>
+    <tr><td>小さな点にしか見えない／横に広がらない</td><td colspan="3">エフェクトが画面の奥に向かって出ています。エフェクト担当の人に「2D 用に、上向きに出るようにしてほしい（Particle System の Shape の Rotation X を -90）」と伝えてください。</td></tr>
+    <tr><td>キャラや壁の絵の後ろに隠れる</td><td colspan="3">エフェクトの Prefab の中の <b>Renderer › Order in Layer</b> を大きい数にする（エフェクト担当の人に依頼）。</td></tr>
+    <tr><td>音が鳴らない／小さい</td><td colspan="3">演出欄の <b>効果音(SE)</b> が入っているか。音量は Asset Browser でその音を選び、Inspector の <b>Volume</b>。</td></tr>
+    <tr><td>敵に当たったエフェクトが多すぎる／少ない</td><td colspan="3">演出欄の下の <b>群衆ヒットの上限（個/秒・全員合計）</b> を下げる／上げる（はじめは 60）。</td></tr>
+    <tr><td>色が変わらない</td><td colspan="3">エフェクト側が対応していないだけなので、気にしなくて大丈夫です。色を変えたいときはエフェクト担当の人に「Params に Color という項目を作ってほしい」と伝えます。</td></tr>
+  </table></div></div>
+
+  <div class="callout rv"><span class="ci">＋</span><div><b>同じやり方で、ほかの場所にもエフェクトを入れられます。</b>手順 1・2 は同じで、手順 3 の場所だけが違います。<br>・<b>壊せる箱や壁</b>：「破壊可能物」タブで物を選ぶ › 選択中の破壊可能物 › <b>演出（エフェクト・効果音）</b>（当たっている間／ひびが入ったとき／壊れたとき／元に戻ったとき）<br>・<b>スマッシュボール</b>：「スマッシュボール」タブで選ぶ › <b>割れたときの演出</b><br>※ 壊れたとき・割れたとき・ひびが入ったときは「1 回だけ用」なので手順 2 はいりません。</div></div>
+</section>
+
 <section id="recipes" data-nav="やりたいこと逆引き">
   <div class="rv">
-    <div class="eyebrow">03 — Recipes</div>
+    <div class="eyebrow">04 — Recipes</div>
     <h2>「〜したい」から<br><em>探す</em>。</h2>
     <p class="lead">よくある「やりたいこと」と、その手順です。キーワードで絞り込めます（例：「太さ」「渋滞」「揺れ」）。</p>
   </div>
@@ -211,7 +316,15 @@
       <p>置いた物はリストに並び、<b>複製</b>・<b>削除</b>・角のハンドルでのサイズ変更ができます。</p>
     </div></details>
     <details class="recipe" data-tags="stage"><summary><span class="q">壊れにくくしたい／壊れた後の復活時間を変えたい</span><span class="who">破壊可能物</span></summary><div class="a"><p>リストで選んで、<span class="mp">選択中の破壊可能物<i>›</i>耐久・再生</span> の <b>耐久値</b>・<b>受けるダメージの倍率</b>・再生の設定を変えます。同じ種類を全部変えたいならプリセットを編集して <b>選択中に適用</b>。レーザー側の効きは「砲台配置」の <b>障害物へのダメージ倍率</b>。</p></div></details>
-    <details class="recipe" data-tags="stage camera"><summary><span class="q">壊れたときのエフェクトや効果音を付けたい</span><span class="who">破壊可能物</span></summary><div class="a"><p><span class="mp">選択中の破壊可能物<i>›</i>演出（エフェクト・効果音）</span> に、被弾・破壊・再生などの出来事ごとのエフェクト Prefab と効果音を入れます。破壊時が空のままなら「仮の破片」が飛びます（<b>仮の破片を出す</b>）。</p></div></details>
+    <details class="recipe" data-tags="turret camera"><summary><span class="q">レーザーにエフェクトや音を付けたい（撃った瞬間・壁に当たったとき・敵に当たったとき）</span><span class="who">砲台配置</span></summary><div class="a">
+      <p>手順を 1 から順番に書いた章があります → <a href="#effects"><b>レーザーにエフェクトを入れる</b></a>（10 分くらいで終わります）。</p>
+      <p>ざっくり言うと：① エフェクトのファイルを <code>SourceAssets/Vfx</code> のフォルダに置く → ② 出しっぱなし用だけ Life Mode を Loop にする → ③ 砲台配置タブの一番下「演出」で選ぶ → ④ Play で確かめる。</p>
+    </div></details>
+    <details class="recipe" data-tags="stage camera"><summary><span class="q">壊れたときのエフェクトや効果音を付けたい</span><span class="who">破壊可能物</span></summary><div class="a">
+      <p>やり方はレーザーと同じです（<a href="#effects">エフェクトを入れる</a> の手順 1・2）。選ぶ場所だけが違います：「破壊可能物」タブで物を選ぶ › <b>選択中の破壊可能物</b> › <b>演出（エフェクト・効果音）</b>。</p>
+      <ul><li><b>被ダメージ時</b>：当たっている間、少しずつ間を空けて繰り返し出る</li><li><b>見た目の段階が進んだとき</b>：ひびが入った瞬間</li><li><b>破壊されたとき</b>：壊れた瞬間（ここが空のままだと、仮の四角い破片が飛びます）</li><li><b>再生したとき</b>：元に戻った瞬間</li></ul>
+      <p class="small muted">同じ種類の箱すべてに付けたいときは、プリセットに入れてから <b>選択中に適用</b>。</p>
+    </div></details>
     <details class="recipe" data-tags="stage"><summary><span class="q">「最初は壊せない」「まとめて壊れる」仕掛けを作りたい</span><span class="who">破壊可能物</span></summary><div class="a"><p>その個体を選んで <b>連動（この個体のみ）</b> でグループ・連鎖爆発、<b>無敵条件（この個体のみ）</b> で「〜が壊れるまで無敵」などを設定します。<b>連動の線・連鎖範囲</b> を ON にすると Scene に線と円で表示されます。</p></div></details>
     <details class="recipe" data-tags="stage camera"><summary><span class="q">スマッシュボールを作りたい</span><span class="who">スマッシュボール</span></summary><div class="a">
       <ol><li>先に「破壊可能物」タブで壊せる物を置いておく。</li><li>「スマッシュボール」タブのリストで、その行の <b>スマッシュボール化</b>。</li><li><b>浮遊</b> を ON にすると画面内をふわふわ漂います。漂う範囲（経路フィールド）が画面より広くても、<b>画面外に出ても少し経つと戻ってくる</b>（既定 ON・1 秒）ので見失いません。Scene ビューでボールを選ぶと、水色の枠で「画面内」とみなす範囲が出ます。<b>同時出現の抑制（ローテーション）</b> で「同じグループは 1 個ずつ順番に出る」にもできます。</li><li>Play 中に <b>P1が割る</b> などのボタンで試し割り。<b>履歴</b> に「誰が何秒前に割ったか」が出ます。</li></ol>
@@ -235,7 +348,7 @@
 <!-- ============ SCREEN GUIDE ============ -->
 <section id="screens" data-nav="画面の見かた">
   <div class="rv">
-    <div class="eyebrow">04 — Every tab</div>
+    <div class="eyebrow">05 — Every tab</div>
     <h2>タブごとに、<br><em>いつ使う・何がある</em>。</h2>
     <p class="lead">左のタブ名を選ぶと説明が切り替わります。</p>
   </div>
@@ -253,7 +366,7 @@
     <div>
       <div class="tg-panel" id="tg-turret" role="tabpanel"><h3>砲台配置</h3><div class="when">⏱ レーザーの手触り・難しさを決めたいとき</div>
         <p>上が「シーン内の砲台」（1 基ずつの設定）、下が「レーザー・熱チューニング」（4 基共通の設定ファイル）です。</p>
-        <ul class="points"><li><b>シーン内の砲台</b>：各砲台の自動回転 ON/OFF・向き・速度倍率、<b>シーンで選択</b>、仮の見た目（砲身など）の作成。</li><li><b>チャージ発射</b>：溜めてから撃つ方式の ON/OFF と秒数。</li><li><b>太さ・熱</b>：最小/最大の太さ、熱上昇係数、熱冷却速度、オーバーヒートしきい値、沈黙時間。</li><li><b>射程・最大秒間ダメージ・貫通</b>：レーザーの強さ。<b>敵を貫通する</b> を OFF にすると先頭の 1 体だけに当たる。</li><li><b>照準表示</b>：撃っていない間に出る、向きを示す細い線（照準線の長さ・太さ・濃さ）。</li><li><b>通常の回転速度(度/秒)</b>・<b>射出中の速度倍率</b>・<b>チャージ中／オーバーヒート中の速度倍率</b>：自動回転の速さ。</li><li>一番下の <b>この設定が未割り当ての砲台に適用</b> で、設定ファイルの付け忘れを直せます。</li></ul></div>
+        <ul class="points"><li><b>シーン内の砲台</b>：各砲台の自動回転 ON/OFF・向き・速度倍率、<b>シーンで選択</b>、仮の見た目（砲身など）の作成。</li><li><b>チャージ発射</b>：溜めてから撃つ方式の ON/OFF と秒数。</li><li><b>太さ・熱</b>：最小/最大の太さ、熱上昇係数、熱冷却速度、オーバーヒートしきい値、沈黙時間。</li><li><b>射程・最大秒間ダメージ・貫通</b>：レーザーの強さ。<b>敵を貫通する</b> を OFF にすると先頭の 1 体だけに当たる。</li><li><b>照準表示</b>：撃っていない間に出る、向きを示す細い線（照準線の長さ・太さ・濃さ）。</li><li><b>通常の回転速度(度/秒)</b>・<b>射出中の速度倍率</b>・<b>チャージ中／オーバーヒート中の速度倍率</b>：自動回転の速さ。</li><li><b>演出（エフェクト・効果音）</b>：発射口・着弾点・群衆の敵に当たった瞬間の 3 欄、<b>群衆ヒットの上限</b>、<b>「▶ 試す」に使う砲台</b>、作り方のコツ。</li><li>一番下の <b>この設定が未割り当ての砲台に適用</b> で、設定ファイルの付け忘れを直せます。</li></ul></div>
       <div class="tg-panel" id="tg-wave" role="tabpanel"><h3>敵ウェーブ</h3><div class="when">⏱ 敵の出方（量・テンポ・方角）を決めたいとき</div>
         <ul class="points"><li><b>編集対象のウェーブ</b>：編集するウェーブの設定ファイル。<b>新規ウェーブを作成</b> で増やせます。</li><li><b>湧きエントリ</b>：1 行 = 「○秒後に、どこから、どの敵を、何体、何秒おきに」。上部のタイムラインで時刻の分布が見えます。</li><li><b>ループ再生</b> / <b>ループ間隔(秒)</b>：最後まで出したら最初から繰り返す。</li><li><b>湧き位置</b>：一覧・追加・複製・削除・グリッドに揃える・<b>リング状に自動配置</b>。</li></ul>
         <p class="small muted">Play 開始時に自動で再生されます。止めたいときは「テスト」タブの <b>停止</b>。</p></div>
@@ -280,7 +393,7 @@
 <!-- ============ PARAMS ============ -->
 <section id="params" data-nav="数値の意味">
   <div class="rv">
-    <div class="eyebrow">05 — Numbers</div>
+    <div class="eyebrow">06 — Numbers</div>
     <h2>数値を変えると、<br><em>何が起こる？</em></h2>
     <p class="lead">よく触る数値の一覧です。「上げると／下げると」で効き方が分かります。カッコ内は今の初期値。</p>
   </div>
@@ -300,6 +413,13 @@
     <tr><td>最大秒間ダメージ</td><td>最大の太さのときの 1 秒あたりダメージ（太さに比例）</td><td class="up">敵がすぐ倒れる</td><td class="down">倒しにくい</td><td class="def">20</td></tr>
     <tr><td>敵を貫通する／貫通数の上限</td><td>ビーム上の敵全員に当たるか／何体まで（0=無制限）</td><td colspan="2">OFF なら先頭の 1 体だけ</td><td class="def">ON／0</td></tr>
     <tr><td>障害物へのダメージ倍率</td><td>壊せる物への効き（1 で敵と同じ）</td><td class="up">壁がすぐ壊れる</td><td class="down">壁が固い</td><td class="def">1</td></tr>
+  </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">🎆 レーザーの演出 <span class="src">砲台配置タブ › 一番下「演出（エフェクト・効果音）」</span></div><div class="ptable-scroll"><table class="params">
+    <tr><th>欄</th><th>いつ出る</th><th colspan="2">どんな素材を入れる</th><th>はじめの状態</th></tr>
+    <tr><td>発射口（撃っている間）</td><td>撃っている間ずっと（音は撃ち始めに 1 回）</td><td colspan="2">出しっぱなし用（Life Mode を Loop に）</td><td class="def">音：和太鼓</td></tr>
+    <tr><td>着弾点（壁などに当たっている間）</td><td>壁や箱に当たっている間ずっと（音は当たり始めに 1 回）</td><td colspan="2">出しっぱなし用（Life Mode を Loop に）</td><td class="def">空</td></tr>
+    <tr><td>群衆の敵に当たった瞬間</td><td>敵に触れた瞬間に 1 回</td><td colspan="2">1 回だけ用（そのままで OK）</td><td class="def">空</td></tr>
+    <tr><td>群衆ヒットの上限</td><td>—</td><td class="up">上げる：たくさん出て派手（少し重くなる）</td><td class="down">下げる：控えめで軽い</td><td class="def">1 秒に 60 個</td></tr>
   </table></div></div>
   <div class="ptable-wrap rv"><div class="ptable-cap">👾 敵ウェーブの 1 行 <span class="src">敵ウェーブタブ ／ Presets/Default_EnemyWaveConfig.asset</span></div><div class="ptable-scroll"><table class="params">
     <tr><th>項目</th><th>意味</th><th colspan="2">メモ</th><th>初期値</th></tr>
@@ -337,7 +457,7 @@
     <tr><td>画面外にいてよい時間(秒)</td><td>はみ出してから戻り始めるまで</td><td colspan="2">0 ならはみ出した瞬間に戻る</td><td class="def">1</td></tr>
     <tr><td>画面の端からの余白</td><td>この距離より内側を「画面内」とみなす</td><td colspan="2">半分見切れた状態を画面内と数えないため</td><td class="def">1</td></tr>
     <tr><td>戻るときの速さの倍率</td><td>戻る間だけ漂う速さに掛ける</td><td colspan="2"></td><td class="def">1.5</td></tr>
-    <tr><td>割れたときの演出</td><td>割った瞬間に出す派手なエフェクトと消すまでの秒数</td><td colspan="2">通常の破壊演出に追加で鳴る</td><td class="def">3 秒</td></tr>
+    <tr><td>割れたときの演出</td><td>割った瞬間に出す派手なエフェクトと音（D-Drive の VFX/SE）</td><td colspan="2">通常の破壊演出に追加で鳴る。消える時間は VFX 側の寿命で決まる</td><td class="def">空</td></tr>
     <tr><td>復活直後の無敵(秒)</td><td>復活した瞬間に連続で割られないための保護</td><td colspan="2"></td><td class="def">1</td></tr>
     <tr><td>ローテーション／グループ名／次が出るまで(秒)</td><td>同じグループは 1 個ずつ順番に出す</td><td colspan="2"></td><td class="def">OFF／空／3</td></tr>
   </table></div></div>
@@ -346,10 +466,11 @@
 <!-- ============ FAQ ============ -->
 <section id="faq" data-nav="困ったとき">
   <div class="rv">
-    <div class="eyebrow">06 — Troubleshooting</div>
+    <div class="eyebrow">07 — Troubleshooting</div>
     <h2>困ったときは<br><em>ここ</em>。</h2>
   </div>
   <div class="faq rv">
+    <details><summary>エフェクトを入れたのに出ない／すぐ消える／音が鳴らない</summary><div class="a">よくある原因と直し方を表にまとめてあります → <a href="#effects">エフェクトを入れる › うまくいかないとき</a>。いちばん多いのは「Play していない」「着弾点なのに何にも当たっていない」「出しっぱなし用なのに Life Mode が Loop になっていない」の 3 つです。</div></details>
     <details><summary>Play を止めたら、置いた物や動かした物が元に戻った</summary><div class="a">Unity の仕様で、<b>Play 中にシーン上の物を変えた内容は Play 終了で元に戻ります</b>。配置・移動・破壊可能物の設定は Play していないときに行い、<kbd>Ctrl</kbd>+<kbd>S</kbd> でシーンを保存してください。一方、設定ファイル（レーザー・熱、ウェーブ、群衆の設定、敵の種類、カメラのプリセット）の数値は Play 中に変えても残ります。</div></details>
     <details><summary>キーを押してもレーザーが出ない</summary><div class="a"><ol><li>Play 中か確認（Play していないと握力は動きません）。</li><li>Game ビューをクリックしてフォーカスを当ててからキーを押す。</li><li>オーバーヒート中（熱が満タン）なら沈黙時間が終わるまで待つ。</li><li>チャージ発射が ON なら、強く握り続けないと出ません。</li><li>「砲台配置」で「砲台(LaserTurret)が1つも見つかりません。」なら、シーンに砲台がありません → 「はじめに」の <b>テストシーンを自動生成</b>。</li></ol></div></details>
     <details><summary>ネット対戦で、Client 側の画面だと敵が倒れない</summary><div class="a">シーンに群衆の同期が入っていない可能性があります。メニュー <b>Tools › 要塞 › ネットワーク › 同期オブジェクトをシーンに配置</b> → 保存 → ビルドし直してください。同期が入っていれば、群衆・Actor の敵・破壊可能物・スマッシュボールは全て Host の結果が全員の画面に届きます（倒れるのは Host の判定から一瞬遅れます）。</div></details>
@@ -371,10 +492,14 @@
 <!-- ============ GLOSSARY ============ -->
 <section id="glossary" data-nav="用語集">
   <div class="rv">
-    <div class="eyebrow">07 — Words</div>
+    <div class="eyebrow">08 — Words</div>
     <h2>分からない言葉は<br><em>ここで引く</em>。</h2>
   </div>
   <dl class="gloss">
+    <div class="rv"><dt>演出欄</dt><dd>「ここでエフェクトと音を出す」という入力欄。レーザー・壊せる物・スマッシュボールにある。倉庫（D-Drive）に入れた素材を一覧から選ぶだけ。</dd></div>
+    <div class="rv"><dt>エフェクト <small>VFX</small></dt><dd>光・火花・煙などの見た目の演出。Unity では Prefab というファイル 1 つ。</dd></div>
+    <div class="rv"><dt>Prefab（プレハブ）</dt><dd>Unity で「部品のひな形」として保存したファイル。エフェクトもこの形で受け渡しする。</dd></div>
+    <div class="rv"><dt>Life Mode（寿命モード）</dt><dd>エフェクトがいつ消えるか。OneShot＝1 回出たら消える。Loop＝止めるまで出しっぱなし。</dd></div>
     <div class="rv"><dt>コア <small>Core Crystal</small></dt><dd>マップ中央の守るべきクリスタル。敵がたどり着くとダメージを受ける。</dd></div>
     <div class="rv"><dt>砲台 <small>Laser Turret</small></dt><dd>プレイヤー 1 人に 1 基。自動で回り続け、握力でレーザーを撃つ。</dd></div>
     <div class="rv"><dt>熱・オーバーヒート</dt><dd>強く握るほど溜まるゲージ。満タンで砲台が「灼け落ちて」数秒撃てなくなる。</dd></div>
@@ -398,7 +523,7 @@
 <div class="devzone"></div>
 <section id="dev" data-nav="データと構成" data-dev>
   <div class="rv">
-    <div class="eyebrow">08 — For programmers</div>
+    <div class="eyebrow">09 — For programmers</div>
     <h2>データの<br><em>置き場所と構成</em>。</h2>
     <p class="lead">ツールは <code>MS2026.Fortress.Editor</code>（<code>Assets/_Game/Fortress/Editor/FortressDesignerWindow/</code>）、ゲーム本体は <code>MS2026.Fortress.Runtime</code>。ツールは「ランタイムのコンポーネントと設定アセットを編集するだけ」で、独自の保存形式は持ちません。</p>
   </div>
@@ -424,7 +549,7 @@
 </section>
 <section id="api" data-nav="コードから使う" data-dev>
   <div class="rv">
-    <div class="eyebrow">09 — Hooks</div>
+    <div class="eyebrow">10 — Hooks</div>
     <h2>ゲーム側から<br><em>拾えるイベント</em>。</h2>
   </div>
   <div class="tabs rv" role="tablist" aria-label="コード例">
@@ -457,7 +582,7 @@ float thick  = turret.CurrentThickness01;   // レーザーの太さ (0-1)
 // コア
 core.OnHealthChanged += (current, max) => { /* HUD 更新 */ };
 core.OnCoreDestroyed += () => { /* ゲームオーバー */ };</pre></div>
-    <div class="notes"><div class="note"><span class="lbl">握力</span>砲台は <code>GripInputBridge.Provider</code> の <code>IsGripping</code> / <code>GetGripValue(playerIndex)</code> を毎フレーム読む。<a href="GripInputBridge_ガイド.html">握力入力ブリッジ</a>参照。</div><div class="note"><span class="lbl">SE</span><code>LaserTurretAudio</code> が Firing 突入時に <code>Audio.PlaySe(SEID.Se)</code>（D-Drive）。</div><div class="note"><span class="lbl">ネット</span>Client では <code>turret.IsReplica</code> が true（Host から届いた状態を表示中）。<code>OnStateChanged</code> は Client でも発火するので、SE・演出は無改修で全員に出る。ダメージなど結果に関わる処理は <code>FortressNet.HasSimulationAuthority</code> で囲む。</div></div>
+    <div class="notes"><div class="note"><span class="lbl">握力</span>砲台は <code>GripInputBridge.Provider</code> の <code>IsGripping</code> / <code>GetGripValue(playerIndex)</code> を毎フレーム読む。<a href="GripInputBridge_ガイド.html">握力入力ブリッジ</a>参照。</div><div class="note"><span class="lbl">演出</span><code>LaserTurretEffects</code>（砲台に自動で付く）が <code>tuning.effects</code> を鳴らす。共通の演出欄は <code>FortressEffect</code>、鳴らすのは <code>FortressEffectPlayer.PlayOnce(effect, pos, rot, player)</code>。群衆ヒットは <code>SwarmSystem.BeamHitsReported</code>。</div><div class="note"><span class="lbl">ネット</span>Client では <code>turret.IsReplica</code> が true（Host から届いた状態を表示中）。<code>OnStateChanged</code> は Client でも発火するので、SE・演出は無改修で全員に出る。ダメージなど結果に関わる処理は <code>FortressNet.HasSimulationAuthority</code> で囲む。</div></div>
   </div>
   <div class="panel" id="cp-swarm" role="tabpanel">
     <div class="codebox"><div class="cap"><span>SwarmSystem / EnemySpawnDirector</span><button class="copy" type="button">copy</button></div><pre>
@@ -474,7 +599,7 @@ bool playing = spawnDirector.IsPlaying;</pre></div>
 
 <section id="more" data-nav="関連ツール">
   <div class="rv">
-    <div class="eyebrow">10 — Related</div>
+    <div class="eyebrow">11 — Related</div>
     <h2>一緒に使う<br><em>ツール</em>。</h2>
   </div>
   <div class="links">
@@ -483,7 +608,7 @@ bool playing = spawnDirector.IsPlaying;</pre></div>
     <a class="lk rv" href="ShaderFX_ガイド.html"><span class="ti">ShaderFX</span><span class="ds">被弾フラッシュ・ディゾルブなどの見た目エフェクト。</span></a>
     <a class="lk rv" href="index.html"><span class="ti">ツール一覧</span><span class="ds">このプロジェクトの全ツール。</span></a>
   </div>
-  <footer><span>Fortress Designer Guide · Xx_MS2026_xX</span><span>2026-10-03 時点のコードに基づく</span></footer>
+  <footer><span>Fortress Designer Guide · Xx_MS2026_xX</span><span>2026-10-04 時点のコードに基づく</span></footer>
 </section>
 </main>
 </div>

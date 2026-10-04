@@ -172,6 +172,7 @@ namespace MS2026.Fortress
             _yRange = new NativeArray<float>(2, Allocator.Persistent);
             _hitT = new NativeArray<float>(SwarmLimits.MaxPierceBuffer, Allocator.Persistent);
             _hitIdx = new NativeArray<int>(SwarmLimits.MaxPierceBuffer, Allocator.Persistent);
+            InitializeHitReports();
 
             InitializeNet(capacity);
 
@@ -255,8 +256,11 @@ namespace MS2026.Fortress
             _spikes.Clear();
         }
 
-        /// <summary>そのフレームのレーザーを登録する。LaserBeamVisualが毎フレーム呼ぶ。maxHits=0で貫通数無制限。</summary>
-        public void QueueBeam(Vector2 origin, Vector2 end, float halfWidth, float damagePerSecond, int maxHits)
+        /// <summary>
+        /// そのフレームのレーザーを登録する。LaserBeamVisualが毎フレーム呼ぶ。maxHits=0で貫通数無制限。
+        /// owner は撃ったプレイヤーの番号（当たった瞬間の記録 <see cref="BeamHitsReported"/> に載る。分からなければ-1）。
+        /// </summary>
+        public void QueueBeam(Vector2 origin, Vector2 end, float halfWidth, float damagePerSecond, int maxHits, int owner = -1)
         {
             if (_beamCount >= SwarmLimits.MaxBeams)
             {
@@ -270,7 +274,8 @@ namespace MS2026.Fortress
                 halfWidth = halfWidth,
                 // ネット対戦のClientでは、ダメージはHostだけが与える。被弾フラッシュ(見た目)だけを出す。
                 damagePerSecond = IsReplica ? 0f : damagePerSecond,
-                maxHits = maxHits
+                maxHits = maxHits,
+                owner = owner
             };
         }
 
@@ -346,6 +351,7 @@ namespace MS2026.Fortress
             // ジョブが止まっていて配列を読める最後の瞬間。ネット同期(位置の配信・途中参加者への全体送信)はここで読む。
             StorageReadable?.Invoke();
 
+            RefillHitBudget();
             ScheduleSimulation();
 
             _beamCount = 0;
@@ -458,6 +464,7 @@ namespace MS2026.Fortress
             CollectRemovals();
 
             ApplyCoreDamage(_flightDt);
+            CollectBeamHits();
             _stats.totalKilled += _counters[1];
             _stats.totalArrived += _counters[2];
 
@@ -547,7 +554,11 @@ namespace MS2026.Fortress
                     maxRadius = maxRadius,
                     dt = dt,
                     hitT = _hitT,
-                    hitIdx = _hitIdx
+                    hitIdx = _hitIdx,
+                    newHits = _newHits,
+                    newHitCount = _newHitCount,
+                    maxNewHits = PrepareHitReport(),
+                    beamOffset = _hitBeamOffset
                 }.Schedule(handle);
                 Mark(ref handle, 1);
             }
@@ -994,6 +1005,7 @@ namespace MS2026.Fortress
             DisposeArray(ref _yRange);
             DisposeArray(ref _hitT);
             DisposeArray(ref _hitIdx);
+            DisposeHitReports();
             DisposeNet();
         }
 

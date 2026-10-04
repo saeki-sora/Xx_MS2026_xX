@@ -110,6 +110,10 @@ namespace MS2026.Fortress
         [Min(0f)]
         public float obstacleDamageMultiplier = 1f;
 
+        [Header("演出（エフェクト・効果音。D-Driveの番号札で指定）")]
+        [Tooltip("発射口・着弾点・群衆の敵に当たった瞬間の演出。ネット対戦でも各PCがそれぞれ鳴らすので全員の画面に出る。")]
+        public LaserEffectSettings effects = new LaserEffectSettings();
+
         /// <summary>レーザーの強さ(太さ0-1)に応じた、射出中の回転速度の倍率。</summary>
         public float EvaluateFiringRotationMultiplier(float strength01)
         {

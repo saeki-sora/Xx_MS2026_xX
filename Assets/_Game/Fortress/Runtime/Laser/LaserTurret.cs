@@ -147,6 +147,15 @@ namespace MS2026.Fortress
             SetState((TurretState)snapshot.State);
         }
 
+        private void Awake()
+        {
+            // 演出（発射口・着弾点・群衆ヒット）を鳴らす係。シーンに手で付けなくても動くよう、無ければここで付ける。
+            if (GetComponent<LaserTurretEffects>() == null)
+            {
+                gameObject.AddComponent<LaserTurretEffects>();
+            }
+        }
+
         private void Update()
         {
             if (IsReplica)

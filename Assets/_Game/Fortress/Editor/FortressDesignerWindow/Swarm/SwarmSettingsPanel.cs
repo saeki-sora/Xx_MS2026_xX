@@ -55,6 +55,10 @@ namespace MS2026.Fortress.EditorTools
                 ("renderQueue", "描画順（レンダーキュー）"),
                 ("hitFlashDuration", "被弾フラッシュの長さ(秒)")
             }),
+            ("演出", new[]
+            {
+                ("hitEffectsPerSecond", "レーザー命中エフェクトの上限（個/秒・全員合計、0=無制限）")
+            }),
             ("範囲", new[]
             {
                 ("fallbackAreaSize", "NavigationField無し時の範囲")

@@ -98,7 +98,6 @@ namespace MS2026.Fortress.EditorTools
                     new Field(Fb + "onStageChanged", "見た目の段階が進んだとき"),
                     new Field(Fb + "onDestroyed", "破壊されたとき"),
                     new Field(Fb + "onRegenerated", "再生したとき"),
-                    new Field(Fb + "effectLifetimeSeconds", "エフェクトを消すまで(秒)"),
                     new Field(Fb + "placeholderDebris", "仮の破片を出す（破壊時の演出が空のとき）"),
                     new Field(Fb + "debrisCount", "仮の破片の数", Fb + "placeholderDebris"),
                     new Field(Fb + "debrisColor", "仮の破片の色", Fb + "placeholderDebris")

@@ -3,8 +3,9 @@ using UnityEngine;
 namespace MS2026.Fortress
 {
     /// <summary>
-    /// 被ダメージ・段階の進行・破壊・再生のたびに、設定されたエフェクトPrefabと効果音を出す。
-    /// 破壊時の演出Prefabが空なら、仮の破片を飛ばす（素材が無い間の代わり）。
+    /// 被ダメージ・段階の進行・破壊・再生のたびに、設定された演出（D-DriveのVFX/SE）を出す。
+    /// 破壊時のエフェクトが空なら、仮の破片を飛ばす（素材が無い間の代わり）。
+    /// ネット対戦のClientでも、Hostから届いた状態変化で同じイベントが起きるので、そのまま全員の画面に出る。
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class DestructibleFeedback : MonoBehaviour
@@ -50,7 +51,7 @@ namespace MS2026.Fortress
             }
 
             _nextHitTime = Time.time + Settings.hitInterval;
-            Play(Settings.onHit);
+            Play(Settings.onHit, obstacle.LastAttacker.PlayerIndex);
         }
 
         private void OnStageChanged(DestructibleObstacle obstacle, int stage)
@@ -58,7 +59,7 @@ namespace MS2026.Fortress
             // より壊れた段階に進んだときだけ鳴らす（自己修復・再生で戻るときは鳴らさない）。
             if (stage > _lastStage)
             {
-                Play(Settings.onStageChanged);
+                Play(Settings.onStageChanged, obstacle.LastAttacker.PlayerIndex);
             }
 
             _lastStage = stage;
@@ -67,9 +68,9 @@ namespace MS2026.Fortress
         private void OnDestroyed(DestructibleObstacle obstacle)
         {
             var effect = Settings.onDestroyed;
-            Play(effect);
+            Play(effect, obstacle.DestroyedBy.PlayerIndex);
 
-            if (effect.prefab == null && Settings.placeholderDebris && Settings.debrisCount > 0)
+            if (!effect.HasVfx && Settings.placeholderDebris && Settings.debrisCount > 0)
             {
                 var scale = transform.lossyScale;
                 PlaceholderDebrisBurst.Spawn(
@@ -82,12 +83,12 @@ namespace MS2026.Fortress
 
         private void OnRegenerated(DestructibleObstacle obstacle)
         {
-            Play(Settings.onRegenerated);
+            Play(Settings.onRegenerated, -1);
         }
 
-        private void Play(DestructibleEffect effect)
+        private void Play(FortressEffect effect, int playerIndex)
         {
-            DestructibleEffectPlayer.Play(effect, transform.position, Settings.effectLifetimeSeconds);
+            FortressEffectPlayer.PlayOnce(effect, transform.position, Quaternion.identity, playerIndex);
         }
     }
 }

@@ -3,54 +3,31 @@ using UnityEngine;
 
 namespace MS2026.Fortress
 {
-    /// <summary>1つの出来事に対する演出。エフェクトのPrefabと効果音を差し替えられる。</summary>
-    [Serializable]
-    public sealed class DestructibleEffect
-    {
-        [Tooltip("その瞬間に生成するPrefab（パーティクル・破片・アニメ付きスプライトなど）。")]
-        public GameObject prefab;
-
-        [Tooltip("その瞬間に鳴らす効果音。")]
-        public AudioClip sound;
-
-        [Range(0f, 1f)]
-        public float volume = 1f;
-
-        [Tooltip("音程の基準。")]
-        [Range(0.5f, 2f)]
-        public float pitch = 1f;
-
-        [Tooltip("鳴らすたびに音程をランダムにずらす幅。0でずらさない。")]
-        [Range(0f, 0.5f)]
-        public float pitchVariance = 0.05f;
-    }
-
-    /// <summary>被ダメージ・破壊・再生などの演出の設定。</summary>
+    /// <summary>
+    /// 被ダメージ・破壊・再生などの演出の設定。演出欄はプロジェクト共通の <see cref="FortressEffect"/>（D-DriveのVFX/SE）。
+    /// エフェクトの消え方（寿命）・音量・連打の間引きは D-Drive 側（VFX/SE）の設定で決まる。
+    /// </summary>
     [Serializable]
     public sealed class DestructibleFeedbackSettings
     {
-        [Tooltip("ダメージを受けている間の演出。")]
-        public DestructibleEffect onHit = new DestructibleEffect();
+        [Tooltip("ダメージを受けている間の演出（下の間隔ごとに繰り返す）。プレイヤー色は攻撃したプレイヤーの色。")]
+        public FortressEffect onHit = new FortressEffect();
 
         [Tooltip("onHitを繰り返し発生させる最短の間隔(秒)。レーザーは毎フレーム当たるので、間引かないと鳴りっぱなしになる。")]
         [Min(0.02f)]
         public float hitInterval = 0.15f;
 
         [Tooltip("見た目の段階が進んだ（ひびが入った等）瞬間の演出。")]
-        public DestructibleEffect onStageChanged = new DestructibleEffect();
+        public FortressEffect onStageChanged = new FortressEffect();
 
-        [Tooltip("破壊された瞬間の演出。")]
-        public DestructibleEffect onDestroyed = new DestructibleEffect();
+        [Tooltip("破壊された瞬間の演出。プレイヤー色は壊したプレイヤーの色。")]
+        public FortressEffect onDestroyed = new FortressEffect();
 
         [Tooltip("再生した瞬間の演出。")]
-        public DestructibleEffect onRegenerated = new DestructibleEffect();
-
-        [Tooltip("生成したエフェクトPrefabを自動で消すまでの時間(秒)。")]
-        [Min(0.1f)]
-        public float effectLifetimeSeconds = 3f;
+        public FortressEffect onRegenerated = new FortressEffect();
 
         [Header("仮の破片（素材が無い間の代わり）")]
-        [Tooltip("破壊時の演出Prefabが空のとき、四角い仮の破片を飛び散らせる。")]
+        [Tooltip("破壊時のエフェクト(VFX)が空のとき、四角い仮の破片を飛び散らせる。")]
         public bool placeholderDebris = true;
 
         [Range(0, 40)]

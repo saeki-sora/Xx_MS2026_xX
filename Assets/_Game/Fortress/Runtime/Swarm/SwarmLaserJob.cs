@@ -8,6 +8,8 @@ namespace MS2026.Fortress
     /// <summary>
     /// レーザー（太さを持つ線分）に触れている敵にダメージを与える。空間ハッシュを使い、
     /// ビームの周囲のセルだけを調べる。maxHitsが正のときは、ビームの始点に近い順にその数だけ当てる。
+    /// あわせて、被弾フラッシュが消えていた敵に当たった「瞬間」を newHits に記録する（maxNewHits 件まで。演出用）。
+    /// 記録の枠を特定のレーザーが使い切らないよう、調べるビームの順番を beamOffset でフレームごとにずらす。
     /// </summary>
     [BurstCompile]
     public struct SwarmLaserJob : IJob
@@ -33,11 +35,17 @@ namespace MS2026.Fortress
         public NativeArray<float> hitT;
         public NativeArray<int> hitIdx;
 
+        public NativeArray<SwarmBeamHit> newHits;
+        public NativeArray<int> newHitCount;
+        public int maxNewHits;
+        public int beamOffset;
+
         public void Execute()
         {
-            for (var b = 0; b < beamCount; b++)
+            newHitCount[0] = 0;
+            for (var n = 0; n < beamCount; n++)
             {
-                ApplyBeam(beams[b]);
+                ApplyBeam(beams[(n + beamOffset) % beamCount]);
             }
         }
 
@@ -74,8 +82,7 @@ namespace MS2026.Fortress
 
                         if (!limited)
                         {
-                            hp[j] = hp[j] - damage;
-                            flash[j] = 1f;
+                            Hit(j, beam.owner, damage);
                             continue;
                         }
 
@@ -109,10 +116,26 @@ namespace MS2026.Fortress
 
             for (var n = 0; n < buffered; n++)
             {
-                var target = hitIdx[n];
-                hp[target] = hp[target] - damage;
-                flash[target] = 1f;
+                Hit(hitIdx[n], beam.owner, damage);
             }
+        }
+
+        private void Hit(int j, int owner, float damage)
+        {
+            // 被弾フラッシュが消えていた(=しばらく当たっていなかった)敵に当たった瞬間だけ記録する。
+            // 同じフレームに2本目のビームが当たっても、1本目でフラッシュが付くので二重には記録されない。
+            if (flash[j] <= 0f)
+            {
+                var count = newHitCount[0];
+                if (count < maxNewHits)
+                {
+                    newHits[count] = new SwarmBeamHit { position = pos[j], owner = owner };
+                    newHitCount[0] = count + 1;
+                }
+            }
+
+            hp[j] = hp[j] - damage;
+            flash[j] = 1f;
         }
     }
 }

@@ -126,6 +126,13 @@ namespace MS2026.Fortress
         [Min(0.01f)]
         public float hitFlashDuration = 0.1f;
 
+        [Header("演出")]
+        [Tooltip("レーザーが群衆の敵に当たった瞬間のエフェクト（砲台配置タブ「群衆の敵に当たった瞬間」）を、" +
+                 "全レーザー合計で1秒に出してよい最大数。0で無制限（非推奨。数千体に当たると一瞬で大量に出る。それでも1フレーム256個まで）。" +
+                 "「当たった瞬間」は、被弾フラッシュが消えていた敵（被弾フラッシュの長さ以上当たっていなかった敵）に触れた瞬間。")]
+        [Min(0)]
+        public int hitEffectsPerSecond = 60;
+
         [Header("範囲")]
         [Tooltip("NavigationFieldが無い場合に使う、シミュレーション範囲の大きさ。")]
         [Min(8f)]

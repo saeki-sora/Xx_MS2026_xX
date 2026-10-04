@@ -68,8 +68,7 @@ namespace MS2026.Fortress.EditorTools
                 Title = "割れたときの演出", OpenByDefault = true,
                 Fields = new[]
                 {
-                    new Field(S + "onBroken", "演出（通常の破壊演出に追加で発生）"),
-                    new Field(S + "effectLifetimeSeconds", "演出Prefabを消すまでの時間(秒)")
+                    new Field(S + "onBroken", "演出（通常の破壊演出に追加で発生）")
                 }
             },
             new Section

@@ -84,7 +84,7 @@
       <dt>誰が使う</dt><dd>デザイナー・プランナー（中身を作る）／プログラマー（札を使う 1 行を書く）</dd>
       <dt>入口</dt><dd><span class="mp">Tools<i>›</i>D-Drive<i>›</i>Asset Browser</span>（全部ここから）</dd>
       <dt>置き場所</dt><dd><code>Assets/_Game/DDrive/</code>（素材の投入口は <code>SourceAssets/</code>）</dd>
-      <dt>今の登録数</dt><dd>効果音 1 個だけ（「和太鼓でドン」＝ <code>SEID.Se</code>。砲台がレーザーを撃った瞬間に鳴る）</dd>
+      <dt>今の登録数</dt><dd>効果音 1 個だけ（「和太鼓でドン」＝ <code>SEID.Se</code>。砲台がレーザーを撃ち始めた瞬間に鳴る）。ゲームの演出欄（レーザー・破壊可能物・スマッシュボール）はすべて D-Drive の番号札で素材を選ぶ形にそろえてあります</dd>
     </dl></div>
   </div>
   <div class="marquee" aria-hidden="true"><div class="track" id="mq" data-words="効果音|BGM|エフェクト|出す位置|モデル|アニメ|マテリアル|Prefab|UI画面|UIの動き|演出|画面の揺れ|振動|カットシーン"></div></div>
@@ -170,11 +170,18 @@
     <button class="chip" aria-pressed="false" data-f="manage">管理・確認</button>
   </div>
   <div class="recipes">
-    <details class="recipe" data-tags="sound"><summary><span class="q">今の効果音（和太鼓）を別の音に差し替えたい</span><span class="who">Asset Browser</span></summary><div class="a"><p>Asset Browser で「和太鼓でドン」を選び、Inspector の <b>Clips</b> の音を新しい音のファイルに差し替えます。札（<code>SEID.Se</code>）は変わらないので、砲台の発射音がそのまま新しい音になります。音を切り詰めたいときは <b>▶ 〜 Editor で開く</b>（Audio Editor）で波形を見ながらトリミング。</p></div></details>
+    <details class="recipe" data-tags="sound"><summary><span class="q">今の効果音（和太鼓）を別の音に差し替えたい</span><span class="who">Asset Browser</span></summary><div class="a"><p>Asset Browser で「和太鼓でドン」を選び、Inspector の <b>Clips</b> の音を新しい音のファイルに差し替えます。札（<code>SEID.Se</code>）は変わらないので、砲台の発射音がそのまま新しい音になります。別の音を発射音にしたいときは、<a href="FortressDesigner_ガイド.html">要塞デザイナー</a>の <span class="mp">砲台配置<i>›</i>演出<i>›</i>発射口</span> の <b>効果音(SE)</b> を選び直します。音を切り詰めたいときは <b>▶ 〜 Editor で開く</b>（Audio Editor）で波形を見ながらトリミング。</p></div></details>
     <details class="recipe" data-tags="sound"><summary><span class="q">毎回少しずつ違う音にしたい</span><span class="who">SE の設定</span></summary><div class="a"><ul><li><b>Clips</b> に複数の音を入れ、<b>Select Mode</b> を <b>Random</b>（毎回ランダム）か <b>RoundRobin</b>（順番に）。</li><li><b>Pitch Range</b> を例えば 0.95〜1.05 にすると、鳴るたびに少し高さが変わります。</li></ul></div></details>
     <details class="recipe" data-tags="sound"><summary><span class="q">連打で音が重なりすぎる／逆に鳴らないことがある</span><span class="who">SE の設定</span></summary><div class="a"><ul><li><b>Max Concurrent</b>：同じ音が同時に鳴れる数（既定 8）。超えると一番古い音が止まる。</li><li><b>Cooldown Sec</b>：この秒数以内の連続再生は無視（既定 0.03 秒）。「鳴らないことがある」なら小さく。</li></ul></div></details>
     <details class="recipe" data-tags="sound"><summary><span class="q">近づくと聞こえる環境音を置きたい</span><span class="who">SeEmitter</span></summary><div class="a"><ol><li>その音の <b>Loop</b> を ON、<b>Spatial</b> を <b>Anchor</b>、<b>Min / Max Distance</b> で聞こえる範囲を決める。</li><li>Hierarchy で右クリック <span class="mp">D-Drive<i>›</i>SeEmitter</span> を置き、<b>Se Id</b> 欄で音を選ぶ。プログラム不要で、その物がある間鳴り続けます。</li></ol></div></details>
-    <details class="recipe" data-tags="visual"><summary><span class="q">エフェクトを登録したい</span><span class="who">VFX</span></summary><div class="a"><p>エフェクトの Prefab を <code>SourceAssets/Vfx/分類/英語名.prefab</code> に置くか、Asset Browser の <b>新規</b> で VFX を作って Prefab を割り当てます。<b>VFX Editor</b> ではシーンで再生しながら位置・色を調整できます。<b>Life Mode</b>（一回で終わる／ループ／秒数指定）にも注意。</p></div></details>
+    <details class="recipe" data-tags="visual"><summary><span class="q">エフェクトを登録したい（倉庫に入れたい）</span><span class="who">VFX</span></summary><div class="a">
+      <ol><li>Project ウィンドウで <code>Assets › _Game › DDrive › SourceAssets › Vfx</code> を開き、分類用のフォルダ（例：<code>Laser</code>）を作る。</li><li>エフェクトのファイル（Prefab）をそのフォルダにドラッグ。ファイル名は英語で。</li><li>数秒で登録されます。Asset Browser の種類メニュー（検索欄の右）を <b>Vfx</b> にすると一覧に出ます。</li></ol>
+      <p>「撃っている間ずっと」のように出しっぱなしにしたいエフェクトは、Inspector の <b>Life Mode</b> を <b>Loop</b> にし、<b>Flags › Pool</b> の <b>Kind</b> を <b>Pooled</b>、<b>Max Count</b> を <b>8</b> にします（しないと黄色の警告が出ます）。1 回出て消えるエフェクトは、そのままで OK。</p>
+    </div></details>
+    <details class="recipe" data-tags="visual"><summary><span class="q">作ったエフェクトや音を、ゲームの中で出したい</span><span class="who">要塞デザイナー</span></summary><div class="a">
+      <p>倉庫に入れた素材は、要塞デザイナーの「演出欄」で一覧から選ぶだけでゲームに出ます（プログラム不要。マルチプレイでも全員の画面に出ます）。手順を 1 から書いた章 → <a href="FortressDesigner_ガイド.html#effects"><b>要塞デザイナー ガイド › エフェクトを入れる</b></a>。</p>
+      <p>演出欄がある場所：レーザー（撃っている間・壁に当たっている間・敵に当たった瞬間）、壊せる箱や壁（当たっている間・ひび・壊れた・元に戻った）、スマッシュボール（割れたとき）。</p>
+    </div></details>
     <details class="recipe" data-tags="visual"><summary><span class="q">スマッシュボールを割ったときなどの「画面の揺れ」を作りたい</span><span class="who">Shake</span></summary><div class="a"><ol><li>Asset Browser の <b>新規</b> で揺れ（Shake）を作る。</li><li><span class="mp">Tools<i>›</i>D-Drive<i>›</i>Editors<i>›</i>Shake / Haptics</span> で波形を見ながら揺れ幅・周波数を調整し、実際に揺らして確認。</li><li><a href="FortressDesigner_ガイド.html">要塞デザイナー</a>の「カメラ › 演出（揺れ・寄り）」で揺らし方を <b>D-Driveの揺れアセット</b> にして、作った揺れを選ぶ。</li></ol></div></details>
     <details class="recipe" data-tags="pres"><summary><span class="q">「斬撃」のように、音・エフェクト・揺れをまとめた演出を作りたい</span><span class="who">Presentation Editor</span></summary><div class="a"><ol><li><span class="mp">Tools<i>›</i>D-Drive<i>›</i>Presentation Editor</span> を開き、<b>＋ 新規作成</b>。</li><li>Asset Browser から SE・VFX・揺れなどをタイムラインへドラッグ＆ドロップ。種類ごとのレーンに並びます。</li><li>各トラックの <b>Trigger</b> を「開始から ○ 秒後（At Time）」か「コードから合図が来たら（On Signal）」に。</li><li>「モデル選択」→「配置」→ <b>▶ 再生</b> で、全部まとめて確認。On Signal は再生中に <b>Signal レーン</b> のボタンで試せます。</li></ol><p>下の「<a href="#pres">演出を体験</a>」で動きをイメージできます。</p></div></details>
     <details class="recipe" data-tags="pres"><summary><span class="q">オンライン対戦で、相手の画面にも演出を出したい</span><span class="who">演出の設定</span></summary><div class="a"><p>演出の <b>Flags › Net</b> を <b>Cosmetic</b> に（既定の Local だと自分の画面だけ）。揺れ・振動・ヒットストップを関係者だけにしたいときは、そのトラックの <b>Scope</b> を <b>Participants Only</b> に。</p></div></details>
@@ -300,7 +307,7 @@ Audio.PlaySe(SEID.Se, transform.position);   // その場所で 3D
 var h = Audio.PlaySe(SEID.Se, transform);    // 追従
 Audio.Stop(h, 0.2f);                         // 0.2 秒でフェードアウト
 Audio.PlayBgm(BGMID.Title);                  // 再生中なら自動クロスフェード</pre></div>
-    <div class="notes"><div class="note"><span class="lbl">このプロジェクト</span><code>LaserTurretAudio</code> が Firing 突入時に <code>Audio.PlaySe(SEID.Se)</code>。</div><div class="note"><span class="lbl">ID 名</span>ファイル名から種別接頭辞を除いた PascalCase。カテゴリも含む。</div></div>
+    <div class="notes"><div class="note"><span class="lbl">このプロジェクト</span>ゲームの演出欄は <code>FortressEffect</code>（VFX/SE の番号札）。<code>FortressEffectPlayer</code> が Vfx/Audio で鳴らす。発射音は砲台の演出欄（既定 <code>SEID.Se</code>）。</div><div class="note"><span class="lbl">ID 名</span>ファイル名から種別接頭辞を除いた PascalCase。カテゴリも含む。</div></div>
   </div>
   <div class="panel" id="cp-vfx" role="tabpanel">
     <div class="codebox"><div class="cap"><span>Vfx / CameraFx / Haptics</span><button class="copy" type="button">copy</button></div><pre>
@@ -352,7 +359,7 @@ async UniTaskVoid Start()
     <a class="lk rv" href="../../Library/PackageCache/com.ddrive.core@54dde12a3be3/Documentation~/DesignerManual/Readme.html"><span class="ti">D-Drive 公式マニュアル</span><span class="ds">全種別の詳しい操作（リンク切れ時は Unity メニューから）。</span></a>
     <a class="lk rv" href="index.html"><span class="ti">ツール一覧</span><span class="ds">このプロジェクトの全ツール。</span></a>
   </div>
-  <footer><span>D-Drive Guide · Xx_MS2026_xX</span><span>com.ddrive.core v1.2.1 · 2026-10-03</span></footer>
+  <footer><span>D-Drive Guide · Xx_MS2026_xX</span><span>com.ddrive.core v1.2.1 · 2026-10-04</span></footer>
 </section>
 </main>
 </div>

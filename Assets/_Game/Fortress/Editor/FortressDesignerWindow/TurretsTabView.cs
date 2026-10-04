@@ -289,6 +289,7 @@ namespace MS2026.Fortress.EditorTools
             }
 
             DrawRotationAndAim(tuning);
+            LaserEffectsPanel.Draw(tuning);
 
             EditorGUILayout.Space(4);
             if (GUILayout.Button("この設定が未割り当ての砲台に適用"))

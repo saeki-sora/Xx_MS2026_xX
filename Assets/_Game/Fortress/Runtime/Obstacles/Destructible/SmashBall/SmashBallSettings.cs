@@ -14,12 +14,8 @@ namespace MS2026.Fortress
         public SmashBallFloatSettings floating = new SmashBallFloatSettings();
 
         [Header("割れたときの演出（通常の破壊可能物の演出に追加で鳴る）")]
-        [Tooltip("割った瞬間に生成するPrefab（ファンファーレ用の派手なエフェクトなど）。")]
-        public DestructibleEffect onBroken = new DestructibleEffect();
-
-        [Tooltip("演出Prefabを自動で消すまでの時間(秒)。")]
-        [Min(0.1f)]
-        public float effectLifetimeSeconds = 3f;
+        [Tooltip("割った瞬間に出す演出（ファンファーレ用の派手なエフェクトなど。D-DriveのVFX/SE）。プレイヤー色は割ったプレイヤーの色。")]
+        public FortressEffect onBroken = new FortressEffect();
 
         [Header("履歴")]
         [Tooltip("誰がいつ割ったかを履歴（SmashBallHistory）に記録する。")]

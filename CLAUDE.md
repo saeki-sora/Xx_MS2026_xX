@@ -18,6 +18,10 @@
 4. 書き方・構成・確認手順は `Docs/Tools/DOCS_GUIDE.md` に従う（HTML はプランナーが初見で使えるレベル、.md は前提知識ゼロの AI が読む前提）。
 5. `Packages/manifest.json` の D-Drive の版が `DDrive_AI_Reference.md` に書かれた版（v1.2.1）と違うときは、内容が古い可能性がある。使う部分をソースで確かめ、リファレンスの更新をユーザーに提案すること。
 
+## 演出（エフェクト・効果音）の共通ルール
+
+ゲーム内の演出欄は、すべて `FortressEffect`（`Assets/_Game/Fortress/Runtime/Effects/`。D-Drive の VFX・SE の番号札＋プレイヤー色）にそろえる（ユーザー決定 2026-10-04）。新しく演出欄を作るときも、Prefab や AudioClip を直接持たせずこの型を使い、`FortressEffectPlayer` で鳴らす（エディタの見た目・試し再生ボタンは自動で付く）。マルチプレイでは通信せず各PCが自分で鳴らすので、VFX の Flags › Net は Local のまま。詳細は `Docs/Tools/FortressDesigner_AI_Reference.md` の「Effects」節。
+
 ## マルチプレイ化（作業中）
 
 4人対戦（LAN・Host権威）の作業状況・ユーザーが決めた方針・残りの宿題（2台のPCでのテスト、性能改善の続き、Phase 5/6）は `Docs/Multiplayer/MultiplayerProgress.md` にまとめてある。マルチプレイ・通信・群衆の同期に関わる作業では、最初にこれを読み、進んだら同じ作業の中で更新すること。

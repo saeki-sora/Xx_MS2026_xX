@@ -10,6 +10,9 @@ namespace MS2026.Fortress
         public const int MaxBeams = 32;
         public const int SortBuckets = 256;
         public const int MaxPierceBuffer = 256;
+
+        /// <summary>「当たった瞬間」を1フレームに記録できる最大数（上限を決めていないときもこれ以上は出さない）。</summary>
+        public const int MaxHitReportsPerFrame = 256;
     }
 
     /// <summary>コア（目的地）に着いた敵をどう扱うか。差し替え式なので、後から挙動を変えるときはここに値を足す。</summary>
@@ -63,6 +66,19 @@ namespace MS2026.Fortress
         public float halfWidth;
         public float damagePerSecond;
         public int maxHits;
+
+        /// <summary>撃ったプレイヤーの番号(0-3)。分からなければ-1。当たった瞬間の記録（演出）に載る。</summary>
+        public int owner;
+    }
+
+    /// <summary>
+    /// レーザーが群衆の敵に「当たった瞬間」1件分（しばらく当たっていなかった敵＝被弾フラッシュが消えていた敵に触れた瞬間）。
+    /// 演出用。各PCが自分の群衆の計算で記録するので、ネット対戦でも通信なしで全員の画面に出せる。
+    /// </summary>
+    public struct SwarmBeamHit
+    {
+        public float2 position;
+        public int owner;
     }
 
     /// <summary>計測用の統計。</summary>

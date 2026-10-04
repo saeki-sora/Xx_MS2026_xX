@@ -21,6 +21,15 @@ namespace MS2026.Fortress
 
         private LaserTurret _turret;
 
+        /// <summary>このフレーム、レーザーが何か（壁・破壊可能物など、トリガー以外）に当たっているか。着弾点の演出が使う。</summary>
+        public bool HasImpact { get; private set; }
+
+        /// <summary>当たっている場所（<see cref="HasImpact"/> のときだけ意味がある）。</summary>
+        public Vector3 ImpactPoint { get; private set; }
+
+        /// <summary>当たった面の向き（砲台側を向く）。</summary>
+        public Vector2 ImpactNormal { get; private set; }
+
         private void Awake()
         {
             _turret = GetComponent<LaserTurret>();
@@ -44,6 +53,7 @@ namespace MS2026.Fortress
             if (!_turret.IsFiring)
             {
                 lineRenderer.enabled = false;
+                HasImpact = false;
                 return;
             }
 
@@ -71,10 +81,13 @@ namespace MS2026.Fortress
             // ネット対戦のClientは見た目(当たった位置までの線)だけ描き、ダメージはHostの計算結果を受け取る。
             var hasAuthority = FortressNet.HasSimulationAuthority;
 
+            HasImpact = nearest >= 0;
             if (nearest >= 0)
             {
                 var hit = HitBuffer[nearest];
                 endPoint = hit.point;
+                ImpactPoint = new Vector3(hit.point.x, hit.point.y, origin.z);
+                ImpactNormal = hit.normal;
 
                 var target = hasAuthority ? hit.collider.GetComponentInParent<ILaserTarget>() : null;
                 if (target != null)
@@ -101,7 +114,8 @@ namespace MS2026.Fortress
                     endPoint,
                     _turret.CurrentThicknessMeters * 0.5f,
                     tuning.maxDamagePerSecond * _turret.CurrentThickness01,
-                    tuning.pierceEnemies ? tuning.maxPierceCount : 1);
+                    tuning.pierceEnemies ? tuning.maxPierceCount : 1,
+                    _turret.playerIndex);
             }
 
             lineRenderer.enabled = true;
