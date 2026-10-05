@@ -32,6 +32,9 @@
 .which a b{font-weight:700;color:var(--ink)}
 .which a span.to{font-size:12.5px;font-weight:800;color:var(--c);white-space:nowrap}
 .mapflow{margin-top:24px}
+.course{margin:12px 0 0 1.3em;display:flex;flex-direction:column;gap:7px;font-size:14.5px;color:var(--ink2)}
+.course a{color:var(--ink);font-weight:700;text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+.course a:hover{text-decoration-color:currentColor}
 </style>
 </head>
 <body>
@@ -44,29 +47,66 @@
   <ol id="toc"></ol>
   <div class="foot">
     <button class="themebtn" id="themeBtn" type="button"><span aria-hidden="true">◐</span><span data-label>ライト表示</span></button>
-    <div class="meta mono">Docs/Tools/<br>2026-10-03 時点</div>
+    <div class="meta mono">Docs/Tools/<br>2026-10-05 時点</div>
   </div>
 </nav>
 
 <main id="top">
 <header class="hero" style="min-height:76vh">
-  <div class="tags"><span class="pill hot">ツール 5 本</span><span class="pill">プランナーでも使える</span><span class="pill">AI 向け .md つき</span></div>
+  <div class="tags"><span class="pill hot">ツール 5 本</span><span class="pill">プランナー・デザイナーでも使える</span><span class="pill">AI 向け .md つき</span></div>
   <h1 class="mega" aria-label="MS2026 TOOLS"><span class="o">MS2026</span><span class="f">TOOLS</span></h1>
   <p class="subname">ゲーム「<b>握れ、灼ける前に</b>」の開発を支えるツールたちの取扱説明書</p>
   <div class="hero-row">
     <p class="oneword">知りたいツールを選ぶだけ。<br>どのガイドも <span class="hl">「ひとことで → 5 分体験 → 逆引き」</span><br>の順に読めます。</p>
     <div class="facts"><dl>
-      <dt>まず読むなら</dt><dd><a href="FortressDesigner_ガイド.html"><b>要塞デザイナー</b></a>（ゲームの中身の調整はほぼここ）</dd>
+      <dt>初めての人</dt><dd><a href="#first"><b>はじめて開く人へ</b></a>（開き方と、デザイナー・プランナー別の最初のコース）</dd>
+      <dt>まず読むなら</dt><dd><a href="FortressDesigner_ガイド.html"><b>要塞デザイナー</b></a>（ゲームの中身の調整はほぼここ。カメラも敵ウェーブもこの 1 つ）</dd>
       <dt>キーボード</dt><dd><kbd>Q</kbd><kbd>W</kbd><kbd>O</kbd><kbd>P</kbd> で 4 人分の握力を代用</dd>
       <dt>AI 向け</dt><dd>各ツールの <code>*_AI_Reference.md</code>（Claude Code 用の詳細資料）</dd>
     </dl></div>
   </div>
 </header>
 
+<section id="first" data-nav="はじめて開く人へ">
+  <div class="rv"><div class="eyebrow">00 — First time</div><h2>はじめて<br><em>開く人へ</em>。</h2>
+  <p class="lead">プロジェクトを初めて開いてから、最初の操作を試すまでの手順です。デザイナー・プランナーの方は、ここを上から順に進めてください。</p></div>
+  <div class="steps">
+    <div class="step rv"><div class="n">1</div><div><h3>Unity を用意する</h3><p>Unity Hub で <b>Unity 6000.3.13f1</b> を入れます。違う版で開くと、プロジェクト全体の変換が走ってしまうので避けてください。</p></div></div>
+    <div class="step rv"><div class="n">2</div><div><h3>Git を入れておく</h3><p>D-Drive などのパッケージの一部は、インターネット上の Git の置き場から自動で取り込みます。そのため PC に <b>Git</b> が入っている必要があります。開いたときに Console に赤字でパッケージのエラーが出たら、Git が入っているか（または置き場を見る権限があるか）を担当プログラマーに相談してください。</p></div></div>
+    <div class="step rv"><div class="n">3</div><div><h3>試すときは自分用のブランチで</h3><p>要塞デザイナーで変えた数値（ウェーブ・敵・カメラ・レーザーなど）は設定ファイルに直接保存され、<b>Play を止めても元に戻りません</b>。GitHub Desktop などで<b>自分用のブランチを作ってから</b>開くと、ほかの人に影響せず、気に入らなければ変更を取り消すだけで元に戻せます。良い値ができたら、担当プログラマーに取り込みを頼んでください。</p></div></div>
+    <div class="step rv"><div class="n">4</div><div><h3>プロジェクトを開く</h3><p>Unity Hub の <b>Add</b> › <b>Add project from disk</b> でこのプロジェクトのフォルダを選び、開きます。<b>初回は読み込みに長く（数分〜数十分）かかります</b>。終わるまで待ってください。</p></div></div>
+    <div class="step rv"><div class="n">5</div><div><h3>最初に開くシーン</h3><p>Project ウィンドウで <span class="mp">Assets<i>›</i>Scenes<i>›</i>Game.unity</span> をダブルクリックします。本番で使うシーンで、コア・4 基の砲台・敵の湧き位置・ウェーブが入っています（<code>SampleScene</code> は使いません）。</p></div></div>
+    <div class="step rv"><div class="n">6</div><div><h3>この資料の開き方</h3><p>この一覧（<code>Docs/Tools/index.html</code>）や各ガイドは、エクスプローラーでダブルクリックしてブラウザで開きます。<code>Docs</code> フォルダの中に置いたまま開いてください（HTML ファイルだけを別の場所にコピーすると、見た目が崩れます）。</p></div></div>
+  </div>
+  <div class="callout rv"><span class="ci">i</span><div>▶ Play すると、画面の<b>右上に「D-Drive/NGO 接続 (Phase 0 検証用)」の枠</b>、<b>左上に数字の並んだ計測表示</b>が出ます。どちらもネット対戦の確認用なので、<b>1 人で試すときは触らなくて大丈夫</b>です（接続しなくても、そのまま遊べます）。</div></div>
+
+  <div class="cards two">
+    <div class="card rv"><h3>🎥 デザイナー：カメラ・見た目の調整</h3><ol class="course">
+      <li><a href="FortressDesigner_ガイド.html#start">はじめての 5 分</a>（Play して <kbd>Q</kbd> でレーザーを撃ち、数値を変える感覚をつかむ）</li>
+      <li><a href="FortressDesigner_ガイド.html#rc-camera-views">4 人それぞれの画面の見え方を決める</a>（<b>最初に 1 回「カメラリグをセットアップ」</b>）</li>
+      <li><a href="FortressDesigner_ガイド.html#rc-camera-other">Play 中に他の人の画面で見る</a>（<kbd>F1</kbd>〜<kbd>F5</kbd>）</li>
+      <li><a href="FortressDesigner_ガイド.html#rc-camera-tilt">斜め見下ろしにしてキャラを立たせる</a></li>
+      <li><a href="FortressDesigner_ガイド.html#rc-camera-shake">割った・攻撃されたときに画面を揺らす</a></li>
+      <li><a href="FortressDesigner_ガイド.html#rc-enemy-sprite">敵の絵（スプライト）を差し替える</a></li>
+      <li><a href="FortressDesigner_ガイド.html#effects">レーザーや壊れる箱にエフェクト・音を入れる</a></li>
+      <li>もっと見た目を作り込むなら：<a href="ShaderFX_ガイド.html">ShaderFX</a>（光る・溶ける）／<a href="SpriteAnim_ガイド.html">SpriteAnim</a>（コマアニメ）</li>
+    </ol></div>
+    <div class="card rv"><h3>👾 プランナー：ウェーブ・レベルデザイン</h3><ol class="course">
+      <li><a href="FortressDesigner_ガイド.html#start">はじめての 5 分</a>（Play して <kbd>Q</kbd><kbd>W</kbd><kbd>O</kbd><kbd>P</kbd> で 4 人分を撃つ）</li>
+      <li><a href="FortressDesigner_ガイド.html#rc-wave">敵の数・出るタイミングを変える</a>（敵ウェーブタブ。Play で自動再生、テストタブで開始／停止）</li>
+      <li><a href="FortressDesigner_ガイド.html#rc-spawn">敵が湧く場所を増やす・円形に並べる</a></li>
+      <li><a href="FortressDesigner_ガイド.html#rc-wall">壁を置いて敵に回り道をさせる</a>（到達チェックで確認）</li>
+      <li><a href="FortressDesigner_ガイド.html#rc-destructible">レーザーで壊せる箱を置く</a>／<a href="FortressDesigner_ガイド.html#rc-smash">スマッシュボールを作る</a></li>
+      <li><a href="FortressDesigner_ガイド.html#rc-enemy-type">新しい敵の種類を作る</a>／<a href="FortressDesigner_ガイド.html#rc-swarm-feel">群れの流れ方を変える</a></li>
+      <li><a href="FortressDesigner_ガイド.html#params">数値の意味</a>（上げると／下げるとどうなるかの一覧）</li>
+    </ol></div>
+  </div>
+</section>
+
 <section id="tools" data-nav="ツール一覧">
   <div class="rv"><div class="eyebrow">01 — Tools</div><h2>入っている<br><em>ツール</em>。</h2></div>
   <div class="tools">
-    <a class="tool rv" href="FortressDesigner_ガイド.html" style="--c:#4de2ff"><div class="top"><span class="logo">要</span><h3>要塞デザイナー<small>FORTRESS DESIGNER · 自作</small></h3></div><p>砲台・レーザーの熱・敵ウェーブ・障害物・スマッシュボール・群衆・4 人のカメラを、コードなしで調整して Play で確認する調整卓。</p><div class="meta2"><span>Tools › 要塞</span><span>プランナー向け</span></div><span class="open">ガイドを開く →</span></a>
+    <a class="tool rv" href="FortressDesigner_ガイド.html" style="--c:#4de2ff"><div class="top"><span class="logo">要</span><h3>要塞デザイナー<small>FORTRESS DESIGNER · 自作</small></h3></div><p>砲台・レーザーの熱・敵ウェーブ・障害物・スマッシュボール・群衆・4 人のカメラを、コードなしで調整して Play で確認する調整卓。</p><div class="meta2"><span>Tools › 要塞</span><span>プランナー・デザイナー向け</span></div><span class="open">ガイドを開く →</span></a>
     <a class="tool rv" href="GripInputBridge_ガイド.html" style="--c:#ff6b6b"><div class="top"><span class="logo">握</span><h3>握力入力ブリッジ<small>GRIP INPUT BRIDGE · 自作</small></h3></div><p>握力センサーの値を「その人の 0〜100%」に通訳してゲームに渡す入力の土台。キーボード代用・キャリブレーション・記録再生。</p><div class="meta2"><span>Tools › 握力入力ブリッジ</span><span>本番運営にも</span></div><span class="open">ガイドを開く →</span></a>
     <a class="tool rv" href="ShaderFX_ガイド.html" style="--c:#b98cff"><div class="top"><span class="logo">FX</span><h3>ShaderFX<small>SHADER FX · 自作パッケージ</small></h3></div><p>光る縁・溶けて消える・被弾フラッシュ・ホログラムなど 16 種類の見た目エフェクトを、設定ファイルに積むだけで付ける。</p><div class="meta2"><span>Create › ShaderFX</span><span>デザイナー向け</span></div><span class="open">ガイドを開く →</span></a>
     <a class="tool rv" href="SpriteAnim_ガイド.html" style="--c:#ffb547"><div class="top"><span class="logo">SA</span><h3>SpriteAnim<small>SPRITE ANIM · 自作パッケージ</small></h3></div><p>スプライトシート 1 枚を切って並べるだけで 2D アニメに。名前で再生・なめらかな切り替え。</p><div class="meta2"><span>MS2026 › スプライトアニメ</span><span>デザイナー向け</span></div><span class="open">ガイドを開く →</span></a>
@@ -105,7 +145,7 @@
     </div>
   </div>
   <div class="callout rv"><span class="ci">✎</span><div><b>このフォルダのルール</b>：ツールを変更・追加したら、同じ作業の中でそのツールの <code>*_ガイド.html</code> と <code>*_AI_Reference.md</code> も更新します（Claude Code にも <code>CLAUDE.md</code> で指示済み）。書き方は <code>Docs/Tools/DOCS_GUIDE.md</code>。</div></div>
-  <footer><span>MS2026 Tool Guides · Xx_MS2026_xX</span><span>2026-10-03</span></footer>
+  <footer><span>MS2026 Tool Guides · Xx_MS2026_xX</span><span>2026-10-05</span></footer>
 </section>
 </main>
 </div>

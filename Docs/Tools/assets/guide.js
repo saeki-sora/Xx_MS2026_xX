@@ -132,6 +132,22 @@
     });
   });
 
+  /* ---------- deep link to a recipe / faq: open the <details> that the #id points at ---------- */
+  function openTarget() {
+    var id = decodeURIComponent((location.hash || "").slice(1));
+    var el = id && document.getElementById(id);
+    if (el && el.tagName === "DETAILS") {
+      el.open = true;
+      el.classList.add("in");
+      // 上の固定バーに隠れないよう少し上に余白を取り、フォント読み込み後にもう一度合わせる(なめらかスクロールは使わない)。
+      var go = function () { window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 84, behavior: "instant" }); };
+      requestAnimationFrame(go);
+      if (document.readyState !== "complete") window.addEventListener("load", go, { once: true });
+    }
+  }
+  window.addEventListener("hashchange", openTarget);
+  openTarget();
+
   /* ---------- reveal + scrollspy ---------- */
   var rvs = $$(".rv");
   if ("IntersectionObserver" in window) {
