@@ -13,9 +13,163 @@ MonoBehaviour:
   m_Name: AudioCatalog
   m_EditorClassIdentifier: DDrive.Foundation::DDrive.Foundation.Registry.AssetCatalog
   entries:
+  - Id: 830934790130038943
+    Type: 1
+    Address: SE_Fortress_DestructRegen
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 1444194907814577389
+    Type: 2
+    Address: BGM_Fortress_BattleTillDawn2
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 1777448812509017777
+    Type: 1
+    Address: SE_Fortress_DestructHit
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 2842824340120649094
+    Type: 1
+    Address: SE_Fortress_DestructStage
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 3399067870436138849
+    Type: 2
+    Address: BGM_Fortress_CyberRun
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 6116545328458876446
+    Type: 1
+    Address: SE_Fortress_SmashBreak
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 7371773206052366440
+    Type: 1
+    Address: SE_Fortress_LaserImpact
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 7903325102335460783
+    Type: 1
+    Address: SE_Fortress_SwarmHit
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
   - Id: 9819440828055015967
     Type: 1
     Address: SE_Se
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 10195324224963385858
+    Type: 1
+    Address: SE_Fortress_DestructBreak
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 15534537489305070377
+    Type: 2
+    Address: BGM_Fortress_BattleTillDawn
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 16135865275358210923
+    Type: 1
+    Address: SE_Fortress_LaserMuzzle
     Flags:
       Pause: 0
       Load: 1

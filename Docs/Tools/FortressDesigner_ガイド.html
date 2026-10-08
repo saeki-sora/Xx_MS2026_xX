@@ -170,6 +170,7 @@
       <li>Unity のインポートと D-Drive の自動登録が終わるまで少し待つ（右下の読み込み表示が消えるまで）。</li>
       <li>メニュー <span class="mp">Tools<i>›</i>要塞<i>›</i>演出素材<i>›</i>2 演出欄へ割り当て</span> を押す。レーザー・破壊物・スマッシュボールの<b>空いている欄だけ</b>に入ります（入力済みの欄は変わりません。発射音が最初の和太鼓のままなら置き換えます）。シーンに BGM 用の <code>[Fortress] Bgm</code> も置かれます。</li>
     </ol>
+    <p><b>BGM を複数入れて聞き比べる：</b><code>[Fortress] Bgm</code> の <code>FortressBgmPlayer</code> で、<code>Bgm</code> が 1 曲目、<code>Extra Bgms</code> に 2 曲目以降を入れます。<code>Start Index</code> で選んだ 1 曲だけが鳴り、その曲の中でループ再生されます（0 = <code>Bgm</code>、1 = <code>Extra Bgms</code> の 1 つ目…）。試聴で切り替えたいときは <code>Next Key</code> にキーを入れます（通常は None）。</p>
     <div class="callout warn"><span class="ci">!</span><div>エフェクトのプレイヤー色の自動色付けは、この仮素材では効きません。BGM は仮の簡易ループです。エラーや「設定できなかった項目」の警告が Console に出たら、内容を開発担当に伝えてください。</div></div>
   </div>
 

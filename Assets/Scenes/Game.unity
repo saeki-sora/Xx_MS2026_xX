@@ -870,10 +870,15 @@ MonoBehaviour:
   eventSendRate: 20
   maxEventsPerSecond: 40000
   correctionCycleSeconds: 0.5
-  correctionSendRate: 20
+  adaptiveCorrection: 1
+  minCorrectionCycleSeconds: 0.1
+  highErrorThreshold: 1
+  lowErrorThreshold: 0.3
+  smoothing: 0
   correctionSharpness: 8
   snapDistance: 4
   correctionLeadSeconds: 0.05
+  replicaSeparationIterations: 1
 --- !u!1 &385221081
 GameObject:
   m_ObjectHideFlags: 0
@@ -1042,6 +1047,57 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &635282333
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 635282335}
+  - component: {fileID: 635282334}
+  m_Layer: 0
+  m_Name: '[Fortress] Bgm'
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &635282334
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 635282333}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bdec9a95c0803db4dab6d208e5c6b1ed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.FortressBgmPlayer
+  bgm:
+    value: 3399067870436138849
+    type: 2
+  playOnStart: 1
+  fadeInSeconds: -1
+  stopOnDisable: 1
+  fadeOutSeconds: -1
+--- !u!4 &635282335
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 635282333}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &648091140
 GameObject:
   m_ObjectHideFlags: 0
@@ -1938,31 +1994,42 @@ MonoBehaviour:
         backColor: {r: 0, g: 0, b: 0, a: 0.6}
     feedback:
       onHit:
-        prefab: {fileID: 0}
-        sound: {fileID: 0}
-        volume: 1
-        pitch: 1
-        pitchVariance: 0.05
+        vfx:
+          value: 865915282325765272
+          type: 3
+        se:
+          value: 1777448812509017777
+          type: 1
+        tintWithPlayerColor: 1
+        colorParam: Color
       hitInterval: 0.15
       onStageChanged:
-        prefab: {fileID: 0}
-        sound: {fileID: 0}
-        volume: 1
-        pitch: 1
-        pitchVariance: 0.05
+        vfx:
+          value: 16382477502686203062
+          type: 3
+        se:
+          value: 2842824340120649094
+          type: 1
+        tintWithPlayerColor: 1
+        colorParam: Color
       onDestroyed:
-        prefab: {fileID: 0}
-        sound: {fileID: 0}
-        volume: 1
-        pitch: 1
-        pitchVariance: 0.05
+        vfx:
+          value: 0
+          type: 0
+        se:
+          value: 0
+          type: 0
+        tintWithPlayerColor: 1
+        colorParam: Color
       onRegenerated:
-        prefab: {fileID: 0}
-        sound: {fileID: 0}
-        volume: 1
-        pitch: 1
-        pitchVariance: 0.05
-      effectLifetimeSeconds: 3
+        vfx:
+          value: 12177394001233572784
+          type: 3
+        se:
+          value: 830934790130038943
+          type: 1
+        tintWithPlayerColor: 1
+        colorParam: Color
       placeholderDebris: 1
       debrisCount: 10
       debrisColor: {r: 0.72, g: 0.52, b: 0.34, a: 1}
@@ -2232,12 +2299,14 @@ MonoBehaviour:
       screenMargin: 1
       returnSpeedMultiplier: 1.5
     onBroken:
-      prefab: {fileID: 0}
-      sound: {fileID: 0}
-      volume: 1
-      pitch: 1
-      pitchVariance: 0.05
-    effectLifetimeSeconds: 3
+      vfx:
+        value: 9076089593357038298
+        type: 3
+      se:
+        value: 6116545328458876446
+        type: 1
+      tintWithPlayerColor: 1
+      colorParam: Color
     recordHistory: 1
     regenGraceInvulnerableSeconds: 1
     exclusiveRotation: 0
@@ -2374,6 +2443,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.Net.FortressNetworkBootstrap
   ddriveBootstrap: {fileID: 0}
   port: 7777
+  packetQueueSize: 1024
 --- !u!114 &1451539724
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3436,3 +3506,4 @@ SceneRoots:
   - {fileID: 2123814597}
   - {fileID: 373009649}
   - {fileID: 131760603}
+  - {fileID: 635282335}

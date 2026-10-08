@@ -20,6 +20,101 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2f0c6b09b775f7e418f4eac1576c0d55
+    m_Address: VFX_Fortress_SwarmHit
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3206952224c7bfe468fa3143bc0c4965
+    m_Address: SE_Fortress_LaserMuzzle
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 35a55602cc2bf744aadf82fb87297b3c
+    m_Address: SE_Fortress_SmashBreak
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 385069082d1e93c43928cdcdda2334f0
+    m_Address: VFX_Fortress_LaserImpact
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3c01feda158fbbd4085f16908efeaccd
+    m_Address: VFX_Fortress_SmashBreak
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 588e4b8fd9710ca4eb92747628e6b6e9
+    m_Address: BGM_Fortress_BattleTillDawn
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7369d2a3f9f05dc4c91839965fca7f90
+    m_Address: SE_Fortress_LaserImpact
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8fd95e775fb640b48be92332f2b138f2
+    m_Address: BGM_Fortress_BattleTillDawn2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a66cc82d2df1c3243a7a782372490852
+    m_Address: SE_Fortress_DestructStage
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aa5a11b7151651e45b9eb6fce2fd16e1
+    m_Address: VFX_Fortress_DestructHit
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: acfbec0f002f01f43976939578c722cb
+    m_Address: SE_Fortress_DestructHit
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c1c5ec1a34b4b434f99f55dd5c747b82
+    m_Address: SE_Fortress_DestructRegen
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c22c5be069102ec40b3686492fabb29d
+    m_Address: SE_Fortress_SwarmHit
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c70dbde9fa5fc994ea22265382e7ad48
+    m_Address: BGM_Fortress_CyberRun
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dc64863c04f7f0a4bbc648896d675c47
+    m_Address: VFX_Fortress_LaserMuzzle
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e74f29da728f92b4cba8658795c9ecef
+    m_Address: SE_Fortress_DestructBreak
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e75dccb303a63184e8b383036e0d11ea
+    m_Address: VFX_Fortress_DestructRegen
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f8da63cbe3c20d448ae56eda8c7f2840
+    m_Address: VFX_Fortress_DestructStage
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fffa260301b6483458ba0c7f15431b5c
+    m_Address: VFX_Fortress_DestructBreak
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: b0944b922872ce54e9706c3315e61915, type: 2}
   m_SchemaSet:

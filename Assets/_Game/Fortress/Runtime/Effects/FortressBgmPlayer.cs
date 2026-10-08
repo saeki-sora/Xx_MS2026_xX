@@ -3,6 +3,7 @@ using DDrive.Foundation.Identity;
 using DDrive.Runtime.Audio;
 using DDrive.Runtime.Loop;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace MS2026.Fortress
 {
@@ -16,6 +17,15 @@ namespace MS2026.Fortress
     {
         [Tooltip("鳴らすBGM（D-DriveのBGM）。空なら何も鳴らさない。")]
         public AssetId<BgmMarker> bgm;
+
+        [Tooltip("追加で切り替えられるBGM。上の「bgm」が1曲目、ここが2曲目以降。片方ずつ鳴らし、切り替えキーで次の曲へ（クロスフェード）。")]
+        public AssetId<BgmMarker>[] extraBgms = new AssetId<BgmMarker>[0];
+
+        [Tooltip("起動時に鳴らす曲の番号（0=bgm、1=Extra Bgms の1つ目…）。選んだ1曲だけが、その曲の中でループ再生される。")]
+        public int startIndex;
+
+        [Tooltip("試聴用に次の曲へ切り替えるキー。通常は None（切り替えず、選んだ曲を鳴らし続ける）。")]
+        public Key nextKey = Key.None;
 
         [Tooltip("ONなら、シーン開始時に自動で鳴らす。")]
         public bool playOnStart = true;
@@ -31,6 +41,49 @@ namespace MS2026.Fortress
 
         private Coroutine _starting;
         private bool _playing;
+        private int _index;
+
+        private int Count
+        {
+            get
+            {
+                var n = bgm.IsValid ? 1 : 0;
+                if (extraBgms != null)
+                {
+                    for (var i = 0; i < extraBgms.Length; i++)
+                    {
+                        if (extraBgms[i].IsValid) n++;
+                    }
+                }
+
+                return n;
+            }
+        }
+
+        private AssetId<BgmMarker> Current
+        {
+            get
+            {
+                var n = 0;
+                if (bgm.IsValid)
+                {
+                    if (_index == 0) return bgm;
+                    n = 1;
+                }
+
+                if (extraBgms != null)
+                {
+                    for (var i = 0; i < extraBgms.Length; i++)
+                    {
+                        if (!extraBgms[i].IsValid) continue;
+                        if (n == _index) return extraBgms[i];
+                        n++;
+                    }
+                }
+
+                return bgm;
+            }
+        }
 
         private void Start()
         {
@@ -38,6 +91,33 @@ namespace MS2026.Fortress
             {
                 Play();
             }
+        }
+
+        private void Update()
+        {
+            if (nextKey == Key.None || Keyboard.current == null || !_playing)
+            {
+                return;
+            }
+
+            if (Keyboard.current[nextKey].wasPressedThisFrame)
+            {
+                Next();
+            }
+        }
+
+        /// <summary>次の曲へ切り替える（最後の曲の次は1曲目）。鳴っている曲とはクロスフェードする。</summary>
+        public void Next()
+        {
+            var count = Count;
+            if (count < 2 || !_playing)
+            {
+                return;
+            }
+
+            _index = (_index + 1) % count;
+            Audio.PlayBgm(Current, fadeInSeconds);
+            Debug.Log("[FortressBgm] " + (_index + 1) + " / " + count + " 曲目に切り替えました。");
         }
 
         private void OnDisable()
@@ -79,7 +159,8 @@ namespace MS2026.Fortress
                 yield return null;
             }
 
-            Audio.PlayBgm(bgm, fadeInSeconds);
+            _index = Mathf.Clamp(startIndex, 0, Mathf.Max(0, Count - 1));
+            Audio.PlayBgm(Current, fadeInSeconds);
             _playing = true;
             _starting = null;
         }
