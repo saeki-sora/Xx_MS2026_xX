@@ -310,6 +310,18 @@ MonoBehaviour:
   targetLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  usePlayerColor: 0
+  beamColor: {r: 0.94, g: 0.99, b: 0.97, a: 1}
+  beamMaterial: {fileID: 2100000, guid: 484b6d99b9330ec2ea235c8e4c97077d, type: 2}
+  wobbleAmplitude: 0.12
+  wobbleWavelength: 2.5
+  wobbleSpeed: 4
+  bulgeAmount: 0.35
+  wobbleSegments: 40
+  glowMaterial: {fileID: 2100000, guid: 64e86fa841a73ab7dbf8e54308ecec25, type: 2}
+  glowLayers: 2
+  glowWidthScale: 1.6
+  glowAlpha: 0.035
 --- !u!212 &62728024
 SpriteRenderer:
   serializedVersion: 2
@@ -1033,6 +1045,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.CoreCrystalController
   maxHealth: 100
+  effects:
+    onDamaged:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onDestroyed:
+      vfx:
+        value: 2734424051633896882
+        type: 3
+      se:
+        value: 17972745566154370587
+        type: 1
+      tintWithPlayerColor: 1
+      colorParam: Color
+    damageEffectInterval: 0.25
 --- !u!212 &526317132
 SpriteRenderer:
   serializedVersion: 2
@@ -1146,6 +1178,18 @@ MonoBehaviour:
   targetLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  usePlayerColor: 0
+  beamColor: {r: 0.94, g: 0.99, b: 0.97, a: 1}
+  beamMaterial: {fileID: 2100000, guid: 484b6d99b9330ec2ea235c8e4c97077d, type: 2}
+  wobbleAmplitude: 0.12
+  wobbleWavelength: 2.5
+  wobbleSpeed: 4
+  bulgeAmount: 0.35
+  wobbleSegments: 40
+  glowMaterial: {fileID: 2100000, guid: 64e86fa841a73ab7dbf8e54308ecec25, type: 2}
+  glowLayers: 2
+  glowWidthScale: 1.6
+  glowAlpha: 0.035
 --- !u!212 &648091143
 SpriteRenderer:
   serializedVersion: 2
@@ -1288,6 +1332,18 @@ MonoBehaviour:
   targetLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  usePlayerColor: 0
+  beamColor: {r: 0.94, g: 0.99, b: 0.97, a: 1}
+  beamMaterial: {fileID: 2100000, guid: 484b6d99b9330ec2ea235c8e4c97077d, type: 2}
+  wobbleAmplitude: 0.12
+  wobbleWavelength: 2.5
+  wobbleSpeed: 4
+  bulgeAmount: 0.35
+  wobbleSegments: 40
+  glowMaterial: {fileID: 2100000, guid: 64e86fa841a73ab7dbf8e54308ecec25, type: 2}
+  glowLayers: 2
+  glowWidthScale: 1.6
+  glowAlpha: 0.035
 --- !u!212 &669435694
 SpriteRenderer:
   serializedVersion: 2
@@ -2833,6 +2889,18 @@ MonoBehaviour:
   targetLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  usePlayerColor: 0
+  beamColor: {r: 0.94, g: 0.99, b: 0.97, a: 1}
+  beamMaterial: {fileID: 2100000, guid: 484b6d99b9330ec2ea235c8e4c97077d, type: 2}
+  wobbleAmplitude: 0.12
+  wobbleWavelength: 2.5
+  wobbleSpeed: 4
+  bulgeAmount: 0.35
+  wobbleSegments: 40
+  glowMaterial: {fileID: 2100000, guid: 64e86fa841a73ab7dbf8e54308ecec25, type: 2}
+  glowLayers: 2
+  glowWidthScale: 1.6
+  glowAlpha: 0.035
 --- !u!212 &1727559729
 SpriteRenderer:
   serializedVersion: 2

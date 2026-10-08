@@ -26,6 +26,12 @@ namespace MS2026.Fortress
         private void Awake()
         {
             CurrentHealth = maxHealth;
+
+            // HPに応じて少しずつ汚れていく見た目（無ければ自動で付ける）。
+            if (GetComponent<CoreDirtVisual>() == null)
+            {
+                gameObject.AddComponent<CoreDirtVisual>();
+            }
         }
 
         public void TakeDamage(float amount)
