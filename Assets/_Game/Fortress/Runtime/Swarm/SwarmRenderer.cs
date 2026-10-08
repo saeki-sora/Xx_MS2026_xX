@@ -9,10 +9,13 @@ namespace MS2026.Fortress
     /// <summary>
     /// 群衆をGPUインスタンシングで描く。全敵のデータを1つのバッファに置き、
     /// 敵の種類ごとに1回だけ描画を呼ぶ（種類が5つなら描画呼び出しは5回）。
+    /// 背景（ステージ背景スタジオ）が「隠れた敵を影で見せる」をONにしている間だけ、種類ごとにもう1回、
+    /// 背景の裏に隠れた部分を単色の影で描く（グローバル値 _FortressSilhouetteEnabled が0より大きいとき。既定は0で描かない）。
     /// </summary>
     public sealed class SwarmRenderer : IDisposable
     {
         private const string ShaderResourcePath = "Fortress/SwarmSprite";
+        private const string SilhouetteShaderResourcePath = "Fortress/SwarmSilhouette";
         private const int InstanceStride = 32;
 
         private static readonly int InstancesId = Shader.PropertyToID("_Instances");
@@ -22,10 +25,12 @@ namespace MS2026.Fortress
         private static readonly int RowsId = Shader.PropertyToID("_Rows");
         private static readonly int TintId = Shader.PropertyToID("_Tint");
         private static readonly int ZWriteId = Shader.PropertyToID("_SwarmZWrite");
+        private static readonly int SilhouetteEnabledId = Shader.PropertyToID("_FortressSilhouetteEnabled");
 
         private readonly GraphicsBuffer _buffer;
         private readonly Mesh _quad;
         private readonly Shader _shader;
+        private readonly Shader _silhouetteShader;
         private readonly List<TypeVisual> _visuals = new List<TypeVisual>();
         private bool _missingShaderLogged;
 
@@ -34,6 +39,7 @@ namespace MS2026.Fortress
         private sealed class TypeVisual
         {
             public Material material;
+            public Material silhouette;
             public Texture2D generated;
             public int key;
         }
@@ -47,6 +53,8 @@ namespace MS2026.Fortress
             {
                 _shader = Shader.Find("MS2026/Fortress/SwarmSprite");
             }
+
+            _silhouetteShader = Resources.Load<Shader>(SilhouetteShaderResourcePath);
         }
 
         public void Render(
@@ -76,6 +84,7 @@ namespace MS2026.Fortress
             _buffer.SetData(instances, 0, 0, total);
 
             var bounds = new Bounds(Vector3.zero, Vector3.one * 100000f);
+            var drawSilhouettes = _silhouetteShader != null && Shader.GetGlobalFloat(SilhouetteEnabledId) > 0f;
             for (var t = 0; t < types.Count; t++)
             {
                 var start = typeStart[t];
@@ -98,6 +107,13 @@ namespace MS2026.Fortress
 
                 Graphics.RenderMeshPrimitives(renderParams, _quad, 0, count);
                 LastBatchCount++;
+
+                if (drawSilhouettes)
+                {
+                    renderParams.material = PrepareSilhouette(t, material);
+                    Graphics.RenderMeshPrimitives(renderParams, _quad, 0, count);
+                    LastBatchCount++;
+                }
             }
         }
 
@@ -144,6 +160,26 @@ namespace MS2026.Fortress
             var standing = Shader.GetGlobalFloat(Billboards.BillboardShaderGlobals.SwarmStandId) > 0f;
             material.SetFloat(ZWriteId, standing ? 1f : 0f);
             return material;
+        }
+
+        /// <summary>影用のマテリアルを、本体と同じ絵・同じ並び・同じ範囲にそろえる（本体の後に描く）。</summary>
+        private Material PrepareSilhouette(int typeIndex, Material main)
+        {
+            var visual = _visuals[typeIndex];
+            if (visual.silhouette == null)
+            {
+                visual.silhouette = new Material(_silhouetteShader) { hideFlags = HideFlags.HideAndDontSave };
+            }
+
+            var silhouette = visual.silhouette;
+            silhouette.renderQueue = main.renderQueue + 1;
+            silhouette.SetBuffer(InstancesId, _buffer);
+            silhouette.SetTexture(MainTexId, main.GetTexture(MainTexId));
+            silhouette.SetFloat(ColsId, main.GetFloat(ColsId));
+            silhouette.SetFloat(RowsId, main.GetFloat(RowsId));
+            silhouette.SetColor(TintId, main.GetColor(TintId));
+            silhouette.SetFloat(InstanceOffsetId, main.GetFloat(InstanceOffsetId));
+            return silhouette;
         }
 
         private static int MakeKey(Color color, int frames, int directions)
@@ -200,6 +236,7 @@ namespace MS2026.Fortress
             foreach (var visual in _visuals)
             {
                 DestroyObject(visual.material);
+                DestroyObject(visual.silhouette);
                 DestroyObject(visual.generated);
             }
 

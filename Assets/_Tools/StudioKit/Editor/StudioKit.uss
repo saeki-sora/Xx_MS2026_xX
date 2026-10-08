@@ -1,0 +1,566 @@
+/* StudioKit — ステージ背景スタジオ / UIスタジオ 共通の見た目。
+   濃い背景に「灼ける」オレンジを差し色にしたダークテーマ。Unityの明るいスキンでも同じ見た目になるよう、
+   背景色・文字色はすべてここで指定している。色を変えるときは下の変数だけ触ればよい。 */
+
+.sk-root {
+    --sk-bg: #17181C;
+    --sk-panel: #1F2126;
+    --sk-card: #272A31;
+    --sk-card-hover: #2E323A;
+    --sk-line: #363A44;
+    --sk-text: #ECEDEF;
+    --sk-sub: #9EA3AE;
+    --sk-faint: #6B707B;
+    --sk-accent: #FF7A3D;
+    --sk-accent-2: #FFB547;
+    --sk-accent-soft: rgba(255, 122, 61, 0.16);
+    --sk-info: #4FC3F7;
+    --sk-ok: #5FD39B;
+    --sk-warn: #FFC857;
+    --sk-error: #FF5C6C;
+
+    flex-grow: 1;
+    background-color: var(--sk-bg);
+    color: var(--sk-text);
+    font-size: 12px;
+}
+
+/* ── 上の帯 ───────────────────────── */
+.sk-header {
+    flex-direction: row;
+    align-items: center;
+    padding: 10px 14px;
+    background-color: var(--sk-panel);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--sk-line);
+    min-height: 54px;
+}
+
+.sk-logo {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background-color: var(--sk-accent);
+    margin-right: 10px;
+    -unity-text-align: middle-center;
+    font-size: 15px;
+    -unity-font-style: bold;
+    color: #1A1A1A;
+}
+
+.sk-title {
+    font-size: 15px;
+    -unity-font-style: bold;
+    color: var(--sk-text);
+}
+
+.sk-subtitle {
+    font-size: 11px;
+    color: var(--sk-sub);
+}
+
+.sk-header-slot {
+    flex-grow: 1;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+/* ── 本体（左のナビ＋右の中身）─────────── */
+.sk-body {
+    flex-grow: 1;
+    flex-direction: row;
+}
+
+.sk-nav {
+    width: 132px;
+    padding: 10px 6px;
+    background-color: var(--sk-panel);
+    border-right-width: 1px;
+    border-right-color: var(--sk-line);
+}
+
+.sk-nav-item {
+    flex-direction: row;
+    align-items: center;
+    height: 34px;
+    padding: 0 10px;
+    margin-bottom: 2px;
+    border-radius: 7px;
+    color: var(--sk-sub);
+    transition-property: background-color, color;
+    transition-duration: 0.12s;
+}
+
+.sk-nav-item:hover {
+    background-color: var(--sk-card);
+    color: var(--sk-text);
+}
+
+.sk-nav-item--active {
+    background-color: var(--sk-accent-soft);
+    color: var(--sk-accent);
+}
+
+.sk-nav-icon {
+    width: 18px;
+    -unity-text-align: middle-center;
+    font-size: 13px;
+    margin-right: 8px;
+}
+
+.sk-nav-label {
+    flex-grow: 1;
+    -unity-font-style: bold;
+}
+
+.sk-nav-badge {
+    min-width: 18px;
+    height: 16px;
+    border-radius: 8px;
+    padding: 0 5px;
+    background-color: var(--sk-error);
+    color: #FFFFFF;
+    font-size: 10px;
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+}
+
+.sk-nav-badge--warn {
+    background-color: var(--sk-warn);
+    color: #2A2000;
+}
+
+.sk-nav-badge--hidden {
+    display: none;
+}
+
+.sk-content {
+    flex-grow: 1;
+}
+
+.sk-page {
+    padding: 16px 18px 28px 18px;
+}
+
+/* ── 下の帯（マウスを乗せた項目の説明）────── */
+.sk-statusbar {
+    flex-direction: row;
+    align-items: center;
+    min-height: 26px;
+    padding: 4px 12px;
+    background-color: var(--sk-panel);
+    border-top-width: 1px;
+    border-top-color: var(--sk-line);
+}
+
+.sk-status-icon {
+    color: var(--sk-accent-2);
+    margin-right: 6px;
+    -unity-font-style: bold;
+}
+
+.sk-status-text {
+    flex-grow: 1;
+    flex-shrink: 1;
+    white-space: normal;
+    color: var(--sk-sub);
+}
+
+/* ── ページの見出し ─────────────────── */
+.sk-page-title {
+    font-size: 20px;
+    -unity-font-style: bold;
+    margin-bottom: 2px;
+}
+
+.sk-page-lead {
+    color: var(--sk-sub);
+    white-space: normal;
+    margin-bottom: 14px;
+}
+
+.sk-section {
+    margin-top: 14px;
+    margin-bottom: 6px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.sk-section-title {
+    font-size: 13px;
+    -unity-font-style: bold;
+    color: var(--sk-text);
+}
+
+.sk-section-line {
+    flex-grow: 1;
+    height: 1px;
+    margin-left: 10px;
+    background-color: var(--sk-line);
+}
+
+/* ── カード ─────────────────────── */
+.sk-card {
+    background-color: var(--sk-card);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.04);
+}
+
+.sk-card--clickable {
+    transition-property: background-color, border-color, translate;
+    transition-duration: 0.12s;
+}
+
+.sk-card--clickable:hover {
+    background-color: var(--sk-card-hover);
+    border-color: var(--sk-accent);
+}
+
+.sk-card--selected {
+    border-color: var(--sk-accent);
+    background-color: #32282A;
+}
+
+.sk-card-title {
+    -unity-font-style: bold;
+    font-size: 13px;
+    margin-bottom: 3px;
+}
+
+.sk-card-body {
+    color: var(--sk-sub);
+    white-space: normal;
+}
+
+.sk-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.sk-grid > .sk-card {
+    width: 220px;
+    margin-right: 8px;
+}
+
+/* ── ステップ（はじめにのページ）────────── */
+.sk-step {
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+.sk-step-number {
+    width: 28px;
+    height: 28px;
+    border-radius: 14px;
+    margin-right: 12px;
+    background-color: var(--sk-line);
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+    color: var(--sk-text);
+}
+
+.sk-step-number--done {
+    background-color: var(--sk-ok);
+    color: #0E2A1C;
+}
+
+.sk-step-body {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+/* ── ボタン ─────────────────────── */
+.sk-button {
+    height: 28px;
+    padding: 0 12px;
+    margin: 2px 6px 2px 0;
+    border-radius: 7px;
+    border-width: 1px;
+    border-color: var(--sk-line);
+    background-color: var(--sk-card);
+    color: var(--sk-text);
+    -unity-font-style: bold;
+    transition-property: background-color, border-color, scale;
+    transition-duration: 0.1s;
+}
+
+.sk-button:hover {
+    background-color: var(--sk-card-hover);
+    border-color: var(--sk-sub);
+}
+
+.sk-button:active {
+    scale: 0.97 0.97;
+}
+
+.sk-button--primary {
+    background-color: var(--sk-accent);
+    border-color: var(--sk-accent);
+    color: #1A1208;
+}
+
+.sk-button--primary:hover {
+    background-color: var(--sk-accent-2);
+    border-color: var(--sk-accent-2);
+}
+
+.sk-button--danger {
+    color: var(--sk-error);
+}
+
+.sk-button--small {
+    height: 22px;
+    padding: 0 8px;
+    font-size: 11px;
+}
+
+.sk-button:disabled {
+    opacity: 0.4;
+}
+
+.sk-row {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.sk-spacer {
+    flex-grow: 1;
+}
+
+/* ── 小さな札（チップ）───────────────── */
+.sk-chip {
+    height: 20px;
+    padding: 0 8px;
+    margin-right: 4px;
+    border-radius: 10px;
+    font-size: 11px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    background-color: var(--sk-line);
+    color: var(--sk-text);
+}
+
+.sk-chip--ok { background-color: rgba(95, 211, 155, 0.18); color: var(--sk-ok); }
+.sk-chip--warn { background-color: rgba(255, 200, 87, 0.18); color: var(--sk-warn); }
+.sk-chip--error { background-color: rgba(255, 92, 108, 0.18); color: var(--sk-error); }
+.sk-chip--info { background-color: rgba(79, 195, 247, 0.18); color: var(--sk-info); }
+.sk-chip--accent { background-color: var(--sk-accent-soft); color: var(--sk-accent); }
+
+/* ── 選択ボタン群（役割の切り替えなど）───── */
+.sk-segment {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.sk-segment-item {
+    min-width: 92px;
+    height: 54px;
+    margin: 0 6px 6px 0;
+    padding: 6px 8px;
+    border-radius: 9px;
+    border-width: 1px;
+    border-color: var(--sk-line);
+    background-color: var(--sk-card);
+    transition-property: border-color, background-color;
+    transition-duration: 0.12s;
+}
+
+.sk-segment-item:hover {
+    border-color: var(--sk-sub);
+}
+
+.sk-segment-item--active {
+    border-color: var(--sk-accent);
+    background-color: var(--sk-accent-soft);
+}
+
+.sk-segment-icon {
+    font-size: 16px;
+    -unity-text-align: middle-left;
+}
+
+.sk-segment-label {
+    -unity-font-style: bold;
+    font-size: 11px;
+}
+
+/* ── お知らせ（ヒント・注意・エラー）──────── */
+.sk-note {
+    flex-direction: row;
+    padding: 8px 10px;
+    margin: 4px 0 8px 0;
+    border-radius: 8px;
+    border-left-width: 3px;
+    background-color: rgba(79, 195, 247, 0.08);
+    border-left-color: var(--sk-info);
+}
+
+.sk-note--warn { background-color: rgba(255, 200, 87, 0.08); border-left-color: var(--sk-warn); }
+.sk-note--error { background-color: rgba(255, 92, 108, 0.08); border-left-color: var(--sk-error); }
+.sk-note--ok { background-color: rgba(95, 211, 155, 0.08); border-left-color: var(--sk-ok); }
+
+.sk-note-icon {
+    margin-right: 8px;
+    -unity-font-style: bold;
+}
+
+.sk-note-text {
+    flex-shrink: 1;
+    flex-grow: 1;
+    white-space: normal;
+    color: var(--sk-text);
+}
+
+/* ── 一覧（左のリスト）──────────────── */
+.sk-split {
+    flex-direction: row;
+    flex-grow: 1;
+}
+
+.sk-list {
+    width: 240px;
+    min-width: 200px;
+    margin-right: 12px;
+}
+
+.sk-list-item {
+    flex-direction: row;
+    align-items: center;
+    height: 32px;
+    padding: 0 8px;
+    margin-bottom: 2px;
+    border-radius: 7px;
+    transition-property: background-color;
+    transition-duration: 0.1s;
+}
+
+.sk-list-item:hover {
+    background-color: var(--sk-card);
+}
+
+.sk-list-item--selected {
+    background-color: var(--sk-accent-soft);
+}
+
+.sk-list-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    margin-right: 8px;
+}
+
+.sk-list-label {
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+    -unity-text-overflow-position: end;
+    text-overflow: ellipsis;
+}
+
+.sk-list-meta {
+    color: var(--sk-faint);
+    font-size: 10px;
+    margin-left: 4px;
+}
+
+.sk-detail {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+/* ── 入力欄 ─────────────────────── */
+.sk-root .unity-base-field__label {
+    color: var(--sk-sub);
+    min-width: 170px;
+}
+
+.sk-root .unity-base-field {
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+.sk-search {
+    margin-bottom: 8px;
+}
+
+/* ── 空のとき ───────────────────── */
+.sk-empty {
+    align-items: center;
+    padding: 30px 20px;
+}
+
+.sk-empty-icon {
+    font-size: 30px;
+    color: var(--sk-faint);
+    margin-bottom: 6px;
+}
+
+.sk-empty-title {
+    font-size: 14px;
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+}
+
+.sk-empty-body {
+    color: var(--sk-sub);
+    white-space: normal;
+    -unity-text-align: upper-center;
+    margin-bottom: 10px;
+    max-width: 360px;
+}
+
+/* ── 取り込み先の落とし場所（ドラッグ＆ドロップ）── */
+.sk-dropzone {
+    height: 110px;
+    border-radius: 12px;
+    border-width: 2px;
+    border-color: var(--sk-line);
+    align-items: center;
+    justify-content: center;
+    background-color: var(--sk-panel);
+    margin-bottom: 10px;
+    transition-property: border-color, background-color;
+    transition-duration: 0.12s;
+}
+
+.sk-dropzone--hover {
+    border-color: var(--sk-accent);
+    background-color: var(--sk-accent-soft);
+}
+
+.sk-dropzone-icon {
+    font-size: 26px;
+    color: var(--sk-accent);
+}
+
+.sk-dropzone-text {
+    color: var(--sk-sub);
+}
+
+/* ── 数字の大きな表示（統計）────────────── */
+.sk-stat {
+    margin-right: 18px;
+}
+
+.sk-stat-value {
+    font-size: 18px;
+    -unity-font-style: bold;
+}
+
+.sk-stat-label {
+    font-size: 10px;
+    color: var(--sk-sub);
+}
+
+.sk-muted {
+    color: var(--sk-sub);
+}
+
+.sk-wrap {
+    white-space: normal;
+}

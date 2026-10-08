@@ -19,7 +19,16 @@ namespace MS2026.Fortress
 
         private static readonly RaycastHit2D[] HitBuffer = new RaycastHit2D[16];
 
+        private static readonly System.Collections.Generic.List<LaserBeamVisual> ActiveList =
+            new System.Collections.Generic.List<LaserBeamVisual>();
+
         private LaserTurret _turret;
+
+        /// <summary>シーン内で有効なレーザー表示の一覧（背景の焦げ・光りなど、着弾を見て反応する見た目用）。</summary>
+        public static System.Collections.Generic.IReadOnlyList<LaserBeamVisual> Active => ActiveList;
+
+        /// <summary>撃っている砲台（Awake以降で有効）。</summary>
+        public LaserTurret Turret => _turret;
 
         /// <summary>このフレーム、レーザーが何か（壁・破壊可能物など、トリガー以外）に当たっているか。着弾点の演出が使う。</summary>
         public bool HasImpact { get; private set; }
@@ -29,6 +38,21 @@ namespace MS2026.Fortress
 
         /// <summary>当たった面の向き（砲台側を向く）。</summary>
         public Vector2 ImpactNormal { get; private set; }
+
+        /// <summary>当たっている当たり判定（<see cref="HasImpact"/> のときだけ意味がある）。全PCで同じように求まる。</summary>
+        public Collider2D ImpactCollider { get; private set; }
+
+        private void OnEnable()
+        {
+            ActiveList.Add(this);
+        }
+
+        private void OnDisable()
+        {
+            ActiveList.Remove(this);
+            HasImpact = false;
+            ImpactCollider = null;
+        }
 
         private void Awake()
         {
@@ -54,6 +78,7 @@ namespace MS2026.Fortress
             {
                 lineRenderer.enabled = false;
                 HasImpact = false;
+                ImpactCollider = null;
                 return;
             }
 
@@ -82,6 +107,7 @@ namespace MS2026.Fortress
             var hasAuthority = FortressNet.HasSimulationAuthority;
 
             HasImpact = nearest >= 0;
+            ImpactCollider = nearest >= 0 ? HitBuffer[nearest].collider : null;
             if (nearest >= 0)
             {
                 var hit = HitBuffer[nearest];

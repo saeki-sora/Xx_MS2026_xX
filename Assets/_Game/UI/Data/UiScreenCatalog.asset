@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69f4affd8574d2a43aba0c9a7a80379e, type: 3}
+  m_Name: UiScreenCatalog
+  m_EditorClassIdentifier: MS2026.UI.Runtime::MS2026.UI.UiScreenCatalog
+  screens:
+  - {fileID: 8338717295536765143, guid: 0b3670abb7bdb0344b227e3a7c391e5b, type: 3}

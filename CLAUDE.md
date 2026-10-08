@@ -10,6 +10,8 @@
 | 握力入力ブリッジ | `Docs/Tools/GripInputBridge_AI_Reference.md` | `GripInputBridge_ガイド.html` | `Assets/_Tools/GripInputBridge/`, `Assets/ArduinoSerialReader.cs` |
 | ShaderFX | `Docs/Tools/ShaderFX_AI_Reference.md` | `ShaderFX_ガイド.html` | `Packages/com.ms2026.shaderfx/` |
 | SpriteAnim | `Docs/Tools/SpriteAnim_AI_Reference.md` | `SpriteAnim_ガイド.html` | `Packages/com.ms2026.spriteanim/` |
+| ステージ背景スタジオ | `Docs/Tools/StageStudio_AI_Reference.md` | `StageStudio_ガイド.html` | `Assets/_Game/Stage/`, `Assets/_Tools/StudioKit/`（共通の画面部品） |
+| UIスタジオ | `Docs/Tools/UIStudio_AI_Reference.md` | `UIStudio_ガイド.html` | `Assets/_Game/UI/`, `Assets/_Tools/StudioKit/` |
 | D-Drive（外部パッケージ） | `Docs/Tools/DDrive_AI_Reference.md` | `D-Drive_ガイド.html` | `Library/PackageCache/com.ddrive.core@*`, `Assets/_Game/DDrive/` |
 
 1. **読む**: 上のツールに関わる作業では、ソースを読み始める前に該当する `*_AI_Reference.md` を読むこと。ソースを開くのは、そこに書いていないことを確かめるときだけにする。

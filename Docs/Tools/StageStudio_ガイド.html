@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ステージ背景スタジオ ガイド</title>
+<meta name="description" content="Mayaの3D背景を取り込み、敵がその間をさらさらと避けて流れるステージを作るツール「ステージ背景スタジオ」の使い方">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/guide.css">
+<style>
+:root{--acc:#ff7a3d;--acc-ink:#1a0d04;--acc2:#4fc3f7;--acc3:#c6ff3d}
+:root[data-theme="light"]{--acc:#b34400;--acc-ink:#ffffff;--acc2:#0a6f9c;--acc3:#5f8a00}
+.mapviz{position:relative;aspect-ratio:16/10;border-radius:14px;background:#14151b;overflow:hidden;border:1px solid var(--line)}
+.mapviz .plate{position:absolute;left:18%;top:10%;width:64%;height:80%;border-radius:50%;background:#2a2d35}
+.mapviz .prop{position:absolute;border:2px solid #ff7a3d;border-radius:12px;background:rgba(255,122,61,.15);display:grid;place-items:center;font-size:clamp(9px,2.4vw,12px);line-height:1.1;text-align:center;color:#ffd2bd;font-weight:700}
+.mapviz .gap{position:absolute;height:3px;background:#5fd39b}
+.mapviz .gap b{position:absolute;top:-18px;left:30%;font-size:11px;color:#5fd39b}
+.mapviz .stream{position:absolute;color:#4fc3f7;font-size:18px;opacity:.85}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<div class="orbs" aria-hidden="true"><div class="orb a"></div><div class="orb b"></div></div>
+
+<div class="shell">
+<nav class="side" aria-label="目次">
+  <a class="back" href="index.html">← ツール一覧</a>
+  <a class="brand" href="#top"><span class="mark">S</span><span class="t">ステージ背景スタジオ</span></a>
+  <ol id="toc"></ol>
+  <div class="foot">
+    <button class="themebtn" id="themeBtn" type="button"><span aria-hidden="true">◐</span><span data-label>ライト表示</span></button>
+    <div class="meta mono">Assets/_Game/Stage<br>2026-10-07 時点</div>
+  </div>
+</nav>
+
+<main id="top">
+<header class="hero">
+  <div class="tags">
+    <span class="pill hot">3D背景</span>
+    <span class="pill">Maya FBX をそのまま</span>
+    <span class="pill">敵の通り道を自動生成</span>
+    <span class="pill">コード不要</span>
+  </div>
+  <h1 class="mega" aria-label="STAGE STUDIO"><span class="o">STAGE</span><span class="f">STUDIO</span></h1>
+  <p class="subname">ステージ背景スタジオ — <b>3Dの背景を置いて、敵の流れ方と見え方を整える</b></p>
+  <div class="hero-row">
+    <div>
+      <p class="oneword">シャンプーや歯ブラシを <span class="hl">置くだけ</span> で、<br>敵の群れがその間を<br><span class="hl">さらさらと避けて流れる</span>。</p>
+      <p class="analogy">机の上に小物を並べて、上から水をこぼすところを想像してください。水は小物の形に沿って回り込み、すき間を流れていきます。このツールは、Mayaで作った小物（背景オブジェクト）の「床に触れている形」を自動で測り、敵の群れにとっての「水が通れない場所」にします。手前の小物が砲台を隠したら自動で透け、裏に入った敵は影で見えます。</p>
+    </div>
+    <div class="facts"><dl>
+      <dt>誰が使う</dt><dd>プランナー（配置・通り道）／デザイナー（見え方・光）</dd>
+      <dt>開き方</dt><dd><span class="mp">Tools<i>›</i>ステージ背景<i>›</i>ステージ背景スタジオを開く</span></dd>
+      <dt>必要なもの</dt><dd>MayaのFBX（無くても空のステージは作れる）</dd>
+      <dt>今の状況</dt><dd>2026-10-06 に完成、10-07 に「配置」ページ（ゲーム画面の中で直接さわる）を追加。<b>動作確認は一部</b>（下の注意を参照）</dd>
+    </dl></div>
+  </div>
+  <div class="marquee" aria-hidden="true"><div class="track" id="mq" data-words="ゲーム画面でつかんで動かす|4人の画面を並べる|取り込み|通れない範囲|すき間のものさし|透け穴|敵の影|焦げ跡|ぷるぷる|壊せる壁|光|点検"></div></div>
+</header>
+
+<section id="what" data-nav="何ができる？">
+  <div class="rv">
+    <div class="eyebrow">01 — What you can do</div>
+    <h2>置くだけで、<br><em>遊べる背景</em>になる。</h2>
+    <p class="lead">見た目のモデルと、ゲームの「通り道」を別々に作る必要はありません。形から通り道を作り、見た目の反応も自動で付きます。</p>
+  </div>
+  <div class="cards">
+    <div class="card feat rv"><div class="ic">⇩</div><h3>FBXを落とすだけで取り込み</h3><p>中の物が1つずつ背景オブジェクトに。名前から役割（床・壁…）を推測し、Mayaの「上」をゲームの床に自動で合わせます。</p><p class="ex">例：bathroom.fbx を落とす → シャンプー・歯ブラシ・コップ・床 が別々に並ぶ</p></div>
+    <div class="card feat rv"><div class="ic">✥</div><h3>ゲーム画面の中でつかんで動かす</h3><p><b>配置</b> ページに、P1〜P4・全体のゲームの画面がそのまま映ります。その画面の中で背景をクリックして選び、引っぱると床の上を動きます。ホイールで回す、Shift+ホイールで大きさ、Alt+ホイールで高さ。マス目や隣の物の端にぴたっとくっつきます。</p><p class="ex">例：P1の画面でコップをつかんで、砲台にかぶらない所まで引っぱる</p></div>
+    <div class="card feat rv"><div class="ic">▣</div><h3>4人の画面を並べて確かめる</h3><p><b>4人並べる</b> で P1〜P4 の画面を2×2に並べ、どの画面でもさわれます。右の欄では、欄の名前を左右にドラッグするだけで向き・大きさ・高さを細かく合わせられます（数字を打たなくてよい）。</p><p class="ex">例：P1で動かしながら、P3の画面で隠れていないかを同時に見る</p></div>
+    <div class="card feat rv"><div class="ic">⤢</div><h3>背の高さによる「ずれ」が見える</h3><p>遠近のあるカメラでは、背の高い物ほど床の位置から外側へずれて映ります。選んだ視点から見て床のどこに重なって見えるかを色付きの影で、てっぺんのずれを矢印と数字で表示します。</p><p class="ex">例：「P1では 1.6m ずれて見える」→ その分、砲台から離して置く</p></div>
+    <div class="card feat rv"><div class="ic">▭</div><h3>通れない範囲を自動で作る</h3><p>床から「壁とみなす高さ」までの形だけを使うので、浮いている部分の下は敵がくぐれます。値を動かすと輪郭がその場で変わります。</p><p class="ex">例：横たわった歯ブラシの持ち手（浮いている）の下を敵が通る</p></div>
+    <div class="card feat rv"><div class="ic">◐</div><h3>手前の物は自動で透ける</h3><p>砲台やコアを隠している所だけ、丸く透けます。4人それぞれの視点で自動。手前に来る物ほど便利。</p><p class="ex">例：左下のシャンプーがP1の砲台に重なっても、砲台が見える</p></div>
+    <div class="card feat rv"><div class="ic">👥</div><h3>隠れた敵は影で見える</h3><p>背景の裏に入った敵の群れは、単色の影（シルエット）で透けて見えます。色と濃さは自由。</p></div>
+    <div class="card feat rv"><div class="ic">🔥</div><h3>レーザーで光る・焦げる・壊れる</h3><p>当たった所が赤く光り、当て続けると焦げ跡が残ります。「壊せる壁」にすれば溶けるように消えて道が開きます。</p></div>
+    <div class="card feat rv"><div class="ic">〰</div><h3>群れに押されて揺れる</h3><p>敵が押し寄せると、反対側へぷるっと傾きます。見た目だけなので通り道は変わりません。</p></div>
+    <div class="card feat rv"><div class="ic">📏</div><h3>すき間のものさし</h3><p>背景どうしのすき間の幅をシーンに表示。敵が通れない（赤）・敵より狭い（黄）・通れる（緑）が一目でわかります。</p></div>
+    <div class="card feat rv"><div class="ic">✓</div><h3>自動の点検と「直す」ボタン</h3><p>道が塞がっていないか、砲台にかぶっていないか、輪郭が古くないか…を数秒ごとに点検。多くは押すだけで直ります。</p></div>
+  </div>
+  <div class="rv" style="margin-top:22px">
+    <div class="mapviz" role="img" aria-label="上から見た図。円い床の上に背景オブジェクトが置かれ、オレンジの輪郭のまわりを敵が流れる">
+      <div class="plate"></div>
+      <div class="prop" style="left:22%;top:58%;width:16%;height:22%">シャンプー</div>
+      <div class="prop" style="left:44%;top:63%;width:26%;height:9%">歯ブラシ</div>
+      <div class="gap" style="left:38%;top:68%;width:6%"><b>0.62</b></div>
+      <div class="prop" style="left:62%;top:20%;width:13%;height:17%">コップ</div>
+      <div class="stream" style="left:40%;top:80%">↑</div><div class="stream" style="left:14%;top:50%">↗</div><div class="stream" style="left:80%;top:44%">↖</div><div class="stream" style="left:52%;top:8%">↓</div>
+    </div>
+    <div class="legend"><span><i style="background:#ff7a3d"></i>壁（通れない範囲）</span><span><i style="background:#5fd39b"></i>すき間のものさし（通れる）</span><span><i style="background:#4fc3f7"></i>敵の流れ</span></div>
+  </div>
+</section>
+
+<section id="start" data-nav="はじめての 5 分">
+  <div class="rv">
+    <div class="eyebrow">02 — First 5 minutes</div>
+    <h2>スタジオの<br><em>「はじめに」を上から順に</em>。</h2>
+    <p class="lead">スタジオの「はじめに」ページには、この5つの手順が並び、終わった手順には自動で ✓ が付きます。</p>
+  </div>
+  <div class="steps">
+    <div class="step rv"><div class="n">1</div><div class="step-body">
+      <div><h3>ステージを作る</h3>
+        <p><span class="mp">Tools<i>›</i>ステージ背景<i>›</i>ステージ背景スタジオを開く</span>。上の帯の <b>＋ 新しいステージ</b> を押すと、空のステージができてシーンに置かれます（ヒエラルキーに <b>[Stage]</b> ができます）。</p>
+        <p style="margin-top:8px">名前は「はじめに」ページの <b>ステージの名前</b> で変えられます。洗面所・台所…のように、いくつでも作れます。</p>
+      </div>
+      <div><div class="mock">
+        <div class="mock-title">ステージ背景スタジオ</div>
+        <div class="mock-body">
+          <div class="mrow"><span>□ 輪郭 □ すき間</span><div class="mf dd">ステージ1</div></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="mbtn">＋ 新しいステージ</span><span class="mbtn">シーンに出ています</span><span class="mbtn pri">シーンに出す</span><span class="mbtn">ステージに保存</span></div>
+        </div>
+      </div></div>
+    </div></div>
+    <div class="step rv"><div class="n">2</div><div class="step-body">
+      <div><h3>Mayaのモデルを取り込む</h3>
+        <p>左の <b>取り込み</b> ページで、プロジェクトのFBXを点線の枠に <b>ドラッグ＆ドロップ</b>。中身が表になり、名前から推測した役割が入ります。</p>
+        <p style="margin-top:8px">緑の帯に「取り込んだ後の全体の大きさ」が出ます。小さすぎるときは <b>基準にする物</b>（例：円い床）を選び、<b>その幅をこの大きさに</b> に 30 などを入れて <b>大きさを合わせる</b>。最後に <b>取り込む（N個）</b>。</p>
+      </div>
+      <div><div class="mock">
+        <div class="mock-title">取り込み</div>
+        <div class="mock-body">
+          <div class="mrow"><span>中の物を別々にする</span><div class="mtoggle on"></div></div>
+          <div class="mrow"><span>Mayaの向きを床に合わせる</span><div class="mtoggle on"></div></div>
+          <div class="mrow"><span>大きさの倍率</span><div class="mf">100</div></div>
+          <div class="help">☑ Shampoo　3.2×3.0×高さ6.1　壁<br>☑ ToothBrush　8.0×1.1×高さ1.2　壁<br>☑ Plate　40×40×高さ0.5　床<br>☑ MARK_Turret1　目印: P1の砲台</div>
+          <span class="mbtn pri">取り込む（3個）</span>
+        </div>
+      </div></div>
+    </div></div>
+    <div class="step rv"><div class="n">3</div><div class="step-body">
+      <div><h3>役割と通れない範囲を整える</h3>
+        <p><b>オブジェクト</b> ページで一覧から選び、<b>役割</b>（床・壁・壊せる壁・遅くなる地帯・飾り）を押して決めます。</p>
+        <p style="margin-top:8px">上の帯の <b>輪郭</b> をONにすると、シーンビューにオレンジの線で通れない範囲が出ます。<b>壁とみなす高さ</b> を下げると、浮いている部分の下がくぐれるようになります。値を動かすと線がその場で変わります。</p>
+      </div>
+      <div><div class="mock">
+        <div class="mock-title">オブジェクト › ToothBrush</div>
+        <div class="mock-body">
+          <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="mbtn">▭ 床</span><span class="mbtn pri">■ 壁</span><span class="mbtn">◩ 壊せる壁</span><span class="mbtn">≈ 遅くなる地帯</span><span class="mbtn">✦ 飾り</span></div>
+          <div class="mrow"><span>壁とみなす高さ</span><div class="mslider"><i style="width:30%"></i></div></div>
+          <div class="mrow"><span>外側への余白</span><div class="mf">0.05</div></div>
+          <div class="mrow"><span>変えたらすぐ作り直す</span><div class="mtoggle on"></div></div>
+        </div>
+      </div></div>
+    </div></div>
+    <div class="step rv"><div class="n">4</div><div>
+      <h3>見え方を確かめる</h3>
+      <p><b>配置</b> ページのゲーム画面（P1〜P4・全体）の中で、背景をつかんで動かします。ホイールで回す、Shift+ホイールで大きさ、Alt+ホイールで高さ。右の欄で細かく合わせ、見た目のずれや砲台までの距離も確かめます。<b>見え方</b> ページでカメラの見え方のカードを押して切り替え、<b>この目線でシーンを編集</b> の <b>P1</b>〜<b>P4</b> でシーンビューをそのプレイヤーのゲームのカメラと同じ見え方にできます。<b>隠れチェック</b> に「P2の視点: シャンプーがP3の砲台を隠しています → 透けるので大丈夫」のように出ます。▶ Play して <kbd>Q</kbd> でレーザーを当てると光って焦げます。</p>
+    </div></div>
+    <div class="step rv"><div class="n">5</div><div>
+      <h3>点検して、ステージに保存</h3>
+      <p><b>点検</b> ページの赤（要対応）を0にします。多くは <b>直す</b> ボタンで直ります。最後に上の帯の <b>ステージに保存</b>。<b>シーンを保存するだけではステージに入りません</b>（別のシーンで同じステージを出したときに反映されません）。</p>
+      <p class="done">これで「シャンプーと歯ブラシの間を、敵がさらさらと流れる」ステージのできあがり</p>
+    </div></div>
+  </div>
+  <div class="callout warn rv"><span class="ci">!</span><div><b>今の状況の注意（2026-10-07）</b>：コードの組み立て（コンパイル）と計算部分の自動テストは通っています。2026-10-07 に追加した <b>配置</b> ページ（ゲーム画面の中でつかむ・ホイール・右の欄・4人並べる）とシーンビューの配置ツール・目線の固定は、Unity の中で動くことを確かめました。<b>それ以外の画面・シェーダー・実際のFBXの取り込みの細かい確認はまだ</b>です。見た目が崩れる・ボタンが効かないなどがあれば、開発者（Claude）に伝えてください。</div></div>
+  <div class="callout info rv"><span class="ci">i</span><div><b>今の Game シーンにそのまま足せます。</b>ステージに入るのは背景オブジェクトだけなので、砲台・コア・湧き位置・敵・経路・今ある障害物はそのまま残ります。ステージを出すと、そのステージの光（まわりの明るさと <b>[Stage] Sun</b>）が当たります。シーンに元からある Directional Light と二重で明るすぎるときは、どちらかを OFF にするか、光ページの <b>光を当てる</b> を OFF に。</div></div>
+</section>
+
+<section id="recipes" data-nav="やりたいこと逆引き">
+  <div class="rv"><div class="eyebrow">03 — Recipes</div><h2>「〜したい」から<br><em>探す</em>。</h2></div>
+  <label class="search rv"><span aria-hidden="true">🔍</span><span class="sr">やりたいことを検索</span><input id="recipeSearch" type="search" placeholder="例：すき間、くぐる、透け、焦げ、差し替え"></label>
+  <div class="chips rv" id="recipeChips" role="group" aria-label="カテゴリ">
+    <button class="chip" aria-pressed="true" data-f="all">すべて</button>
+    <button class="chip" aria-pressed="false" data-f="place">置く・取り込む</button>
+    <button class="chip" aria-pressed="false" data-f="path">敵の通り道</button>
+    <button class="chip" aria-pressed="false" data-f="look">見え方</button>
+    <button class="chip" aria-pressed="false" data-f="break">壊す・反応</button>
+  </div>
+  <div class="recipes">
+    <details class="recipe" id="rc-stage-move" data-tags="place"><summary><span class="q">ゲームの画面を見ながら背景を動かしたい・回したい・大きさを変えたい</span><span class="who">配置</span></summary><div class="a"><ol><li>スタジオ左の <b>配置</b> を開く。上の帯の <b>視点</b> で <b>全体</b>／<b>P1</b>〜<b>P4</b> を選ぶ（<b>4人並べる</b> で4人分を2×2に）。</li><li><b>選ぶ</b>：画面の中の背景をクリック（オレンジの縁取りが付く）。<kbd>Shift</kbd>＋クリックで追加・外す。何も無い所をクリックすると選択が外れます。</li><li><b>動かす</b>：そのままドラッグ。つかんだ所がマウスに付いてきます。<kbd>Esc</kbd> でつかむ前に戻ります。</li><li><b>回す</b>：ホイール（吸着オンなら15°ずつ）。<b>大きさ</b>：<kbd>Shift</kbd>＋ホイール（5%ずつ）。<b>高さ</b>：<kbd>Alt</kbd>＋ホイール（5cmずつ）。</li><li><b>細かく</b>：右の欄の <b>横 X</b>・<b>縦 Y</b>・<b>向き</b>・<b>幅</b>・<b>奥行</b>・<b>高さ</b>・<b>床から</b> の名前を左右にドラッグ。ボタン（<b>↺90°</b>・<b>+10%</b>・<b>床に下ろす</b> など）でも。</li><li>どれも <kbd>Ctrl</kbd>＋<kbd>Z</kbd> で戻せます（ホイールを続けて回した分は1回にまとまります）。大きさ・高さを変えると、通れない範囲は自動で作り直されます。</li></ol><p class="small">キー操作（画面をクリックしてから）：矢印で少しずらす（<kbd>Shift</kbd> で細かく）、<kbd>Q</kbd>/<kbd>E</kbd> で回す、<kbd>-</kbd>/<kbd>+</kbd> で大きさ、<kbd>PageUp</kbd>/<kbd>PageDown</kbd> で高さ、<kbd>F</kbd> でシーンビューに映す。吸着は <kbd>Ctrl</kbd> を押している間だけ逆になります。シーンビューでも、背景をクリックすると <b>ステージ配置</b> ツール（つかんで動かす・黄色い輪で回す・右下の四角で大きさ・<b>↕</b> の札で高さ）で同じようにさわれます。</p></div></details>
+    <details class="recipe" id="rc-stage-lift" data-tags="place"><summary><span class="q">物を床から浮かせたい／床に下ろしたい</span><span class="who">配置 › 床からの高さ</span></summary><div class="a"><p><b>配置</b> ページで選んで、<kbd>Alt</kbd>＋ホイール、または右の欄の <b>床から</b> の名前を左右にドラッグ。<b>▲5cm</b>／<b>▼5cm</b>、まっすぐ床に戻すなら <b>床に下ろす</b>。ゲーム画面の物の上に「○○・0.40m 浮き」と出ます。</p><p class="small">浮かせた高さが <b>壁とみなす高さ</b>（初期0.6）より上なら、敵はその下をくぐれます（右の欄に「床から高いので、敵は下をくぐれます。」と出ます）。シーンビューでは物の横の <b>↕</b> の札を上下に引きます。</p></div></details>
+    <details class="recipe" id="rc-stage-gameview" data-tags="look"><summary><span class="q">4人それぞれの画面でどう見えるかを確かめながら置きたい</span><span class="who">配置 › 視点</span></summary><div class="a"><ol><li><b>配置</b> ページの <b>4人並べる</b>。P1〜P4 の画面が2×2に並び、どの画面でも背景をつかめます。1つの画面で動かすと、ほかの画面もすぐ描き直されます。</li><li>大きく見たいときは <b>視点</b> で1人を選ぶ（ウィンドウを広げると画面も大きくなります）。</li><li>Unity のシーンビューも同じ見え方にしたいときは、ページ下の <b>シーンビューをこの目線にする</b>。Game ビューの縦横比の枠が出ます。シーンビューを回す・ずらす・拡大縮小すると外れます。</li></ol></div></details>
+    <details class="recipe" id="rc-stage-parallax" data-tags="look"><summary><span class="q">背の高い物が、置いた所からずれて見えるのを何とかしたい</span><span class="who">配置 › 見た目のずれ</span></summary><div class="a"><p>遠近のあるカメラ（今のP1など）では、背の高い物ほど画面の外側へずれて映ります。<b>配置</b> ページのゲーム画面は実際の見え方そのものなので、見えている所を見ながら置けば大丈夫です。</p><ul><li>上の帯の <b>輪郭</b> をオンにすると、敵が通れない範囲（床の上の本当の位置）が重なり、見た目とのずれが分かります。</li><li>右の欄の <b>見た目のずれ</b> に「P1 1.6m」のように、各視点でてっぺんが何mずれて見えるかが出ます。</li><li>シーンビューにも出したいときは、ページ下の <b>見た目のずれをシーンビューに出す</b> で視点を選ぶ（その視点の色の影と矢印）。</li></ul></div></details>
+    <details class="recipe" id="rc-stage-distance" data-tags="path"><summary><span class="q">砲台・コアにどれくらい近いか知りたい</span><span class="who">配置 › 距離</span></summary><div class="a"><p><b>配置</b> ページで背景を選ぶと、右の欄の <b>砲台・コア・湧き位置との距離</b> に近い順に出ます（例「P1の砲台 1.8m」）。上の帯の <b>距離</b> がオンなら、ゲーム画面にも点線と距離が出ます。<b>近すぎ</b>（1m未満）は赤、重なっていると「…に重なっています」。シーンビューにも同じ線が出ます。</p></div></details>
+    <details class="recipe" id="rc-stage-gap" data-tags="path"><summary><span class="q">シャンプーと歯ブラシの間を敵に通らせたい</span><span class="who">オブジェクト・すき間</span></summary><div class="a"><ol><li>上の帯の <b>すき間</b> をON。シーンビューに2つの間のものさしと幅の数字が出ます。</li><li><b>緑</b>なら通れます。<b>黄</b>は「敵の体より狭い」（詰まる）。<b>赤</b>は「経路のマス目より狭いので、敵はそこを道だと思っていない」。</li><li>赤のときは、背景を少し離すか、どちらかの <b>外側への余白</b> を0にする、または <b>点検</b> の <b>マス目を0.25にする</b>（経路の計算が少し重くなります）。</li></ol></div></details>
+    <details class="recipe" id="rc-stage-under" data-tags="path"><summary><span class="q">浮いている部分の下を敵にくぐらせたい</span><span class="who">通れない範囲</span></summary><div class="a"><p>その物の <b>壁とみなす高さ</b> を、浮いている部分より低くします（右上の <b>物の高さ</b> が目安）。例：持ち手が高さ0.4から浮いているなら 0.3。<b>変えたらすぐ作り直す</b> がONなら、輪郭がその場で変わります。</p></div></details>
+    <details class="recipe" id="rc-stage-puddle" data-tags="path"><summary><span class="q">水たまり・泡の上だけ敵を遅くしたい</span><span class="who">役割</span></summary><div class="a"><p>役割を <b>≈ 遅くなる地帯</b> に。<b>敵の速さの倍率</b>（0.5で半分）と <b>敵が避けたがる強さ</b>（大きいほど遠回りしてでも避ける）を決めます。レーザーは素通りします。</p></div></details>
+    <details class="recipe" id="rc-stage-import" data-tags="place"><summary><span class="q">Mayaのシーンを丸ごと取り込みたい</span><span class="who">取り込み</span></summary><div class="a"><ol><li>Mayaで小物ごとに名前を付けて（Shampoo, ToothBrush, Plate…）FBXで書き出し、エクスプローラーから Unity の Project ウィンドウへドラッグして入れる。置き場所は <code>Assets/_Game/Stage/Models/ステージ名/</code>（例 <code>Models/Bathroom/bathroom.fbx</code>）がおすすめ。テクスチャも同じフォルダに。<code>Assets/_Game/DDrive/SourceAssets/Model</code> には入れない（D-Drive の倉庫に自動登録されてしまうため）。</li><li>取り込みページの枠に落とす。全部が1つのグループに入っていても、自動で開いて中身を分けます。</li><li>向きが違えば <b>床の上での向き</b>、大きさが違えば <b>大きさを合わせる</b>。</li></ol><p class="small">「MARK_」で始まる空のロケーターを置いておくと、取り込んだ後に <b>砲台・コアを目印に合わせる</b> で位置を合わせられます。</p></div></details>
+    <details class="recipe" id="rc-stage-markers" data-tags="place"><summary><span class="q">Mayaで決めた位置に、砲台とコアを置きたい</span><span class="who">取り込み・目印</span></summary><div class="a"><p>Mayaで <code>MARK_Core</code>、<code>MARK_Turret1</code>〜<code>MARK_Turret4</code>（<code>MARK_P1</code>〜も可）、<code>MARK_Spawn…</code> という名前の空の物を置いて書き出します。取り込むと結果のカードに <b>砲台・コアを目印に合わせる</b> が出ます。<b>湧き位置も合わせる</b> をONにすると、敵の湧き位置（名前順）も合わせます。</p></div></details>
+    <details class="recipe" id="rc-stage-replace" data-tags="place"><summary><span class="q">Mayaでモデルを直した／別のモデルに差し替えたい</span><span class="who">オブジェクト › モデル</span></summary><div class="a"><p>同じFBXを書き出し直したなら <b>取り込み直す</b>。別のモデルにするなら <b>差し替えるモデル</b> に入れて <b>差し替える</b>。どちらも位置・役割・設定はそのままで、通れない範囲だけ作り直します。</p></div></details>
+    <details class="recipe" id="rc-stage-camera" data-tags="look"><summary><span class="q">カメラの見え方を切り替えて確かめたい（真上／斜め）</span><span class="who">見え方</span></summary><div class="a"><p>見え方ページのカードを押すだけで切り替わり、ステージにも記録されます（次にステージを出すとその見え方になる）。<b>この目線でシーンを編集</b> の <b>P1</b>〜<b>P4</b> でシーンビューをその人のゲームのカメラと同じ見え方に（<a href="#rc-stage-gameview">4人の画面で確かめるレシピ</a>）。見え方のプリセット自体は要塞デザイナーの「カメラ」タブで作ります。</p></div></details>
+    <details class="recipe" id="rc-stage-hole" data-tags="look"><summary><span class="q">手前の物の透け方を変えたい</span><span class="who">見た目の反応・反応の共通設定</span></summary><div class="a"><p>物ごとに <b>砲台・コアを隠したとき</b> を選びます：<b>Hole</b>（隠している所だけ丸く透ける・おすすめ）／<b>WholeFade</b>（全体を薄く）／<b>None</b>（透けない）。丸の大きさ・ぼかしは見え方ページの <b>反応の共通設定</b>（<b>砲台のまわりの透ける丸の半径</b>、<b>コアのまわりの透ける丸の半径</b>、<b>丸のふちのぼかし</b>）。</p></div></details>
+    <details class="recipe" id="rc-stage-silhouette" data-tags="look"><summary><span class="q">裏に隠れた敵の影の色を変えたい・消したい</span><span class="who">反応の共通設定</span></summary><div class="a"><p>見え方ページの反応の共通設定の <b>影の色（アルファ＝濃さ）</b>。全体で消すなら <b>隠れた敵を影で見せる</b> をOFF、物ごとに消すなら <b>裏に隠れた敵を影で見せる</b> をOFFにして <b>専用シェーダーに切り替え</b> を押し直します。</p></div></details>
+    <details class="recipe" id="rc-stage-light" data-tags="look"><summary><span class="q">ステージの明るさ・影の向きを変えたい</span><span class="who">光</span></summary><div class="a"><p>光ページで太陽の <b>色</b>・<b>明るさ</b>・<b>照らす向き</b>・<b>高さ</b>・<b>影の濃さ</b>、まわりの明るさ、霧を変えます。動かすとすぐ反映。同じページで <b>このステージのBGM</b> も選べます（D-Driveの番号札）。</p></div></details>
+    <details class="recipe" id="rc-stage-break" data-tags="break"><summary><span class="q">レーザーで壊して道が開く壁にしたい</span><span class="who">役割 › 壊せる壁</span></summary><div class="a"><p>役割を <b>◩ 壊せる壁</b> に。<b>耐久・再生</b>、<b>演出（エフェクト・効果音）</b>、<b>耐久ゲージ・壊れた後</b>（瓦礫を残すか）が出ます。壊れると溶けるように消えて通れるようになり、再生すると溶けた状態から現れます。▶ Play 中は <b>壊してみる</b> / <b>直す</b> で試せます。ネット対戦でも壊れ方は全員に同期されます。</p></div></details>
+    <details class="recipe" id="rc-stage-heat" data-tags="break"><summary><span class="q">焦げ・光り・揺れの強さを変えたい</span><span class="who">見た目の反応・反応の共通設定</span></summary><div class="a"><p>物ごとの強さは <b>光り・焦げの強さ</b> と <b>揺れの大きさ</b>（重そうな物は小さく）。全体の速さ・色は反応の共通設定の「熱」「揺れ」。▶ Play 中は <b>熱を当ててみる</b>・<b>揺らしてみる</b> ですぐ試せます。</p></div></details>
+    <p class="noresult">見つかりませんでした。別の言葉で探してください。</p>
+  </div>
+</section>
+
+<section id="screens" data-nav="画面の見かた">
+  <div class="rv"><div class="eyebrow">04 — Screens</div><h2>左のナビの<br><em>7ページ</em>＋シーンビュー。</h2><p class="lead">どの項目も、マウスを乗せると画面の一番下の帯に説明が出ます。</p></div>
+  <div class="tabguide rv">
+    <div class="tg-list" role="tablist" aria-label="ページの説明">
+      <button role="tab" aria-selected="true" aria-controls="tg-start"><span class="em">★</span>はじめに</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-import"><span class="em">⇩</span>取り込み</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-layout"><span class="em">✥</span>配置</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-props"><span class="em">▤</span>オブジェクト</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-view"><span class="em">◐</span>見え方</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-light"><span class="em">☀</span>光</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-check"><span class="em">✓</span>点検</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-scene"><span class="em">⌖</span>シーンビュー</button>
+    </div>
+    <div>
+      <div class="tg-panel" id="tg-start" role="tabpanel"><h3>はじめに</h3><div class="when">⏱ 最初に開いたとき・次に何をするか迷ったとき</div>
+        <ul class="points"><li>5つの手順。終わると番号が ✓ に変わります。</li><li><b>このステージ</b>：<b>ステージの名前</b>・<b>メモ</b>・<b>一覧に出す絵</b>。</li><li>Mayaで決めておくと楽になる名前（MARK_… と役割の自動推測の決まり）。</li></ul></div>
+      <div class="tg-panel" id="tg-import" role="tabpanel"><h3>取り込み</h3><div class="when">⏱ MayaのFBXを入れるとき</div>
+        <ul class="points"><li>点線の枠にFBXを落とす（または <b>取り込むモデル</b> で選ぶ）。</li><li><b>向きと大きさ</b>：<b>中の物を別々にする</b>、<b>Mayaの向きを床に合わせる</b>、<b>床の上での向き</b>、<b>大きさの倍率</b>、<b>基準にする物</b> ＋ <b>その幅をこの大きさに</b> ＋ <b>大きさを合わせる</b>、<b>全体の真ん中をゲームの中心に</b>、<b>専用シェーダーに切り替える</b>。</li><li><b>中身（取り込む物と役割）</b>：行ごとに取り込むか・役割を直せます。目印は青い札。</li><li>取り込んだ後のカード：<b>砲台・コアを目印に合わせる</b>（<b>湧き位置も合わせる</b>）。</li></ul></div>
+      <div class="tg-panel" id="tg-layout" role="tabpanel"><h3>配置</h3><div class="when">⏱ 背景の位置・向き・大きさ・高さを、ゲームの画面を見ながら決めるとき</div>
+        <ul class="points"><li>上の帯：<b>視点</b>（<b>全体</b>／<b>P1</b>〜<b>P4</b>／<b>4人並べる</b>）、<b>重ねる</b>（<b>輪郭</b>・<b>距離</b>）、<b>吸着</b>（<b>オン</b>、<b>マス目</b> 0.1〜1m、<b>角度</b> 5〜90°、<b>端</b> なし〜0.5m）。オンの札はオレンジ。</li><li>ゲーム画面：クリックで選ぶ（オレンジの縁取り）・ドラッグで動かす・ホイールで回す・Shift+ホイールで大きさ・Alt+ホイールで高さ。選んだ物の上に名前と浮き／沈みの量。左上に視点の札。画面の下に操作のまとめ。</li><li>右の欄：<b>位置（m）</b>・<b>向き（°）</b>・<b>大きさ（m）</b>・<b>床からの高さ（m）</b>（名前を左右にドラッグ、ボタンでも）、<b>見た目のずれ</b>、<b>砲台・コア・湧き位置との距離</b>、<b>シーンで見る</b>、<b>役割・反応を変える</b>（オブジェクトページへ）。その下に <b>背景の一覧</b>。</li><li><b>シーンビュー</b>：<b>シーンビューをこの目線にする</b>／<b>シーンビューの固定を外す</b>、<b>背景を選んだら配置ツールにする</b>、<b>見た目のずれをシーンビューに出す</b>（なし／全体／P1〜P4、<b>選んでいない物にも</b>）。</li><li>ウィンドウが狭いと、右の欄はゲーム画面の下に回ります。広げると横に並び、画面も大きくなります。</li></ul></div>
+      <div class="tg-panel" id="tg-props" role="tabpanel"><h3>オブジェクト</h3><div class="when">⏱ 役割・通り道・反応を決めるとき</div>
+        <ul class="points"><li>左：一覧（名前で検索、役割の札で絞り込み、問題のある物に × ! の印）。ダブルクリックでシーンに映す。<kbd>Ctrl</kbd> で複数選ぶと <b>まとめて変える</b>。</li><li><b>役割</b>：5つのボタン＋役割ごとの設定（壊せる壁は耐久・演出・耐久ゲージ・瓦礫）。</li><li><b>通れない範囲</b>：頂点の数・面積・物の高さ・状態（最新／古い）、各設定、<b>作り直す</b>・<b>根元を真ん中へ</b>・<b>形を手で直す</b>・<b>シーンで見る</b>。</li><li><b>見た目の反応</b>：透け方・敵の影・熱・揺れ、Play中のテストボタン。</li><li><b>モデル</b>：<b>取り込み直す</b>・<b>差し替える</b>・マテリアルの <b>専用シェーダーに切り替え</b> / <b>元に戻す</b>。</li></ul></div>
+      <div class="tg-panel" id="tg-view" role="tabpanel"><h3>見え方</h3><div class="when">⏱ 4人の画面で邪魔にならないか確かめるとき</div>
+        <ul class="points"><li><b>カメラの見え方</b>：プリセットのカード（押すと切り替え）、<b>この目線でシーンを編集</b>（全体／P1〜P4。シーンビューをゲームのカメラと同じ見え方に固定）、<b>配置ページを開く</b>。</li><li><b>隠れチェック</b>：視点ごとに、どの背景が砲台・コアを隠しているか（クリックでその物を選ぶ）。</li><li><b>反応の共通設定</b>：透け・敵の影・熱・揺れ・壊せる壁の強さと色。<b>このステージ専用にする</b> で他のステージと分けられます。</li></ul></div>
+      <div class="tg-panel" id="tg-light" role="tabpanel"><h3>光</h3><div class="when">⏱ ステージの雰囲気を決めるとき</div>
+        <ul class="points"><li><b>光を当てる</b>（OFFでシーンの光のまま）、太陽（色・明るさ・照らす向き・高さ・影の濃さ）、まわりの明るさ（上から・横から・下から）、霧、<b>このステージのBGM</b>。</li></ul>
+        <div class="callout warn"><span class="ci">!</span><div>太陽は <b>[Stage] Sun</b> として自動で作られます。シーンに別の Directional Light があると明るすぎるので、そちらは消すかOFFに。</div></div></div>
+      <div class="tg-panel" id="tg-check" role="tabpanel"><h3>点検</h3><div class="when">⏱ 保存する前・Playする前</div>
+        <ul class="points"><li>要対応（赤）・注意（黄）・お知らせ（青）の数。左のナビの数字も同じ。</li><li>各項目に <b>直す</b> ボタン（ある物だけ）と <b>選ぶ</b>。</li><li>主な点検：置き場所が無い／ステージがシーンに無い／部品が足りない／根元が傾いている／通れない範囲が無い・古い／専用シェーダーでない／砲台・コア・湧き位置にかぶっている／すき間が狭い／湧き位置からコアへ行けない／ステージに保存していない。</li></ul></div>
+      <div class="tg-panel" id="tg-scene" role="tabpanel"><h3>シーンビュー</h3><div class="when">⏱ Unity のシーンビューで直接さわりたいとき</div>
+        <ul class="points"><li><b>ステージ配置</b> ツール（スタジオを開いた状態で背景を選ぶと自動で切り替わる）：本体をつかんで動かす／黄色い輪で回す／右下の四角で大きさ／<b>↕</b> の札で高さ。吸着は配置ページの設定と同じ。</li><li>選んだ物から砲台・コア・湧き位置までの距離、配置ページで選んだ視点の <b>見た目のずれ</b>（影と矢印）、<b>シーンビューをこの目線にする</b> 中は Game ビューの枠。</li><li>切り替えはすべて <b>配置</b> ページ（上の帯と、ページ下の <b>シーンビュー</b>）で行います。</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section id="params" data-nav="数値の意味">
+  <div class="rv"><div class="eyebrow">05 — Numbers</div><h2>上げると／下げると<br><em>どうなる</em>。</h2></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">通れない範囲（物ごと）</div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>壁とみなす高さ</td><td>床からどの高さまでの形を壁にするか</td><td>高い所の出っぱりも壁になる</td><td>浮いた部分の下をくぐれる</td><td class="def">0.6</td></tr>
+    <tr><td>外側への余白</td><td>輪郭を外へ広げる量</td><td>敵がモデルから離れて流れる</td><td>モデルにぴったり（めり込んで見えることも）</td><td class="def">0.05</td></tr>
+    <tr><td>狭いすき間を埋める幅</td><td>これより狭いくぼみを埋める</td><td>形がなめらか・敵が引っかからない</td><td>細かい凹凸まで再現</td><td class="def">0.1</td></tr>
+    <tr><td>角の丸め</td><td>頂点を間引く強さ</td><td>軽い・角が丸い</td><td>正確・頂点が多い</td><td class="def">0.04</td></tr>
+    <tr><td>調べる細かさ</td><td>形を調べるマス目の大きさ</td><td>速いが粗い</td><td>正確だが重い</td><td class="def">0.05</td></tr>
+    <tr><td>内側の穴を埋める</td><td>筒の中などの穴を埋める</td><td colspan="2">普通はON（OFFだと穴の中に入れない囲いになる）</td><td class="def">ON</td></tr>
+  </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">配置ページの吸着・距離（このPCだけの設定）</div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>マス目</td><td>動かすときに根元が乗るマス目の細かさ（0.1／0.25／0.5／1m）</td><td>大まかにそろう</td><td>細かく置ける</td><td class="def">0.25m</td></tr>
+    <tr><td>角度</td><td>輪で回すときの刻み（5／15／45／90°）</td><td>大まかにそろう</td><td>細かく回せる</td><td class="def">15°</td></tr>
+    <tr><td>端</td><td>他の物の端にくっつく・そろう距離（なし／0.1／0.2／0.5m）</td><td>遠くからでも吸い付く</td><td>近づけたときだけ</td><td class="def">0.2m</td></tr>
+    <tr><td>近すぎ</td><td>砲台・コア・湧き位置との距離を赤で出す基準（0.5／1／1.5／2m未満）</td><td>少し近いだけで赤</td><td>重なる寸前まで白</td><td class="def">1m未満</td></tr>
+  </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">反応の共通設定（見え方ページ）</div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>砲台のまわりの透ける丸の半径</td><td>透ける丸の大きさ</td><td>大きく透ける</td><td>小さく透ける</td><td class="def">1.6</td></tr>
+    <tr><td>コアのまわりの透ける丸の半径</td><td>同上（コア）</td><td></td><td></td><td class="def">2.4</td></tr>
+    <tr><td>自分の砲台の丸の倍率</td><td>自分のPCの画面で、自分の砲台の丸だけ大きくする</td><td>自分の砲台がより見やすい</td><td></td><td class="def">1.3</td></tr>
+    <tr><td>光る速さ</td><td>レーザーで赤くなる速さ</td><td>すぐ真っ赤</td><td>なかなか光らない</td><td class="def">2.5</td></tr>
+    <tr><td>冷める速さ</td><td>光りが消える速さ</td><td>すぐ消える</td><td>しばらく光る</td><td class="def">0.7</td></tr>
+    <tr><td>焦げが溜まる速さ</td><td>焦げ跡の付きやすさ（焦げは消えない）</td><td>すぐ焦げる</td><td>焦げにくい</td><td class="def">0.3</td></tr>
+    <tr><td>一番傾く敵の数</td><td>一番大きく傾く人数</td><td>大群でないと揺れない</td><td>少しでよく揺れる</td><td class="def">25</td></tr>
+    <tr><td>一番傾く角度</td><td>揺れの大きさ（度）</td><td>大きく傾く</td><td>控えめ</td><td class="def">5</td></tr>
+    <tr><td>ばねの硬さ／揺れの止まりやすさ</td><td>揺れ方</td><td>速くプルプル／すぐ止まる</td><td>ゆったり／長く揺れる</td><td class="def">90 / 7</td></tr>
+    <tr><td>溶けて消える時間</td><td>壊せる壁の消え方</td><td>ゆっくり溶ける</td><td>パッと消える</td><td class="def">0.7秒</td></tr>
+  </table></div></div>
+</section>
+
+<section id="faq" data-nav="困ったとき">
+  <div class="rv"><div class="eyebrow">06 — Troubleshooting</div><h2>困ったときは<br><em>ここ</em>。</h2></div>
+  <div class="faq rv">
+    <details><summary>敵が背景をすり抜ける／避けない</summary><div class="a"><ol><li>その物の役割が <b>壁</b> か（飾り・床は素通り）。</li><li>点検に「通れない範囲がありません」「古いままです」が出ていないか → <b>作り直す</b>。</li><li>要塞デザイナーの「経路・障害物」タブの範囲（経路フィールド）の外に置いていないか。</li></ol></div></details>
+    <details><summary>通れるはずのすき間を敵が通らない</summary><div class="a">すき間のものさしが <b>赤</b> なら、経路のマス目（初期0.5）より狭いので道として扱われていません。<a href="#rc-stage-gap">すき間のレシピ</a> を参照。</div></details>
+    <details><summary>透けない・焦げない・影が出ない</summary><div class="a">その物のマテリアルが専用シェーダーか確認（点検の「専用シェーダーでないマテリアル」）。<b>専用シェーダーに切り替え</b> を押してください。床は透けない・影を作らないのが正しい動きです。</div></details>
+    <details><summary>取り込んだら小さすぎる／寝ている</summary><div class="a">小さい：Mayaの1cmはUnityで0.01なので、<b>大きさを合わせる</b> を使います。寝ている：<b>Mayaの向きを床に合わせる</b> をON／OFFしてみてください。画面上の向きは <b>床の上での向き</b>。</div></details>
+    <details><summary>シーンを保存したのに、別のシーンでステージを出すと変更が無い</summary><div class="a">背景はステージ（Prefab）に保存して初めて入ります。上の帯が「未保存の変更あり」なら <b>ステージに保存</b>。</div></details>
+    <details><summary>「置き場所がありません」と出る／「取り込めません」と言われる</summary><div class="a"><p class="small">2026-10-07 まで、Play を止めるたびにこの表示が出てしまう不具合がありました（ヒエラルキーに [Stage] があっても出る）。直してあります。</p><ol><li>ヒエラルキーに <b>[Stage]</b> があるか確認。あれば、スタジオのウィンドウを一度クリックすると読み直します（「置き場所を作る」を押しても、すでにあれば二重には作りません）。</li><li>Game シーンを開いているか、Prefab の編集画面（青い帯の画面）になっていないか確認。</li><li>それでも出る場合は、スタジオのウィンドウを閉じて開き直してください。</li></ol></div></details>
+    <details><summary>背景をクリックしても、つかんで動かせない</summary><div class="a"><ol><li><b>配置</b> ページのゲーム画面なら、絵が出ているか（「描いています…」のままなら Unity のウィンドウを一度クリック）。手前に別の物があると、手前の物が選ばれます。隠れた物は右の <b>背景の一覧</b> から選んでください。</li><li>シーンビューでは、ツールが <b>ステージ配置</b> になっているか。スタジオを開いていると、背景を選んだときに自動で切り替わります（配置ページ下の <b>背景を選んだら配置ツールにする</b> がオンのとき）。</li><li>シーンビューで黄色い輪のそばの何も無い所を押すと、動かすのではなく回すになります。物の上をつかんでください。</li></ol></div></details>
+    <details><summary>大きさや高さを変えたら、通れない範囲が変わった</summary><div class="a">大きさ・高さを変えると、通れない範囲は自動で作り直されます（浮かせて <b>壁とみなす高さ</b> より上に行った部分は通れるようになる）。<b>手で直した</b> 形は作り直さず、大きさの倍率だけ掛けます。</div></details>
+    <details><summary>「シーンビューをこの目線にする」がすぐ外れる</summary><div class="a">シーンビューを回す・右ドラッグ・ホイールで拡大縮小すると、自由に見たいものとして固定を外します。背景をつかんで動かすだけなら外れません。</div></details>
+    <details><summary>ホイールを回したらページがスクロールしてしまう</summary><div class="a">何も選んでいないときは、ホイールはページのスクロールになります。先にゲーム画面の背景をクリックして選んでから回してください。</div></details>
+    <details><summary>役割を「壊せる壁」から変えられない</summary><div class="a">スマッシュボールが付いているときは変えられません。要塞デザイナーのスマッシュボールタブで外してから変えます。</div></details>
+  </div>
+</section>
+
+<section id="glossary" data-nav="用語集">
+  <div class="rv"><div class="eyebrow">07 — Words</div><h2>分からない言葉は<br><em>ここで引く</em>。</h2></div>
+  <dl class="gloss">
+    <div class="rv"><dt>ステージ</dt><dd>背景一式（洗面所・台所…）。中身のPrefab・カメラの見え方・光・反応の設定・BGMのセット。</dd></div>
+    <div class="rv"><dt>背景オブジェクト</dt><dd>シャンプー・歯ブラシなど、ステージに置く物1つ。役割を持つ。</dd></div>
+    <div class="rv"><dt>通れない範囲（輪郭）</dt><dd>真上から見た、敵が入れない形。モデルの形から自動で作る。</dd></div>
+    <div class="rv"><dt>壁とみなす高さ</dt><dd>床からこの高さまでにある形だけを壁にする値。浮いた部分の下をくぐらせるのに使う。</dd></div>
+    <div class="rv"><dt>経路のマス目</dt><dd>敵の通り道を計算するときの、床の細かさ（要塞デザイナーの経路フィールド）。これより狭いすき間は道にならない。</dd></div>
+    <div class="rv"><dt>専用シェーダー</dt><dd>透け・焦げ・光り・溶け・敵の影に対応した、背景用の見た目の計算。色やテクスチャは元のまま。</dd></div>
+    <div class="rv"><dt>シルエット（敵の影）</dt><dd>背景の裏に隠れた敵を、単色で透かして見せる表示。</dd></div>
+    <div class="rv"><dt>目印（MARK_）</dt><dd>Mayaで置く空の物。名前でコア・砲台・湧き位置の場所を伝える。</dd></div>
+    <div class="rv"><dt>見た目のずれ（視差）</dt><dd>遠近のあるカメラで、背の高い物が床に置いた位置より画面の外側へずれて映ること。画面の端にある物・背の高い物ほど大きい。</dd></div>
+    <div class="rv"><dt>吸着（スナップ）</dt><dd>動かしたり回したりしたときに、マス目・決まった角度・他の物の端にぴたっとそろうこと。<kbd>Ctrl</kbd> を押している間は逆になる。</dd></div>
+    <div class="rv"><dt>Prefab</dt><dd>Unityの「部品の型」。ステージの中身はPrefabに保存され、どのシーンでも同じものを出せる。</dd></div>
+  </dl>
+</section>
+
+<div class="devzone"></div>
+<section id="dev" data-nav="開発者向け" data-dev>
+  <div class="rv">
+    <div class="eyebrow">08 — For programmers</div>
+    <h2>仕組みは<br><em>既存の通路の上に</em>。</h2>
+    <p class="lead">背景の輪郭は普通の <code>PolygonCollider2D</code>＋<code>NavigationObstacle</code>。群衆は既存の流れ場（フロー・フィールド）と壁の距離場で避けるので、群衆側の変更はありません。見た目の反応はすべて各PCで計算し、通信しません。</p>
+  </div>
+  <div class="tabs rv" role="tablist" aria-label="コード例">
+    <button class="tab" role="tab" aria-selected="true" aria-controls="cp-api">API</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="cp-tree">構成</button>
+  </div>
+  <div class="panel" id="cp-api" role="tabpanel">
+    <div class="codebox"><div class="cap"><span>MS2026.Stage</span><button class="copy" type="button">copy</button></div><pre>
+StageRoot.Active.current;                 // 今のステージ（StageSet）
+StageRoot.Active.ApplyEnvironment(true);  // 光・反応・カメラの見え方を当て直す
+StageProp.All;                            // シーンの背景オブジェクト
+prop.GetComponent&lt;StagePropWobble&gt;().Poke(Vector2.right, 6f);
+prop.GetComponent&lt;StagePropHeat&gt;().ReceiveLaser(point, 0.3f, Time.deltaTime);
+StageLookProfile.Current.ApplyGlobals();  // 透け・影・熱の色を反映</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">詳細</span><code>Docs/Tools/StageStudio_AI_Reference.md</code>。</div><div class="note"><span class="lbl">配置</span>ページ <code>StageLayoutPage</code> ＝ <code>LayoutToolbar</code> ＋ <code>StagePreviewView</code>（隠しカメラで描いた絵の上で、<code>StagePropShape.Pick</code> と <code>StageMoveSession</code> で直接さわる）＋ <code>PropAdjustPanel</code>。シーンビューの <code>StagePlaceTool</code> も同じ <code>StageMoveSession</code> を使う。大きさ・高さは根元ではなく中のモデルを変える（根元の大きさは1のまま）。</div><div class="note"><span class="lbl">シェーダー</span><code>MS2026/Stage/Prop</code>（URP Lit 互換）。群衆の影は別シェーダー <code>MS2026/Fortress/SwarmSilhouette</code>（ステンシル64）で、「隠れた敵を影で見せる」が ON のときだけ描くので、OFF や背景の無いシーンでは負荷は増えません。</div></div>
+  </div>
+  <div class="panel" id="cp-tree" role="tabpanel">
+    <div class="codebox" data-plain><div class="cap"><span>hierarchy</span></div><pre>
+[Stage]  (StageRoot + StageFocusPoints + StageLaserHeatScanner + StageSwarmPressure)
+ ├ [Stage] Sun            ← 光ページの太陽
+ └ Stage_洗面所 (Prefab)
+    └ Props
+       └ Shampoo  (StageProp, NavigationObstacle, StagePropRenderer, Heat, Wobble, Occlusion)
+          ├ Visual   ← 揺れの支点
+          │  └ Shampoo (モデル)
+          └ Footprint (PolygonCollider2D + StagePropFootprint)</pre></div>
+  </div>
+</section>
+
+<section id="more" data-nav="関連ツール">
+  <div class="rv"><div class="eyebrow">09 — Related</div><h2>一緒に使う<br><em>ツール</em>。</h2></div>
+  <div class="links">
+    <a class="lk rv" href="FortressDesigner_ガイド.html"><span class="ti">要塞デザイナー</span><span class="ds">カメラの見え方の作成、経路のマス目、壊せる物の詳しい設定、群衆の流れ方。</span></a>
+    <a class="lk rv" href="D-Drive_ガイド.html"><span class="ti">D-Drive</span><span class="ds">壊れたときの効果音・エフェクト、ステージのBGM。</span></a>
+    <a class="lk rv" href="UIStudio_ガイド.html"><span class="ti">UIスタジオ</span><span class="ds">同じ見た目・操作感の、画面（UI）を作るツール。</span></a>
+    <a class="lk rv" href="index.html"><span class="ti">ツール一覧</span><span class="ds">このプロジェクトの全ツール。</span></a>
+  </div>
+  <footer><span>Stage Studio Guide · Xx_MS2026_xX</span><span>2026-10-07 時点のコードに基づく</span></footer>
+</section>
+</main>
+</div>
+<script src="assets/guide.js"></script>
+</body>
+</html>

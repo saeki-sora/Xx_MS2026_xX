@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb9a2e4c50b23f146bd8df3334492c68, type: 3}
+  m_Name: StageLookProfile_Default
+  m_EditorClassIdentifier: MS2026.Stage.Runtime::MS2026.Stage.StageLookProfile
+  turretHoleRadius: 1.6
+  coreHoleRadius: 2.4
+  localTurretHoleScale: 1.3
+  holeSoftness: 0.4
+  focusHeight: 0.4
+  wholeFadeSpeed: 6
+  showHiddenEnemies: 1
+  hiddenEnemyColor: {r: 0.35, g: 0.9, b: 1, a: 0.55}
+  glowPerSecond: 2.5
+  coolPerSecond: 0.7
+  scorchPerSecond: 0.3
+  heatRadius: 0.35
+  heatRadiusPerThickness: 0.8
+  heatHeightOffset: 0.15
+  glowColor: {r: 2.2, g: 0.45, b: 0.08, a: 1}
+  hotColor: {r: 4, g: 3.2, b: 1.6, a: 1}
+  scorchColor: {r: 0.12, g: 0.07, b: 0.05, a: 1}
+  pressureForFullTilt: 25
+  maxTiltDegrees: 5
+  squash: 0.04
+  stiffness: 90
+  damping: 7
+  pressureRange: 0.8
+  hitFlashColor: {r: 1.6, g: 1.6, b: 1.6, a: 1}
+  hitFlashSeconds: 0.08
+  darkenAtZeroHealth: 0.45
+  dissolveSeconds: 0.7
+  dissolveEdgeColor: {r: 3, g: 1.2, b: 0.25, a: 1}

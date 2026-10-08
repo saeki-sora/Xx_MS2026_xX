@@ -1,0 +1,20 @@
+{
+    "name": "MS2026.UI.Runtime",
+    "rootNamespace": "MS2026.UI",
+    "references": [
+        "DDrive.Runtime",
+        "DDrive.Foundation",
+        "UnityEngine.UI",
+        "Unity.TextMeshPro",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

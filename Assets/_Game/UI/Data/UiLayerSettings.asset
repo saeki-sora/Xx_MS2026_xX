@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc9a0fa07b391d44b859d74b48cd720f, type: 3}
+  m_Name: UiLayerSettings
+  m_EditorClassIdentifier: MS2026.UI.Runtime::MS2026.UI.UiLayerSettings
+  layers:
+  - id: Background
+    label: "\u80CC\u666F"
+    description: "\u4E00\u756A\u5965\u3002\u30BF\u30A4\u30C8\u30EB\u306E\u80CC\u666F\u7D75\u306A\u3069\u3002"
+    sortOrder: 0
+    color: {r: 0.55, g: 0.6, b: 0.68, a: 1}
+    oneAtATime: 0
+  - id: HUD
+    label: HUD
+    description: "\u30B2\u30FC\u30E0\u4E2D\u305A\u3063\u3068\u51FA\u3066\u3044\u308B\u8868\u793A\uFF08\u71B1\u30B2\u30FC\u30B8\u30FB\u30B3\u30A2\u306EHP\u306A\u3069\uFF09\u3002"
+    sortOrder: 100
+    color: {r: 0.37, g: 0.83, b: 0.61, a: 1}
+    oneAtATime: 0
+  - id: Menu
+    label: "\u30E1\u30CB\u30E5\u30FC"
+    description: "\u30BF\u30A4\u30C8\u30EB\u30FB\u30ED\u30D3\u30FC\u30FB\u30EA\u30B6\u30EB\u30C8\u306A\u3069\u30011\u753B\u9762\u307E\u308B\u3054\u3068\u306E\u753B\u9762\u3002"
+    sortOrder: 200
+    color: {r: 0.31, g: 0.76, b: 0.97, a: 1}
+    oneAtATime: 1
+  - id: Popup
+    label: "\u30DD\u30C3\u30D7\u30A2\u30C3\u30D7"
+    description: "\u78BA\u8A8D\u30FB\u30DD\u30FC\u30BA\u306A\u3069\u3001\u4E0A\u306B\u91CD\u306D\u3066\u51FA\u3059\u5C0F\u7A93\u3002"
+    sortOrder: 300
+    color: {r: 0.88, g: 0.36, b: 1, a: 1}
+    oneAtATime: 0
+  - id: Toast
+    label: "\u901A\u77E5"
+    description: "\u300CP2\u304C\u53C2\u52A0\u3057\u307E\u3057\u305F\u300D\u306A\u3069\u306E\u77ED\u3044\u304A\u77E5\u3089\u305B\u3002\u62BC\u305B\u306A\u3044\u3002"
+    sortOrder: 400
+    color: {r: 1, g: 0.78, b: 0.34, a: 1}
+    oneAtATime: 0
+  - id: Transition
+    label: "\u753B\u9762\u5207\u308A\u66FF\u3048"
+    description: "\u753B\u9762\u5207\u308A\u66FF\u3048\u306E\u5E55\uFF08\u30EF\u30A4\u30D7\u7B49\uFF09\u3002\u81EA\u52D5\u3067\u4F7F\u308F\u308C\u308B\u3002"
+    sortOrder: 900
+    color: {r: 1, g: 0.48, b: 0.24, a: 1}
+    oneAtATime: 0
+  - id: Debug
+    label: "\u30C7\u30D0\u30C3\u30B0"
+    description: "\u958B\u767A\u7528\u306E\u8868\u793A\u3002\u4E00\u756A\u624B\u524D\u3002"
+    sortOrder: 1000
+    color: {r: 0.62, g: 0.64, b: 0.68, a: 1}
+    oneAtATime: 0
+  referenceResolution: {x: 1920, y: 1080}
+  matchWidthOrHeight: 0.5
+  safeArea: 0.92

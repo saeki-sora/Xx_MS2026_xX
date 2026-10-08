@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UIスタジオ ガイド</title>
+<meta name="description" content="ロビー・HUDなどの画面を、レイヤーで重ね、動きと画面切り替えを付け、ゲームの値とつなぐツール「UIスタジオ」の使い方">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/guide.css">
+<style>
+:root{--acc:#5fd39b;--acc-ink:#04170d;--acc2:#ff7a3d;--acc3:#4fc3f7}
+:root[data-theme="light"]{--acc:#16794a;--acc-ink:#ffffff;--acc2:#b34400;--acc3:#0a6f9c}
+.stack{display:grid;gap:6px;margin-top:18px}
+.stack .lane{display:grid;grid-template-columns:120px minmax(0,1fr);gap:10px;align-items:center;padding:10px 14px;border-radius:12px;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--c)}
+.stack .lane b{font-size:14px}
+.stack .lane span{color:var(--ink2);font-size:13px}
+.curtains{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:16px}
+.curtain{border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--card)}
+.curtain .scr{position:relative;aspect-ratio:16/9;background:linear-gradient(#336b8c,#2a5a76)}
+.curtain .scr::after{content:"";position:absolute;inset:0;background:#111;animation:var(--a) 2.6s ease-in-out infinite}
+.curtain p{margin:0;padding:8px 10px;font-size:13px}
+@keyframes wipe{0%,15%{clip-path:inset(0 100% 0 0)}45%,60%{clip-path:inset(0 0 0 0)}90%,100%{clip-path:inset(0 0 0 100%)}}
+@keyframes iris{0%,15%{clip-path:circle(0% at 50% 50%);opacity:1}45%,60%{clip-path:circle(80% at 50% 50%)}90%,100%{clip-path:circle(0% at 50% 50%)}}
+@keyframes fade{0%,15%{opacity:0}45%,60%{opacity:1}90%,100%{opacity:0}}
+@keyframes blinds{0%,15%{clip-path:polygon(0 0,0 0,0 100%,0 100%)}45%,60%{clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}90%,100%{clip-path:polygon(100% 0,100% 0,100% 100%,100% 100%)}}
+@media (prefers-reduced-motion:reduce){.curtain .scr::after{animation:none;opacity:.5}}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<div class="orbs" aria-hidden="true"><div class="orb a"></div><div class="orb b"></div></div>
+
+<div class="shell">
+<nav class="side" aria-label="目次">
+  <a class="back" href="index.html">← ツール一覧</a>
+  <a class="brand" href="#top"><span class="mark">U</span><span class="t">UIスタジオ</span></a>
+  <ol id="toc"></ol>
+  <div class="foot">
+    <button class="themebtn" id="themeBtn" type="button"><span aria-hidden="true">◐</span><span data-label>ライト表示</span></button>
+    <div class="meta mono">Assets/_Game/UI<br>2026-10-06 時点</div>
+  </div>
+</nav>
+
+<main id="top">
+<header class="hero">
+  <div class="tags">
+    <span class="pill hot">画面づくり</span>
+    <span class="pill">そのまま動く雛形</span>
+    <span class="pill">Photoshop風レイヤー</span>
+    <span class="pill">コード不要</span>
+  </div>
+  <h1 class="mega" aria-label="UI STUDIO"><span class="o">UI</span><span class="f">STUDIO</span></h1>
+  <p class="subname">UIスタジオ — <b>画面を重ねて、動かして、ゲームの値とつなぐ</b></p>
+  <div class="hero-row">
+    <div>
+      <p class="oneword">ロビーもHUDも、<span class="hl">雛形を押すだけ</span>で動き出す。<br>あとは<span class="hl">見た目を自分の絵に</span>差し替えるだけ。</p>
+      <p class="analogy">紙芝居の舞台を想像してください。奥から「背景の板」「HUDの板」「メニューの板」「ポップアップの板」…と何枚も重なっていて、それぞれの板に画面（紙）を出し入れします。UIスタジオは、この板（レイヤー）と紙（画面）の出し入れ、紙が出る・消えるときの動き、板を全部覆う幕（画面切り替え）、そして「熱が上がったらゲージを伸ばす」といったゲームとのつながりを、プログラムなしで決める道具です。</p>
+    </div>
+    <div class="facts"><dl>
+      <dt>誰が使う</dt><dd>デザイナー（見た目・動き）／プランナー（画面の流れ・表示する値）</dd>
+      <dt>開き方</dt><dd><span class="mp">Tools<i>›</i>UIスタジオ<i>›</i>UIスタジオを開く</span></dd>
+      <dt>必要なもの</dt><dd>特になし（D-Drive の起動オブジェクトがシーンにあると動きが付く）</dd>
+      <dt>今の状況</dt><dd>2026-10-06 に完成。<b>Unity上での動作確認はこれから</b>（下の注意を参照）</dd>
+    </dl></div>
+  </div>
+  <div class="marquee" aria-hidden="true"><div class="track" id="mq" data-words="雛形|レイヤー|部品の重なり順|59種の動き|その場でプレビュー|画面切り替えの幕|値の一覧|サンプル値|ロビー|HUD|点検"></div></div>
+</header>
+
+<section id="what" data-nav="何ができる？">
+  <div class="rv">
+    <div class="eyebrow">01 — What you can do</div>
+    <h2>作る・重ねる・動かす・<br><em>つなぐ</em>。</h2>
+  </div>
+  <div class="cards">
+    <div class="card feat rv"><div class="ic">▢</div><h3>雛形からすぐ動く画面</h3><p>ロビー（4人の接続待ち）・ゲーム中HUD・確認ポップアップ・空の画面。値のつなぎ・動き・ボタンの役目まで入った状態でできあがります。</p><p class="ex">例：ロビーを作って Play → P1を選んで「ホストになる」→ 幕が閉じて HUD に切り替わる</p></div>
+    <div class="card feat rv"><div class="ic">☰</div><h3>Photoshop風のレイヤー</h3><p>部品を「上ほど手前」で一覧。編集中だけ隠す・ゲームで隠す・ロック・↑↓で重なり順・グループ・濃さ。</p></div>
+    <div class="card feat rv"><div class="ic">〰</div><h3>59種の動きをクリックで試す</h3><p>「ポンと出る」「ぷにっ」「ぶるっと震える」…を、Playせずに部品の上で再生。気に入ったら「出たとき」「押したとき」などに付けるだけ。</p></div>
+    <div class="card feat rv"><div class="ic">◧</div><h3>画面切り替えの幕</h3><p>暗転・ワイプ・まるく閉じる・ブラインド・ひし形・ルール画像・<b>灼ける</b>（ふちが光りながら焼ける）。カードの中で動く見本を見比べられます。</p></div>
+    <div class="card feat rv"><div class="ic">≡</div><h3>ゲームの値と線でつなぐ</h3><p>熱・オーバーヒート・コアのHP・敵の数・接続状況などが一覧に。部品にどれを出すか選ぶだけ。サンプル値を動かせば Play しなくても見え方がわかる。</p></div>
+    <div class="card feat rv"><div class="ic">✓</div><h3>点検と「直す」</h3><p>名前の重なり・値の打ち間違い・押せない透明な画像・役目の無いボタンなどを見つけ、多くは押すだけで直ります。</p></div>
+  </div>
+  <div class="stack rv" role="img" aria-label="レイヤーの重なりの図。上ほど手前">
+    <div class="lane" style="--c:#9ea3ae"><b>デバッグ</b><span>開発用の表示（一番手前）</span></div>
+    <div class="lane" style="--c:#ff7a3d"><b>画面切り替え</b><span>幕（ワイプ等）。自動で使われる</span></div>
+    <div class="lane" style="--c:#ffc857"><b>通知</b><span>「P2が参加しました」など</span></div>
+    <div class="lane" style="--c:#e05cff"><b>ポップアップ</b><span>確認・ポーズ（後ろを暗くして押せなくする）</span></div>
+    <div class="lane" style="--c:#4fc3f7"><b>メニュー</b><span>タイトル・ロビー・リザルト（一度に1枚）</span></div>
+    <div class="lane" style="--c:#5fd39b"><b>HUD</b><span>ゲーム中ずっと出ている表示</span></div>
+    <div class="lane" style="--c:#8d9ba8"><b>背景</b><span>一番奥</span></div>
+  </div>
+</section>
+
+<section id="start" data-nav="はじめての 5 分">
+  <div class="rv">
+    <div class="eyebrow">02 — First 5 minutes</div>
+    <h2>ロビー → HUD を<br><em>5分で動かす</em>。</h2>
+  </div>
+  <div class="steps">
+    <div class="step rv"><div class="n">1</div><div class="step-body">
+      <div><h3>UIの置き場所を作る</h3>
+        <p><span class="mp">Tools<i>›</i>UIスタジオ<i>›</i>UIスタジオを開く</span>。上の帯の <b>UIの置き場所を作る</b> を押すと、ヒエラルキーに <b>[UI]</b> ができます（レイヤーごとの板・ゲームの値の書き込み役・EventSystem も一緒に）。</p>
+      </div>
+      <div><div class="mock">
+        <div class="mock-title">UIスタジオ</div>
+        <div class="mock-body">
+          <div class="mrow"><span>☑ サンプル値で表示</span><div class="mf">編集中の画面なし</div></div>
+          <span class="mbtn pri">UIの置き場所を作る</span>
+        </div>
+      </div></div>
+    </div></div>
+    <div class="step rv"><div class="n">2</div><div class="step-body">
+      <div><h3>雛形でロビーとHUDを作る</h3>
+        <p>左の <b>画面</b> ページで <b>ロビー（4人の接続待ち）</b> と <b>ゲーム中HUD</b> のカードを1回ずつ押します。<code>Lobby</code> と <code>Hud</code> という名前の画面ができ、一覧に入ります。</p>
+      </div>
+      <div><div class="mock">
+        <div class="mock-title">画面</div>
+        <div class="mock-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><span class="mbtn">□ 空の画面</span><span class="mbtn pri">◎ ロビー</span><span class="mbtn pri">▮ ゲーム中HUD</span><span class="mbtn">▢ 確認ポップアップ</span></div>
+          <div class="help">メニュー ● ロビー〔起動時〕<br>HUD ● ゲーム中HUD</div>
+        </div>
+      </div></div>
+    </div></div>
+    <div class="step rv"><div class="n">3</div><div>
+      <h3>Play して、ホストになる</h3>
+      <p>▶ Play。ロビーが出たら <b>P1</b> のカードを押して <b>ホストになる</b>。つながると幕が閉じて、HUD に切り替わります。<kbd>Q</kbd> を押すと熱ゲージが伸び、オーバーヒートで <b>OVERHEAT</b> が震えて点滅します。</p>
+    </div></div>
+    <div class="step rv"><div class="n">4</div><div class="step-body">
+      <div><h3>見た目を自分の絵にする</h3>
+        <p>画面ページで HUD を選び <b>この画面を編集</b>。シーンビューで部品を動かし、画像の <b>Source Image</b> に自分の絵を入れるだけ。<b>レイヤー</b> ページで重なり順やグループを整理できます。</p>
+      </div>
+      <div><div class="mock">
+        <div class="mock-title">レイヤー › 部品（上ほど手前）</div>
+        <div class="mock-body">
+          <div class="help">◎ ● □ ▤ Overheat 〔値〕〔動〕 ↑↓<br>◎ ● □ ▤ CoreHp ↑↓<br>◎ ● □ T Enemies 〔値〕 ↑↓<br>◎ ● □ ▤ LocalHeat ↑↓</div>
+          <div class="mrow"><span>濃さ（初期値）</span><div class="mslider"><i style="width:100%"></i></div></div>
+        </div>
+      </div></div>
+    </div></div>
+    <div class="step rv"><div class="n">5</div><div>
+      <h3>動きを足して、点検</h3>
+      <p><b>動き</b> ページで部品を選び、<b>定番の動き</b> をクリックして試し、<b>付ける</b>。最後に <b>点検</b> ページで赤が0なのを確かめます。</p>
+      <p class="done">これでロビー → HUD の流れができました。あとは絵と動きを好みに。</p>
+    </div></div>
+  </div>
+  <div class="callout warn rv"><span class="ci">!</span><div><b>今の状況の注意（2026-10-06）</b>：コードの組み立て（コンパイル）と計算部分の自動テストは通っていますが、<b>Unity の中で画面・幕・雛形を動かす確認はまだ</b>です。崩れていたら開発者（Claude）に伝えてください。今の仮の接続画面（右上）と仮の熱ゲージ（下）は残してあります。ロビーが出ると仮の接続画面は止まり、HUD の段に画面が出ている間は仮の熱ゲージが自動で隠れます。今の Game シーンにそのまま <b>[UI]</b> を足して試せます（既存の物は変わりません）。</div></div>
+</section>
+
+<section id="recipes" data-nav="やりたいこと逆引き">
+  <div class="rv"><div class="eyebrow">03 — Recipes</div><h2>「〜したい」から<br><em>探す</em>。</h2></div>
+  <label class="search rv"><span aria-hidden="true">🔍</span><span class="sr">やりたいことを検索</span><input id="recipeSearch" type="search" placeholder="例：ボタン、点滅、ゲージ、ワイプ、ロビー"></label>
+  <div class="chips rv" id="recipeChips" role="group" aria-label="カテゴリ">
+    <button class="chip" aria-pressed="true" data-f="all">すべて</button>
+    <button class="chip" aria-pressed="false" data-f="screen">画面</button>
+    <button class="chip" aria-pressed="false" data-f="motion">動き・切り替え</button>
+    <button class="chip" aria-pressed="false" data-f="value">値・ゲージ</button>
+    <button class="chip" aria-pressed="false" data-f="net">ロビー・通信</button>
+  </div>
+  <div class="recipes">
+    <details class="recipe" id="rc-ui-button" data-tags="screen"><summary><span class="q">ボタンで別の画面を開きたい・閉じたい</span><span class="who">ボタンの役目</span></summary><div class="a"><p>ボタンに <span class="mp">Add Component<i>›</i>UI Studio<i>›</i>ボタンの役目 (UiButtonAction)</span> を付け、<b>押したときにすること</b> を選びます：<b>OpenScreen</b>（開く）／<b>CloseScreen</b>（閉じる）／<b>CloseThisScreen</b>（このボタンの画面を閉じる）／<b>Back</b>（戻る）／<b>SwitchScreen</b>（幕で切り替える）／<b>LoadScene</b>（幕でシーンを読む）／<b>PlayMotion</b>（名前の動き）。<b>名前（画面・シーン・動き）</b> に画面の名前（例 <code>Hud</code>）。点検に「押しても何も起きません」が出たボタンは、これを付ければ直ります。</p></div></details>
+    <details class="recipe" id="rc-ui-popup" data-tags="screen"><summary><span class="q">「本当にやめますか？」の小窓を出したい</span><span class="who">画面 › 確認ポップアップ</span></summary><div class="a"><p>画面ページの <b>確認ポップアップ</b> で作ります（ポップアップの段・<b>モーダル</b>ON＝後ろを暗くして押せなくする）。開くボタンには「ボタンの役目」で <b>OpenScreen</b> ＋ 名前 <code>Confirm</code>。<b>はい</b>・<b>いいえ</b> は最初から「この画面を閉じる」になっています。</p></div></details>
+    <details class="recipe" id="rc-ui-start" data-tags="screen"><summary><span class="q">ゲームが始まったときに出す画面を決めたい</span><span class="who">画面の設定</span></summary><div class="a"><p>画面の設定の <b>起動時に開く</b> をON。ロビーの雛形は最初からON、HUD はOFF（ロビーから切り替わる）。ロビーを使わずにすぐ遊ぶテストなら、HUD をONにしてロビーをOFFに。</p></div></details>
+    <details class="recipe" id="rc-ui-layer" data-tags="screen"><summary><span class="q">ポーズ画面をHUDより手前に出したい（重なり順）</span><span class="who">レイヤー</span></summary><div class="a"><p>画面の設定の <b>レイヤー（段）</b> で <b>ポップアップ</b> を選ぶとHUDより手前。段そのものの順番はレイヤーページの帯の ↑↓ で入れ替えます。同じ段の中は「後から開いた画面が手前」。</p></div></details>
+    <details class="recipe" id="rc-ui-motion" data-tags="motion"><summary><span class="q">部品がポンと出る・押したらぷにっとする動きを付けたい</span><span class="who">動き</span></summary><div class="a"><ol><li>動きページで部品を選ぶ（レイヤーページかシーンビューで選ぶ）。</li><li><b>定番の動き</b> の名前をクリック → その場で動く。</li><li>右上のきっかけ（<b>出たとき</b>・<b>押したとき</b>…）を選んで <b>付ける</b>。</li><li>順番に出したいときは、部品ごとに <b>遅らせる（秒）</b> を少しずつ増やす（0.05〜0.1 秒ずつがおすすめ）。</li></ol></div></details>
+    <details class="recipe" id="rc-ui-blink" data-tags="motion value"><summary><span class="q">オーバーヒート中だけ「OVERHEAT」を点滅させたい</span><span class="who">値で表示を切り替える＋動き</span></summary><div class="a"><p>HUD の雛形の作りをまねします：外枠に <b>値で表示を切り替える (UiBindVisible)</b>（見る値 <code>local.overheated</code>、<b>WhenOn</b>）、中の文字に動き <b>ずっと繰り返す ＋ 点滅</b>。<b>同じ部品に両方付けない</b>のがコツです（どちらも透明度を使うため）。</p></div></details>
+    <details class="recipe" id="rc-ui-transition" data-tags="motion"><summary><span class="q">画面切り替えをワイプや「灼ける」にしたい</span><span class="who">画面切り替え</span></summary><div class="a"><p>画面切り替えページのカードで見比べ、使いたい幕を、ボタンの役目（<b>SwitchScreen</b> / <b>LoadScene</b>）の <b>画面切り替えの幕</b> か、ロビー画面の動きの <b>画面切り替えの幕</b> に入れます。色・秒数・向きは選んだ幕の設定で。<b>▶ Playで試す</b> で本物を確認。</p></div></details>
+    <details class="recipe" id="rc-ui-rule" data-tags="motion"><summary><span class="q">自分で描いた模様で画面を切り替えたい</span><span class="who">ルール画像</span></summary><div class="a"><p>白黒の画像（暗い所から先に覆われる）を用意し、新しい幕の <b>模様</b> を <b>RuleTexture</b>、<b>ルール画像</b> にその画像を入れます。グラデーションや渦巻き・手描きのムラなど、自由な切り替えが作れます。</p></div></details>
+    <details class="recipe" id="rc-ui-gauge" data-tags="value"><summary><span class="q">ゲームの値をゲージや数字で出したい</span><span class="who">値のつなぎ</span></summary><div class="a"><ol><li>部品に <span class="mp">Add Component<i>›</i>UI Studio</span> から <b>値をゲージで出す</b>（UiBindFill）／<b>値を文字で出す</b>（UiBindText）／<b>値で色を変える</b>（UiBindColor）／<b>値で表示を切り替える</b>（UiBindVisible）。</li><li><b>見る値</b> の ▼ で値を選ぶ（例：コアのHP（割合））。</li><li>文字は <b>書式</b> で飾れます：<code>{0:0}%</code> → 70%、<code>敵 {0:N0}</code> → 敵 1,200。</li></ol><p class="small">ゲージは画像の <b>Image Type</b> を <b>Filled</b> にするのがおすすめ。<b>残像の画像</b> に色違いの画像を入れると、減ったときに遅れて追いかける「残像」になります。</p></div></details>
+    <details class="recipe" id="rc-ui-sample" data-tags="value"><summary><span class="q">Playせずにゲージの見え方を確かめたい</span><span class="who">値・サンプル値</span></summary><div class="a"><p>上の帯の <b>サンプル値で表示</b> をON。値ページで各値の <b>サンプル値</b> のスライダーを動かすと、シーンビューのゲージや文字がその場で変わります。隠れる部品（UiBindVisible）は、編集中は薄く表示されます。</p></div></details>
+    <details class="recipe" id="rc-ui-newvalue" data-tags="value"><summary><span class="q">新しい値（スコアなど）を画面に出したい</span><span class="who">値</span></summary><div class="a"><p>値ページの <b>＋ 値を足す</b> で名前と説明を決め、プログラマーにその名前で書き込んでもらいます（<code>UiValues.Set("score", 1200)</code> の1行）。部品側はその名前を選ぶだけ。</p></div></details>
+    <details class="recipe" id="rc-ui-lobby" data-tags="net"><summary><span class="q">ロビーで別のPCに参加したい</span><span class="who">ロビー</span></summary><div class="a"><p>ホスト役のPCで P1 などを選んで <b>ホストになる</b>。参加するPCでは別の番号を選び、<b>ホストのIPアドレス</b> にホストのPCのIP（例 192.168.0.12）を入れて <b>参加する</b>。各カードの <b>参加中</b> はホストのPCでは全員分、参加側では自分だけ表示されます（今の通信の仕組みでは参加側に他の人の接続状況が届かないため）。</p></div></details>
+    <details class="recipe" id="rc-ui-delete" data-tags="screen"><summary><span class="q">間違って作った画面を消したい</span><span class="who">画面 › この画面を削除</span></summary><div class="a"><ol><li>画面ページの一覧で、消したい画面を選ぶ（同じ名前が2つあるときは、<b>プロジェクトで見る</b> でどのファイルか確かめる）。</li><li>下の <b>この画面を削除</b> を押し、確認で <b>削除する</b>。</li><li>画面の一覧から外れ、Prefab ファイルはパソコンのごみ箱へ移ります。間違えたら、ごみ箱から元の場所へ戻せば復活します（一覧には <b>画面</b> ページから入れ直す）。ファイルを残して一覧からだけ外したいときは <b>一覧から外す</b>。</li></ol></div></details>
+    <details class="recipe" id="rc-ui-tmp" data-tags="screen"><summary><span class="q">文字を TextMeshPro にしたい（縁取り・影を付けたい）</span><span class="who">画面 › 文字を TextMeshPro にする</span></summary><div class="a"><ol><li>ゲームに入れてよいライセンスの日本語フォント（.ttf / .otf）をプロジェクトに入れる（Windows に入っているメイリオ等は、ゲームに同梱してよいか必ず確認）。</li><li>画面ページで画面を選び、<b>文字を TextMeshPro にする（任意）</b> の <b>日本語のフォントファイル</b> に入れて <b>TextMeshPro 用のフォントを作る</b>（使った文字だけ自動で足されるので、文字の一覧を用意しなくてよい）。</li><li><b>この画面の文字を TextMeshPro にする</b>。文字・大きさ・色・寄せ方はそのまま置き換わります（入力欄の中の文字は除く）。Prefab の画面は元に戻せないので、先に <b>複製</b> しておくと安心。</li></ol></div></details>
+    <p class="noresult">見つかりませんでした。別の言葉で探してください。</p>
+  </div>
+</section>
+
+<section id="screens" data-nav="画面の見かた">
+  <div class="rv"><div class="eyebrow">04 — Screens</div><h2>左のナビの<br><em>7ページ</em>。</h2><p class="lead">どの項目も、マウスを乗せると一番下の帯に説明が出ます。</p></div>
+  <div class="tabguide rv">
+    <div class="tg-list" role="tablist" aria-label="ページの説明">
+      <button role="tab" aria-selected="true" aria-controls="tg-ustart"><span class="em">★</span>はじめに</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-uscreen"><span class="em">▢</span>画面</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-ulayer"><span class="em">☰</span>レイヤー</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-umotion"><span class="em">〰</span>動き</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-utrans"><span class="em">◧</span>画面切り替え</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-uvalue"><span class="em">≡</span>値</button>
+      <button role="tab" aria-selected="false" aria-controls="tg-ucheck"><span class="em">✓</span>点検</button>
+    </div>
+    <div>
+      <div class="tg-panel" id="tg-ustart" role="tabpanel"><h3>はじめに</h3><div class="when">⏱ 最初に開いたとき</div>
+        <ul class="points"><li>6つの手順（終わると ✓）と、用語の説明。</li><li>上の帯：<b>サンプル値で表示</b>、<b>編集中: ○○</b>（今部品を触れる画面）、<b>編集を終える</b>（Prefabの編集画面を閉じる）、<b>UIの置き場所を作る</b>。</li></ul></div>
+      <div class="tg-panel" id="tg-uscreen" role="tabpanel"><h3>画面</h3><div class="when">⏱ 画面を作る・開き方を決めるとき</div>
+        <ul class="points"><li>雛形カード：<b>空の画面</b>・<b>ロビー（4人の接続待ち）</b>・<b>ゲーム中HUD</b>・<b>確認ポップアップ</b>。</li><li>一覧（段ごと、手前の段が上）。札：<b>起動時</b>・<b>シーン</b>・<b>表示中</b>（Play中）。ダブルクリックで編集。</li><li>選んだ画面：<b>プロジェクトで見る</b>（Prefab ファイルの場所へ飛ぶ。シーンに直接置いた画面は <b>ヒエラルキーで見る</b>）・<b>この画面を編集</b>・<b>出る動きを試す</b>・<b>消える動きを試す</b>・<b>開く</b>／<b>閉じる</b>（Play中）、設定（<b>画面の名前（プログラム用）</b>・<b>表示名</b>・<b>レイヤー（段）</b>・<b>起動時に開く</b>・<b>戻る（Esc）で閉じる</b>・<b>モーダル（下を押せなくする）</b>・<b>画面が出るときの動き</b>…）、<b>文字を TextMeshPro にする（任意）</b>、<b>複製</b>・<b>一覧から外す</b>（ファイルは残す）・<b>この画面を削除</b>（一覧から外し、Prefab ファイルをパソコンのごみ箱へ。シーンに置いた分も消す）。</li></ul></div>
+      <div class="tg-panel" id="tg-ulayer" role="tabpanel"><h3>レイヤー</h3><div class="when">⏱ 重なり順・部品を整理するとき</div>
+        <ul class="points"><li>上：画面の重なり（段の帯、↑↓、<b>Canvas をそろえる</b>、レイヤーの一覧の編集）。</li><li>下：部品（上ほど手前）。<b>◎</b>=編集中だけ隠す（ゲームに影響なし）、<b>●</b>=ゲームでも表示、<b>⊠</b>=シーンで選べなくする（ロック）、<b>↑↓</b>=重なり順、札 <b>値</b>／<b>動</b>。</li><li>ボタン：<b>＋ グループにまとめる</b>・<b>グループを解く</b>・<b>複製</b>・<b>削除</b>。選んだ部品の <b>名前</b>・<b>濃さ（初期値）</b>。</li></ul></div>
+      <div class="tg-panel" id="tg-umotion" role="tabpanel"><h3>動き</h3><div class="when">⏱ 出る・消える・押したときの動きを付けるとき</div>
+        <ul class="points"><li>選んだ部品の動き：<b>きっかけ</b>・<b>動き</b>・<b>長さ（秒・0=標準）</b>・<b>強さ・距離（0=標準）</b>・<b>遅らせる（秒）</b>・<b>効果音</b>・<b>見る値</b>（値が増えた／減ったとき）・<b>▶ 試す</b>・<b>消す</b>。</li><li>定番の動き（出る／消える／ずっと繰り返す／目立たせる）：クリックで試す → きっかけを選んで <b>付ける</b>。</li><li>画面全体：<b>出るときの動き</b>・<b>消えるときの動き</b>、<b>▶ 出る動きを試す</b> など。</li></ul></div>
+      <div class="tg-panel" id="tg-utrans" role="tabpanel"><h3>画面切り替え</h3><div class="when">⏱ 画面・シーンの切り替え演出を決めるとき</div>
+        <ul class="points"><li>幕のカード（小さな画面で見本が動く）、<b>＋ 新しい幕</b>、<b>ひな形をそろえる</b>。</li><li>選んだ幕：<b>▶ Playで試す</b>・<b>複製</b>、設定（<b>模様</b>・<b>幕の色</b>・<b>閉じる秒数</b>・<b>開く秒数</b>・<b>向き（度）</b>・<b>開くとき同じ向きへ抜ける</b>・<b>ルール画像</b>・<b>灼けるふちの色</b>・効果音…）。</li></ul></div>
+      <div class="tg-panel" id="tg-uvalue" role="tabpanel"><h3>値</h3><div class="when">⏱ ゲームのどの値を画面に出すか決めるとき</div>
+        <ul class="points"><li><b>ゲームの値を一覧に登録</b>（熱・コア・敵・通信・ロビーの値をまとめて登録）、<b>＋ 値を足す</b>。</li><li>各値：表示名・名前（クリックでコピー）・<b>○か所で使用</b>・説明・<b>サンプル値</b>・Play中の今の値・名前や種類の編集。</li></ul></div>
+      <div class="tg-panel" id="tg-ucheck" role="tabpanel"><h3>点検</h3><div class="when">⏱ Playする前</div>
+        <ul class="points"><li>主な点検：置き場所が無い／設定ファイルが無い／画面の名前が無い・重なっている／レイヤーが無い／値の名前が一覧に無い（打ち間違い？）／見えないのにクリックを受け止める画像／押しても何も起きないボタン。</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section id="params" data-nav="値と幕の一覧">
+  <div class="rv"><div class="eyebrow">05 — Reference</div><h2>ゲームの値と<br><em>幕の種類</em>。</h2></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">ゲームが画面に渡す値（「ゲームの値を一覧に登録」で入る物）</div><div class="ptable-scroll"><table class="params">
+    <tr><th>名前</th><th>表示名</th><th colspan="2">意味</th><th>種類</th></tr>
+    <tr><td>local.heat</td><td>自分の熱（割合）</td><td colspan="2">0=冷えている、1=オーバーヒート寸前</td><td class="def">数</td></tr>
+    <tr><td>local.overheated</td><td>自分がオーバーヒート中</td><td colspan="2">撃てない間だけON</td><td class="def">ON/OFF</td></tr>
+    <tr><td>local.firing / local.charge / local.thickness / local.grip</td><td>撃っている／チャージ／太さ／握力</td><td colspan="2">自分の砲台の今の様子</td><td class="def">数・ON/OFF</td></tr>
+    <tr><td>local.player / local.playerLabel / local.color</td><td>自分の番号・名前・色</td><td colspan="2">0〜3 / P1〜P4 / プレイヤー色</td><td class="def">数・文字・色</td></tr>
+    <tr><td>player.1〜4.heat / overheated / firing / grip / connected / color</td><td>P1〜P4 の様子</td><td colspan="2">つながっているか・握力はホストで全員分が正確</td><td class="def">いろいろ</td></tr>
+    <tr><td>core.hp / core.hp01 / core.destroyed</td><td>コアのHP</td><td colspan="2">残りHP・割合・壊れたか</td><td class="def">数・ON/OFF</td></tr>
+    <tr><td>swarm.alive</td><td>敵の数</td><td colspan="2">今いる群衆の敵の数</td><td class="def">数</td></tr>
+    <tr><td>wave.time / wave.playing</td><td>ウェーブ</td><td colspan="2">経過秒・湧いている間ON</td><td class="def">数・ON/OFF</td></tr>
+    <tr><td>net.mode / net.players / net.lastError</td><td>通信</td><td colspan="2">オフライン/ホスト/参加中・人数・切断理由</td><td class="def">文字・数</td></tr>
+    <tr><td>lobby.status / lobby.selectedPlayer</td><td>ロビー</td><td colspan="2">お知らせの文・選んだ番号</td><td class="def">文字・数</td></tr>
+  </table></div></div>
+  <div class="curtains rv" aria-label="幕の見本（雰囲気）">
+    <div class="curtain"><div class="scr" style="--a:fade"></div><p><b>暗転</b>（フェード）</p></div>
+    <div class="curtain"><div class="scr" style="--a:wipe"></div><p><b>ワイプ</b></p></div>
+    <div class="curtain"><div class="scr" style="--a:iris"></div><p><b>まるく閉じる</b></p></div>
+    <div class="curtain"><div class="scr" style="--a:blinds"></div><p><b>ブラインド</b>・<b>ひし形</b>・<b>ルール画像</b>・<b>灼ける</b> はツールのカードで</p></div>
+  </div>
+</section>
+
+<section id="faq" data-nav="困ったとき">
+  <div class="rv"><div class="eyebrow">06 — Troubleshooting</div><h2>困ったときは<br><em>ここ</em>。</h2></div>
+  <div class="faq rv">
+    <details><summary>動きが付かない（パッと出る・消える）</summary><div class="a">動きの中身は D-Drive なので、シーンに D-Drive の起動オブジェクト（[D-Drive] Runtime）が必要です。無いときは動きを飛ばして、すぐ出る・消えるようになっています。</div></details>
+    <details><summary>ボタンを押しても何も起きない</summary><div class="a">「ボタンの役目」を付けたか、EventSystem があるか（Play時に無ければ自動で作ります）、手前に見えない画像が被さっていないか（点検の「見えないのにクリックを受け止めています」）を確認。</div></details>
+    <details><summary>ゲージや文字が動かない</summary><div class="a">部品の <b>見る値</b> が値の一覧にあるか（黄色なら打ち間違い）。[UI] に「ゲームの値を画面へ (FortressUiValues)」が付いているか（点検で直せます）。</div></details>
+    <details><summary>編集中に部品が薄く表示される</summary><div class="a">「値で表示を切り替える」の付いた部品が、サンプル値では「隠れる」状態です。編集しやすいように薄く見せています。値ページでサンプル値を変えると表示されます。</div></details>
+    <details><summary>HUD と昔の熱ゲージが二重に出る</summary><div class="a">[UI] に <b>仮の表示との切り替え (FortressLegacyUiSwitch)</b> が付いていれば、HUD の段に画面が出ている間は仮の熱ゲージ（[Fortress] LocalTurretHud）が自動で隠れます。付いていなければ点検の「仮の熱ゲージとの切り替え部品がありません」の <b>部品を付ける</b>。</div></details>
+    <details><summary>テスト用の bat で起動したらロビーが出たままになる</summary><div class="a">起動引数で自動でつながった場合も、つながった時点でロビーは HUD に切り替わります。ロビーを出したくなければ、ロビーの <b>起動時に開く</b> を OFF に。</div></details>
+    <details><summary>日本語の文字が四角（□）になる</summary><div class="a">TextMeshPro の文字の部品は日本語のフォントが必要です（<a href="#rc-ui-tmp">TextMeshPro にするレシピ</a>）。雛形は標準の Text なので、そのままで日本語が出ます。</div></details>
+  </div>
+</section>
+
+<section id="glossary" data-nav="用語集">
+  <div class="rv"><div class="eyebrow">07 — Words</div><h2>分からない言葉は<br><em>ここで引く</em>。</h2></div>
+  <dl class="gloss">
+    <div class="rv"><dt>画面</dt><dd>ロビー・HUD・ポーズなど1枚の画面。名前で開け閉めする。</dd></div>
+    <div class="rv"><dt>レイヤー（段）</dt><dd>画面の重なりの段。上の段ほど手前に出る。</dd></div>
+    <div class="rv"><dt>部品</dt><dd>画面の中の画像・文字・ボタン・ゲージ。</dd></div>
+    <div class="rv"><dt>値</dt><dd>ゲームから画面へ渡す数・文字・色。名前（例 local.heat）で選ぶ。</dd></div>
+    <div class="rv"><dt>サンプル値</dt><dd>Playしていないときに見た目を確かめるための仮の値。</dd></div>
+    <div class="rv"><dt>動き</dt><dd>出る・消える・押した…ときのアニメ。D-Drive の UI の動きを使う。</dd></div>
+    <div class="rv"><dt>幕（画面切り替え）</dt><dd>画面やシーンを入れ替えるとき、全体を覆って隠す演出。</dd></div>
+    <div class="rv"><dt>モーダル</dt><dd>その画面が出ている間、後ろの画面を押せなくすること。</dd></div>
+    <div class="rv"><dt>Prefab の編集画面</dt><dd>画面のファイルを開いて中身を直す、Unity の専用の編集モード。</dd></div>
+  </dl>
+</section>
+
+<div class="devzone"></div>
+<section id="dev" data-nav="開発者向け" data-dev>
+  <div class="rv">
+    <div class="eyebrow">08 — For programmers</div>
+    <h2>呼ぶのは<br><em>名前だけ</em>。</h2>
+    <p class="lead">名前空間 <code>MS2026.UI</code>。画面は名前で開け閉めし、値は掲示板（<code>UiValues</code>）に書くだけ。動きは D-Drive の <code>UiFx</code>。</p>
+  </div>
+  <div class="tabs rv" role="tablist" aria-label="コード例">
+    <button class="tab" role="tab" aria-selected="true" aria-controls="cp-open">画面</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="cp-values">値</button>
+  </div>
+  <div class="panel" id="cp-open" role="tabpanel">
+    <div class="codebox"><div class="cap"><span>UiRoot</span><button class="copy" type="button">copy</button></div><pre>
+using MS2026.UI;
+
+UiRoot.Active.Open("Confirm");
+UiRoot.Active.Close("Confirm");
+UiRoot.Active.Back();                                   // 一番手前の「戻るで閉じる」画面
+UiRoot.Active.SwitchTo("Hud", wipe, closeScreenId: "Lobby");
+UiRoot.Active.LoadScene("Game", burn);
+UiRoot.Active.PlayTransition(burn, onCovered: () =&gt; { /* 裏で入れ替え */ });</pre></div>
+  </div>
+  <div class="panel" id="cp-values" role="tabpanel">
+    <div class="codebox"><div class="cap"><span>UiValues</span><button class="copy" type="button">copy</button></div><pre>
+UiValues.Set("score", 1200);          // 同じ値なら何もしない（毎フレームでも軽い）
+UiValues.Set("result.win", true);
+using var sub = UiValues.Subscribe("core.hp01", v =&gt; Debug.Log(v.AsNumber));</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">詳細</span><code>Docs/Tools/UIStudio_AI_Reference.md</code>。</div><div class="note"><span class="lbl">ゲーム側の値</span><code>FortressUiValues</code> / <code>FortressUiKeys</code>（<code>Assets/_Game/UI/Game</code>）。</div></div>
+  </div>
+</section>
+
+<section id="more" data-nav="関連ツール">
+  <div class="rv"><div class="eyebrow">09 — Related</div><h2>一緒に使う<br><em>ツール</em>。</h2></div>
+  <div class="links">
+    <a class="lk rv" href="D-Drive_ガイド.html"><span class="ti">D-Drive</span><span class="ds">動き（UI Tween）・効果音の中身。自分で動きを作るときは UI Tween エディタ。</span></a>
+    <a class="lk rv" href="StageStudio_ガイド.html"><span class="ti">ステージ背景スタジオ</span><span class="ds">同じ見た目・操作感の、3D背景のツール。</span></a>
+    <a class="lk rv" href="FortressDesigner_ガイド.html"><span class="ti">要塞デザイナー</span><span class="ds">熱・コアのHPなど、画面に出す値の元になるゲームの調整。</span></a>
+    <a class="lk rv" href="index.html"><span class="ti">ツール一覧</span><span class="ds">このプロジェクトの全ツール。</span></a>
+  </div>
+  <footer><span>UI Studio Guide · Xx_MS2026_xX</span><span>2026-10-06 時点のコードに基づく</span></footer>
+</section>
+</main>
+</div>
+<script src="assets/guide.js"></script>
+</body>
+</html>

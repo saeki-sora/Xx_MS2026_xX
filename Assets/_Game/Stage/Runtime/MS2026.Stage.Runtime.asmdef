@@ -1,0 +1,21 @@
+{
+    "name": "MS2026.Stage.Runtime",
+    "rootNamespace": "MS2026.Stage",
+    "references": [
+        "MS2026.Fortress.Runtime",
+        "DDrive.Runtime",
+        "DDrive.Generated",
+        "DDrive.Foundation",
+        "Unity.Mathematics",
+        "Unity.Collections"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 185b1fa018422a9488d3adb76b179dfc, type: 3}
+  m_Name: Transition_Diamonds
+  m_EditorClassIdentifier: MS2026.UI.Runtime::MS2026.UI.UiScreenTransition
+  displayName: "\u3072\u3057\u5F62"
+  pattern: 4
+  color: {r: 0.07, g: 0.07, b: 0.09, a: 1}
+  coverSeconds: 0.5
+  holdSeconds: 0.05
+  revealSeconds: 0.5
+  ease:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  angle: 30
+  revealPassThrough: 1
+  count: 8
+  softness: 0.06
+  center: {x: 0.5, y: 0.5}
+  ruleTexture: {fileID: 0}
+  invert: 0
+  edgeColor: {r: 4, g: 1.4, b: 0.3, a: 1}
+  edgeWidth: 0.08
+  seCover:
+    value: 0
+    type: 0
+  seReveal:
+    value: 0
+    type: 0

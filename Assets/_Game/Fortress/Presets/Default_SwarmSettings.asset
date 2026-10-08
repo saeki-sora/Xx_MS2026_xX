@@ -26,11 +26,16 @@ MonoBehaviour:
   maxCorrectionRatio: 0.6
   wallStiffness: 1
   maxNeighborsChecked: 48
+  obstacleAwareness: 0.1
+  wallContactRange: 0.6
+  wallSlide: 0.9
   arrivalMode: 0
   arrivalRadius: 0.6
   lingerDamagePerSecond: 1
   spawnJitter: 0.3
+  maxSpawnsPerFrame: 3000
   ySort: 1
   renderQueue: 2990
   hitFlashDuration: 0.1
+  hitEffectsPerSecond: 60
   fallbackAreaSize: 64
