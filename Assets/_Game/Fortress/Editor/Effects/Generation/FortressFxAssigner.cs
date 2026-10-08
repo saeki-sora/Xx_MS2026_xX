@@ -71,6 +71,7 @@ namespace MS2026.Fortress.EditorTools
                 if (root == null) continue;
                 int n = FillComponents(root.GetComponentsInChildren<DestructibleObstacle>(true),
                     root.GetComponentsInChildren<SmashBallModule>(true), ids, isPrefabAsset: true);
+                n += FillCores(root.GetComponentsInChildren<CoreCrystalController>(true), ids, isPrefabAsset: true);
                 if (n > 0)
                 {
                     slots += n;
@@ -396,6 +397,25 @@ namespace MS2026.Fortress.EditorTools
             return n;
         }
 
+        private static int FillCores(CoreCrystalController[] cores, Ids ids, bool isPrefabAsset)
+        {
+            int n = 0;
+            foreach (var c in cores)
+            {
+                if (c == null || c.effects == null) continue;
+                if (!isPrefabAsset) Undo.RecordObject(c, "Assign core effects");
+                int added = Both(c.effects.onDamaged, ids, "CoreShatter");
+                if (added > 0)
+                {
+                    n += added;
+                    EditorUtility.SetDirty(c);
+                    if (!isPrefabAsset) PrefabUtility.RecordPrefabInstancePropertyModifications(c);
+                }
+            }
+
+            return n;
+        }
+
         private static int ProcessScene(Scene scene, Ids ids, bool placeBgm)
         {
             int n = 0;
@@ -408,6 +428,11 @@ namespace MS2026.Fortress.EditorTools
             }
 
             n += FillComponents(obstacles.ToArray(), balls.ToArray(), ids, isPrefabAsset: false);
+
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                n += FillCores(root.GetComponentsInChildren<CoreCrystalController>(true), ids, isPrefabAsset: false);
+            }
 
             if (placeBgm && ids.bgm != 0)
             {

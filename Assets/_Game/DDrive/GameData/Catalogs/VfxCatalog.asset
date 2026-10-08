@@ -55,6 +55,20 @@ MonoBehaviour:
       Persistent: 0
       Domain: 0
       Net: 0
+  - Id: 2734424051633896882
+    Type: 3
+    Address: VFX_Fortress_CoreShatter
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
   - Id: 9076089593357038298
     Type: 3
     Address: VFX_Fortress_SmashBreak

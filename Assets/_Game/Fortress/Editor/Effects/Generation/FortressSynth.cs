@@ -266,6 +266,28 @@ namespace MS2026.Fortress.EditorTools
             return b;
         }
 
+        /// <summary>コアクリスタルが割れる: 鋭いガラスの砕け音（パリーン）＋高い破片のきらめきが散る。</summary>
+        public static float[] CoreShatter()
+        {
+            var b = Buffer(0.9f);
+            Noise(b, 0f, 0.06f, 0.9f, 1.2f, 1f, 0.7f, 91);
+            Noise(b, 0f, 0.4f, 0.4f, 2.2f, 0.95f, 0.5f, 92);
+            Tone(b, 0f, 0.15f, 2400f, 900f, 0.4f, Wave.Sine, 0.0005f, 3f);
+            Tone(b, 0f, 0.3f, 140f, 60f, 0.3f, Wave.Sine, 0.001f, 2.5f);
+            // 破片が床に散る高い音（音程をばらして不規則に）
+            var rng = new System.Random(93);
+            for (int i = 0; i < 18; i++)
+            {
+                float t = 0.03f + i * 0.035f + (float)rng.NextDouble() * 0.02f;
+                float f = 2200f + (float)rng.NextDouble() * 3800f;
+                Tone(b, t, 0.1f + (float)rng.NextDouble() * 0.12f, f, f * 0.92f, 0.16f * (1f - i / 24f), Wave.Sine, 0.0005f, 3f);
+            }
+
+            Sparkle(b, 0.12f, 0.12f, 6, 96f, 0.05f, 19);
+            Finish(b);
+            return b;
+        }
+
         // ───────── BGM ─────────
 
         public const float BgmBpm = 140f;

@@ -10,17 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bde4918bc0c27404bbd509ad885a2853, type: 3}
-  m_Name: SE_Fortress_SwarmHit
+  m_Name: SE_Fortress_CoreShatter
   m_EditorClassIdentifier: DDrive.Runtime::DDrive.Runtime.Audio.SeData
-  Id: 7903325102335460783
-  DisplayName: SwarmHit
+  Id: 17972745566154370587
+  DisplayName: CoreShatter
   Description: 
   Category: Fortress
   Tags: []
   Icon: {fileID: 0}
   Assignee: 
   SpecUrl: 
-  Version: 5
+  Version: 2
   Author: xxxak
   UpdatedAt: 2026-10-08T10:48:41
   ChangeNote: 
@@ -36,15 +36,15 @@ MonoBehaviour:
     Domain: 0
     Net: 0
   Events: []
-  ImportSourceGuid: 13a2ef79149c1614ba001bc01aa05ce7
+  ImportSourceGuid: b43479d54978c2b40b62d2e5becafb38
   SchemaVersion: 1
   Clips:
-  - {fileID: 8300000, guid: 13a2ef79149c1614ba001bc01aa05ce7, type: 3}
+  - {fileID: 8300000, guid: b43479d54978c2b40b62d2e5becafb38, type: 3}
   Sources: []
   StartOffsetSec: 0
   SelectMode: 0
   Mixer: {fileID: 0}
-  Volume: 0.5
+  Volume: 0.8
   PitchRange: {x: 1, y: 1}
   Loop: 0
   Spatial: 0
@@ -70,4 +70,4 @@ MonoBehaviour:
   Spread: 0
   DopplerEnabled: 0
   MaxConcurrent: 8
-  CooldownSec: 0.05
+  CooldownSec: 0.03

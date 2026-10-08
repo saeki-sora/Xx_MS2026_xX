@@ -24,11 +24,13 @@ namespace MS2026.Fortress.EditorTools
         public static readonly string[] VfxNames =
         {
             "LaserMuzzle", "LaserImpact", "SwarmHit", "DestructHit", "DestructStage", "DestructBreak", "DestructRegen", "SmashBreak",
+            "CoreShatter",
         };
 
         public static readonly string[] SeNames =
         {
             "LaserMuzzle", "LaserImpact", "SwarmHit", "DestructHit", "DestructStage", "DestructBreak", "DestructRegen", "SmashBreak",
+            "CoreShatter",
         };
 
         public const string BgmName = "CyberRun";
@@ -95,7 +97,7 @@ namespace MS2026.Fortress.EditorTools
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log("[FortressFx] 素材を生成しました（VFX 8 / SE 8 / BGM 1）。D-Drive の自動登録が終わったら、" +
+            Debug.Log("[FortressFx] 素材を生成しました（VFX 9 / SE 9 / BGM 1）。D-Drive の自動登録が終わったら、" +
                       "Tools › 要塞 › 演出素材 › 2 演出欄へ割り当て を実行してください。");
         }
 
@@ -453,6 +455,25 @@ namespace MS2026.Fortress.EditorTools
                     size = new Vector2(0.2f, 0.34f), burst = 20, c0 = Purple, c1 = Cyan, radius = 0.4f, cols = 2, randRot = false, maxParticles = 30 });
                 Save(root, "SmashBreak");
             }
+
+            // コアクリスタルが割れる: 白い閃光、ガラスの破片が四方に飛ぶ、RGBずれのひび割れ、きらめき。
+            {
+                var root = Root("CoreShatter");
+                Layer(root.transform, new Spec { name = "Flash", mat = m.glow, duration = 0.8f, life = new Vector2(0.15f, 0.25f), speed = Vector2.zero,
+                    size = new Vector2(3.5f, 4.2f), burst = 1, c0 = new Color(0.9f, 1f, 1f, 1f), c1 = new Color(0.8f, 0.95f, 1f, 1f), grow = true, maxParticles = 4 });
+                Ghosts(root.transform, new Spec { name = "Shift", mat = m.glow, duration = 0.8f, life = new Vector2(0.15f, 0.25f), speed = Vector2.zero,
+                    size = new Vector2(3.6f, 4.4f), burst = 1, grow = true, maxParticles = 4 }, 0.15f);
+                Layer(root.transform, new Spec { name = "Shards", mat = m.streak, duration = 0.8f, life = new Vector2(0.35f, 0.7f), speed = new Vector2(6f, 13f),
+                    size = new Vector2(0.18f, 0.4f), burst = 26, c0 = White, c1 = new Color(0.6f, 0.95f, 1f, 1f), radius = 0.3f, stretch = true, stretchLen = 3f,
+                    gravity = 0.4f, randRot = false, maxParticles = 40 });
+                Layer(root.transform, new Spec { name = "ShardGlints", mat = m.star, duration = 0.8f, life = new Vector2(0.4f, 0.9f), speed = new Vector2(3f, 9f),
+                    size = new Vector2(0.2f, 0.5f), burst = 20, c0 = White, c1 = Cyan, radius = 0.3f, spin = 220f, shrink = true, gravity = 0.5f, maxParticles = 30 });
+                Layer(root.transform, new Spec { name = "Dust", mat = m.puff, duration = 0.8f, life = new Vector2(0.5f, 0.9f), speed = new Vector2(0.5f, 2f),
+                    size = new Vector2(0.5f, 1f), burst = 6, c0 = new Color(0.8f, 0.95f, 1f, 0.5f), c1 = new Color(0.9f, 0.85f, 1f, 0.4f), radius = 0.4f, grow = true, maxParticles = 10 });
+                Layer(root.transform, new Spec { name = "Digits", mat = m.digits, duration = 0.8f, life = new Vector2(0.6f, 1f), speed = new Vector2(1.5f, 4f),
+                    size = new Vector2(0.16f, 0.26f), burst = 8, c0 = Purple, c1 = Pink, radius = 0.3f, cols = 2, randRot = false, maxParticles = 12 });
+                Save(root, "CoreShatter");
+            }
         }
 
         // ───────── 効果音・BGM ─────────
@@ -469,6 +490,7 @@ namespace MS2026.Fortress.EditorTools
                 { "DestructBreak", FortressSynth.DestructBreak },
                 { "DestructRegen", FortressSynth.DestructRegen },
                 { "SmashBreak", FortressSynth.SmashBreak },
+                { "CoreShatter", FortressSynth.CoreShatter },
             };
 
             foreach (var kv in seBuilders)

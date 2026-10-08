@@ -10,19 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d4015dd925fd84944a6b81371d5d7807, type: 3}
-  m_Name: VFX_Fortress_LaserImpact
+  m_Name: VFX_Fortress_CoreShatter
   m_EditorClassIdentifier: DDrive.Runtime::DDrive.Runtime.Vfx.VfxData
-  Id: 9696497413153645610
-  DisplayName: LaserImpact
+  Id: 2734424051633896882
+  DisplayName: CoreShatter
   Description: 
   Category: Fortress
   Tags: []
-  Icon: {fileID: 0}
+  Icon: {fileID: 2800000, guid: 37734a5162171084b97c34c94c2e42ff, type: 3}
   Assignee: 
   SpecUrl: 
-  Version: 5
+  Version: 3
   Author: xxxak
-  UpdatedAt: 2026-10-08T10:48:41
+  UpdatedAt: 2026-10-08T10:48:42
   ChangeNote: 
   Flags:
     Pause: 0
@@ -30,15 +30,15 @@ MonoBehaviour:
     Pool:
       Kind: 1
       InitialCount: 0
-      MaxCount: 8
+      MaxCount: 12
     Priority: 0
     Persistent: 0
     Domain: 0
     Net: 0
   Events: []
-  ImportSourceGuid: d87d1dfb7b0fb8846bc1d1f99ca6971a
+  ImportSourceGuid: 7f764da5022b5aa46bf0ab98b38cd1b6
   SchemaVersion: 1
-  Prefab: {fileID: 3265220833547476963, guid: d87d1dfb7b0fb8846bc1d1f99ca6971a, type: 3}
+  Prefab: {fileID: 6624677477435784661, guid: 7f764da5022b5aa46bf0ab98b38cd1b6, type: 3}
   AnchorId:
     value: 0
     type: 0
@@ -50,7 +50,7 @@ MonoBehaviour:
     LocalScale: {x: 1, y: 1, z: 1}
     FollowRotation: 0
     DetachOnStop: 0
-  LifeMode: 1
+  LifeMode: 0
   Duration: 1
   FadeOutSec: 0
   Render: 0
