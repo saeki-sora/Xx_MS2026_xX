@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Title_CubeRight
+  m_Shader: {fileID: 4800000, guid: 108b8982ac3b39e4ca1c2d74f35a23f4, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _DissolveAmount: 0
+    - _DissolveEdgeWidth: 0.08
+    - _DissolveNoiseScale: 12
+    - _FXDissolveToggle: 0
+    - _FXEmissionIntensity: 1
+    - _FXEmissionPulseSpeed: 0
+    - _FXEmissionToggle: 0
+    - _FXFireToggle: 0
+    - _FXFrostToggle: 0
+    - _FXGlitchToggle: 0
+    - _FXHitFlashToggle: 0
+    - _FXHologramToggle: 0
+    - _FXRimToggle: 0
+    - _FXToonToggle: 0
+    - _FXUVScrollToggle: 0
+    - _FireIntensity: 2
+    - _FireNoiseScale: 24
+    - _FireScrollSpeed: 1.5
+    - _FrostAmount: 0.7
+    - _FrostSparkleThreshold: 0.85
+    - _GlitchAmount: 0.5
+    - _GlitchBlockSize: 16
+    - _GlitchRGBSplit: 0.02
+    - _GlitchSpeed: 12
+    - _HitFlashAmount: 0
+    - _HologramFlickerIntensity: 0.15
+    - _HologramFlickerSpeed: 6
+    - _HologramFresnelPower: 2.5
+    - _HologramScanlineDensity: 60
+    - _HologramScanlineSpeed: 4
+    - _RimIntensity: 1.5
+    - _RimPower: 3
+    - _ToonSteps: 2
+    - _UVScrollPatternScale: 30
+    - _UVScrollSharpness: 0.6
+    - _UVScrollSpeed: 1
+    m_Colors:
+    - _BaseColor: {r: 0.7, g: 0.93, b: 1, a: 1}
+    - _DissolveEdgeColor: {r: 1, g: 0.54999995, b: 0.049999982, a: 1}
+    - _FXEmissionColor: {r: 1, g: 1, b: 1, a: 1}
+    - _FireColor: {r: 1, g: 0.45, b: 0.049999982, a: 1}
+    - _FrostColor: {r: 0.65, g: 0.85, b: 1, a: 1}
+    - _FrostSparkleColor: {r: 0.9, g: 0.97999996, b: 1, a: 1}
+    - _HitFlashColor: {r: 1, g: 1, b: 1, a: 1}
+    - _HologramColor: {r: 0.19999996, g: 0.9, b: 1, a: 1}
+    - _RimColor: {r: 0.29999998, g: 0.9, b: 1, a: 1}
+    - _ToonShadeColor: {r: 0.54999995, g: 0.54999995, b: 0.65, a: 1}
+    - _UVScrollColor: {r: 1, g: 0.7, b: 0.09999997, a: 1}
+    - _UVScrollDirection: {r: 0, g: 1, b: 0, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

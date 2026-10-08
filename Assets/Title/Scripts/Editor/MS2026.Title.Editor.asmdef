@@ -1,0 +1,20 @@
+{
+    "name": "MS2026.Title.Editor",
+    "rootNamespace": "MS2026.Title.EditorTools",
+    "references": [
+        "MS2026.Title.Runtime",
+        "MS2026.ShaderFX.Runtime",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

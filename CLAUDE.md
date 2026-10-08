@@ -13,6 +13,7 @@
 | ステージ背景スタジオ | `Docs/Tools/StageStudio_AI_Reference.md` | `StageStudio_ガイド.html` | `Assets/_Game/Stage/`, `Assets/_Tools/StudioKit/`（共通の画面部品） |
 | UIスタジオ | `Docs/Tools/UIStudio_AI_Reference.md` | `UIStudio_ガイド.html` | `Assets/_Game/UI/`, `Assets/_Tools/StudioKit/` |
 | D-Drive（外部パッケージ） | `Docs/Tools/DDrive_AI_Reference.md` | `D-Drive_ガイド.html` | `Library/PackageCache/com.ddrive.core@*`, `Assets/_Game/DDrive/` |
+| タイトル画面（作業中） | `Docs/Tools/TitleScreen_AI_Reference.md` | `TitleScreen_ガイド.html` | `Assets/Title/`, `Assets/Scenes/Title.unity` |
 
 1. **読む**: 上のツールに関わる作業では、ソースを読み始める前に該当する `*_AI_Reference.md` を読むこと。ソースを開くのは、そこに書いていないことを確かめるときだけにする。
 2. **更新する**: ツールのコード・挙動・UI の文言・メニュー・既定値・パス・公開 API を変更／追加したら、**同じ作業の中で**そのツールの `*_ガイド.html` と `*_AI_Reference.md` を両方更新する（後回しにしない）。D-Drive は版の更新、ID の追加・変更、呼び出し箇所や設定の変更が対象。
