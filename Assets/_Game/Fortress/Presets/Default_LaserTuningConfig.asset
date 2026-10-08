@@ -85,28 +85,28 @@ MonoBehaviour:
   effects:
     muzzle:
       vfx:
-        value: 0
-        type: 0
+        value: 759660600684738104
+        type: 3
       se:
-        value: 9819440828055015967
+        value: 16135865275358210923
         type: 1
       tintWithPlayerColor: 1
       colorParam: Color
     impact:
       vfx:
-        value: 0
-        type: 0
+        value: 9696497413153645610
+        type: 3
       se:
-        value: 0
-        type: 0
+        value: 7371773206052366440
+        type: 1
       tintWithPlayerColor: 1
       colorParam: Color
     swarmHit:
       vfx:
-        value: 0
-        type: 0
+        value: 1148039940316807166
+        type: 3
       se:
-        value: 0
-        type: 0
+        value: 7903325102335460783
+        type: 1
       tintWithPlayerColor: 1
       colorParam: Color

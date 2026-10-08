@@ -20,9 +20,9 @@ MonoBehaviour:
   Icon: {fileID: 0}
   Assignee: 
   SpecUrl: 
-  Version: 1
+  Version: 2
   Author: xxxak
-  UpdatedAt: 2026-10-08T10:07:27
+  UpdatedAt: 2026-10-08T10:23:15
   ChangeNote: 
   Flags:
     Pause: 0
@@ -41,7 +41,7 @@ MonoBehaviour:
   Intro: {fileID: 0}
   LoopBody: {fileID: 8300000, guid: 88afca15922a98242b57ec4c76fd815c, type: 3}
   LoopStartSec: 0
-  LoopEndSec: 0
+  LoopEndSec: 72.80326843261719
   Mixer: {fileID: 0}
   Volume: 1
   FadeIn:

@@ -141,6 +141,7 @@ namespace MS2026.Fortress
         {
             if (!bgm.IsValid || !isActiveAndEnabled)
             {
+                Debug.LogWarning("[FortressBgm] 鳴らしません: bgm が空、またはオブジェクトが無効です。", this);
                 return;
             }
 
@@ -160,6 +161,8 @@ namespace MS2026.Fortress
             }
 
             _index = Mathf.Clamp(startIndex, 0, Mathf.Max(0, Count - 1));
+            Debug.Log("[FortressBgm] 再生します: 曲 " + (_index + 1) + " / " + Count + "（ID " + Current.Value + "）, Audio.IsBound=" + Audio.IsBound +
+                      ", AudioListener=" + (FindFirstObjectByType<AudioListener>() != null), this);
             Audio.PlayBgm(Current, fadeInSeconds);
             _playing = true;
             _starting = null;
