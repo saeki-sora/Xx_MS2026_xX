@@ -20,6 +20,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 070f0243510f9fe44ab61f83160cb4d0
+    m_Address: VFX_Fortress_Overheat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 20d144fcd16a16942865a190173d1b39
     m_Address: SE_Fortress_CoreShatter
     m_ReadOnly: 0
@@ -57,6 +62,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 588e4b8fd9710ca4eb92747628e6b6e9
     m_Address: BGM_Fortress_BattleTillDawn
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6ab8e43b8e9ae284e8f53496138e1b8c
+    m_Address: SE_Fortress_Overheat
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

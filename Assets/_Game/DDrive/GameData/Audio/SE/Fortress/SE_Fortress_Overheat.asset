@@ -10,17 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bde4918bc0c27404bbd509ad885a2853, type: 3}
-  m_Name: SE_Fortress_DestructHit
+  m_Name: SE_Fortress_Overheat
   m_EditorClassIdentifier: DDrive.Runtime::DDrive.Runtime.Audio.SeData
-  Id: 1777448812509017777
-  DisplayName: DestructHit
+  Id: 17024609056135836289
+  DisplayName: Overheat
   Description: 
   Category: Fortress
   Tags: []
   Icon: {fileID: 0}
   Assignee: 
   SpecUrl: 
-  Version: 6
+  Version: 2
   Author: xxxak
   UpdatedAt: 2026-10-08T15:19:33
   ChangeNote: 
@@ -36,10 +36,10 @@ MonoBehaviour:
     Domain: 0
     Net: 0
   Events: []
-  ImportSourceGuid: ee1ab7c7da37f2c4ea52597e3f19af7a
+  ImportSourceGuid: 38762d3b0bab5c846bba8642357ba8f5
   SchemaVersion: 1
   Clips:
-  - {fileID: 8300000, guid: ee1ab7c7da37f2c4ea52597e3f19af7a, type: 3}
+  - {fileID: 8300000, guid: 38762d3b0bab5c846bba8642357ba8f5, type: 3}
   Sources: []
   StartOffsetSec: 0
   SelectMode: 0

@@ -1048,11 +1048,11 @@ MonoBehaviour:
   effects:
     onDamaged:
       vfx:
-        value: 0
-        type: 0
+        value: 2734424051633896882
+        type: 3
       se:
-        value: 0
-        type: 0
+        value: 17972745566154370587
+        type: 1
       tintWithPlayerColor: 1
       colorParam: Color
     onDestroyed:

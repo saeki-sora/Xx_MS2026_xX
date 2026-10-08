@@ -24,6 +24,9 @@ namespace MS2026.Fortress
         private Transform _impactPoint;
         private Handle<VfxMarker> _muzzleVfx = Handle<VfxMarker>.Invalid;
         private Handle<VfxMarker> _impactVfx = Handle<VfxMarker>.Invalid;
+        private Handle<VfxMarker> _steamVfx = Handle<VfxMarker>.Invalid;
+        private float _steamRemaining;
+        private bool _steamActive;
         private bool _impactActive;
 
         private LaserEffectSettings Settings => _turret != null && _turret.tuning != null ? _turret.tuning.effects : null;
@@ -48,6 +51,8 @@ namespace MS2026.Fortress
             _turret.OnStateChanged -= HandleStateChanged;
             SetSwarm(null);
             FortressEffectPlayer.Stop(ref _muzzleVfx);
+            StopSteam();
+            _steamRemaining = 0f;
             StopImpact();
         }
 
@@ -71,10 +76,12 @@ namespace MS2026.Fortress
 
             // LaserBeamVisual(Update)がこのフレームの当たり判定を済ませた後に読む。
             UpdateImpact();
+            UpdateSteam();
         }
 
         private void HandleStateChanged(TurretState state)
         {
+
             if (state == TurretState.Firing)
             {
                 StartMuzzle(true);
@@ -100,6 +107,58 @@ namespace MS2026.Fortress
             {
                 FortressEffectPlayer.PlaySound(effect, anchor.position);
             }
+        }
+
+        /// <summary>
+        /// 撃った時間ぶんだけ「湯気の残り時間」をためて、撃っていない間に減らしながら湯気を出す。
+        /// 撃っている間は湯気は出さない（ビームそのものを見せる）。
+        /// </summary>
+        private void UpdateSteam()
+        {
+            var settings = Settings;
+            var effect = settings?.steam;
+            if (effect == null || effect.IsEmpty)
+            {
+                _steamRemaining = 0f;
+                StopSteam();
+                return;
+            }
+
+            var dt = Time.deltaTime;
+            if (_turret.IsFiring)
+            {
+                _steamRemaining = Mathf.Min(settings.maxSteamSeconds, _steamRemaining + dt * settings.steamSecondsPerFireSecond);
+                StopSteam();
+                return;
+            }
+
+            if (_steamRemaining <= 0f)
+            {
+                StopSteam();
+                return;
+            }
+
+            _steamRemaining -= dt;
+            if (_steamActive)
+            {
+                return;
+            }
+
+            _steamActive = true;
+            var anchor = _turret.muzzle != null ? _turret.muzzle : transform;
+            _steamVfx = FortressEffectPlayer.StartFollowing(effect, anchor, _turret.playerIndex);
+            FortressEffectPlayer.PlaySound(effect, anchor.position);
+        }
+
+        private void StopSteam()
+        {
+            if (!_steamActive)
+            {
+                return;
+            }
+
+            _steamActive = false;
+            FortressEffectPlayer.Stop(ref _steamVfx);
         }
 
         private void UpdateImpact()

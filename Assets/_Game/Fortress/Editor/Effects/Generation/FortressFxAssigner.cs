@@ -200,7 +200,7 @@ namespace MS2026.Fortress.EditorTools
                 var data = FindData("VFX_", n);
                 if (data == null) continue;
                 var so = new SerializedObject(data);
-                bool loop = n == "LaserMuzzle" || n == "LaserImpact";
+                bool loop = n == "LaserMuzzle" || n == "LaserImpact" || n == "Overheat";
                 SetEnum(so, "LifeMode", loop ? "Loop" : "OneShot", n);
                 if (!loop) SetFloatIfPresent(so, "FadeOutSec", 0f);
                 SetEnum(so, "Flags.Pool.Kind", "Pooled", n);
@@ -351,7 +351,8 @@ namespace MS2026.Fortress.EditorTools
             if (s == null) return 0;
             return Both(s.muzzle, ids, "LaserMuzzle", replaceOldDrum: true)
                    + Both(s.impact, ids, "LaserImpact")
-                   + Both(s.swarmHit, ids, "SwarmHit");
+                   + Both(s.swarmHit, ids, "SwarmHit")
+                   + Both(s.steam, ids, "Overheat");
         }
 
         private static int FillDestructible(DestructibleFeedbackSettings f, Ids ids, bool includeDestroyed = true)

@@ -33,6 +33,7 @@ namespace MS2026.Fortress.EditorTools
             DrawSlot("effects.muzzle", "発射口（撃っている間）");
             DrawSlot("effects.impact", "着弾点（壁などに当たっている間）");
             DrawSlot("effects.swarmHit", "群衆の敵に当たった瞬間");
+            DrawSlot("effects.steam", "撃ったあとの湯気（撃った時間ぶん続く）");
             _tuningSerialized.ApplyModifiedProperties();
 
             DrawSwarmBudget();

@@ -20,9 +20,9 @@ MonoBehaviour:
   Icon: {fileID: 2800000, guid: 37734a5162171084b97c34c94c2e42ff, type: 3}
   Assignee: 
   SpecUrl: 
-  Version: 3
+  Version: 4
   Author: xxxak
-  UpdatedAt: 2026-10-08T10:48:42
+  UpdatedAt: 2026-10-08T15:19:33
   ChangeNote: 
   Flags:
     Pause: 0

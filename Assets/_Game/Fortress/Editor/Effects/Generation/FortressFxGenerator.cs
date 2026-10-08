@@ -24,13 +24,13 @@ namespace MS2026.Fortress.EditorTools
         public static readonly string[] VfxNames =
         {
             "LaserMuzzle", "LaserImpact", "SwarmHit", "DestructHit", "DestructStage", "DestructBreak", "DestructRegen", "SmashBreak",
-            "CoreShatter",
+            "CoreShatter", "Overheat",
         };
 
         public static readonly string[] SeNames =
         {
             "LaserMuzzle", "LaserImpact", "SwarmHit", "DestructHit", "DestructStage", "DestructBreak", "DestructRegen", "SmashBreak",
-            "CoreShatter",
+            "CoreShatter", "Overheat",
         };
 
         public const string BgmName = "CyberRun";
@@ -474,6 +474,19 @@ namespace MS2026.Fortress.EditorTools
                     size = new Vector2(0.16f, 0.26f), burst = 8, c0 = Purple, c1 = Pink, radius = 0.3f, cols = 2, randRot = false, maxParticles = 12 });
                 Save(root, "CoreShatter");
             }
+
+            // オーバーヒート中（止まっている間ずっと）: 白い湯気がもくもく上がり、赤っぽい熱のにじみ、ときどき小さな泡。
+            {
+                var root = Root("Overheat");
+                Layer(root.transform, new Spec { name = "HeatGlow", mat = m.glow, loop = true, duration = 1f, life = new Vector2(0.5f, 0.8f), speed = Vector2.zero,
+                    size = new Vector2(1.4f, 1.8f), rate = 4f, c0 = new Color(1f, 0.35f, 0.2f, 0.45f), c1 = new Color(1f, 0.55f, 0.3f, 0.35f), worldSpace = false, maxParticles = 8 });
+                Layer(root.transform, new Spec { name = "Steam", mat = m.puff, loop = true, duration = 1f, life = new Vector2(0.9f, 1.5f), speed = new Vector2(0.4f, 1.1f),
+                    size = new Vector2(0.5f, 0.9f), rate = 12f, c0 = new Color(1f, 1f, 1f, 0.5f), c1 = new Color(0.9f, 0.95f, 1f, 0.4f), radius = 0.3f,
+                    gravity = -0.25f, grow = true, maxParticles = 30 });
+                Layer(root.transform, new Spec { name = "Bubble", mat = m.bubble, loop = true, duration = 1f, life = new Vector2(0.6f, 1.0f), speed = new Vector2(0.5f, 1.4f),
+                    size = new Vector2(0.1f, 0.22f), rate = 4f, c0 = White, c1 = White, radius = 0.35f, gravity = -0.2f, maxParticles = 10 });
+                Save(root, "Overheat");
+            }
         }
 
         // ───────── 効果音・BGM ─────────
@@ -491,6 +504,7 @@ namespace MS2026.Fortress.EditorTools
                 { "DestructRegen", FortressSynth.DestructRegen },
                 { "SmashBreak", FortressSynth.SmashBreak },
                 { "CoreShatter", FortressSynth.CoreShatter },
+                { "Overheat", FortressSynth.Overheat },
             };
 
             foreach (var kv in seBuilders)

@@ -288,6 +288,17 @@ namespace MS2026.Fortress.EditorTools
             return b;
         }
 
+        /// <summary>オーバーヒート: 「シュゥゥ」と蒸気が抜ける音。</summary>
+        public static float[] Overheat()
+        {
+            var b = Buffer(1.0f);
+            Noise(b, 0f, 0.9f, 0.5f, 1.2f, 0.6f, 0.15f, 101);
+            Noise(b, 0f, 0.5f, 0.3f, 2f, 0.95f, 0.5f, 102);
+            Tone(b, 0f, 0.5f, 520f, 150f, 0.25f, Wave.Sine, 0.01f, 2f);
+            Finish(b);
+            return b;
+        }
+
         // ───────── BGM ─────────
 
         public const float BgmBpm = 140f;

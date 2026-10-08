@@ -110,3 +110,14 @@ MonoBehaviour:
         type: 1
       tintWithPlayerColor: 1
       colorParam: Color
+    steam:
+      vfx:
+        value: 5465202105630298506
+        type: 3
+      se:
+        value: 17024609056135836289
+        type: 1
+      tintWithPlayerColor: 1
+      colorParam: Color
+    steamSecondsPerFireSecond: 1
+    maxSteamSeconds: 10
