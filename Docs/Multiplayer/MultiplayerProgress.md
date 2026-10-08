@@ -1,7 +1,7 @@
 # マルチプレイ化 進捗と宿題（4人対戦・LAN）
 
 > 別のチャット（Claude Code のセッション）で作業を再開するときは、まずこのファイルを読んでください。
-> 最終更新: 2026-10-04。コードの詳細は `Docs/Tools/FortressDesigner_AI_Reference.md` の「Net」「Hud」「Swarm」節にあります。
+> 最終更新: 2026-10-08（ロビーのシーンを追加。5b章）。コードの詳細は `Docs/Tools/FortressDesigner_AI_Reference.md` の「Net」「Hud」「Swarm」節にあります。
 > 最初の計画書（承認済み）: `C:\Users\soret\.claude\plans\snoopy-forging-castle.md`。
 
 ## 1. 目標と方針（ユーザー承認済み）
@@ -241,6 +241,19 @@
 - 破壊可能物・敵の種類は「ウェーブ設定に入っている物」「シーン内の名前の並び」で番号を振る。HostとClientは必ず同じビルドを使う。
 - 要塞デザイナーのテストボタン（壊す・湧かせる・ストレステスト）はHost側で押す（Clientでは無効）。
 
+## 5b. タイトル → ロビー → ゲーム（2026-10-08）
+
+ユーザー決定: 「ロビーで接続して全員待つ」形（ロビーのシーンでつながり、全員そろったらホストの「ゲーム開始」で全員一緒にゲームへ）／開始は「全員が準備OKなら押せる」（ホストは「待たずに開始」もできる）／ビルドの最初のシーンはタイトル。詳しい仕組みは `Docs/Tools/UIStudio_AI_Reference.md` の 7章、人間向けは `UIStudio_ガイド.html` の「タイトル → ロビー → ゲーム」。
+
+- 流れ: Title → **Lobby**（名前・P1〜P4を選ぶ → 部屋を作る／同じLANの部屋を一覧から選んで参加）→ 部屋（全員の名前・準備OK・通信の遅れが全員に見える。握り続けても準備OK）→ ホストの「ゲーム開始！」→ 3・2・1 → 全員でゲームへ。試合中は Esc の一時メニューで「全員でロビーに戻る（ホスト）」「試合から抜ける（参加側）」「タイトルへ」。
+- 仕組み: **ロビーのシーンは遊んでいる間も読み込まれたまま**。通信の土台（NetworkManager・D-Drive・FortressNetworkBootstrap・NgoNetBridge・センサー）はロビーのシーンにあり、ホストが NGO のシーン管理でゲームのシーンを**重ねて（Additive）**読み込む。参加側は `SetClientSynchronizationMode(Additive)` により、後から参加した人もロビーのシーンはそのまま使い、ゲームのシーンだけ読み込む。各中継役（*NetworkHub）は OnNetworkSpawn で準備するので、ロビーで先につながっていても問題ない。
+- ゲームのシーンの同じ物（通信の土台・[UI]・EventSystem・センサー）は、ロビーから来たときだけ `[Session] Guard`（`GameSceneSessionGuard`）が動き出す前に外す。**ゲームのシーンだけで Play／起動すれば今まで通り**（接続UI・起動引数もそのまま）。
+- **テスト用の bat は変更なしで使える**: `-fortress-` で始まる引数があると、タイトルがロビーを飛ばしてすぐゲームのシーンを読み込む（今までと同じ流れ）。
+- ロビーのやり取りは NGO の名前つきメッセージ（`MS2026.Lobby.Hello/Ready/State`）。ホストが部屋の一覧（席・名前・準備OK・ホストか・遅れ）を変わるたびに全員へ配る。**これで「参加側には他の人の接続状況が届かない」問題は、ロビーから来た場合は解消**（`player.N.connected` も全員のPCで正しい）。ゲームのシーンには NetworkObject を増やしていない。
+- 部屋さがし: UDP **47777** のブロードキャスト（ホストが返事をする）。ゲームの通信（UDP 7777）とは別。初回にファイアウォールの許可が要る。見つからなくてもアドレス入力で参加できる。違うビルドは一覧に「ビルドが違います」と出る（`Application.version` で判定）。
+- 確認済み（1台のエディタ、ホストのみ）: 部屋を作る・部屋さがしの返事・準備OK・3・2・1・ゲームを重ねて読み込む（2回）・番人が重複を外す（NetworkManager/D-Drive/UI/EventSystem/センサーが各1つ）・全員でロビーに戻る・接続の時間切れのお知らせ・タイトルへ戻る→もう一度ロビー。
+- **宿題（未確認）**: 2台以上での参加側の流れ（一覧から参加・途中参加・準備OKの同期・カウントダウン・全員でゲームへ／ロビーへ・ホストが抜けたときのお知らせ・外す）。ビルドして 2台で確かめる。1台で試すときは、ロビーで「部屋を作る」と「このアドレスに参加（127.0.0.1）」を別々の起動で行う（タイトルからの通常の起動。bat は使わない）。
+
 ## 6. 主なファイル
 
 | 何 | 場所 |
@@ -251,5 +264,6 @@
 | 解説（人間向け） | `Docs/Multiplayer/群衆同期_写真方式_解説.html`（方式の全体像・工夫・ネットワークの基礎知識） |
 | 計測 | `Runtime/Net/Bench/NetBenchmarkRunner.cs`, `NetBenchmarkArgs.cs`, `NetTrafficStats.cs` |
 | シーンへの配置 | メニュー `Tools/要塞/ネットワーク/同期オブジェクトをシーンに配置`（`Editor/Net/FortressNetSceneSetup.cs`） |
+| ロビー（タイトル→ロビー→ゲーム） | `Assets/_Game/UI/Game/Session/`（`GameSession`・`LobbyRoster`・`LobbyMessages`・`LanDiscovery`・`GameSceneSessionGuard`・画面の部品）、`Assets/Scenes/Lobby.unity`、組み立て `Assets/_Game/UI/Editor/Session/SessionFlowBuilder.cs` |
 | 起動用bat | `Tools/NetTest/`（`launch_2p/4p`, `launch_ui_2p`, `launch_duplicate_test`, `bench_2p`, `bench_4p`, `bench_4p_latejoin`, `bench_offline`, `run_instance`） |
 | 画面のUI配置 | `Runtime/Hud/DebugOverlayLayout.cs`（左上の縦積み）、`LocalTurretGaugeHud.cs` |

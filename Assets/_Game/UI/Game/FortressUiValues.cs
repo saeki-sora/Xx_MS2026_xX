@@ -143,11 +143,20 @@ namespace MS2026.UI.Game
                 UiValues.Set(FortressUiKeys.PlayerConnected(p), IsConnected(p, local, listening, manager));
             }
 
-            UiValues.Set(FortressUiKeys.NetPlayers, listening && manager.IsHost && _bootstrap != null ? _bootstrap.ClientIdToPlayerIndex.Count : listening ? 1 : 0);
+            var session = GameSession.Active;
+            UiValues.Set(FortressUiKeys.NetPlayers, session != null && listening ? session.Roster.PresentCount
+                : listening && manager.IsHost && _bootstrap != null ? _bootstrap.ClientIdToPlayerIndex.Count : listening ? 1 : 0);
         }
 
         private bool IsConnected(int player, int local, bool listening, NetworkManager manager)
         {
+            // ロビーから来たときは、ホストが配る部屋の一覧で全員分がわかる（参加側でも正しい）。
+            var session = GameSession.Active;
+            if (session != null && listening)
+            {
+                return session.Roster.seats[player].present;
+            }
+
             if (!listening)
             {
                 return player == local;

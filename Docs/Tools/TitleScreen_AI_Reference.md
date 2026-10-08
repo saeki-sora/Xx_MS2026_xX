@@ -1,17 +1,17 @@
 # Title Screen (タイトル画面) — AI Agent Reference
 
-> Cold-start brief for Claude Code. Verified against source on **2026-10-07**.
+> Cold-start brief for Claude Code. Verified against source on **2026-10-08**.
 > Human guide: `Docs/Tools/TitleScreen_ガイド.html`. Maintenance rule: when you change anything under `Assets/Title/` (behaviour, Inspector labels/tooltips, defaults, menu, scene layout), update this file + the HTML guide in the same task. Style: `Docs/Tools/DOCS_GUIDE.md`.
 > **Status: work in progress.** All art is placeholder. Start key is a temporary `A` key (grip input later). The user directs the animation; the current sequence below is their 2026-10-07 direction. The placeholder logo must NOT contain the text 「握れ、灼ける前に」 (user: not needed) — it reads `TITLE LOGO（仮）`.
 > World (from the user's synopsis + rough art): 100 years ahead, people live in a cyber world; bugs/viruses spread like germs (ばいきん); cleaning staff fight them with special toothpaste. Look: pastel cyan/pink/lavender, magenta–cyan RGB offset, glitch, binary digits, sparkles, speed lines.
 
 ## 0. Mental model
-- `Assets/Scenes/Title.unity` → press start → `SceneManager.LoadSceneAsync("Game")`.
+- `Assets/Scenes/Title.unity` → press start → `SceneManager.LoadSceneAsync("Lobby")` (the network lobby, built by UI Studio — `UIStudio_AI_Reference.md` §7) → host starts the match → Game. **Test launches** (any command-line arg starting with `-fortress-`, e.g. every `Tools/NetTest/*.bat`) skip Title and Lobby: `TitleScreenController.Awake` loads `directSceneForTestLaunch` ("Game") immediately.
 - **Sequence** (user direction):
   1. Fade from black; the **gloomy purple "before" background** appears (slow zoom-out; user 2026-10-08). Floating germs run from the start; bubbles are hidden until the screen is repainted.
   2. **Opening** (`TitleOpening`, user direction 2026-10-07 v2): an upright toothpaste tube (cap on top) pops in near the centre; its middle gets pinched (narrows; no fingers shown — user removed them) while the rest of the tube **swells** (camera zooms in + rumbles, rising) → it can't hold: the **cap blows off** (user 2026-10-07: detached from the tube, launched up with random sideways speed + spin + gravity) and paste **shoots up out of the mouth** (stream grows upward, upward splash particles, shake, camera pulls back, tube deflates) → paste **oozes down from the top over the whole screen** ("どろーっ", user 2026-10-07: screen-space UI split into vertical columns that fall with Perlin-smoothed lags, so the front is uneven and viscous) and covers it → tube/stream/cap are hidden and `SetPainted(true)` swaps `beforeObjects` (gloomy background) off and `afterObjects` (Bubbles, started with Play) on, so the bright background is revealed → the paste flows on down off-screen (same lags) or fades = the screen is "repainted" → `Finished` fires `handOffDelay` after the reveal starts.
   3. On `Finished`, `TitleScreenController` calls `PlayEnter()` on `afterOpening`: **logo** drops from above to top-center (InCubic, lands with flash + shake + squash), two **character cubes** tumble down to bottom-left / bottom-right (each landing shakes the screen), then **press-start** text pops in at bottom-center.
-  4. Ready → start key → exit effects (flash, glitch, blink) + camera zoom/shake → fade to black → load Game.
+  4. Ready → start key → exit effects (flash, glitch, blink) + camera zoom/shake → fade to black → load Lobby.
   - Any start input during 1–3 skips to the ready state (opening skipped, all elements to idle).
 - Scene content is **generated** by the editor menu `Tools/タイトル/タイトルシーンを組み立てる` (`TitleSceneBuilder`). Re-running rebuilds `[Title]`; swapped sprites (SpriteRenderers by parent name) and the curtain texture (RawImage `PasteCurtain`) and the character `Model` children (by `CharacterLeft`/`CharacterRight`) are always kept. Dialog `数値を引き継いで作り直す` / `やめる` / `初期値で作り直す`: "keep" snapshots every Title component's values + all non-UI transforms under `[Title]` by hierarchy path (`TitleValueSnapshot`) and re-applies them after the rebuild; "initial" resets to §2. A root that fails `IsCurrentLayout` (needs `Opening/PasteStream` and a RawImage on `FadeCanvas/PasteCurtain`; older layout) only gets `作り直す` / `やめる` and always resets. Materials / ShaderFX profiles are created only if missing.
 - **Tuning (user decision 2026-10-07: stay in the Inspector, no separate window).** `TitleScreenController` Inspector has a `流れの一覧（ここで全部まとめて調整できます）` overview (opening timings/zoom/rumble/shake + tube position/size, every element's timing/ease/moveFrom/rotateFrom/glitchIn/landing feel + position/size, camera & start settings incl. `画面に映る高さ` = orthographicSize×2). Controller / Opening / ElementMotion / CameraMotion Inspectors show Play-mode buttons `▶ 最初から再生` (`controller.Restart()`) and `再生中に変えた値を残す` (`TitlePlayModeKeeper`: snapshot to `SessionState`, written back to the scene on `EnteredEditMode`, scene marked dirty, undoable). Positions/sizes are edit-mode only (motion overwrites transforms in Play).
@@ -35,7 +35,7 @@ Assets/Title/
              TitleFX_Character.asset (RimLight (.35,.95,1) power 3 ×1.2 + Glitch amount 0 block 10 speed 16 split .025 + HitFlash white) — used by both cubes
              Glitch amount stays 0 in the profiles; TitleElementMotion drives `_GlitchAmount` per renderer.
 ```
-Build list: the builder **appends** `Assets/Scenes/Title.unity` to `EditorBuildSettings` (end of list, so the existing launch flow / net tests are unchanged). Making Title the first scene is a user decision (not done).
+Build list: the title builder **appends** `Assets/Scenes/Title.unity` to `EditorBuildSettings`. Since 2026-10-08 (user decision) UI Studio's `タイトル→ロビー→ゲームの流れを組み立てる` sets the order **Title → Lobby → Game** (→ SampleScene) and sets the scene value `gameSceneName = "Lobby"`; net tests still work because test launches skip to Game.
 
 ## 2. Generated scene (builder defaults)
 Camera (`Camera.main`): orthographic, size 5.4 (view 19.2×10.8 world at 16:9), pos (0,0,-10), SolidColor black, + `TitleCameraMotion`. The default Directional Light stays (it lights the cubes).
@@ -62,7 +62,8 @@ Depth: cubes (opaque, z≈0) occlude Background (z 5) / particles (z 3–4) by d
 ## 3. Runtime API (ns `MS2026.Title`)
 ```csharp
 // TitleScreenController
-string gameSceneName = "Game"; Key startKey = Key.A;     // Keyboard.current[startKey].wasPressedThisFrame
+string gameSceneName = "Lobby"; Key startKey = Key.A;    // Keyboard.current[startKey].wasPressedThisFrame
+string directSceneForTestLaunch = "Game";               // loaded in Awake when a "-fortress-…" arg is present (empty = never skip)
 TitleOpening opening;                                    // null → afterOpening enter immediately
 TitleElementMotion background;                           // PlayEnter at Start
 TitleElementMotion[] afterOpening;                       // PlayEnter on opening.Finished; enterDelay counts from then
@@ -142,7 +143,7 @@ void ZoomTo(float amount /*0.1 = 10% closer, holds; negative = wider*/, float se
 - Inspector: Japanese `[Header]`s (`登場`, `待機中のゆらぎ`, `スタート時（退場）`, `遷移`, `オープニング（歯磨き粉）`, `配置物（…）`, `画面全体の演出`, `エフェクト・効果音（D-Drive）`, on TitleOpening `配置物`, `出てくる`, `つまんでふくらむ`, `噴き出す`, `塗り替わる`) and Japanese tooltips; enum values have Japanese `InspectorName`s. `FortressEffect` slots get the Fortress drawer (`▶ 試す` etc.).
 
 ## 5. Integration
-- Game scene loads normally (single mode). Title has no NetworkManager / D-Drive bootstrap.
+- Lobby scene loads normally (single mode); it owns the network stack and later adds Game on top. Title has no NetworkManager / D-Drive bootstrap. Going back to the title from the lobby/game (`GameSession.GoToTitle`) shuts networking down and loads Title single (Title then fades in from black as usual).
 - Grip input: not wired. Plan: call `TitleScreenController.RequestStart()` from a grip threshold (see `GripInputBridge_AI_Reference.md`). The pinch/swell could later be driven by the real grip value (idea, not implemented).
 - ShaderFX: `EffectTarget` on sprites (Uber Sprite) and on the cubes (3D Uber). Module classes are in `MS2026.ShaderFX.Modules` (editor code needs that `using`).
 

@@ -31,7 +31,7 @@
   <ol id="toc"></ol>
   <div class="foot">
     <button class="themebtn" id="themeBtn" type="button"><span aria-hidden="true">◐</span><span data-label>ライト表示</span></button>
-    <div class="meta mono">Assets/Title<br>作業中 · 2026-10-07 時点</div>
+    <div class="meta mono">Assets/Title<br>作業中 · 2026-10-08 時点</div>
   </div>
 </nav>
 
@@ -112,7 +112,7 @@
     </div></div>
     <div class="step rv"><div class="n">2</div><div>
       <h3>再生して確かめる</h3>
-      <p>▶ Play。演出が終わったら <kbd>A</kbd> でゲームのシーンへ進みます。</p>
+      <p>▶ Play。演出が終わったら <kbd>A</kbd> でロビー（部屋を作る・参加する）のシーンへ進み、そこからゲームへ進みます。ロビーは UIスタジオで作ります（<a href="UIStudio_ガイド.html#rc-ui-flow">タイトル → ロビー → ゲームのレシピ</a>）。テスト用の bat で起動したときは、タイトルとロビーを飛ばしてすぐゲームのシーンへ進みます。</p>
     </div></div>
     <div class="step rv"><div class="n">3</div><div class="step-body">
       <div><h3>画像を差し替える</h3>
@@ -260,7 +260,7 @@
   <div class="faq rv">
     <details><summary>再生を止めたら、調整した値が元に戻った</summary><div class="a">Unity では再生中の変更は止めると戻ります。止める前に <b>再生中に変えた値を残す</b> を押してください（逆引き「再生中に調整した値を残したい」）。</div></details>
     <details><summary>再生してもロゴやキャラが表示されない／歯磨き粉が出ない</summary><div class="a">シーンが古い作りのままです。<span class="mp">Tools<i>›</i>タイトル<i>›</i>タイトルシーンを組み立てる</span> → <b>作り直す</b> を実行してください。Hierarchy の <b>[Title]</b> の下に <b>Opening</b>・<b>CharacterLeft</b>・<b>CharacterRight</b> があれば新しい作りです。</div></details>
-    <details><summary>A を押してもゲームのシーンに進まない</summary><div class="a"><ol><li>演出の途中なら、1 回目は「演出を飛ばす」です。もう 1 回押してください。</li><li>Console に「シーン「Game」を読み込めません」が出ていたら、File › Build Profiles のシーン一覧に Game が入っているか確認。</li><li>Game ビューをクリックしてから押してください（Unity の別の画面が選ばれているとキーが届きません）。</li></ol></div></details>
+    <details><summary>A を押してもロビーに進まない</summary><div class="a"><ol><li>演出の途中なら、1 回目は「演出を飛ばす」です。もう 1 回押してください。</li><li>Console に「シーン「Lobby」を読み込めません」が出ていたら、UIスタジオの <b>はじめに</b> › <b>流れを組み立てる</b> でロビーのシーンを作り、ビルドのシーンの順番をそろえてください（Title Screen Controller の <b>Game Scene Name</b> が進む先のシーンの名前です）。</li><li>Game ビューをクリックしてから押してください（Unity の別の画面が選ばれているとキーが届きません）。</li></ol></div></details>
     <details><summary>キューブが真っ黒・ピンク色になる</summary><div class="a">キューブには光が必要です。シーンの <b>Directional Light</b> を消していないか確認。ピンク色ならマテリアル（<code>Title_CubeLeft</code> / <code>Title_CubeRight</code>）のシェーダーが見つかっていないので、プログラマーに相談してください。</div></details>
     <details><summary>差し替えた画像が真っ白・四角になる</summary><div class="a">画像の <b>Texture Type</b> が <b>Sprite (2D and UI)</b> になっているか確認してください。</div></details>
     <details><summary>ロゴが浮かび上がらない・光らない・ノイズが出ない</summary><div class="a">Logo › Sprite に <b>Effect Target</b> が付いていて、Profile が <b>TitleFX_Logo</b>、Sprite Renderer の Material が <b>Title_SpriteFX</b> か確認。</div></details>
@@ -308,7 +308,7 @@ cam.SetRumble(0.1f);      // 止めるまで続くブルブル（0 で止める�
     <a class="lk rv" href="GripInputBridge_ガイド.html"><span class="ti">握力入力ブリッジ</span><span class="ds">今後、握ってスタートに使う予定。</span></a>
     <a class="lk rv" href="index.html"><span class="ti">ツール一覧</span><span class="ds">このプロジェクトの全ツール。</span></a>
   </div>
-  <footer><span>Title Screen Guide · Xx_MS2026_xX</span><span>2026-10-07 時点のコードに基づく</span></footer>
+  <footer><span>Title Screen Guide · Xx_MS2026_xX</span><span>2026-10-08 時点のコードに基づく</span></footer>
 </section>
 </main>
 </div>

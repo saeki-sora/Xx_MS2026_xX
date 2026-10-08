@@ -244,9 +244,14 @@ namespace MS2026.UI.EditorTools
             {
                 var row = B.Rect(team, $"P{p + 1}");
                 B.Place(row, new Vector2(0f, 1f), new Vector2(0f, -p * 46f), new Vector2(360f, 40f));
-                var name = B.Text(row, "Name", $"P{p + 1}", 26, FortressColors.PlayerColor(p), TextAnchor.MiddleLeft, true);
-                B.Place(name.rectTransform, new Vector2(0f, 0.5f), Vector2.zero, new Vector2(60f, 40f));
+                var name = B.Text(row, "Name", $"P{p + 1}", 22, FortressColors.PlayerColor(p), TextAnchor.MiddleLeft, true);
+                B.Place(name.rectTransform, new Vector2(0f, 0.5f), Vector2.zero, new Vector2(80f, 40f));
                 name.rectTransform.pivot = new Vector2(0f, 0.5f);
+                name.horizontalOverflow = HorizontalWrapMode.Overflow;
+                // ロビーで付けた名前（無ければ P1 など）。
+                var nameText = name.gameObject.AddComponent<UiBindText>();
+                nameText.key = FortressUiKeys.PlayerName(p);
+                nameText.whenEmpty = $"P{p + 1}";
                 var bar = B.Gauge(row, "Heat", FortressUiKeys.PlayerHeat(p), new Vector2(280f, 20f), FortressColors.PlayerColor(p), false);
                 B.Place((RectTransform)bar.transform.parent, new Vector2(1f, 0.5f), Vector2.zero, new Vector2(280f, 20f));
                 ((RectTransform)bar.transform.parent).pivot = new Vector2(1f, 0.5f);

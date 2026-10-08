@@ -75,9 +75,9 @@ namespace MS2026.UI.EditorTools
 
             foreach (var item in catalog.items)
             {
-                if (item.kind == UiValueKind.Text && string.IsNullOrEmpty(item.sampleText))
+                if (item.kind == UiValueKind.Text && (string.IsNullOrEmpty(item.sampleText) || item.sampleText == "サンプル"))
                 {
-                    item.sampleText = item.key == FortressUiKeys.LocalPlayerLabel ? "P1" : item.key == FortressUiKeys.NetMode ? "ホスト" : item.key == FortressUiKeys.LobbyStatus ? "P1 としてホストを始めています…" : "サンプル";
+                    item.sampleText = SampleText(item.key);
                 }
 
                 if (item.kind == UiValueKind.Color && item.key.EndsWith(".color"))
@@ -88,6 +88,33 @@ namespace MS2026.UI.EditorTools
 
             EditorUtility.SetDirty(catalog);
             return added;
+        }
+
+        private static readonly string[] SampleNames = { "たろう", "はなこ", "ジロー", "" };
+
+        /// <summary>文字の値のサンプル（UIスタジオの「サンプル値で表示」で、Play しなくても画面の見た目がわかるように）。</summary>
+        private static string SampleText(string key)
+        {
+            if (key.StartsWith("player.") && key.EndsWith(".name"))
+            {
+                return SampleNames[Mathf.Clamp(key[7] - '1', 0, 3)];
+            }
+
+            return key switch
+            {
+                FortressUiKeys.LocalPlayerLabel => "P1",
+                FortressUiKeys.NetMode => "ホスト",
+                FortressUiKeys.LobbyStatus => "みんなが入ってくるのを待っています",
+                FortressUiKeys.LobbySelectedLabel => "P1",
+                FortressUiKeys.LobbyName => "たろう",
+                FortressUiKeys.LobbyPhase => "準備OKを待っています",
+                FortressUiKeys.LobbyAddress => "192.168.1.12",
+                FortressUiKeys.LobbyHostAddress => "192.168.1.12",
+                FortressUiKeys.MessageTitle => "部屋との接続が切れました",
+                FortressUiKeys.MessageBody => "ホストが部屋を閉じたか、通信が途切れました。",
+                FortressUiKeys.ToastText => "はなこ（P2）が入りました",
+                _ => "サンプル"
+            };
         }
 
         /// <summary>画面切り替えのひな形（暗転・ワイプ・まるく・ブラインド・ひし形・灼ける）が1つも無ければ作る。</summary>

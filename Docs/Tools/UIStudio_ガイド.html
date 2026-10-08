@@ -39,7 +39,7 @@
   <ol id="toc"></ol>
   <div class="foot">
     <button class="themebtn" id="themeBtn" type="button"><span aria-hidden="true">◐</span><span data-label>ライト表示</span></button>
-    <div class="meta mono">Assets/_Game/UI<br>2026-10-06 時点</div>
+    <div class="meta mono">Assets/_Game/UI<br>2026-10-08 時点</div>
   </div>
 </nav>
 
@@ -62,7 +62,7 @@
       <dt>誰が使う</dt><dd>デザイナー（見た目・動き）／プランナー（画面の流れ・表示する値）</dd>
       <dt>開き方</dt><dd><span class="mp">Tools<i>›</i>UIスタジオ<i>›</i>UIスタジオを開く</span></dd>
       <dt>必要なもの</dt><dd>特になし（D-Drive の起動オブジェクトがシーンにあると動きが付く）</dd>
-      <dt>今の状況</dt><dd>2026-10-06 に完成。<b>Unity上での動作確認はこれから</b>（下の注意を参照）</dd>
+      <dt>今の状況</dt><dd>2026-10-06 に完成、10-08 に「タイトル → ロビー → ゲーム」の流れを追加。ホスト1台での流れは Unity で確認済み、<b>2台以上での確認はこれから</b></dd>
     </dl></div>
   </div>
   <div class="marquee" aria-hidden="true"><div class="track" id="mq" data-words="雛形|レイヤー|部品の重なり順|59種の動き|その場でプレビュー|画面切り替えの幕|値の一覧|サンプル値|ロビー|HUD|点検"></div></div>
@@ -75,6 +75,7 @@
   </div>
   <div class="cards">
     <div class="card feat rv"><div class="ic">▢</div><h3>雛形からすぐ動く画面</h3><p>ロビー（4人の接続待ち）・ゲーム中HUD・確認ポップアップ・空の画面。値のつなぎ・動き・ボタンの役目まで入った状態でできあがります。</p><p class="ex">例：ロビーを作って Play → P1を選んで「ホストになる」→ 幕が閉じて HUD に切り替わる</p></div>
+    <div class="card feat rv"><div class="ic">⇄</div><h3>タイトル → ロビー → ゲーム</h3><p>ボタン1つで通信のロビーを組み立てます。名前と番号を決めて「部屋を作る」／「部屋に参加する」（同じLANの部屋は一覧に自動で出る）。全員の名前・準備OK・通信の遅れが全員に見え、全員が準備OKでホストの「ゲーム開始！」→ 3・2・1 → 全員一緒にゲームへ。試合中は Esc で一時メニュー（全員でロビーに戻る／抜ける／タイトルへ）。</p><p class="ex">例：4台のPCでタイトル → それぞれ番号を選ぶ → P1が部屋を作る → 3人が一覧から参加 → 握って準備OK → 開始</p></div>
     <div class="card feat rv"><div class="ic">☰</div><h3>Photoshop風のレイヤー</h3><p>部品を「上ほど手前」で一覧。編集中だけ隠す・ゲームで隠す・ロック・↑↓で重なり順・グループ・濃さ。</p></div>
     <div class="card feat rv"><div class="ic">〰</div><h3>59種の動きをクリックで試す</h3><p>「ポンと出る」「ぷにっ」「ぶるっと震える」…を、Playせずに部品の上で再生。気に入ったら「出たとき」「押したとき」などに付けるだけ。</p></div>
     <div class="card feat rv"><div class="ic">◧</div><h3>画面切り替えの幕</h3><p>暗転・ワイプ・まるく閉じる・ブラインド・ひし形・ルール画像・<b>灼ける</b>（ふちが光りながら焼ける）。カードの中で動く見本を見比べられます。</p></div>
@@ -169,7 +170,12 @@
     <details class="recipe" id="rc-ui-gauge" data-tags="value"><summary><span class="q">ゲームの値をゲージや数字で出したい</span><span class="who">値のつなぎ</span></summary><div class="a"><ol><li>部品に <span class="mp">Add Component<i>›</i>UI Studio</span> から <b>値をゲージで出す</b>（UiBindFill）／<b>値を文字で出す</b>（UiBindText）／<b>値で色を変える</b>（UiBindColor）／<b>値で表示を切り替える</b>（UiBindVisible）。</li><li><b>見る値</b> の ▼ で値を選ぶ（例：コアのHP（割合））。</li><li>文字は <b>書式</b> で飾れます：<code>{0:0}%</code> → 70%、<code>敵 {0:N0}</code> → 敵 1,200。</li></ol><p class="small">ゲージは画像の <b>Image Type</b> を <b>Filled</b> にするのがおすすめ。<b>残像の画像</b> に色違いの画像を入れると、減ったときに遅れて追いかける「残像」になります。</p></div></details>
     <details class="recipe" id="rc-ui-sample" data-tags="value"><summary><span class="q">Playせずにゲージの見え方を確かめたい</span><span class="who">値・サンプル値</span></summary><div class="a"><p>上の帯の <b>サンプル値で表示</b> をON。値ページで各値の <b>サンプル値</b> のスライダーを動かすと、シーンビューのゲージや文字がその場で変わります。隠れる部品（UiBindVisible）は、編集中は薄く表示されます。</p></div></details>
     <details class="recipe" id="rc-ui-newvalue" data-tags="value"><summary><span class="q">新しい値（スコアなど）を画面に出したい</span><span class="who">値</span></summary><div class="a"><p>値ページの <b>＋ 値を足す</b> で名前と説明を決め、プログラマーにその名前で書き込んでもらいます（<code>UiValues.Set("score", 1200)</code> の1行）。部品側はその名前を選ぶだけ。</p></div></details>
-    <details class="recipe" id="rc-ui-lobby" data-tags="net"><summary><span class="q">ロビーで別のPCに参加したい</span><span class="who">ロビー</span></summary><div class="a"><p>ホスト役のPCで P1 などを選んで <b>ホストになる</b>。参加するPCでは別の番号を選び、<b>ホストのIPアドレス</b> にホストのPCのIP（例 192.168.0.12）を入れて <b>参加する</b>。各カードの <b>参加中</b> はホストのPCでは全員分、参加側では自分だけ表示されます（今の通信の仕組みでは参加側に他の人の接続状況が届かないため）。</p></div></details>
+    <details class="recipe" id="rc-ui-flow" data-tags="net"><summary><span class="q">タイトル → ロビー → ゲームの流れを作りたい</span><span class="who">はじめに › タイトル → ロビー → ゲーム</span></summary><div class="a"><ol><li>UIスタジオの <b>はじめに</b> の <b>流れを組み立てる</b>（メニューなら <span class="mp">Tools<i>›</i>UIスタジオ<i>›</i>タイトル→ロビー→ゲームの流れを組み立てる</span>）。</li><li><b>足りない物だけ作る</b>（作った画面・シーンはそのまま）か、<b>画面とロビーも作り直す</b> を選ぶ。</li><li>できる物：ロビーの画面（<code>LobbyBackground</code>・<code>LobbyTop</code>・<code>LobbyJoin</code>・<code>LobbyRoom</code>・<code>Countdown</code>・<code>Pause</code>・<code>Message</code>・<code>Toast</code>、無ければ <code>Hud</code>）、ロビーのシーン <code>Assets/Scenes/Lobby.unity</code>、ゲームのシーンの番人 <b>[Session] Guard</b>。タイトルのスタートの行き先がロビーになり、ビルドのシーンの順番が タイトル → ロビー → ゲーム になります。</li><li><b>タイトルから Play</b> で通しで確かめる。</li></ol><p class="small">ゲームのシーンだけで Play すれば、今まで通りすぐ遊べます（番人は、ロビーから来たときだけ働きます）。テスト用の bat（Tools/NetTest）もタイトル・ロビーを飛ばしてゲームへ直行するので、今まで通り使えます。</p></div></details>
+    <details class="recipe" id="rc-ui-lobby" data-tags="net"><summary><span class="q">部屋を作って、ほかのPCに参加してもらいたい</span><span class="who">ロビー</span></summary><div class="a"><ol><li>どのPCも、最初の画面で <b>名前</b>（無くてもよい）と <b>プレイヤー番号</b>（P1〜P4。全員ちがう番号に）を決める。名前と番号はそのPCに覚えておきます。</li><li>1台が <b>部屋を作る</b>（ホスト）。部屋の画面の右上に <b>部屋のアドレス</b> が出ます。</li><li>ほかのPCは <b>部屋に参加する</b>。同じLANの部屋が一覧に自動で出るので、押すだけで参加。選んだ番号が使われていたら、空いている番号で入ります。一覧に出ないときは、右の欄に部屋のアドレスを入れて <b>このアドレスに参加</b>。</li><li>部屋の画面で全員の名前・準備OK・通信の遅れが見えます。だれかが入る・抜けると上に通知が出ます。</li></ol><p class="small">初めて部屋を作る・探すとき、Windows のファイアウォールの確認が出たら「プライベート ネットワーク」を許可してください（ゲームの通信 UDP 7777 と、部屋さがし UDP 47777）。</p></div></details>
+    <details class="recipe" id="rc-ui-ready" data-tags="net"><summary><span class="q">準備OKにして、全員そろったら始めたい</span><span class="who">ロビー › 部屋</span></summary><div class="a"><ol><li>それぞれ <b>準備OKにする</b> を押す（もう一度で取り消し）。<b>センサーを握り続けても</b>切り替わります（約1秒。キーボードなら Q を押し続ける）。下の細いゲージが溜まり具合です。</li><li>全員が準備OKになると、ホストの <b>ゲーム開始！</b> が押せるようになります（押せないときは灰色）。</li><li>押すと全員の画面で 3・2・1 → 幕が閉じて、全員一緒にゲームのシーンへ。カウントダウン中にだれかが準備OKを外す・抜けると開始は取り消されます。ホストは <b>開始をやめる</b> も押せます。</li><li>待ちきれないときはホストの <b>待たずに開始</b>（準備OKでない人がいても始める）。</li></ol><p class="small">秒数・必要な人数・「待たずに開始」を出すか・握って準備OKのしきい値と秒数は、ロビーのシーンの <b>[Lobby] Session</b>（ロビーとゲームの流れ）で変えられます。</p></div></details>
+    <details class="recipe" id="rc-ui-pause" data-tags="net"><summary><span class="q">試合中にロビーへ戻りたい・抜けたい</span><span class="who">一時メニュー（Pause）</span></summary><div class="a"><p>試合中に <kbd>Esc</kbd>（ゲームパッドなら Start / B）で一時メニュー。対戦中なのでゲームは止まりません。</p><ul><li><b>つづける</b>：閉じる（もう一度 <kbd>Esc</kbd> でも）。</li><li><b>全員でロビーに戻る</b>（ホストだけ）：全員の画面が幕で閉じ、部屋の画面へ。準備OKは外れます。</li><li><b>試合から抜ける</b>（参加側だけ）：自分だけ最初の画面へ。</li><li><b>タイトルへ</b>：通信を終えてタイトルへ。ホストがこれを押すと部屋が閉じ、ほかの人には「部屋との接続が切れました」が出て最初の画面に戻ります。</li></ul></div></details>
+    <details class="recipe" id="rc-ui-lobbylook" data-tags="screen net"><summary><span class="q">ロビーの見た目（絵・色・配置）を変えたい</span><span class="who">画面・レイヤー</span></summary><div class="a"><ul><li><b>絵だけ替える</b>：<code>Assets/_Game/UI/Art/Session/</code> の PNG（<code>Session_Background</code>・<code>Session_Panel</code>（角丸。9スライス）・<code>Session_Dot</code>・<code>Session_Ready</code>（チェック）・<code>Session_Host</code>（王冠））を、同じ名前で上書きすれば全部の画面が変わります。</li><li><b>配置・色・文字</b>：画面ページで <code>LobbyTop</code> などを選んで <b>この画面を編集</b>。ボタンや文字を動かしても、名前の付いた部品（ボタン・入力欄）が残っていれば動きます。表示の切り替え・文字は「値の部品」なので、見る値（<code>lobby.*</code>・<code>player.N.*</code>）を変えれば中身も変えられます。</li><li><b>動き</b>：動きページで、出る・押した・値が増えたときの動きを付け替え。</li><li><b>幕</b>：[Lobby] Session の <b>画面切り替えの幕</b>（ロビーの画面どうし・ロビー ↔ ゲーム・タイトルへ）。</li></ul><p class="small">「画面とロビーも作り直す」を押すと、手で直したロビーの画面も最初の形に戻ります。直した後は「足りない物だけ作る」を使ってください。</p></div></details>
+    <details class="recipe" id="rc-ui-lobbysound" data-tags="net"><summary><span class="q">ロビーのBGM・効果音を付けたい</span><span class="who">[Lobby] Session</span></summary><div class="a"><p>ロビーのシーンの <b>[Lobby] Session</b> の <b>音・演出（D-Drive の番号札）</b>：<b>ロビーで流すBGM</b>、<b>誰かが部屋に入ったとき</b>・<b>抜けたとき</b>・<b>準備OKが変わったとき</b>・<b>カウントダウンの1つごと</b>・<b>試合が始まる瞬間</b>・<b>お知らせを出すとき</b>。どれも D-Drive の番号札（空なら鳴らさない）。試合に入るとステージのBGMに変わり、ロビーに戻るとロビーのBGMに戻ります。ボタンを押した音などは、動きページの <b>効果音</b> で部品ごとに付けます。</p></div></details>
     <details class="recipe" id="rc-ui-delete" data-tags="screen"><summary><span class="q">間違って作った画面を消したい</span><span class="who">画面 › この画面を削除</span></summary><div class="a"><ol><li>画面ページの一覧で、消したい画面を選ぶ（同じ名前が2つあるときは、<b>プロジェクトで見る</b> でどのファイルか確かめる）。</li><li>下の <b>この画面を削除</b> を押し、確認で <b>削除する</b>。</li><li>画面の一覧から外れ、Prefab ファイルはパソコンのごみ箱へ移ります。間違えたら、ごみ箱から元の場所へ戻せば復活します（一覧には <b>画面</b> ページから入れ直す）。ファイルを残して一覧からだけ外したいときは <b>一覧から外す</b>。</li></ol></div></details>
     <details class="recipe" id="rc-ui-tmp" data-tags="screen"><summary><span class="q">文字を TextMeshPro にしたい（縁取り・影を付けたい）</span><span class="who">画面 › 文字を TextMeshPro にする</span></summary><div class="a"><ol><li>ゲームに入れてよいライセンスの日本語フォント（.ttf / .otf）をプロジェクトに入れる（Windows に入っているメイリオ等は、ゲームに同梱してよいか必ず確認）。</li><li>画面ページで画面を選び、<b>文字を TextMeshPro にする（任意）</b> の <b>日本語のフォントファイル</b> に入れて <b>TextMeshPro 用のフォントを作る</b>（使った文字だけ自動で足されるので、文字の一覧を用意しなくてよい）。</li><li><b>この画面の文字を TextMeshPro にする</b>。文字・大きさ・色・寄せ方はそのまま置き換わります（入力欄の中の文字は除く）。Prefab の画面は元に戻せないので、先に <b>複製</b> しておくと安心。</li></ol></div></details>
     <p class="noresult">見つかりませんでした。別の言葉で探してください。</p>
@@ -190,7 +196,7 @@
     </div>
     <div>
       <div class="tg-panel" id="tg-ustart" role="tabpanel"><h3>はじめに</h3><div class="when">⏱ 最初に開いたとき</div>
-        <ul class="points"><li>6つの手順（終わると ✓）と、用語の説明。</li><li>上の帯：<b>サンプル値で表示</b>、<b>編集中: ○○</b>（今部品を触れる画面）、<b>編集を終える</b>（Prefabの編集画面を閉じる）、<b>UIの置き場所を作る</b>。</li></ul></div>
+        <ul class="points"><li>6つの手順（終わると ✓）と、用語の説明。</li><li><b>タイトル → ロビー → ゲーム</b>：<b>流れを組み立てる</b>・<b>ロビーのシーンを開く</b>・<b>タイトルから Play</b>。</li><li>上の帯：<b>サンプル値で表示</b>、<b>編集中: ○○</b>（今部品を触れる画面）、<b>編集を終える</b>（Prefabの編集画面を閉じる）、<b>UIの置き場所を作る</b>。</li></ul></div>
       <div class="tg-panel" id="tg-uscreen" role="tabpanel"><h3>画面</h3><div class="when">⏱ 画面を作る・開き方を決めるとき</div>
         <ul class="points"><li>雛形カード：<b>空の画面</b>・<b>ロビー（4人の接続待ち）</b>・<b>ゲーム中HUD</b>・<b>確認ポップアップ</b>。</li><li>一覧（段ごと、手前の段が上）。札：<b>起動時</b>・<b>シーン</b>・<b>表示中</b>（Play中）。ダブルクリックで編集。</li><li>選んだ画面：<b>プロジェクトで見る</b>（Prefab ファイルの場所へ飛ぶ。シーンに直接置いた画面は <b>ヒエラルキーで見る</b>）・<b>この画面を編集</b>・<b>出る動きを試す</b>・<b>消える動きを試す</b>・<b>開く</b>／<b>閉じる</b>（Play中）、設定（<b>画面の名前（プログラム用）</b>・<b>表示名</b>・<b>レイヤー（段）</b>・<b>起動時に開く</b>・<b>戻る（Esc）で閉じる</b>・<b>モーダル（下を押せなくする）</b>・<b>画面が出るときの動き</b>…）、<b>文字を TextMeshPro にする（任意）</b>、<b>複製</b>・<b>一覧から外す</b>（ファイルは残す）・<b>この画面を削除</b>（一覧から外し、Prefab ファイルをパソコンのごみ箱へ。シーンに置いた分も消す）。</li></ul></div>
       <div class="tg-panel" id="tg-ulayer" role="tabpanel"><h3>レイヤー</h3><div class="when">⏱ 重なり順・部品を整理するとき</div>
@@ -202,7 +208,7 @@
       <div class="tg-panel" id="tg-uvalue" role="tabpanel"><h3>値</h3><div class="when">⏱ ゲームのどの値を画面に出すか決めるとき</div>
         <ul class="points"><li><b>ゲームの値を一覧に登録</b>（熱・コア・敵・通信・ロビーの値をまとめて登録）、<b>＋ 値を足す</b>。</li><li>各値：表示名・名前（クリックでコピー）・<b>○か所で使用</b>・説明・<b>サンプル値</b>・Play中の今の値・名前や種類の編集。</li></ul></div>
       <div class="tg-panel" id="tg-ucheck" role="tabpanel"><h3>点検</h3><div class="when">⏱ Playする前</div>
-        <ul class="points"><li>主な点検：置き場所が無い／設定ファイルが無い／画面の名前が無い・重なっている／レイヤーが無い／値の名前が一覧に無い（打ち間違い？）／見えないのにクリックを受け止める画像／押しても何も起きないボタン。</li></ul></div>
+        <ul class="points"><li>主な点検：置き場所が無い／設定ファイルが無い／画面の名前が無い・重なっている／レイヤーが無い／値の名前が一覧に無い（打ち間違い？）／見えないのにクリックを受け止める画像／押しても何も起きないボタン（ロビーの画面のボタンは動き出したときにつながるので除く）。</li><li>ロビー：ロビーの画面が足りない（<b>足りない画面を作る</b>）／ビルドのシーンの順番が タイトル → ロビー → ゲーム でない（<b>順番を直す</b>）／ロビーの [UI] が「シーンをまたいで残る」になっている。</li></ul></div>
     </div>
   </div>
 </section>
@@ -220,7 +226,13 @@
     <tr><td>swarm.alive</td><td>敵の数</td><td colspan="2">今いる群衆の敵の数</td><td class="def">数</td></tr>
     <tr><td>wave.time / wave.playing</td><td>ウェーブ</td><td colspan="2">経過秒・湧いている間ON</td><td class="def">数・ON/OFF</td></tr>
     <tr><td>net.mode / net.players / net.lastError</td><td>通信</td><td colspan="2">オフライン/ホスト/参加中・人数・切断理由</td><td class="def">文字・数</td></tr>
-    <tr><td>lobby.status / lobby.selectedPlayer</td><td>ロビー</td><td colspan="2">お知らせの文・選んだ番号</td><td class="def">文字・数</td></tr>
+    <tr><td>lobby.status / lobby.selectedPlayer / lobby.selectedLabel / lobby.name</td><td>ロビー（自分）</td><td colspan="2">お知らせの文・選んだ番号（0〜3 / P1〜P4）・自分の名前</td><td class="def">文字・数</td></tr>
+    <tr><td>lobby.isHost / inRoom / connecting / inGame / phase</td><td>ロビー（状態）</td><td colspan="2">ホストか・部屋にいるか・接続中か・試合中か・部屋の状態の文（準備OKを待っています 等）</td><td class="def">ON/OFF・文字</td></tr>
+    <tr><td>lobby.players / readyCount / allReady / canStart</td><td>ロビー（人数）</td><td colspan="2">部屋の人数・準備OKの人数・全員準備OK・開始できる（ホストで全員準備OK）</td><td class="def">数・ON/OFF</td></tr>
+    <tr><td>lobby.countdown / countingDown / localReady / gripHold</td><td>ロビー（開始）</td><td colspan="2">3・2・1（数えていなければ0）・カウントダウン中・自分が準備OK・握って準備の溜まり（0〜1）</td><td class="def">数・ON/OFF</td></tr>
+    <tr><td>lobby.address / hostAddress / foundHosts</td><td>ロビー（アドレス）</td><td colspan="2">このPCのアドレス・部屋のアドレス・見つかった部屋の数</td><td class="def">文字・数</td></tr>
+    <tr><td>player.1〜4.name / ready / isHost / isLocal / ping / taken</td><td>P1〜P4（ロビー）</td><td colspan="2">名前（空なら未参加）・準備OK・ホスト・自分・通信の遅れ（ms）・参加先で使われている番号。ロビーから来たときは connected も全員のPCで正しい</td><td class="def">いろいろ</td></tr>
+    <tr><td>message.title / message.body / toast.text</td><td>お知らせ</td><td colspan="2">お知らせの小窓の見出し・本文、上に少し出る通知の文</td><td class="def">文字</td></tr>
   </table></div></div>
   <div class="curtains rv" aria-label="幕の見本（雰囲気）">
     <div class="curtain"><div class="scr" style="--a:fade"></div><p><b>暗転</b>（フェード）</p></div>
@@ -238,7 +250,11 @@
     <details><summary>ゲージや文字が動かない</summary><div class="a">部品の <b>見る値</b> が値の一覧にあるか（黄色なら打ち間違い）。[UI] に「ゲームの値を画面へ (FortressUiValues)」が付いているか（点検で直せます）。</div></details>
     <details><summary>編集中に部品が薄く表示される</summary><div class="a">「値で表示を切り替える」の付いた部品が、サンプル値では「隠れる」状態です。編集しやすいように薄く見せています。値ページでサンプル値を変えると表示されます。</div></details>
     <details><summary>HUD と昔の熱ゲージが二重に出る</summary><div class="a">[UI] に <b>仮の表示との切り替え (FortressLegacyUiSwitch)</b> が付いていれば、HUD の段に画面が出ている間は仮の熱ゲージ（[Fortress] LocalTurretHud）が自動で隠れます。付いていなければ点検の「仮の熱ゲージとの切り替え部品がありません」の <b>部品を付ける</b>。</div></details>
-    <details><summary>テスト用の bat で起動したらロビーが出たままになる</summary><div class="a">起動引数で自動でつながった場合も、つながった時点でロビーは HUD に切り替わります。ロビーを出したくなければ、ロビーの <b>起動時に開く</b> を OFF に。</div></details>
+    <details><summary>テスト用の bat で起動したらどうなる？</summary><div class="a">コマンドラインに <code>-fortress-</code> で始まる引数がある起動（Tools/NetTest の bat はすべて当てはまる）は、タイトルとロビーを飛ばしてすぐゲームのシーンへ進みます。ゲームのシーンの中の通信の土台・仮の接続画面を使うので、今まで通り自動でつながります。</div></details>
+    <details><summary>部屋が一覧に出てこない</summary><div class="a"><ol><li>ホストが <b>部屋を作る</b> を押して部屋の画面にいるか。</li><li>同じLAN（同じルーター・ハブ）につながっているか。</li><li>ファイアウォールの許可（UDP 47777）。初回の確認で「拒否」した場合は Windows の設定で許可し直す。</li><li>出なくても、ホストの画面の <b>部屋のアドレス</b> を入れて <b>このアドレスに参加</b> すれば参加できます。</li></ol></div></details>
+    <details><summary>「ビルドが違います」と出る</summary><div class="a">部屋のPCと自分のPCでビルドの版（Project Settings の Version）が違います。違うビルド同士では敵や壊せる物の並びが合わず同期しないので、同じビルドを使ってください。</div></details>
+    <details><summary>「つながりませんでした」と出る</summary><div class="a">10秒待っても返事が無かったか、ホストに断られました（同じ番号がもう使われている・違うビルドなど。理由が出ます）。アドレス・ファイアウォール（UDP 7777）・同じLANかを確かめ、番号を変えてもう一度。</div></details>
+    <details><summary>ゲームのシーンだけで Play したい</summary><div class="a">今まで通りできます。ゲームのシーンを開いて Play すれば、ゲームのシーンの中の通信の土台と仮の接続画面（右上）が使われます。<b>[Session] Guard</b> はロビーから来たときだけ働きます。</div></details>
     <details><summary>日本語の文字が四角（□）になる</summary><div class="a">TextMeshPro の文字の部品は日本語のフォントが必要です（<a href="#rc-ui-tmp">TextMeshPro にするレシピ</a>）。雛形は標準の Text なので、そのままで日本語が出ます。</div></details>
   </div>
 </section>
@@ -254,6 +270,10 @@
     <div class="rv"><dt>動き</dt><dd>出る・消える・押した…ときのアニメ。D-Drive の UI の動きを使う。</dd></div>
     <div class="rv"><dt>幕（画面切り替え）</dt><dd>画面やシーンを入れ替えるとき、全体を覆って隠す演出。</dd></div>
     <div class="rv"><dt>モーダル</dt><dd>その画面が出ている間、後ろの画面を押せなくすること。</dd></div>
+    <div class="rv"><dt>部屋（ロビー）</dt><dd>いっしょに遊ぶ人が集まる場所。1台が「部屋を作る」（ホスト）と、ほかのPCが「参加する」。</dd></div>
+    <div class="rv"><dt>ホスト</dt><dd>部屋を作ったPC。ゲームの結果を決める役で、開始・全員でロビーに戻るはホストだけができる。</dd></div>
+    <div class="rv"><dt>準備OK</dt><dd>「いつでも始めていい」の合図。全員が準備OKになるとホストが開始できる。センサーを握り続けても切り替わる。</dd></div>
+    <div class="rv"><dt>LAN / アドレス</dt><dd>同じ建物のネットワーク。アドレス（例 192.168.1.12）はそのPCの住所で、部屋に参加するときに使う。</dd></div>
     <div class="rv"><dt>Prefab の編集画面</dt><dd>画面のファイルを開いて中身を直す、Unity の専用の編集モード。</dd></div>
   </dl>
 </section>
@@ -285,7 +305,8 @@ UiRoot.Active.PlayTransition(burn, onCovered: () =&gt; { /* 裏で入れ替え *
 UiValues.Set("score", 1200);          // 同じ値なら何もしない（毎フレームでも軽い）
 UiValues.Set("result.win", true);
 using var sub = UiValues.Subscribe("core.hp01", v =&gt; Debug.Log(v.AsNumber));</pre></div>
-    <div class="notes"><div class="note"><span class="lbl">詳細</span><code>Docs/Tools/UIStudio_AI_Reference.md</code>。</div><div class="note"><span class="lbl">ゲーム側の値</span><code>FortressUiValues</code> / <code>FortressUiKeys</code>（<code>Assets/_Game/UI/Game</code>）。</div></div>
+    <div class="notes"><div class="note"><span class="lbl">ロビー</span>ロビーのシーンは遊んでいる間も読み込まれたまま。通信の土台（NetworkManager・D-Drive・FortressNetworkBootstrap・NgoNetBridge・センサー）はロビーのシーンに置き、ホストが NGO のシーン管理でゲームのシーンを<b>重ねて</b>読み込む（参加側も自動。<code>SetClientSynchronizationMode(Additive)</code> で、後から参加した人もロビーはそのまま使う）。ゲームのシーンの同じ物は <code>GameSceneSessionGuard</code>（実行順 -32000）が動き出す前に外す。部屋の一覧は NGO の名前つきメッセージ（<code>MS2026.Lobby.*</code>）でホストが全員に配る。部屋さがしは UDP 47777 のブロードキャスト。コードは <code>Assets/_Game/UI/Game/Session/</code>、組み立ては <code>Assets/_Game/UI/Editor/Session/</code>。</div></div>
+  <div class="notes"><div class="note"><span class="lbl">詳細</span><code>Docs/Tools/UIStudio_AI_Reference.md</code>。</div><div class="note"><span class="lbl">ゲーム側の値</span><code>FortressUiValues</code> / <code>FortressUiKeys</code>（<code>Assets/_Game/UI/Game</code>）。</div></div>
   </div>
 </section>
 
@@ -297,7 +318,7 @@ using var sub = UiValues.Subscribe("core.hp01", v =&gt; Debug.Log(v.AsNumber));<
     <a class="lk rv" href="FortressDesigner_ガイド.html"><span class="ti">要塞デザイナー</span><span class="ds">熱・コアのHPなど、画面に出す値の元になるゲームの調整。</span></a>
     <a class="lk rv" href="index.html"><span class="ti">ツール一覧</span><span class="ds">このプロジェクトの全ツール。</span></a>
   </div>
-  <footer><span>UI Studio Guide · Xx_MS2026_xX</span><span>2026-10-06 時点のコードに基づく</span></footer>
+  <footer><span>UI Studio Guide · Xx_MS2026_xX</span><span>2026-10-08 時点のコードに基づく</span></footer>
 </section>
 </main>
 </div>

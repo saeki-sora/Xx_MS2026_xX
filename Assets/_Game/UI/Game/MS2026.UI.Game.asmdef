@@ -7,9 +7,12 @@
         "MS2026.GripInputBridge.Runtime",
         "DDrive.Runtime",
         "DDrive.Foundation",
+        "DDrive.Runtime.Ngo",
         "UnityEngine.UI",
         "Unity.TextMeshPro",
-        "Unity.Netcode.Runtime"
+        "Unity.Netcode.Runtime",
+        "Unity.Collections",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

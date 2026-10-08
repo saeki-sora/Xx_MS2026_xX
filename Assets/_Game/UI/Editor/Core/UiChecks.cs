@@ -56,6 +56,7 @@ namespace MS2026.UI.EditorTools
             CheckScreens(context, root, issues);
             CheckElements(context, issues);
             CheckTemporaryConnectUi(context, issues);
+            CheckSessionFlow(root, issues);
 
             issues.Sort((a, b) => a.Severity.CompareTo(b.Severity));
             return issues;
@@ -189,9 +190,68 @@ namespace MS2026.UI.EditorTools
             }
         }
 
+        /// <summary>タイトル → ロビー → ゲームの流れ（ロビーのシーン・画面・ビルドの順番）。</summary>
+        private static void CheckSessionFlow(UiRoot root, List<StudioIssue> issues)
+        {
+            var session = Object.FindFirstObjectByType<GameSession>(FindObjectsInactive.Include);
+            if (session != null)
+            {
+                var missing = new List<string>();
+                foreach (var id in new[] { session.topScreen, session.joinScreen, session.roomScreen, session.countdownScreen, session.hudScreen, session.pauseScreen, session.messageScreen, session.toastScreen })
+                {
+                    if (!string.IsNullOrEmpty(id) && root.catalog != null && root.catalog.Find(id) == null)
+                    {
+                        missing.Add(id);
+                    }
+                }
+
+                if (missing.Count > 0)
+                {
+                    issues.Add(new StudioIssue(StudioIssueSeverity.Error, $"ロビーの画面が足りません: {string.Join("・", missing)}",
+                            "ロビー（GameSession）が開く画面が、画面の一覧にありません。", session)
+                        .WithFix("足りない画面を作る", () => SessionScreens.BuildAll(false)));
+                }
+
+                if (root.keepAcrossScenes)
+                {
+                    issues.Add(new StudioIssue(StudioIssueSeverity.Info, "ロビーのUIの置き場所が「シーンをまたいで残る」になっています",
+                        "ロビーのシーンは遊んでいる間も読み込まれたままなので、残す必要はありません（タイトルへ戻るときはロビーが片付けます）。", root));
+                }
+            }
+
+            if (!System.IO.File.Exists(SessionFlowBuilder.LobbyScenePath))
+            {
+                return;
+            }
+
+            var order = new List<string>();
+            foreach (var scene in EditorBuildSettings.scenes)
+            {
+                if (scene.enabled)
+                {
+                    order.Add(scene.path);
+                }
+            }
+
+            var title = order.IndexOf(SessionFlowBuilder.TitleScenePath);
+            var lobby = order.IndexOf(SessionFlowBuilder.LobbyScenePath);
+            var game = order.IndexOf(SessionFlowBuilder.GameScenePath);
+            if (lobby < 0 || game < 0 || (title >= 0 && title != 0))
+            {
+                issues.Add(new StudioIssue(StudioIssueSeverity.Warning, "ビルドのシーンの順番が タイトル → ロビー → ゲーム になっていません",
+                        "ロビーかゲームのシーンがビルドに入っていないと、ロビーやゲームへ進めません。")
+                    .WithFix("順番を直す", SessionFlowBuilder.FixBuildOrder));
+            }
+        }
+
         /// <summary>ロビーのボタンのように、プログラムでつながるボタンか。</summary>
         private static bool IsWiredByScript(UiScreen screen, Button button)
         {
+            if (button.GetComponentInParent<SessionScreenBase>(true) != null || button.GetComponentInParent<LobbyHostRow>(true) != null)
+            {
+                return true; // ロビーの画面のボタン（GameSession の操作に、動き出したときにつながる）
+            }
+
             var lobby = screen.GetComponent<LobbyScreenController>();
             if (lobby == null)
             {

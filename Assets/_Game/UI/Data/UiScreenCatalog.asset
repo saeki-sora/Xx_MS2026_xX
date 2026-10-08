@@ -14,3 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: MS2026.UI.Runtime::MS2026.UI.UiScreenCatalog
   screens:
   - {fileID: 8338717295536765143, guid: 0b3670abb7bdb0344b227e3a7c391e5b, type: 3}
+  - {fileID: 590181753197092268, guid: 0c9b1b32172c1994584eaa356a31c578, type: 3}
+  - {fileID: 6821922218014113712, guid: e54e22620b8da5c40865c6d90bf8c882, type: 3}
+  - {fileID: 3665658136618079030, guid: 029de34acfe39da4caf332839675d1a3, type: 3}
+  - {fileID: 1331824754006330980, guid: 8b8b769b22913d24b9d32f6985682e14, type: 3}
+  - {fileID: 3321519945604347095, guid: f832bde39d095ef40b59eeb02ac2e2e3, type: 3}
+  - {fileID: 4816331734716102506, guid: ed11697f0de19644bbd02e328eaed2c7, type: 3}
+  - {fileID: 5176549113360216949, guid: 00b72f451bde07d4392560888f62772e, type: 3}
+  - {fileID: 8198358743219530045, guid: e2dd5855a2e00fd4b851cd3b52fe84f9, type: 3}
+  - {fileID: 3201564977541925997, guid: 33a8366f12b8f50488c53de5dd460ae5, type: 3}
+  - {fileID: 2530410101377478735, guid: e1c58d0167276d7488fbdeb0034bb918, type: 3}

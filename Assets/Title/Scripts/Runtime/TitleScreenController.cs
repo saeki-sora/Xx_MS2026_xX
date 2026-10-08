@@ -9,15 +9,18 @@ namespace MS2026.Title
     /// <summary>
     /// タイトル画面の進行役。
     /// 暗転から明ける（背景が出る）→ オープニング（歯磨き粉をつまむ → ふくらんで噴き出す → 画面が歯磨き粉で塗り替わる）→ ロゴ・キャラが落ちてくる → 「スタート」の文字
-    /// → 入力待ち → スタート演出 → ゲームのシーンへ。
+    /// → 入力待ち → スタート演出 → ロビーのシーンへ（ロビーで部屋を作る・参加する → ゲーム）。
+    /// テスト用の起動（-fortress-… の引数つき。Tools/NetTest の bat）では、タイトルとロビーを飛ばしてすぐゲームのシーンへ進む。
     /// 演出の途中で入力すると演出を飛ばす（もう一度入力でスタート）。
     /// 握力センサーなど別の入力から始めたいときは <see cref="RequestStart"/> を呼ぶ。
     /// </summary>
     public sealed class TitleScreenController : MonoBehaviour
     {
         [Header("遷移")]
-        [Tooltip("スタートで読み込むシーンの名前（Build Profiles のシーン一覧に入っている必要がある）。")]
-        public string gameSceneName = "Game";
+        [Tooltip("スタートで読み込むシーンの名前（ふつうはロビー。Build Profiles のシーン一覧に入っている必要がある）。")]
+        public string gameSceneName = "Lobby";
+        [Tooltip("テスト用の起動（コマンドラインに -fortress- で始まる引数がある）のとき、タイトルとロビーを飛ばしてすぐ読み込むシーン。空なら飛ばさない。")]
+        public string directSceneForTestLaunch = "Game";
         [Tooltip("仮のスタート用キー。")]
         public Key startKey = Key.A;
 
@@ -68,6 +71,30 @@ namespace MS2026.Title
 
         private TitleElementMotion[] AllElements =>
             new[] { background }.Concat(afterOpening ?? System.Array.Empty<TitleElementMotion>()).Where(e => e != null).Distinct().ToArray();
+
+        private void Awake()
+        {
+            if (IsTestLaunch() && !string.IsNullOrEmpty(directSceneForTestLaunch) && Application.CanStreamedLevelBeLoaded(directSceneForTestLaunch))
+            {
+                loadRequested = true;
+                enabled = false;
+                SceneManager.LoadScene(directSceneForTestLaunch);
+            }
+        }
+
+        // Tools/NetTest の bat は必ず -fortress-start（host/client/ui）を渡す。ほかの -fortress-… も検証用なので、どれか1つあればテスト用の起動とみなす。
+        private static bool IsTestLaunch()
+        {
+            foreach (var arg in System.Environment.GetCommandLineArgs())
+            {
+                if (arg.StartsWith("-fortress-", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         private void Start()
         {

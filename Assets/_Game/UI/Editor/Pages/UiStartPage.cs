@@ -1,5 +1,6 @@
 using System.Linq;
 using MS2026.StudioKit;
+using UnityEditor;
 using UnityEngine.UIElements;
 
 namespace MS2026.UI.EditorTools
@@ -56,6 +57,14 @@ namespace MS2026.UI.EditorTools
                 "「点検」ページの赤を0に。Play すると「起動時に開く」画面が出て、ロビーからつながると HUD に切り替わります。",
                 out _steps[5], StudioUi.Button("点検へ", () => _shell.ShowPage<UiCheckPage>(), small: true)));
 
+            root.Add(StudioUi.Section("タイトル → ロビー → ゲーム", "通信のロビー（部屋を作る・参加する・準備OK・3・2・1）を挟んで、タイトルからゲームへつなぐ流れ。"));
+            root.Add(StudioUi.Note("ボタン1つで、ロビーの画面（最初の画面・部屋を選ぶ・部屋・3・2・1・一時メニュー・お知らせ・通知）とロビーのシーンを作り、" +
+                                   "タイトルのスタートの行き先とビルドの順番（タイトル → ロビー → ゲーム）を整えます。作った画面はこのツールで自由に直せます。", NoteKind.Info));
+            root.Add(StudioUi.Row(
+                StudioUi.Button("流れを組み立てる", SessionFlowBuilder.BuildInteractive, "ロビーの画面・ロビーのシーン・ゲームのシーンの番人・タイトルの行き先・ビルドの順番をまとめて用意します（足りない物だけ／作り直すを選べます）。", primary: true, small: true),
+                StudioUi.Button("ロビーのシーンを開く", () => OpenScene(SessionFlowBuilder.LobbyScenePath), "Assets/Scenes/Lobby.unity を開きます。", small: true),
+                StudioUi.Button("タイトルから Play", PlayFromTitle, "タイトルのシーンを開いて Play します（タイトル → ロビー → ゲームの順に進みます）。", small: true)));
+
             root.Add(StudioUi.Section("用語"));
             var words = StudioUi.Card();
             words.Add(StudioUi.Styled(new Label(
@@ -67,6 +76,34 @@ namespace MS2026.UI.EditorTools
                 "・画面切り替えの幕 … 画面やシーンを入れ替えるときに全体を覆う演出。"), "sk-card-body"));
             root.Add(words);
             return root;
+        }
+
+        private static void OpenScene(string path)
+        {
+            if (!System.IO.File.Exists(path))
+            {
+                EditorUtility.DisplayDialog("シーンがありません", $"{path} がありません。先に「流れを組み立てる」を押してください。", "OK");
+                return;
+            }
+
+            if (UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            {
+                UnityEditor.SceneManagement.EditorSceneManager.OpenScene(path);
+            }
+        }
+
+        private static void PlayFromTitle()
+        {
+            if (EditorApplication.isPlaying)
+            {
+                return;
+            }
+
+            OpenScene(SessionFlowBuilder.TitleScenePath);
+            if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().path == SessionFlowBuilder.TitleScenePath)
+            {
+                EditorApplication.isPlaying = true;
+            }
         }
 
         public override void Refresh()

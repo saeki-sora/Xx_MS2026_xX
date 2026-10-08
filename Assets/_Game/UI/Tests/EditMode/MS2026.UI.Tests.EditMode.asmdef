@@ -3,6 +3,7 @@
     "rootNamespace": "MS2026.UI.Tests.EditMode",
     "references": [
         "MS2026.UI.Runtime",
+        "MS2026.UI.Game",
         "DDrive.Runtime",
         "DDrive.Foundation",
         "UnityEngine.TestRunner",

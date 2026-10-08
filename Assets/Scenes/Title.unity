@@ -538,7 +538,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0241edc6c84bcf8408295e77909bae65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MS2026.Title.Runtime::MS2026.Title.TitleScreenController
-  gameSceneName: Game
+  gameSceneName: Lobby
+  directSceneForTestLaunch: Game
   startKey: 15
   opening: {fileID: 1297605039}
   background: {fileID: 10877400}
