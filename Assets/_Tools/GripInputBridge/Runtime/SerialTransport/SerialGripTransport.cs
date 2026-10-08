@@ -50,7 +50,9 @@ namespace MS2026.GripInputBridge.Transports
         private volatile bool _isRunning;
 
         public event Action<int> OnConnected;
+#pragma warning disable CS0067 // 未使用でもインターフェースの都合で必要なイベント
         public event Action<int> OnDisconnected;
+#pragma warning restore CS0067
 
         public SerialGripTransport(GripDeviceConfig config)
         {

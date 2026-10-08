@@ -1,5 +1,6 @@
 using DDrive.Foundation.Handle;
 using DDrive.Runtime.Audio;
+using DDrive.Runtime.Loop;
 using DDrive.Runtime.Vfx;
 using UnityEngine;
 
@@ -12,6 +13,9 @@ namespace MS2026.Fortress
     /// </summary>
     public static class FortressEffectPlayer
     {
+        /// <summary>D-Drive の準備（番号札の登録）が終わっているか。終わる前に鳴らすと「未登録のIDがPlaceholderになった」警告が出るので、その間は鳴らさない。</summary>
+        private static bool IsReady => DDriveRuntimeBootstrap.Instance != null && DDriveRuntimeBootstrap.Instance.IsReady;
+
         /// <summary>その場に1回だけ出す（エフェクトは VFX 側の寿命の設定で消える）。</summary>
         public static void PlayOnce(FortressEffect effect, Vector3 position, Quaternion rotation, int playerIndex = -1)
         {
@@ -27,7 +31,7 @@ namespace MS2026.Fortress
         /// <summary>エフェクトだけをその場に出し、Handle を返す（音は鳴らさない）。エフェクトが空なら Invalid。</summary>
         public static Handle<VfxMarker> SpawnVfx(FortressEffect effect, Vector3 position, Quaternion rotation, int playerIndex = -1)
         {
-            if (effect == null || !effect.HasVfx)
+            if (effect == null || !effect.HasVfx || !IsReady)
             {
                 return Handle<VfxMarker>.Invalid;
             }
@@ -40,9 +44,11 @@ namespace MS2026.Fortress
         /// <summary>効果音だけを鳴らす。</summary>
         public static void PlaySound(FortressEffect effect, Vector3 position)
         {
-            if (effect != null && effect.HasSe)
+            // このゲームの効果音は位置で変わらない（SE の Spatial=None）ので、位置は渡さない。
+            // 渡すと D-Drive が「位置の指定は無視されます」という警告を出し続ける。
+            if (effect != null && effect.HasSe && IsReady)
             {
-                Audio.PlaySe(effect.se, position);
+                Audio.PlaySe(effect.se);
             }
         }
 
@@ -53,7 +59,7 @@ namespace MS2026.Fortress
         /// </summary>
         public static Handle<VfxMarker> StartFollowing(FortressEffect effect, Transform follow, int playerIndex = -1)
         {
-            if (effect == null || !effect.HasVfx || follow == null)
+            if (effect == null || !effect.HasVfx || follow == null || !IsReady)
             {
                 return Handle<VfxMarker>.Invalid;
             }

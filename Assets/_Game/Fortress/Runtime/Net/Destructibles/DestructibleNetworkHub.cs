@@ -226,7 +226,7 @@ namespace MS2026.Fortress.Net
             return NetworkManager != null && NetworkManager.ConnectedClientsIds.Count > 1;
         }
 
-        [Rpc(SendTo.Server, RequireOwnership = false)]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
         private void RequestFullStateRpc(RpcParams rpcParams = default)
         {
             var states = new DestructibleNetState[_index.Count];

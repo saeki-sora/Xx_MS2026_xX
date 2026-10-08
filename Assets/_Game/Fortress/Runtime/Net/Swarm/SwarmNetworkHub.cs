@@ -464,13 +464,13 @@ namespace MS2026.Fortress.Net
             return result;
         }
 
-        [Rpc(SendTo.Server, Delivery = RpcDelivery.Unreliable, RequireOwnership = false)]
+        [Rpc(SendTo.Server, Delivery = RpcDelivery.Unreliable, InvokePermission = RpcInvokePermission.Everyone)]
         private void ReportCorrectionErrorRpc(float averageError, RpcParams rpcParams = default)
         {
             _reportedErrors[rpcParams.Receive.SenderClientId] = (averageError, Time.unscaledTime);
         }
 
-        [Rpc(SendTo.Server, RequireOwnership = false)]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
         private void RequestFullStateRpc(RpcParams rpcParams = default)
         {
             if (_swarm != null)

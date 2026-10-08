@@ -221,7 +221,7 @@ namespace MS2026.Fortress.Net
             return NetworkManager != null && NetworkManager.ConnectedClientsIds.Count > 1;
         }
 
-        [Rpc(SendTo.Server, RequireOwnership = false)]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
         private void RequestFullStateRpc(RpcParams rpcParams = default)
         {
             // 保留中の敵にも番号を振ってから、今いる全員を「出現」として送る。

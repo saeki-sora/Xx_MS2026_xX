@@ -155,7 +155,7 @@ namespace MS2026.Fortress.Net
         }
 
         // 取りこぼしても次の値がすぐ届くのでUnreliable(再送なし)で送る。古い値はRemoteGripBufferが連番で捨てる。
-        [Rpc(SendTo.Server, Delivery = RpcDelivery.Unreliable, RequireOwnership = false)]
+        [Rpc(SendTo.Server, Delivery = RpcDelivery.Unreliable, InvokePermission = RpcInvokePermission.Everyone)]
         private void SubmitGripRpc(bool isGripping, float grip01, uint sequence, RpcParams rpcParams = default)
         {
             var bootstrap = FortressNetworkBootstrap.Instance;

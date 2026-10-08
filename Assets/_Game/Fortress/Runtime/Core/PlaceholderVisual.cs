@@ -29,7 +29,18 @@ namespace MS2026.Fortress
 
         private void OnValidate()
         {
+#if UNITY_EDITOR
+            // OnValidate の中でスプライトを変えると「SendMessage は OnValidate 中に呼べません」の警告が出るので、1フレーム遅らせる。
+            UnityEditor.EditorApplication.delayCall += () =>
+            {
+                if (this != null)
+                {
+                    Apply();
+                }
+            };
+#else
             Apply();
+#endif
         }
 
         public void Apply()
