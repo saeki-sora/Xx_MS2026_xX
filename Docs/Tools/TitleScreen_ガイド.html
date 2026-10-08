@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>タイトル画面 ガイド</title>
+<meta name="description" content="ゲームのタイトル画面（歯磨き粉のオープニング・ロゴ・キャラ・スタート文字）の差し替えと演出の調整のしかた">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/guide.css">
+<style>
+:root{--acc:#ffcf4a;--acc-ink:#1d1400;--acc2:#ff6a3d;--acc3:#7ad7ff}
+:root[data-theme="light"]{--acc:#8a6100;--acc-ink:#ffffff;--acc2:#b8380f;--acc3:#0a6c94}
+.timeline{display:grid;gap:6px;margin-top:18px}
+.timeline .row{display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:center;font-size:13px}
+.timeline .bar{position:relative;height:22px;background:rgba(127,127,127,.12);border-radius:6px}
+.timeline .bar i{position:absolute;top:0;bottom:0;border-radius:6px;background:var(--acc);opacity:.85}
+.timeline .bar i.idle{background:var(--acc3);opacity:.45}
+.timeline .scale{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--ink2);margin-left:120px}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<div class="orbs" aria-hidden="true"><div class="orb a"></div><div class="orb b"></div></div>
+
+<div class="shell">
+<nav class="side" aria-label="目次">
+  <a class="back" href="index.html">← ツール一覧</a>
+  <a class="brand" href="#top"><span class="mark">TI</span><span class="t">タイトル画面</span></a>
+  <ol id="toc"></ol>
+  <div class="foot">
+    <button class="themebtn" id="themeBtn" type="button"><span aria-hidden="true">◐</span><span data-label>ライト表示</span></button>
+    <div class="meta mono">Assets/Title<br>作業中 · 2026-10-07 時点</div>
+  </div>
+</nav>
+
+<main id="top">
+<header class="hero">
+  <div class="tags">
+    <span class="pill hot">作業中</span>
+    <span class="pill">画像は差し替え自由</span>
+    <span class="pill">動きは数値で調整</span>
+    <span class="pill">仮スタート：A キー</span>
+  </div>
+  <h1 class="mega" aria-label="TITLE SCREEN"><span class="o">TITLE</span><span class="f">SCREEN</span></h1>
+  <p class="subname">タイトル画面 — <b>ゲームの顔を、画像の差し替えと数値だけで作る</b></p>
+  <div class="hero-row">
+    <div>
+      <p class="oneword">上向きの歯磨き粉を<span class="hl">つまむと、ふくらんで噴き出す</span>。<br>画面が<span class="hl">歯磨き粉で塗り替わり</span>、<br>ロゴとキャラが落ちてきてボタンでゲームへ。</p>
+      <p class="analogy">舞台は 100 年後の電脳世界。バグやウイルスが「ばいきん」のように増え、歯磨き粉を武器にしたクリーニングスタッフが磨いて回る――その世界の入口です。見た目はパステルの水色・ピンク、色ずれ、電脳ノイズ（グリッチ）、2 進数、キラキラでそろえています。<br>舞台の幕開けのようなものです。暗転から明るくなり、真ん中の大きな歯磨き粉がつままれてふくらみ、キャップから噴き出した歯磨き粉が画面全体にどろーっと垂れて塗り替わると、ロゴ → キャラ 2 人 → 「スタート」の順に役者が飛び込んできます。役者（画像）はいつでも入れ替えられ、出てくるタイミングや動き方は台本（Inspector の数値）で決めます。</p>
+    </div>
+    <div class="facts"><dl>
+      <dt>誰が使う</dt><dd>デザイナー（画像の差し替え）／プランナー（タイミング・動きの調整）</dd>
+      <dt>開き方</dt><dd><code>Assets/Scenes/Title.unity</code> を開く。最初の 1 回だけ <span class="mp">Tools<i>›</i>タイトル<i>›</i>タイトルシーンを組み立てる</span></dd>
+      <dt>必要なもの</dt><dd>差し替える画像（PNG）。無くても仮の画像で動く</dd>
+      <dt>今の状況</dt><dd>画像はすべて仮（キャラは仮のキューブ）。スタートは A キー（握力センサーは今後）。演出の流れは 2026-10-07 の指示どおり</dd>
+    </dl></div>
+  </div>
+  <div class="marquee" aria-hidden="true"><div class="track" id="mq" data-words="上向きの歯磨き粉|真ん中をつまむ|ふくらむ|カメラが寄ってブルブル|キャップから噴き出す|上から塗りつぶす|画面が塗り替わる|ロゴとキャラが落ちてくる|握ってスタート"></div></div>
+</header>
+
+<section id="what" data-nav="何ができる？">
+  <div class="rv">
+    <div class="eyebrow">01 — What you can do</div>
+    <h2>つまんで、噴き出して、<br><em>塗り替わる</em>。</h2>
+    <p class="lead">再生すると、下の順番で進みます。途中で A キーを押すと演出を飛ばし、もう一度押すとスタートします。</p>
+  </div>
+  <div class="flow rv">
+    <div class="flow-title">OPENING → DROP → START</div>
+    <div class="pipe">
+      <div class="node"><div class="k">① つまむ</div><div class="v">ぷくーっ</div><div class="s">上向きの歯磨き粉の真ん中がきゅっとつままれたように細くなり、まわりがふくらんでいく。カメラが寄りながらブルブル（だんだん強く）。</div></div>
+      <div class="arrow"></div>
+      <div class="node hl"><div class="k">② 噴き出す</div><div class="v">スポーン！ブシュッ</div><div class="s">抑えきれずにキャップが回りながら吹き飛び、口から歯磨き粉が上へ噴き出す。泡が飛び、画面が揺れ、カメラが引く。</div></div>
+      <div class="arrow"></div>
+      <div class="node"><div class="k">③ 塗り替わる</div><div class="v">どろーっ</div><div class="s">上から画面全体に歯磨き粉がどろーっと垂れてきて覆い、そのまま下へ流れ落ちると、紫でどんよりした背景がきれいな明るい背景に塗り替わっている。</div></div>
+      <div class="arrow"></div>
+      <div class="node"><div class="k">④ 落ちてくる → スタート</div><div class="v">ドン・ドン・ドン</div><div class="s">ロゴが真ん中上、キャラが左下・右下に落ちてくる。最後に「握ってスタート！（Aキー）」。</div></div>
+    </div>
+  </div>
+  </div>
+  <div class="cards">
+    <div class="card feat rv"><div class="ic">🪥</div><h3>歯磨き粉（オープニング）</h3><p>上向きでポンと出てきて、真ん中がつままれたように細くなる（指などは出さない）。つまんだ所は細く、まわりはふくらんで縦にも少し伸び、震える。力は「ゆっくり → 最後にぐっと」強くなる。噴き出す瞬間にキャップが回転しながら吹き飛び、噴き出した後はしぼむ。</p><p class="ex">絵を差し替えても、ふくらみはそのまま効く（再生中に絵を細かい横じまに切って動かしている）</p></div>
+    <div class="card feat rv"><div class="ic">🎥</div><h3>カメラ・幕</h3><p>ふくらむ間はだんだん寄りながらブルブル。噴き出した瞬間に揺れて、少し行き過ぎるくらいの勢いで引いて戻る。そのあと上から画面全体に歯磨き粉がどろーっと垂れてきて覆い、下へ流れ落ちる。垂れる先端はでこぼこ（細い縦の列ごとに少しずつ遅れて落ちる）。</p></div>
+    <div class="card feat rv"><div class="ic">🅰️</div><h3>タイトルロゴ</h3><p>上から落ちてきて真ん中上に「ドン」。白く光り、画面が揺れ、むにっとつぶれて戻る。待機中は数秒おきに「キラッ」、ときどき「ザザッ」と電脳ノイズ。</p></div>
+    <div class="card feat rv"><div class="ic">🧊</div><h3>キャラ（仮のキューブ）</h3><p>回転しながら左下・右下に順番に落ちてきて「ドン」。着地のたびに画面が揺れ、白く光ってむにっとつぶれる。その後ふわふわ上下。</p><p class="ex">あとでキャラのモデルや絵に差し替える</p></div>
+    <div class="card feat rv"><div class="ic">👆</div><h3>〇〇でスタート！</h3><p>真ん中下に弾むように現れて、ゆっくり点滅。押すとノイズが走り、速く点滅して消える。</p></div>
+    <div class="card feat rv"><div class="ic">🫧</div><h3>背景・泡・ばいきん</h3><p>最初は紫でどんよりした背景（汚れた洗面台・ばいきんの影・ノイズ）が、ゆっくり引きながら現れる。歯磨き粉で塗り替わると、同じ場所のきれいな明るい背景になり、下から泡が湧き始める。ばいきん（バグ）は最初から回りながら漂う。</p></div>
+  </div>
+  <div class="timeline rv" aria-label="進み方（秒）">
+    <div class="row"><span>背景</span><div class="bar"><i style="left:0;width:40%"></i><i class="idle" style="left:40%;right:0"></i></div></div>
+    <div class="row"><span>歯磨き粉</span><div class="bar"><i style="left:4%;width:53.3%"></i></div></div>
+    <div class="row"><span>どろーっ</span><div class="bar"><i style="left:40%;width:32.7%"></i></div></div>
+    <div class="row"><span>ロゴ</span><div class="bar"><i style="left:62.7%;width:7.3%"></i><i class="idle" style="left:70%;right:0"></i></div></div>
+    <div class="row"><span>キャラ左</span><div class="bar"><i style="left:68.7%;width:6.7%"></i><i class="idle" style="left:75.4%;right:0"></i></div></div>
+    <div class="row"><span>キャラ右</span><div class="bar"><i style="left:72%;width:6.7%"></i><i class="idle" style="left:78.7%;right:0"></i></div></div>
+    <div class="row"><span>スタート文字</span><div class="bar"><i style="left:82.7%;width:6.7%"></i><i class="idle" style="left:89.4%;right:0"></i></div></div>
+    <div class="scale"><span>0秒</span><span>噴き出す 約2.8秒</span><span>7.5秒</span></div>
+    <p class="small" style="color:var(--ink2)">濃い色 = 動いている間、薄い色 = 待機中のゆらぎ。全員が出そろう（約 7 秒）までは、ボタンを押すと「演出を飛ばす」扱いになります。</p>
+  </div>
+</section>
+
+<section id="start" data-nav="はじめての 5 分">
+  <div class="rv">
+    <div class="eyebrow">02 — First 5 minutes</div>
+    <h2>組み立てて、<br><em>再生して、差し替える</em>。</h2>
+  </div>
+  <div class="steps">
+    <div class="step rv"><div class="n">1</div><div>
+      <h3>シーンを組み立てる（最初の 1 回だけ）</h3>
+      <p><span class="mp">Tools<i>›</i>タイトル<i>›</i>タイトルシーンを組み立てる</span>。Title シーンが開き、仮の画像で一式が並んで保存されます。Hierarchy に <b>[Title]</b> ができていれば OK。</p>
+    </div></div>
+    <div class="step rv"><div class="n">2</div><div>
+      <h3>再生して確かめる</h3>
+      <p>▶ Play。演出が終わったら <kbd>A</kbd> でゲームのシーンへ進みます。</p>
+    </div></div>
+    <div class="step rv"><div class="n">3</div><div class="step-body">
+      <div><h3>画像を差し替える</h3>
+        <p>Hierarchy で <b>[Title]</b> › <b>Logo</b> › <b>Sprite</b> を選び、Inspector の Sprite Renderer の <b>Sprite</b> 欄に新しい画像をドラッグ。大きさは自動で今と同じに合います。</p>
+        <p style="margin-top:8px">新しい画像は Project で選んで <b>Texture Type</b> を <b>Sprite (2D and UI)</b> にしておきます（<code>Assets/Title/Sprites</code> に置くのがおすすめ）。</p>
+      </div>
+      <div><div class="mock">
+        <div class="mock-title">Inspector — Sprite</div>
+        <div class="mock-body">
+          <h5>Sprite Renderer</h5>
+          <div class="mrow"><span>Sprite</span><div class="mf obj">Title_Logo</div></div>
+          <h5>Title Sprite Fit</h5>
+          <div class="mrow"><span>Mode</span><div class="mf dd">高さを指定</div></div>
+          <div class="mrow"><span>Size</span><div class="mf">3.6</div></div>
+        </div>
+      </div></div>
+    </div></div>
+    <div class="step rv"><div class="n">4</div><div>
+      <h3>動きを調整する</h3>
+      <p><b>Logo</b> などの親オブジェクトの <b>Title Element Motion</b> の数値を変えて再生。<b>登場</b>／<b>待機中のゆらぎ</b>／<b>スタート時（退場）</b> の 3 つに分かれています。</p>
+      <p style="margin-top:8px">歯磨き粉のふくらみ方・噴き出し方・幕は <b>[Title]</b> › <b>Opening</b> の <b>Title Opening</b> で変えます（<b>出てくる</b>／<b>つまんでふくらむ</b>／<b>噴き出す</b>／<b>塗り替わる</b>）。</p>
+      <p class="done">位置はシーン上で動かしたところが「最終位置」。登場の動きはそこからの相対で決まります</p>
+    </div></div>
+    <div class="step rv"><div class="n">5</div><div>
+      <h3>まとめて調整して、何度でも見直す</h3>
+      <p><b>[Title]</b> を選ぶと、Inspector の上に <b>流れの一覧（ここで全部まとめて調整できます）</b> が出ます。歯磨き粉・背景・ロゴ・キャラ左右・スタート文字・カメラの、タイミング・位置・大きさ・揺れなどをここだけで変えられます（名前の青い文字を押すとその物を選べます）。</p>
+      <p style="margin-top:8px">▶ Play 中は <b>▶ 最初から再生</b> で、止めずに何度でも頭から見直せます。再生中に変えた値は、止めると元に戻ります。残したいときは止める前に <b>再生中に変えた値を残す</b> を押し、止めた後にシーンを保存（<kbd>Ctrl</kbd>+<kbd>S</kbd>）。</p>
+      <p class="done">位置と大きさは再生を止めてから変えます（再生中は動きの演出が上書きするため）</p>
+    </div></div>
+  </div>
+</section>
+
+<section id="recipes" data-nav="やりたいこと逆引き">
+  <div class="rv"><div class="eyebrow">03 — Recipes</div><h2>「〜したい」から<br><em>探す</em>。</h2></div>
+  <label class="search rv"><span aria-hidden="true">🔍</span><span class="sr">やりたいことを検索</span><input id="recipeSearch" type="search" placeholder="例：差し替え、遅く、点滅、効果音"></label>
+  <div class="chips rv" id="recipeChips" role="group" aria-label="カテゴリ">
+    <button class="chip" aria-pressed="true" data-f="all">すべて</button>
+    <button class="chip" aria-pressed="false" data-f="art">画像</button>
+    <button class="chip" aria-pressed="false" data-f="motion">動き</button>
+    <button class="chip" aria-pressed="false" data-f="flow">進行</button>
+  </div>
+  <div class="recipes">
+    <details class="recipe" id="rc-swap" data-tags="art"><summary><span class="q">ロゴ・背景・歯磨き粉・スタート文字の画像を替えたい</span><span class="who">Sprite</span></summary><div class="a"><p>各オブジェクトの子 <b>Sprite</b> の Sprite Renderer › <b>Sprite</b> を差し替えます（歯磨き粉は <b>Opening</b> › <b>Toothpaste</b> › <b>Sprite</b>、キャップは <b>Toothpaste</b> › <b>Cap</b> › <b>Sprite</b>（チューブとキャップは別々の絵）、噴き出す歯磨き粉は <b>PasteStream</b>。塗り替わりの歯磨き粉だけは UI なので <b>FadeCanvas</b> › <b>PasteCurtain</b> の Raw Image › Texture）。または <code>Assets/Title/Sprites</code> の同じ名前の PNG を上書きしても替わります。</p></div></details>
+    <details class="recipe" id="rc-character" data-tags="art"><summary><span class="q">仮のキューブを本物のキャラに替えたい</span><span class="who">Model</span></summary><div class="a"><ol><li><b>[Title]</b> › <b>CharacterLeft</b>（または <b>CharacterRight</b>）の子 <b>Model</b> を消す。</li><li>代わりのモデル（または絵）を同じ場所の子として置き、名前を <b>Model</b> にする。位置は (0, 0, 0) が着地点。</li></ol><p>名前を <b>Model</b> にしておくと、組み立て直しても消えずに引き継がれます。落ち方・揺れは親の <b>Title Element Motion</b> がそのまま効きます。</p></div></details>
+    <details class="recipe" id="rc-before" data-tags="art"><summary><span class="q">塗り替わる前（どんよりした背景）の絵を替えたい</span><span class="who">SpriteBefore</span></summary><div class="a"><p><b>[Title]</b> › <b>Background</b> › <b>SpriteBefore</b> の Sprite を差し替えます（塗り替わった後のきれいな背景は、同じ Background の子 <b>Sprite</b>）。歯磨き粉が画面を覆いきった瞬間に、SpriteBefore が消えて後ろのきれいな背景が見える仕組みです。編集中は SpriteBefore が手前に重なっているので、後ろを見たいときは SpriteBefore を一時的に非表示にしてください。</p><p>塗り替わる前／後で出し分けたい物を増やしたいときは、<b>Opening</b> の <b>Title Opening</b> › <b>Before Objects</b>（前だけ）／<b>After Objects</b>（後だけ）に入れます。今は泡（Bubbles）が「後だけ」です。</p></div></details>
+    <details class="recipe" data-tags="art"><summary><span class="q">差し替えた画像の大きさを変えたい</span><span class="who">Title Sprite Fit</span></summary><div class="a"><p>子 <b>Sprite</b> の <b>Title Sprite Fit</b> › <b>Size</b>（画面の高さが約 10.8）。横幅で決めたいときは <b>Mode</b> を <b>幅を指定</b>。画像そのままの大きさにしたいときは <b>合わせない（画像の大きさのまま）</b>。</p></div></details>
+    <details class="recipe" data-tags="art"><summary><span class="q">ロゴの現れ方・光り方・ノイズの見た目を変えたい</span><span class="who">ShaderFX</span></summary><div class="a"><p><code>Assets/Title/Effects/TitleFX_Logo</code> を選び、<b>ディゾルブ</b> の Edge Color（浮かび上がるときの縁の色）、<b>グリッチ</b> の Block Size（ノイズの粗さ）・Rgb Split（色ずれの幅）、<b>被弾フラッシュ</b> の Color（光る色）を変えます。グリッチの Amount は 0 のままにしてください（強さは Title Element Motion が動かします）。キャラは <code>TitleFX_Character</code>（輪郭の光は <b>リムライト</b>）。スタート文字はロゴと同じ設定を使っています。</p></div></details>
+    <details class="recipe" data-tags="motion"><summary><span class="q">出てくる順番・タイミングを変えたい</span><span class="who">登場</span></summary><div class="a"><p><b>Enter Delay</b>（始まってから何秒後に出るか）と <b>Enter Duration</b>（何秒かけて出るか）。例：ロゴを先に出したいなら Logo の Enter Delay を 0.3 に。</p></div></details>
+    <details class="recipe" data-tags="motion"><summary><span class="q">キャラを横から出したい／もっと高い所から落としたい</span><span class="who">Move From</span></summary><div class="a"><p>CharacterLeft / CharacterRight の <b>Move From</b>。今は真上 <code>(0, 10, 0)</code>。横から滑り込ませるなら <code>(-8, 0, 0)</code> など。最終位置から見た「出発点のずれ」です。落ちながらの回転は <b>Rotate From</b>（0,0,0 で回らない）。</p></div></details>
+    <details class="recipe" data-tags="motion"><summary><span class="q">着地の「ドン」をもっと重く／軽くしたい</span><span class="who">着地</span></summary><div class="a"><p><b>Shake On Land</b>（画面の揺れ）、<b>Squash On Land</b>（むにっとつぶれる量、0 で無し）、<b>Flash On Land</b>（白く光る量）。落ちる速さは <b>Enter Duration</b>（短いほど速い）。</p></div></details>
+    <details class="recipe" id="rc-squeeze" data-tags="flow"><summary><span class="q">歯磨き粉のふくらみ方・つまみ方を変えたい</span><span class="who">Title Opening</span></summary><div class="a"><p><b>[Title]</b> › <b>Opening</b> の <b>Title Opening</b> › <b>つまんでふくらむ</b>：<b>Swell Duration</b>（ふくらんでいく秒数、既定 2）、<b>Swell Amount</b>（太くなる割合、0.4）、<b>Pinch Amount</b>（つまんだ所の細さ、0.5）、<b>Pinch Height</b>（つまむ高さ。0 = 下端、1 = 上端、0.45）、<b>Pinch Width</b>（つまむ幅）、<b>Swell Stretch</b>（縦に伸びる量）、<b>Tube Tremble</b>（震え）。</p><p>指などは置いていません。置きたくなったら Opening の子に置いて <b>Pinchers</b> に入れると、つまむ間に真ん中へ寄っていきます（寄る距離は <b>Pincher Travel</b>）。</p></div></details>
+    <details class="recipe" data-tags="flow"><summary><span class="q">ふくらむ間のカメラの寄り・ブルブル、噴き出した揺れを変えたい</span><span class="who">Title Opening</span></summary><div class="a"><p><b>Zoom In</b>（寄る量）と <b>Rumble</b>（ブルブル、0.12）。キャップの飛び方は <b>Cap Launch Speed</b>（飛ぶ速さ、16）、<b>Cap Launch Spread</b>（左右のぶれ）、<b>Cap Spin</b>（回転）、<b>Cap Gravity</b>（重力。0 で落ちてこない）。噴き出した後は <b>Eject Shake</b>（揺れ）と <b>Pull Back Duration</b>（引いて戻るまでの秒数）。噴き出す勢いは <b>Eject Duration</b>（伸びきるまでの秒数、短いほど速い）。</p></div></details>
+    <details class="recipe" id="rc-curtain" data-tags="flow"><summary><span class="q">どろーっと垂れる歯磨き粉（塗り替わり）の速さ・垂れ方を変えたい</span><span class="who">塗り替わる</span></summary><div class="a"><p>Title Opening › <b>塗り替わる</b>：<b>Curtain Delay</b>（噴き出してから垂れてくるまで、0.25）、<b>Curtain Drop Duration</b>（覆いきるまで、1.3。長いほどどろーっと遅い）、<b>Curtain Ease</b>（垂れ方の緩急）、<b>Curtain Unevenness</b>（先端のでこぼこ。0 で横一直線、0.45）、<b>Curtain Columns</b>（縦の列の数、28）、<b>Curtain Hold</b>（覆ったままの時間、0.25）、<b>Reveal Style</b>（<b>下へ抜ける</b>／<b>ふっと消える</b>）、<b>Reveal Duration</b>（消えきるまで、0.9）。</p><p>絵は <b>[Title]</b> › <b>FadeCanvas</b> › <b>PasteCurtain</b> の Raw Image › <b>Texture</b>。列ごとに上下にずれて落ちるので、しまは縦向きの絵にすると継ぎ目が目立ちません（下のふちの垂れも絵の一部）。</p></div></details>
+    <details class="recipe" data-tags="flow"><summary><span class="q">幕が抜けてからロゴが落ちてくるまでの間を変えたい</span><span class="who">Hand Off Delay</span></summary><div class="a"><p>Title Opening の <b>Hand Off Delay</b>（幕が消え始めてから合図を出すまで、既定 0.15 秒）。個別には各配置物の <b>Enter Delay</b>（合図から何秒後に落ち始めるか。ロゴ 0／キャラ左 0.45／キャラ右 0.7／スタート文字 1.5）。</p></div></details>
+    <details class="recipe" data-tags="motion"><summary><span class="q">着地のバウンドを強く／弱くしたい</span><span class="who">Enter Ease</span></summary><div class="a"><p><b>Enter Ease</b> を選びます：<b>少し行き過ぎて戻る</b>（今の既定）、<b>弾む</b>（ボールのように跳ねる）、<b>最後にゆっくり</b>（行き過ぎない）など。</p></div></details>
+    <details class="recipe" data-tags="motion"><summary><span class="q">スタート文字の点滅を速く／薄くしたい</span><span class="who">待機中のゆらぎ</span></summary><div class="a"><p>PressStart の <b>Blink Speed</b>（1 秒あたりの回数、既定 0.8）と <b>Blink Min Alpha</b>（一番薄いとき、既定 0.35。1 で点滅なし）。</p></div></details>
+    <details class="recipe" data-tags="motion"><summary><span class="q">ロゴの「キラッ」を止めたい／増やしたい</span><span class="who">Glint</span></summary><div class="a"><p>Logo の <b>Glint Interval</b>（何秒ごと、既定 3.5。0 で止める）と <b>Glint Strength</b>。</p></div></details>
+    <details class="recipe" data-tags="motion"><summary><span class="q">泡やばいきんを増やしたい／減らしたい</span><span class="who">Bubbles / Germs</span></summary><div class="a"><p><b>[Title]</b> › <b>Bubbles</b>（泡）または <b>Germs</b>（ばいきん）の Particle System の <b>Emission</b> › <b>Rate over Time</b>（1 秒に出る数。既定 泡 45／ばいきん 1.2）。色は一番上の <b>Start Color</b>、大きさは <b>Start Size</b>。ばいきんの絵は <code>Assets/Title/Sprites/Title_Germ.png</code> を上書きすると替わります。</p></div></details>
+    <details class="recipe" data-tags="motion"><summary><span class="q">電脳ノイズ（ザザッ）を増やしたい／止めたい</span><span class="who">Glitch</span></summary><div class="a"><p>Title Element Motion の <b>Glitch In</b>（登場中のノイズ）、<b>Glitch Interval</b>（待機中に何秒おきか、0 で止める）と <b>Glitch Strength</b>、<b>Glitch On Exit</b>（スタートの瞬間）。子に、グリッチの入った Effect Target が付いているもの（Logo・CharacterLeft/Right・PressStart）だけで効きます。</p></div></details>
+    <details class="recipe" data-tags="flow"><summary><span class="q">スタートの後、暗転するまでを長く／短くしたい</span><span class="who">Title Screen Controller</span></summary><div class="a"><p><b>[Title]</b> の <b>Title Screen Controller</b> › <b>Start Hold Seconds</b>（暗転し始めるまで、既定 0.55）と <b>Fade Out Seconds</b>（暗転にかける秒数、既定 0.5）。</p></div></details>
+    <details class="recipe" data-tags="flow"><summary><span class="q">スタートのキーを変えたい</span><span class="who">Start Key</span></summary><div class="a"><p><b>Title Screen Controller</b> › <b>Start Key</b>。今は仮で A キーです。握力センサーでのスタートは今後つなぎます。</p></div></details>
+    <details class="recipe" data-tags="flow"><summary><span class="q">スタートやロゴ着地で効果音を鳴らしたい</span><span class="who">エフェクト・効果音</span></summary><div class="a"><p>噴き出す音は <b>Title Opening</b> の <b>On Eject</b>（つまみ始めは <b>On Pinch</b>、幕が覆いきった瞬間は <b>On Covered</b>）、着地の「ドン」は各配置物の <b>Title Element Motion</b> › <b>On Land</b>、スタートは <b>Title Screen Controller</b> の <b>On Start</b> に、D-Drive の SE・VFX を選びます。</p><div class="callout warn"><span class="ci">!</span><div><b>今の仕様の注意：</b>D-Drive の起動役がゲームのシーンにしか無いため、タイトルでは選んでも鳴りません（エラーも出ません）。タイトルでも鳴らすには起動役をタイトルのシーンへ移す作業が必要です（プログラマーに相談）。</div></div></div></details>
+    <details class="recipe" id="rc-replay" data-tags="flow"><summary><span class="q">値を変えるたびに再生し直すのが面倒</span><span class="who">最初から再生</span></summary><div class="a"><p>▶ Play したまま、<b>[Title]</b>（または各配置物・Opening・Main Camera）の Inspector 上部の <b>▶ 最初から再生</b>。暗転から頭出しされます。</p></div></details>
+    <details class="recipe" id="rc-keep" data-tags="flow"><summary><span class="q">再生中に調整した値を残したい</span><span class="who">値を残す</span></summary><div class="a"><ol><li>再生中に値を調整する。</li><li>止める前に <b>再生中に変えた値を残す</b> を押す（「✓ 値を写し取り済み」と出る）。</li><li>再生を止めると値がシーンに書き戻されるので、シーンを保存。</li></ol><p>位置と大きさは対象外です（再生を止めてから変えてください）。</p></div></details>
+    <details class="recipe" data-tags="flow"><summary><span class="q">数値をめちゃくちゃにしたので最初に戻したい</span><span class="who">組み立て直し</span></summary><div class="a"><p><span class="mp">Tools<i>›</i>タイトル<i>›</i>タイトルシーンを組み立てる</span> をもう一度 → <b>初期値で作り直す</b>。差し替えた画像とキャラの <b>Model</b> はそのまま、位置と動きの数値が初期値に戻ります。<b>数値を引き継いで作り直す</b> を選ぶと、調整した値はそのまま残ります。</p></div></details>
+    <p class="noresult">見つかりませんでした。別の言葉で探してください。</p>
+  </div>
+</section>
+
+<section id="screen" data-nav="画面の見かた">
+  <div class="rv"><div class="eyebrow">04 — Hierarchy</div><h2>シーンの<br><em>中身</em>。</h2></div>
+  <div class="tabguide rv">
+    <div class="tg-panel"><h4>[Title]（Title Screen Controller）</h4><p class="when">全体の進行役。スタートのキー、行き先のシーン、暗転・フラッシュ・カメラの寄り、効果音。</p>
+      <ul class="points"><li><b>Opening</b> — オープニングの進行（Title Opening）。子に歯磨き粉 <b>Toothpaste</b>（その子にキャップ <b>Cap</b>）、噴き出す歯磨き粉 <b>PasteStream</b>、飛び散る泡 <b>BurstSplash</b>。</li><li><b>Background / Logo / PressStart</b> — それぞれ親が「動き」（Title Element Motion）、子の <b>Sprite</b> が「画像と大きさ」（Sprite Renderer ＋ Title Sprite Fit）。</li><li><b>CharacterLeft / CharacterRight</b> — 親が「動き」、子の <b>Model</b> が見た目（今は仮のキューブ）。</li><li><b>Background</b> › <b>SpriteBefore</b> — 塗り替わる前の、紫でどんよりした背景。<b>Bubbles</b> — 下から湧く泡・キラキラ（塗り替わった後だけ）。<b>Germs</b> — 漂うばいきん。</li><li><b>FadeCanvas</b> › <b>PasteCurtain</b> — 画面にどろーっと垂れて塗りつぶす歯磨き粉（再生中に縦の列に分かれる）。<b>Fade</b> — 暗転・フラッシュ用の板（どちらも編集中は消えています）。</li><li><b>Main Camera</b> — Title Camera Motion（揺れ・ブルブル・寄り）が付いています。</li></ul></div>
+  </div>
+</section>
+
+<section id="params" data-nav="数値の意味">
+  <div class="rv"><div class="eyebrow">05 — Numbers</div><h2>Title Element Motion の<br><em>数値</em>。</h2></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">登場</div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>Enter Delay</td><td>出始めるまでの秒数</td><td>後から出る</td><td>先に出る</td><td class="def">0</td></tr>
+    <tr><td>Enter Duration</td><td>出きるまでの秒数</td><td>ゆっくり</td><td>素早く（0 で一瞬）</td><td class="def">0.8</td></tr>
+    <tr><td>Enter Ease</td><td>動きの緩急</td><td colspan="2">一定の速さ／最後にゆっくり／少し行き過ぎて戻る／弾む／ゆっくり始まりゆっくり終わる／だんだん速く</td><td class="def">最後にゆっくり</td></tr>
+    <tr><td>Fade In</td><td>透明から現れる</td><td colspan="2">OFF なら最初から見えている</td><td class="def">ON</td></tr>
+    <tr><td>Move From</td><td>出発点のずれ</td><td colspan="2">(0,0,0) なら動かない</td><td class="def">(0,0,0)</td></tr>
+    <tr><td>Scale From</td><td>出始めの大きさ（1 = 最終）</td><td>大きい所から縮む</td><td>小さい所から膨らむ</td><td class="def">1</td></tr>
+    <tr><td>Rotate From</td><td>出始めの向きのずれ（度）</td><td>大きく回りながら出る</td><td>(0,0,0) で回らない</td><td class="def">(0,0,0)</td></tr>
+    <tr><td>Burn In</td><td>縁を光らせながら浮かび上がる（ディゾルブ）</td><td colspan="2">子に Effect Target が要る（Logo のみ ON）</td><td class="def">OFF</td></tr>
+    <tr><td>Glitch In</td><td>登場中の電脳ノイズの強さ（0〜1）</td><td>ノイズが強い</td><td>0 で無し</td><td class="def">0</td></tr>
+    <tr><td>Flash On Land</td><td>出きった瞬間の白い光（0〜1）</td><td>強く光る</td><td>0 で光らない</td><td class="def">0</td></tr>
+    <tr><td>Shake On Land</td><td>出きった瞬間の画面の揺れ</td><td>大きく揺れる</td><td>0 で揺れない</td><td class="def">0</td></tr>
+    <tr><td>Squash On Land</td><td>着地でむにっとつぶれる量（0〜0.5）</td><td>大きくつぶれる</td><td>0 で無し</td><td class="def">0</td></tr>
+    <tr><td>On Land</td><td>着地の瞬間のエフェクト・効果音（D-Drive）</td><td colspan="2">今のタイトルでは鳴らない（逆引き参照）</td><td class="def">空</td></tr>
+  </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">待機中のゆらぎ</div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>Float Amplitude</td><td>ふわふわ揺れる幅（XYZ）</td><td>大きく揺れる</td><td>0 で止まる</td><td class="def">(0,0,0)</td></tr>
+    <tr><td>Float Speed</td><td>ふわふわの速さ（1 秒の往復回数）</td><td>せわしない</td><td>ゆったり</td><td class="def">0.5</td></tr>
+    <tr><td>Pulse Amount</td><td>大きさの脈打ち（0.05 = ±5%）</td><td>大きく脈打つ</td><td>0 で無し</td><td class="def">0</td></tr>
+    <tr><td>Pulse Speed</td><td>脈打ちの速さ</td><td>速い</td><td>遅い</td><td class="def">1</td></tr>
+    <tr><td>Blink Min Alpha</td><td>点滅で一番薄いときの濃さ</td><td>1 で点滅しない</td><td>0 で完全に消える</td><td class="def">1</td></tr>
+    <tr><td>Blink Speed</td><td>点滅の速さ</td><td>速い</td><td>遅い</td><td class="def">1</td></tr>
+    <tr><td>Glint Interval / Strength</td><td>何秒ごとにキラッと光るか／強さ</td><td colspan="2">Interval 0 で光らない</td><td class="def">0 / 0.5</td></tr>
+    <tr><td>Glitch Interval / Strength</td><td>何秒ごとにザザッとノイズが走るか／強さ</td><td colspan="2">Interval 0 で走らない。間隔は毎回±30% ばらつく</td><td class="def">0 / 0.6</td></tr>
+  </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">スタート時（退場）</div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th colspan="2">メモ</th><th>初期値</th></tr>
+    <tr><td>Exit Style</td><td>消え方</td><td colspan="2">何もしない／フェードアウト／点滅して消える／膨らみながら消える</td><td class="def">何もしない</td></tr>
+    <tr><td>Exit Duration</td><td>消えるまでの秒数</td><td colspan="2">長いと暗転までの待ちも延びる</td><td class="def">0.5</td></tr>
+    <tr><td>Flash On Exit</td><td>押した瞬間の白い光</td><td colspan="2">子に Effect Target が要る</td><td class="def">0</td></tr>
+    <tr><td>Glitch On Exit</td><td>押した瞬間の電脳ノイズ</td><td colspan="2">子に Effect Target が要る</td><td class="def">0</td></tr>
+  </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">Title Opening（歯磨き粉のオープニング）</div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>Appear Delay / Appear Duration</td><td>歯磨き粉が出てくるまで／ポンと出るのにかける秒数</td><td>ゆっくり</td><td>すぐ</td><td class="def">0.3 / 0.45</td></tr>
+    <tr><td>Swell Duration</td><td>つまんでふくらんでいく秒数</td><td>じっくり溜める</td><td>すぐ噴き出す</td><td class="def">2</td></tr>
+    <tr><td>Swell Amount</td><td>一番ふくらんだときに太くなる割合</td><td>ぱんぱん</td><td>あまりふくらまない</td><td class="def">0.4</td></tr>
+    <tr><td>Pinch Amount</td><td>つまんだ所が細くなる割合（0〜0.9）</td><td>きゅっと細い</td><td>あまり細くならない</td><td class="def">0.5</td></tr>
+    <tr><td>Pinch Height / Pinch Width</td><td>つまむ高さ（0 = 下端、1 = 上端）／つまむ幅</td><td colspan="2">歯磨き粉の絵の、細くしたい所に合わせる</td><td class="def">0.45 / 0.08</td></tr>
+    <tr><td>Swell Range</td><td>ふくらむ範囲（下端・上端。しっぽとキャップは除く）</td><td colspan="2">絵を差し替えたら合わせる</td><td class="def">(0.06, 0.84)</td></tr>
+    <tr><td>Swell Stretch</td><td>ふくらむにつれて縦に伸びる量</td><td>大きく伸びる</td><td>伸びない</td><td class="def">0.08</td></tr>
+    <tr><td>Tube Tremble</td><td>歯磨き粉自身の震えの幅</td><td>激しく震える</td><td>0 で震えない</td><td class="def">0.05</td></tr>
+    <tr><td>Pinchers / Pincher Travel</td><td>つまむ間に真ん中へ寄せる物（今は空）／寄る距離</td><td colspan="2">指などを足したいときだけ使う</td><td class="def">空 / 0.35</td></tr>
+    <tr><td>Zoom In / Rumble</td><td>ふくらむ間にカメラが寄る量／ブルブルの強さ</td><td>ぐっと寄る・激しい</td><td>0 で無し</td><td class="def">0.15 / 0.12</td></tr>
+    <tr><td>Slice Count</td><td>ふくらみを作る横じまの数</td><td>なめらか</td><td>段々が見える</td><td class="def">48</td></tr>
+    <tr><td>Cap Launch Speed / Spread / Spin / Gravity</td><td>キャップが飛ぶ速さ／左右のぶれ／回転（度/秒）／重力</td><td>勢いよく飛ぶ</td><td>ふわっと外れる</td><td class="def">16 / 3 / 900 / 20</td></tr>
+    <tr><td>Eject Duration</td><td>噴き出した歯磨き粉が伸びきる秒数</td><td>ゆっくり伸びる</td><td>勢いよく</td><td class="def">0.4</td></tr>
+    <tr><td>Eject Shake</td><td>噴き出した瞬間の揺れ（幕が覆いきったときはこの半分）</td><td>大きく揺れる</td><td>0 で無し</td><td class="def">0.4</td></tr>
+    <tr><td>Pull Back Duration / Deflate Duration</td><td>カメラが引いて戻る秒数／チューブがしぼむ秒数</td><td>ゆっくり</td><td>すばやく</td><td class="def">0.5 / 0.35</td></tr>
+    <tr><td>Curtain Delay</td><td>噴き出してから歯磨き粉が垂れてくるまで</td><td>間が空く</td><td>すぐ垂れる</td><td class="def">0.25</td></tr>
+    <tr><td>Curtain Drop Duration</td><td>どろーっと垂れて覆いきるまで</td><td>重く遅い</td><td>さらっと速い</td><td class="def">1.3</td></tr>
+    <tr><td>Curtain Ease</td><td>垂れ方の緩急</td><td colspan="2">「ゆっくり始まりゆっくり終わる」がどろーっとした感じ</td><td class="def">ゆっくり始まりゆっくり終わる</td></tr>
+    <tr><td>Curtain Unevenness / Curtain Columns</td><td>先端のでこぼこ（0〜0.9）／縦の列の数</td><td>でこぼこ・なめらか</td><td>横一直線・段々</td><td class="def">0.45 / 28</td></tr>
+    <tr><td>Curtain Hold</td><td>覆ったままの時間</td><td>長く覆う</td><td>すぐ消える</td><td class="def">0.25</td></tr>
+    <tr><td>Reveal Style / Reveal Duration</td><td>消え方（下へ抜ける／ふっと消える）／消えきるまで</td><td colspan="2"></td><td class="def">下へ抜ける / 0.9</td></tr>
+    <tr><td>Before Objects / After Objects</td><td>塗り替わる前だけ見せる物／後だけ見せる物</td><td colspan="2">覆いきった瞬間に入れ替わる</td><td class="def">どんよりした背景 / 泡</td></tr>
+    <tr><td>Hand Off Delay</td><td>消え始めてから、ロゴたちが登場し始めるまで</td><td>間が空く</td><td>すぐ落ちてくる</td><td class="def">0.15</td></tr>
+  </table></div></div>
+  <p class="small rv" style="color:var(--ink2)">※ 初期値は部品を新しく付けたときの値です。組み立てメニューで置かれたものには、上の「何ができる？」の演出になるよう別の値が入っています。</p>
+</section>
+
+<section id="faq" data-nav="困ったとき">
+  <div class="rv"><div class="eyebrow">06 — Troubleshooting</div><h2>困ったときは<br><em>ここ</em>。</h2></div>
+  <div class="faq rv">
+    <details><summary>再生を止めたら、調整した値が元に戻った</summary><div class="a">Unity では再生中の変更は止めると戻ります。止める前に <b>再生中に変えた値を残す</b> を押してください（逆引き「再生中に調整した値を残したい」）。</div></details>
+    <details><summary>再生してもロゴやキャラが表示されない／歯磨き粉が出ない</summary><div class="a">シーンが古い作りのままです。<span class="mp">Tools<i>›</i>タイトル<i>›</i>タイトルシーンを組み立てる</span> → <b>作り直す</b> を実行してください。Hierarchy の <b>[Title]</b> の下に <b>Opening</b>・<b>CharacterLeft</b>・<b>CharacterRight</b> があれば新しい作りです。</div></details>
+    <details><summary>A を押してもゲームのシーンに進まない</summary><div class="a"><ol><li>演出の途中なら、1 回目は「演出を飛ばす」です。もう 1 回押してください。</li><li>Console に「シーン「Game」を読み込めません」が出ていたら、File › Build Profiles のシーン一覧に Game が入っているか確認。</li><li>Game ビューをクリックしてから押してください（Unity の別の画面が選ばれているとキーが届きません）。</li></ol></div></details>
+    <details><summary>キューブが真っ黒・ピンク色になる</summary><div class="a">キューブには光が必要です。シーンの <b>Directional Light</b> を消していないか確認。ピンク色ならマテリアル（<code>Title_CubeLeft</code> / <code>Title_CubeRight</code>）のシェーダーが見つかっていないので、プログラマーに相談してください。</div></details>
+    <details><summary>差し替えた画像が真っ白・四角になる</summary><div class="a">画像の <b>Texture Type</b> が <b>Sprite (2D and UI)</b> になっているか確認してください。</div></details>
+    <details><summary>ロゴが浮かび上がらない・光らない・ノイズが出ない</summary><div class="a">Logo › Sprite に <b>Effect Target</b> が付いていて、Profile が <b>TitleFX_Logo</b>、Sprite Renderer の Material が <b>Title_SpriteFX</b> か確認。</div></details>
+    <details><summary>効果音が鳴らない</summary><div class="a">今の仕様ではタイトルでは鳴りません（逆引き「効果音を鳴らしたい」参照）。</div></details>
+  </div>
+</section>
+
+<section id="glossary" data-nav="用語集">
+  <div class="rv"><div class="eyebrow">07 — Words</div><h2>分からない言葉は<br><em>ここで引く</em>。</h2></div>
+  <dl class="gloss">
+    <div class="rv"><dt>暗転／明転</dt><dd>画面が黒くなること／黒から明るくなること。</dd></div>
+    <div class="rv"><dt>ディゾルブ</dt><dd>絵がノイズ状に少しずつ現れる・消える見た目。ShaderFX の機能。</dd></div>
+    <div class="rv"><dt>グリッチ</dt><dd>画面がザザッと乱れて、絵がずれたり色が分かれたりするデジタルなノイズ。ShaderFX の機能。</dd></div>
+    <div class="rv"><dt>Effect Target</dt><dd>ShaderFX の見た目エフェクトを付けるための部品。</dd></div>
+    <div class="rv"><dt>ワールドの単位</dt><dd>シーン内の長さ。タイトルのカメラでは画面の高さが約 10.8。</dd></div>
+  </dl>
+</section>
+
+<div class="devzone"></div>
+<section id="dev" data-nav="コードから使う" data-dev>
+  <div class="rv">
+    <div class="eyebrow">08 — For programmers</div>
+    <h2>別の入力から<br><em>スタートさせる</em>。</h2>
+    <p class="lead">名前空間 <code>MS2026.Title</code>（<code>Assets/Title/Scripts/Runtime</code>）。</p>
+  </div>
+  <div class="codebox rv"><div class="cap"><span>TitleScreenController</span><button class="copy" type="button">copy</button></div><pre>
+using MS2026.Title;
+
+// 握力などのしきい値を超えたら呼ぶ（演出中なら演出を飛ばす、待機中ならスタート）
+FindAnyObjectByType&lt;TitleScreenController&gt;().RequestStart();
+
+// カメラの演出（今のカメラの動きに上乗せされる）
+var cam = Camera.main.GetComponent&lt;TitleCameraMotion&gt;();
+cam.Shake(0.2f);          // ワールド単位の最大のずれ
+cam.ZoomTo(0.1f, 0.5f);   // 0.5 秒で 10% 寄って保つ（0 で戻す）
+cam.SetRumble(0.1f);      // 止めるまで続くブルブル（0 で止める）</pre></div>
+  <div class="notes rv"><div class="note"><span class="lbl">詳細</span><code>Docs/Tools/TitleScreen_AI_Reference.md</code></div><div class="note"><span class="lbl">シーン</span>手で YAML を書き換えず、組み立てメニュー（<code>TitleSceneBuilder</code>）を直す。</div></div>
+</section>
+
+<section id="more" data-nav="関連ツール">
+  <div class="rv"><div class="eyebrow">09 — Related</div><h2>一緒に使う<br><em>ツール</em>。</h2></div>
+  <div class="links">
+    <a class="lk rv" href="ShaderFX_ガイド.html"><span class="ti">ShaderFX</span><span class="ds">電脳ノイズ・白フラッシュ・キャラの輪郭の光。</span></a>
+    <a class="lk rv" href="D-Drive_ガイド.html"><span class="ti">D-Drive</span><span class="ds">効果音・エフェクトの登録。</span></a>
+    <a class="lk rv" href="GripInputBridge_ガイド.html"><span class="ti">握力入力ブリッジ</span><span class="ds">今後、握ってスタートに使う予定。</span></a>
+    <a class="lk rv" href="index.html"><span class="ti">ツール一覧</span><span class="ds">このプロジェクトの全ツール。</span></a>
+  </div>
+  <footer><span>Title Screen Guide · Xx_MS2026_xX</span><span>2026-10-07 時点のコードに基づく</span></footer>
+</section>
+</main>
+</div>
+<script src="assets/guide.js"></script>
+</body>
+</html>

@@ -11,6 +11,7 @@
 | ShaderFX | `Docs/Tools/ShaderFX_AI_Reference.md` | `ShaderFX_ガイド.html` | `Packages/com.ms2026.shaderfx/` |
 | SpriteAnim | `Docs/Tools/SpriteAnim_AI_Reference.md` | `SpriteAnim_ガイド.html` | `Packages/com.ms2026.spriteanim/` |
 | D-Drive（外部パッケージ） | `Docs/Tools/DDrive_AI_Reference.md` | `D-Drive_ガイド.html` | `Library/PackageCache/com.ddrive.core@*`, `Assets/_Game/DDrive/` |
+| タイトル画面（作業中） | `Docs/Tools/TitleScreen_AI_Reference.md` | `TitleScreen_ガイド.html` | `Assets/Title/`, `Assets/Scenes/Title.unity` |
 
 1. **読む**: 上のツールに関わる作業では、ソースを読み始める前に該当する `*_AI_Reference.md` を読むこと。ソースを開くのは、そこに書いていないことを確かめるときだけにする。
 2. **更新する**: ツールのコード・挙動・UI の文言・メニュー・既定値・パス・公開 API を変更／追加したら、**同じ作業の中で**そのツールの `*_ガイド.html` と `*_AI_Reference.md` を両方更新する（後回しにしない）。D-Drive は版の更新、ID の追加・変更、呼び出し箇所や設定の変更が対象。
