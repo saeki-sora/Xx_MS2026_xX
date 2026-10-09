@@ -163,6 +163,22 @@
     <div class="card feat rv" style="--c:#ff4d8d"><div class="ic">✨</div><h3>敵に当たった瞬間</h3><p>敵の群れにレーザーが触れた瞬間に 1 回だけ出ます。出すぎないよう、1 秒に 60 個までに自動で減らします。</p><p class="ex"><b>素材</b> 1 回だけ用（手順 2 は不要）</p></div>
   </div>
 
+  <div class="card rv" style="margin-top:26px">
+    <h3 style="margin-bottom:10px">近道：仮のエフェクト・効果音・BGM を自動で入れる</h3>
+    <p>素材がまだ無いときは、仮の素材（水色・ピンク・紫・白の泡・きらめき・0と1のエフェクト、効果音 8 個、BGM 1 曲）を自動で作って、演出欄に入れられます。本番の素材ができたら、演出欄で選び直すだけで差し替わります。</p>
+    <ol>
+      <li>メニュー <span class="mp">Tools<i>›</i>要塞<i>›</i>演出素材<i>›</i>1 素材を生成</span> を押す。</li>
+      <li>Unity のインポートと D-Drive の自動登録が終わるまで少し待つ（右下の読み込み表示が消えるまで）。</li>
+      <li>メニュー <span class="mp">Tools<i>›</i>要塞<i>›</i>演出素材<i>›</i>2 演出欄へ割り当て</span> を押す。レーザー・破壊物・スマッシュボールの<b>空いている欄だけ</b>に入ります（入力済みの欄は変わりません。発射音が最初の和太鼓のままなら置き換えます）。シーンに BGM 用の <code>[Fortress] Bgm</code> も置かれます。</li>
+    </ol>
+    <p><b>コアクリスタルが割れる演出：</b>敵がコアに当たってダメージを受けると、ガラスが割れるエフェクトと「パリーン」という効果音が出ます（0.25 秒に 1 回まで）。コアの <code>Core Crystal Controller</code> の <code>Effects</code> に <code>On Damaged</code>（ダメージ時）と <code>On Destroyed</code>（壊れたとき）があり、上の手順 1・2 で <code>On Damaged</code> に仮素材が入ります。いまは Host（1 人用も含む）の画面にだけ出ます。</p>
+    <p><b>撃ったあとの湯気：</b>ビームを撃ち終わると、砲台から湯気のエフェクトが出て、出始めに「シュー」という音が鳴ります。<b>ビームを撃った時間が長いほど、湯気が出ている時間も長くなります</b>（既定は 1 秒撃つと 1 秒ぶん、上限 10 秒）。要塞デザイナーの「砲台配置」タブの「撃ったあとの湯気」の欄で選びます。時間は <code>Steam Seconds Per Fire Second</code>（撃った 1 秒あたりの湯気の秒数）と <code>Max Steam Seconds</code>（上限）で変えられます。仮素材は、上の手順 1・2（素材を生成→割り当て）で入ります。エフェクトの寿命は「Loop」にしてください。</p>
+    <p><b>ビームのグニャグニャ：</b>砲台の <code>Laser Beam Visual</code> の <code>Wobble Amplitude</code>（うねりの大きさ。0 でまっすぐ）、<code>Wobble Wavelength</code>、<code>Wobble Speed</code>、<code>Bulge Amount</code>（太さのふくらみ）で、歯磨き粉のようにうねる見た目に変えられます。当たり判定はまっすぐなままです。さらに <code>Glow Material</code>・<code>Glow Layers</code>・<code>Glow Width Scale</code>・<code>Glow Alpha</code> で、ビームのまわりにぼんやり光る層を重ねられます（<code>Glow Material</code> を空にすると光は出ません）。</p>
+    <p><b>クリスタルの汚れ：</b>コアの HP が減るほど、クリスタルの色が少しずつ汚れた色（茶ぐろい色）に変わります。自動で付くので設定は不要です。色と汚れ方は、コアの <code>Core Dirt Visual</code>（再生中に自動で付く）で変えられます。割れる演出は、いまは「壊れたとき」だけ出ます。</p>
+    <p><b>BGM を複数入れて聞き比べる：</b><code>[Fortress] Bgm</code> の <code>FortressBgmPlayer</code> で、<code>Bgm</code> が 1 曲目、<code>Extra Bgms</code> に 2 曲目以降を入れます。<code>Start Index</code> で選んだ 1 曲だけが鳴り、その曲の中でループ再生されます（0 = <code>Bgm</code>、1 = <code>Extra Bgms</code> の 1 つ目…）。試聴で切り替えたいときは <code>Next Key</code> にキーを入れます（通常は None）。</p>
+    <div class="callout warn"><span class="ci">!</span><div>エフェクトのプレイヤー色の自動色付けは、この仮素材では効きません。BGM は仮の簡易ループです。エラーや「設定できなかった項目」の警告が Console に出たら、内容を開発担当に伝えてください。</div></div>
+  </div>
+
   <div class="steps">
     <div class="step rv"><div class="n">1</div><div class="step-body">
       <div><h3>素材を倉庫の入口に置く</h3>

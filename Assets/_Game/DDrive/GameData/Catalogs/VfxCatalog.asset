@@ -12,4 +12,200 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02b02146e7ae53741932c128e99966dc, type: 3}
   m_Name: VfxCatalog
   m_EditorClassIdentifier: DDrive.Foundation::DDrive.Foundation.Registry.AssetCatalog
-  entries: []
+  entries:
+  - Id: 759660600684738104
+    Type: 3
+    Address: VFX_Fortress_LaserMuzzle
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 865915282325765272
+    Type: 3
+    Address: VFX_Fortress_DestructHit
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 1148039940316807166
+    Type: 3
+    Address: VFX_Fortress_SwarmHit
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 1496822387155871521
+    Type: 3
+    Address: VFX_Fortress_ToothpasteBeam
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 2734424051633896882
+    Type: 3
+    Address: VFX_Fortress_CoreShatter
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 3298427915611929982
+    Type: 3
+    Address: VFX_Fortress_ToothpasteEnemyHit
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 4949327726820022131
+    Type: 3
+    Address: VFX_Fortress_ToothpasteImpact
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 5465202105630298506
+    Type: 3
+    Address: VFX_Fortress_Overheat
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 9076089593357038298
+    Type: 3
+    Address: VFX_Fortress_SmashBreak
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 9290360900547890165
+    Type: 3
+    Address: VFX_Fortress_ToothpasteMuzzleSpark
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 9696497413153645610
+    Type: 3
+    Address: VFX_Fortress_LaserImpact
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 12177394001233572784
+    Type: 3
+    Address: VFX_Fortress_DestructRegen
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 14956730833521469517
+    Type: 3
+    Address: VFX_Fortress_DestructBreak
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 16382477502686203062
+    Type: 3
+    Address: VFX_Fortress_DestructStage
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0

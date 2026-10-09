@@ -13,14 +13,25 @@ namespace MS2026.Fortress
         [Min(1f)]
         public float maxHealth = 100f;
 
+        [Tooltip("ダメージを受けたとき・壊れたときの演出（エフェクトと効果音）。")]
+        public CoreEffectSettings effects = new CoreEffectSettings();
+
         public event Action<float, float> OnHealthChanged;
         public event Action OnCoreDestroyed;
 
         public float CurrentHealth { get; private set; }
 
+        private float _nextDamageEffectTime;
+
         private void Awake()
         {
             CurrentHealth = maxHealth;
+
+            // HPに応じて少しずつ汚れていく見た目（無ければ自動で付ける）。
+            if (GetComponent<CoreDirtVisual>() == null)
+            {
+                gameObject.AddComponent<CoreDirtVisual>();
+            }
         }
 
         public void TakeDamage(float amount)
@@ -35,7 +46,21 @@ namespace MS2026.Fortress
 
             if (CurrentHealth <= 0f)
             {
+                Play(effects?.onDestroyed);
                 OnCoreDestroyed?.Invoke();
+            }
+            else if (effects != null && Time.time >= _nextDamageEffectTime)
+            {
+                _nextDamageEffectTime = Time.time + effects.damageEffectInterval;
+                Play(effects.onDamaged);
+            }
+        }
+
+        private void Play(FortressEffect effect)
+        {
+            if (effect != null && !effect.IsEmpty)
+            {
+                FortressEffectPlayer.PlayOnce(effect, transform.position, Quaternion.identity);
             }
         }
     }

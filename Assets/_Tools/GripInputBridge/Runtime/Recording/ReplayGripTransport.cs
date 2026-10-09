@@ -20,8 +20,10 @@ namespace MS2026.GripInputBridge.Recording
         private readonly float[] _currentValues = new float[GripInputBridgeConstants.PlayerCount];
         private readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew();
 
+#pragma warning disable CS0067 // 未使用でもインターフェースの都合で必要なイベント
         public event Action<int> OnConnected;
         public event Action<int> OnDisconnected;
+#pragma warning restore CS0067
 
         public ReplayGripTransport(string filePath)
         {

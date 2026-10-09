@@ -130,6 +130,7 @@ GameObject:
   - component: {fileID: 11383753}
   - component: {fileID: 11383752}
   - component: {fileID: 11383751}
+  - component: {fileID: 11383754}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -272,6 +273,50 @@ PrefabInstance:
       addedObject: {fileID: 1025688041}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a48402b497d10f24794cf107d5552469, type: 3}
+--- !u!114 &11383754
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 11383750}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalCameraData
+  m_RenderShadows: 1
+  m_RequiresDepthTextureOption: 2
+  m_RequiresOpaqueTextureOption: 2
+  m_CameraType: 0
+  m_Cameras: []
+  m_RendererIndex: -1
+  m_VolumeLayerMask:
+    serializedVersion: 2
+    m_Bits: 1
+  m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
+  m_RenderPostProcessing: 0
+  m_Antialiasing: 0
+  m_AntialiasingQuality: 2
+  m_StopNaN: 0
+  m_Dithering: 0
+  m_ClearDepth: 1
+  m_AllowXRRendering: 1
+  m_AllowHDROutput: 1
+  m_UseScreenCoordOverride: 0
+  m_ScreenSizeOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
+  m_RequiresDepthTexture: 0
+  m_RequiresColorTexture: 0
+  m_TaaSettings:
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
+  m_Version: 2
 --- !u!1 &62728021
 GameObject:
   m_ObjectHideFlags: 0
@@ -326,6 +371,18 @@ MonoBehaviour:
   targetLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  usePlayerColor: 0
+  beamColor: {r: 0.94, g: 0.99, b: 0.97, a: 1}
+  beamMaterial: {fileID: 2100000, guid: 484b6d99b9330ec2ea235c8e4c97077d, type: 2}
+  wobbleAmplitude: 0.12
+  wobbleWavelength: 2.5
+  wobbleSpeed: 4
+  bulgeAmount: 0.35
+  wobbleSegments: 40
+  glowMaterial: {fileID: 2100000, guid: 64e86fa841a73ab7dbf8e54308ecec25, type: 2}
+  glowLayers: 2
+  glowWidthScale: 1.6
+  glowAlpha: 0.035
 --- !u!212 &62728024
 SpriteRenderer:
   serializedVersion: 2
@@ -2480,6 +2537,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.CoreCrystalController
   maxHealth: 100
+  effects:
+    onDamaged:
+      vfx:
+        value: 2734424051633896882
+        type: 3
+      se:
+        value: 17972745566154370587
+        type: 1
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onDestroyed:
+      vfx:
+        value: 2734424051633896882
+        type: 3
+      se:
+        value: 17972745566154370587
+        type: 1
+      tintWithPlayerColor: 1
+      colorParam: Color
+    damageEffectInterval: 0.25
 --- !u!212 &526317132
 SpriteRenderer:
   serializedVersion: 2
@@ -2625,6 +2702,18 @@ MonoBehaviour:
   targetLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  usePlayerColor: 0
+  beamColor: {r: 0.94, g: 0.99, b: 0.97, a: 1}
+  beamMaterial: {fileID: 2100000, guid: 484b6d99b9330ec2ea235c8e4c97077d, type: 2}
+  wobbleAmplitude: 0.12
+  wobbleWavelength: 2.5
+  wobbleSpeed: 4
+  bulgeAmount: 0.35
+  wobbleSegments: 40
+  glowMaterial: {fileID: 2100000, guid: 64e86fa841a73ab7dbf8e54308ecec25, type: 2}
+  glowLayers: 2
+  glowWidthScale: 1.6
+  glowAlpha: 0.035
 --- !u!212 &648091143
 SpriteRenderer:
   serializedVersion: 2
@@ -2767,6 +2856,18 @@ MonoBehaviour:
   targetLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  usePlayerColor: 0
+  beamColor: {r: 0.94, g: 0.99, b: 0.97, a: 1}
+  beamMaterial: {fileID: 2100000, guid: 484b6d99b9330ec2ea235c8e4c97077d, type: 2}
+  wobbleAmplitude: 0.12
+  wobbleWavelength: 2.5
+  wobbleSpeed: 4
+  bulgeAmount: 0.35
+  wobbleSegments: 40
+  glowMaterial: {fileID: 2100000, guid: 64e86fa841a73ab7dbf8e54308ecec25, type: 2}
+  glowLayers: 2
+  glowWidthScale: 1.6
+  glowAlpha: 0.035
 --- !u!212 &669435694
 SpriteRenderer:
   serializedVersion: 2
@@ -4030,21 +4131,21 @@ MonoBehaviour:
     feedback:
       onHit:
         vfx:
-          value: 0
-          type: 0
+          value: 865915282325765272
+          type: 3
         se:
-          value: 0
-          type: 0
+          value: 1777448812509017777
+          type: 1
         tintWithPlayerColor: 1
         colorParam: Color
       hitInterval: 0.15
       onStageChanged:
         vfx:
-          value: 0
-          type: 0
+          value: 16382477502686203062
+          type: 3
         se:
-          value: 0
-          type: 0
+          value: 2842824340120649094
+          type: 1
         tintWithPlayerColor: 1
         colorParam: Color
       onDestroyed:
@@ -4058,11 +4159,11 @@ MonoBehaviour:
         colorParam: Color
       onRegenerated:
         vfx:
-          value: 0
-          type: 0
+          value: 12177394001233572784
+          type: 3
         se:
-          value: 0
-          type: 0
+          value: 830934790130038943
+          type: 1
         tintWithPlayerColor: 1
         colorParam: Color
       placeholderDebris: 1
@@ -4335,11 +4436,11 @@ MonoBehaviour:
       returnSpeedMultiplier: 1.5
     onBroken:
       vfx:
-        value: 0
-        type: 0
+        value: 9076089593357038298
+        type: 3
       se:
-        value: 0
-        type: 0
+        value: 6116545328458876446
+        type: 1
       tintWithPlayerColor: 1
       colorParam: Color
     recordHistory: 1
@@ -5181,6 +5282,60 @@ MonoBehaviour:
     PacketDelayMS: 0
     PacketJitterMS: 0
     PacketDropRate: 0
+--- !u!1 &1716361887
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1716361889}
+  - component: {fileID: 1716361888}
+  m_Layer: 0
+  m_Name: '[Fortress] Bgm'
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1716361888
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1716361887}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bdec9a95c0803db4dab6d208e5c6b1ed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.FortressBgmPlayer
+  bgm:
+    value: 3399067870436138849
+    type: 2
+  extraBgms: []
+  startIndex: 0
+  nextKey: 0
+  playOnStart: 1
+  fadeInSeconds: -1
+  stopOnDisable: 1
+  fadeOutSeconds: -1
+--- !u!4 &1716361889
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1716361887}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1727559726
 GameObject:
   m_ObjectHideFlags: 0
@@ -5235,6 +5390,18 @@ MonoBehaviour:
   targetLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  usePlayerColor: 0
+  beamColor: {r: 0.94, g: 0.99, b: 0.97, a: 1}
+  beamMaterial: {fileID: 2100000, guid: 484b6d99b9330ec2ea235c8e4c97077d, type: 2}
+  wobbleAmplitude: 0.12
+  wobbleWavelength: 2.5
+  wobbleSpeed: 4
+  bulgeAmount: 0.35
+  wobbleSegments: 40
+  glowMaterial: {fileID: 2100000, guid: 64e86fa841a73ab7dbf8e54308ecec25, type: 2}
+  glowLayers: 2
+  glowWidthScale: 1.6
+  glowAlpha: 0.035
 --- !u!212 &1727559729
 SpriteRenderer:
   serializedVersion: 2
@@ -6855,3 +7022,4 @@ SceneRoots:
   - {fileID: 2047610808}
   - {fileID: 124015613}
   - {fileID: 1941662560}
+  - {fileID: 1716361889}

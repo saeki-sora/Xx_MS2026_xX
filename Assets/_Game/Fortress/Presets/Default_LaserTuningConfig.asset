@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbd850a17e5df944abfa9afb4d38c6f2, type: 3}
   m_Name: Default_LaserTuningConfig
   m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.LaserTuningConfig
+  chargeToFireEnabled: 0
   chargeToFireSeconds: 0.5
   chargeGripThreshold01: 0.95
   gripToThicknessCurve:
@@ -81,3 +82,42 @@ MonoBehaviour:
   pierceEnemies: 1
   maxPierceCount: 0
   obstacleDamageMultiplier: 1
+  effects:
+    muzzle:
+      vfx:
+        value: 1496822387155871521
+        type: 3
+      se:
+        value: 16135865275358210923
+        type: 1
+      tintWithPlayerColor: 1
+      colorParam: Color
+    impact:
+      vfx:
+        value: 4949327726820022131
+        type: 3
+      se:
+        value: 7371773206052366440
+        type: 1
+      tintWithPlayerColor: 1
+      colorParam: Color
+    swarmHit:
+      vfx:
+        value: 3298427915611929982
+        type: 3
+      se:
+        value: 7903325102335460783
+        type: 1
+      tintWithPlayerColor: 1
+      colorParam: Color
+    steam:
+      vfx:
+        value: 5465202105630298506
+        type: 3
+      se:
+        value: 17024609056135836289
+        type: 1
+      tintWithPlayerColor: 1
+      colorParam: Color
+    steamSecondsPerFireSecond: 1
+    maxSteamSeconds: 10
