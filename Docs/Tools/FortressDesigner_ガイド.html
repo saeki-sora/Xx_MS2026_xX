@@ -267,7 +267,7 @@
     <details class="recipe" data-tags="test"><summary><span class="q">ネット対戦で砲台を動かしたい（2〜4 人）</span><span class="who">メニュー</span></summary><div class="a">
       <div class="where"><span class="mp">Tools<i>›</i>要塞<i>›</i>ネットワーク<i>›</i>同期オブジェクトをシーンに配置</span></div>
       <ol><li>Play していない状態でメニューを実行します。砲台・破壊可能物・スマッシュボールを同期する「[Fortress] NetSync」と、自分のゲージ「[Fortress] LocalTurretHud」が追加されます（既にあれば何もしません）。</li><li><kbd>Ctrl</kbd>+<kbd>S</kbd> でシーンを保存してから、ビルドします（保存しないとビルドに入りません）。</li><li><code>Tools/NetTest/launch_2p.bat</code> で 2 つ起動し、操作したいウィンドウをクリックして <kbd>Q</kbd> を押します。<b>ネット対戦中はどの PC でも自分の砲台は Q（センサー 1 番）で動きます</b>（各 PC にセンサーが 1 台ずつのため）。</li><li>両方の画面で、同じ向き・同じ太さのレーザーが見えれば OK。画面下に自分の熱ゲージが出ます。</li></ol>
-    </div></details>
+    <p class="small muted" style="margin-top:8px">PC 2 台で 4 人：1 台目で <code>Tools/NetTest/launch_2pc_A.bat</code>（P1・P2）、2 台目で <code>launch_2pc_B.bat 1台目のIPアドレス</code>（P3・P4）。IP アドレスは 1 台目のコマンドプロンプトで <code>ipconfig</code> の「IPv4 アドレス」。初めて起動したときの Windows の確認は「プライベート ネットワーク」を許可します。</p></div></details>
     <details class="recipe" data-tags="turret"><summary><span class="q">レーザーを太く／細くしたい</span><span class="who">砲台配置</span></summary><div class="a">
       <div class="where"><span class="mp">砲台配置<i>›</i>レーザー・熱チューニング<i>›</i>太さ・熱</span></div>
       <ol><li><b>最大の太さ</b>＝全力（握力 100%）で握ったときの太さ。<b>最小の太さ</b>＝少しだけ握ったときの太さ。</li><li>握力と太さの関係を「曲線」で変えたいときは、設定ファイル <code>Default_LaserTuningConfig</code> の <b>Grip To Thickness Curve</b> を Inspector で編集します（例：弱く握ってもすぐ太くなる）。</li></ol>
@@ -303,6 +303,8 @@
       <p>敵の種類の <b>スプライトシート（空=仮絵）</b> に 1 枚の画像を入れ、<b>アニメのコマ数（横）</b>・<b>向きの数（縦: 1/2/4/8）</b> を合わせます。画像は次の格子で作ってください：</p>
       <ul><li><b>横</b>＝アニメのコマ（左→右）。例：10 コマなら横 10 分割</li><li><b>縦</b>＝向き。上から <b>右・右上・上・左上・左・左下・下・右下</b>（8 方向）</li></ul>
       <p>空のままなら自動生成の仮絵（丸＋足）で動きます。</p>
+      <p>画像は <code>Assets/_Game/Fortress/Art/Enemies/</code> の中に、敵 1 種類につき 1 フォルダ作って置きます（例：<code>Art/Enemies/Germ_Small/Germ_Small_Sheet.png</code>）。</p>
+      <p>見本：いまの敵「スピキ」は <code>Art/Enemies/スピキ_sheet.png</code>（7 コマ × 2 向き＝右・左。左は右を反転したもの）。コマの間隔がバラバラの絵はそのままでは使えないので、等間隔のマスに並べ直してから入れてください。</p>
     </div></details>
     <details class="recipe" id="rc-swarm-feel" data-tags="enemy"><summary><span class="q">敵の群れを「詰まりやすく」「さらさら流れる」ようにしたい</span><span class="who">群衆</span></summary><div class="a">
       <p><span class="mp">群衆<i>›</i>群衆の設定（流体らしさ）</span> のプリセットから選び、数値で微調整します。Play 中でもすぐ反映されます。</p>
@@ -530,6 +532,7 @@
     <p class="lead">ツールは <code>MS2026.Fortress.Editor</code>（<code>Assets/_Game/Fortress/Editor/FortressDesignerWindow/</code>）、ゲーム本体は <code>MS2026.Fortress.Runtime</code>。ツールは「ランタイムのコンポーネントと設定アセットを編集するだけ」で、独自の保存形式は持ちません。</p>
   </div>
   <div class="tree rv"><span class="d">Assets/_Game/Fortress/</span>
+├─ <span class="d">Art/Enemies/</span>                     <span class="c"># 敵の絵（1 種類 = 1 フォルダ）</span>
 ├─ <span class="d">Editor/FortressDesignerWindow/</span>  <span class="c"># 9 タブ。1 タブ = 1 TabView + 複数 Panel</span>
 │  ├─ <span class="h">FortressDesignerWindow.cs</span>    <span class="c"># Tools/要塞/要塞デザイナーを開く</span>
 │  └─ <span class="d">Camera/ Destructibles/ SmashBall/ Swarm/</span>

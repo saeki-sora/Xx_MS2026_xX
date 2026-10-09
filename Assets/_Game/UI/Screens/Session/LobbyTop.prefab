@@ -239,7 +239,7 @@ MonoBehaviour:
       source: 0
       preset:
         Preset: 49
-        Duration: 0.25
+        Duration: 0.15
         Distance: 0
         EaseOverride:
           Kind: 0
@@ -264,7 +264,7 @@ MonoBehaviour:
       source: 0
       preset:
         Preset: 56
-        Duration: 0.35
+        Duration: 0.15
         Distance: 0
         EaseOverride:
           Kind: 0
@@ -289,7 +289,7 @@ MonoBehaviour:
       source: 0
       preset:
         Preset: 49
-        Duration: 0.25
+        Duration: 0.15
         Distance: 0
         EaseOverride:
           Kind: 0
@@ -314,7 +314,7 @@ MonoBehaviour:
       source: 0
       preset:
         Preset: 7
-        Duration: 0.35
+        Duration: 0.15
         Distance: 0
         EaseOverride:
           Kind: 0

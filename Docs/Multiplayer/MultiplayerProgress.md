@@ -226,6 +226,15 @@
 - Host側PC: `run_instance.bat host 0`
 - Client側PC: `run_instance.bat client 1 <HostのIP>`
 
+**2台で4人（2026-10-08 追加）**: PC A に Host(P1)+Client(P2)、PC B に Client(P3)+Client(P4)。
+- PC A: `Tools\NetTest\launch_2pc_A.bat`（Hostを起動し、約3秒後にP2を起動）
+- PC B: `Tools\NetTest\launch_2pc_B.bat <PC AのIP>`（P3・P4を起動）
+- 負荷計測: PC A `bench_2pc_A.bat` → 30秒以内に PC B `bench_2pc_B.bat <PC AのIP>`。3人そろうとHostが3万体投入、70秒で全部終了。ログは各PCの `logs\p0_host_bench2pc.log`〜`p3_client_bench2pc.log`。
+- PC B にプロジェクトが無い場合: `Builds\TestBuild` をフォルダごと PC B の `ダウンロード\TestBuild` にコピーし、`Tools\NetTest` の bat（`run_instance.bat` と `launch_2pc_B.bat`、計測なら `bench_2pc_B.bat` も）を同じ場所に置けば、ビルドは自動で見つかる。
+- 1台で4つ起動して確認済み（2026-10-08、接続先 127.0.0.1）: 3人とも写真を受信、立て直し0回。
+- bat はテスト用の起動なので、タイトル・ロビーを飛ばしてすぐゲームに入る（`TitleScreenController.directSceneForTestLaunch`）。
+- 本番と同じ流れ（タイトル → ロビー → ゲーム）を2台で試すときは、bat を使わず `MS2026.exe` を各PCで2回ずつ普通に起動する（Alt+Enter でウィンドウにできる）。PC A の1つ目で「部屋を作る」、残り3つは「部屋に参加する」で見つかった部屋を選ぶ（見つからなければ PC A のアドレスを入力）。席は P1〜P4 を別々に選ぶ。全員「準備OK」→ ホストが「ゲーム開始！」。ロビーの2台での動作はまだ未確認（`Docs/Tools/UIStudio_AI_Reference.md`）。部屋探しは UDP 47777、ゲームは UDP 7777 を使う。Windows のネットワークが「パブリック」だと通らないことがあるので「プライベート」にする。
+
 負荷計測（2台）
 - Host側PC: `run_instance.bat host 0 - -fortress-bench -fortress-bench-burst 30000 -fortress-bench-clients 1 -fortress-bench-quit 60 -fortress-bench-no-wave`
 - Client側PC: `run_instance.bat client 1 <HostのIP> -fortress-bench -fortress-bench-quit 60 -fortress-bench-no-wave`
