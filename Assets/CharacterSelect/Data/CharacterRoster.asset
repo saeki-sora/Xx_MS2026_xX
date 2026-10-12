@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3dae770e1970d1a4e9f67bcfe989133a, type: 3}
+  m_Name: CharacterRoster
+  m_EditorClassIdentifier: MS2026.CharacterSelect.Data::MS2026.CharacterSelect.CharacterRoster
+  characters:
+  - {fileID: 11400000, guid: cb451aadad7dc4845bcd6ffd810f3f9a, type: 2}
+  - {fileID: 11400000, guid: 39bfda5f66ca1e04188a7409dbbc4170, type: 2}
+  - {fileID: 11400000, guid: 7db4767292e776b40a3fe296749d3284, type: 2}
+  - {fileID: 11400000, guid: d9c336238095ceb428bd5086a39bda20, type: 2}

@@ -61,6 +61,13 @@ namespace MS2026.UI.Game
             }
 
             _forcedStart = force;
+            if (UsesCharacterSelect)
+            {
+                // キャラクター選択を使うときは 3・2・1 をせず、すぐ全員でキャラクター選択へ。
+                BeginCharacterSelect();
+                return;
+            }
+
             if (countdownSeconds <= 0f)
             {
                 BeginLoadGame();
@@ -142,8 +149,16 @@ namespace MS2026.UI.Game
                 FortressEffectPlayer.PlaySound(onMatchStart, Vector3.zero);
                 if (!IsHost && !IsGameLoaded)
                 {
-                    // 参加側は NGO が自動でゲームのシーンを読み込む。読み終わるまで幕で隠す。
-                    root?.PlayTransition(gameTransition, null, () => IsGameLoaded || !IsOnline || Roster.phase == LobbyPhase.Waiting);
+                    // 参加側は NGO が自動でゲームのシーンを読み込む。読み終わるまで幕で隠す（キャラクター選択からなら、その幕）。
+                    Func<bool> loaded = () => IsGameLoaded || !IsOnline || Roster.phase == LobbyPhase.Waiting;
+                    if (before == LobbyPhase.CharacterSelect)
+                    {
+                        PlayGameStartCover(null, loaded);
+                    }
+                    else
+                    {
+                        root?.PlayTransition(gameTransition, null, loaded);
+                    }
                 }
             }
 
@@ -156,9 +171,10 @@ namespace MS2026.UI.Game
             if (after == LobbyPhase.Returning && before != LobbyPhase.Returning && !IsHost)
             {
                 root?.Close(pauseScreen);
-                root?.PlayTransition(gameTransition, null, () => !IsGameLoaded || !IsOnline);
+                root?.PlayTransition(gameTransition, null, () => !IsMatchSceneLoaded || !IsOnline);
             }
 
+            OnCharacterSelectPhase(before, after);
             RaiseChanged();
         }
 
@@ -197,7 +213,7 @@ namespace MS2026.UI.Game
         /// <summary>ホストが、試合中の全員をロビー（部屋の画面）へ戻す。</summary>
         public void ReturnEveryoneToLobby()
         {
-            if (!IsHost || !IsGameLoaded || Roster.phase == LobbyPhase.Returning)
+            if (!IsHost || !IsMatchSceneLoaded || Roster.phase == LobbyPhase.Returning || Roster.phase == LobbyPhase.Loading)
             {
                 return;
             }
@@ -205,10 +221,10 @@ namespace MS2026.UI.Game
             var root = UiRoot.Active;
             root?.Close(pauseScreen);
             ChangePhase(LobbyPhase.Returning);
-            Action unload = () => NetworkManager.Singleton.SceneManager.UnloadScene(GameScene);
+            Action unload = UnloadMatchSceneForEveryone;
             if (root != null)
             {
-                root.PlayTransition(gameTransition, unload, () => !IsGameLoaded);
+                root.PlayTransition(gameTransition, unload, () => !IsMatchSceneLoaded);
             }
             else
             {
@@ -299,11 +315,13 @@ namespace MS2026.UI.Game
                 {
                     SceneManager.UnloadSceneAsync(scene);
                 }
+
+                UnloadCharacterSelectLocally();
             };
 
             if (root != null)
             {
-                root.PlayTransition(gameTransition, unload, () => !IsGameLoaded, done);
+                root.PlayTransition(gameTransition, unload, () => !IsMatchSceneLoaded, done);
             }
             else
             {
@@ -328,6 +346,12 @@ namespace MS2026.UI.Game
 
         private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
         {
+            if (IsCharacterSelectScene(scene))
+            {
+                HandleCharacterSelectLoaded(scene);
+                return;
+            }
+
             if (scene.name != gameSceneName)
             {
                 return;
@@ -353,7 +377,13 @@ namespace MS2026.UI.Game
 
         private void HandleSceneUnloaded(Scene scene)
         {
-            if (scene.name != gameSceneName)
+            if (scene.name != gameSceneName && !IsCharacterSelectScene(scene))
+            {
+                return;
+            }
+
+            // キャラクター選択からゲームへ進む途中（選択のシーンを外した後、ゲームのシーンを読み込む）。ロビーには戻らない。
+            if (IsCharacterSelectScene(scene) && (Roster.phase == LobbyPhase.Loading || IsGameLoaded))
             {
                 return;
             }

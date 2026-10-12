@@ -1,0 +1,25 @@
+{
+    "name": "MS2026.CharacterSelect.Tests.EditMode",
+    "rootNamespace": "MS2026.CharacterSelect.Tests.EditMode",
+    "references": [
+        "MS2026.CharacterSelect.Runtime",
+        "MS2026.CharacterSelect.Data",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

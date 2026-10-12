@@ -48,6 +48,7 @@ namespace MS2026.UI.Game
                     LobbyPhase.InGame => "試合中（途中から参加）",
                     LobbyPhase.Countdown => "まもなく開始",
                     LobbyPhase.Loading => "読み込み中",
+                    LobbyPhase.CharacterSelect => "キャラクター選択中（途中から参加）",
                     _ => "参加できます"
                 };
                 info.text = $"{reply.players}/4人・{phase}";

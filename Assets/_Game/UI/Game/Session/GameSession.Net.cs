@@ -346,7 +346,7 @@ namespace MS2026.UI.Game
             Roster.Clear();
             _localReady = false;
             _forcedStart = false;
-            if (IsGameLoaded)
+            if (IsMatchSceneLoaded)
             {
                 UnloadGameLocally(() =>
                 {
