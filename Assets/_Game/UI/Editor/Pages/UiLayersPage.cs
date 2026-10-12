@@ -8,6 +8,7 @@ namespace MS2026.UI.EditorTools
     {
         private LayerStackPanel _stack;
         private ElementLayersPanel _elements;
+        private ElementBindingPanel _bindings;
 
         public UiLayersPage(UiStudioContext context) : base(context)
         {
@@ -30,6 +31,10 @@ namespace MS2026.UI.EditorTools
             root.Add(StudioUi.Section("部品（上ほど手前）", "◎=編集中だけ隠す ●=ゲームでも表示 ⊠=選べなくする（ロック） ↑↓=重なり順。クリックで選択、Ctrlで追加選択、ダブルクリックでシーンに映す。"));
             _elements = new ElementLayersPanel(Context);
             root.Add(_elements);
+
+            root.Add(StudioUi.Section("選んだ部品の値のつなぎ", "選んだ部品が、ゲームのどの値（熱・コアのHP・名前…）を見ているか。ここで値を選び直したり、新しくつないだり外したりできます。"));
+            _bindings = new ElementBindingPanel(Context);
+            root.Add(_bindings);
             return root;
         }
 
@@ -37,6 +42,7 @@ namespace MS2026.UI.EditorTools
         {
             _stack.Refresh();
             _elements.Refresh();
+            _bindings.Refresh();
         }
     }
 }
