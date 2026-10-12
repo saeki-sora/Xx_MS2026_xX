@@ -140,6 +140,7 @@ Assets/_Game/Fortress/
 
 ## 6. Gotchas
 1. Scene-object changes during Play revert; SO (Presets) changes during Play persist — warn users before experimenting in Play.
+1b. Wave tab play controls (2026-10-12, `WavePlayControls`, drawn under the wave picker): edit mode → toggle `Play したらすぐウェーブを再生する` (= `EnemySpawnDirector.autoStartOnPlay`, Undo) + note that wave-asset edits persist in Play but spawn-point moves revert; Play → `ウェーブの再生（Play 中）: 再生中 X秒 / 止まっています`, `▶ 最初から再生` (StopWave + StartWave), `▶ X秒（選んだ行）から` (StopWave + new `EnemySpawnDirector.StartWaveFrom(startTime)`: skips rows with triggerTime < startTime, ElapsedTime starts at startTime; separate name so the loop's `Invoke(nameof(StartWave))` stays unambiguous), `■ 止める`. `StopWave()` now also `StopAllCoroutines()` so rows spawning one by one stop too.
 2. All 4 turrets share `Default_LaserTuningConfig`; editing it affects everyone.
 3. Spawn point ring generator **replaces** existing spawn points.
 4. Swarm capacity (`maxEnemies`) needs re-Play.

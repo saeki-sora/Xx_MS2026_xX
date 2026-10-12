@@ -60,6 +60,16 @@ namespace MS2026.Fortress
         /// <summary>ウェーブの再生を最初から開始する。</summary>
         public void StartWave()
         {
+            StartWaveFrom(0f);
+        }
+
+        /// <summary>
+        /// ウェーブを startTime 秒の時点から再生する（それより前に湧き始める行は飛ばす）。
+        /// 要塞デザイナーの「この行から試す」用。0 なら最初から。
+        /// （名前を StartWave と分けているのは、ループの Invoke(nameof(StartWave)) が引数なしの方を確実に呼ぶため。）
+        /// </summary>
+        public void StartWaveFrom(float startTime)
+        {
             if (wave == null)
             {
                 Debug.LogWarning("[EnemySpawnDirector] waveが設定されていません。", this);
@@ -71,9 +81,10 @@ namespace MS2026.Fortress
                 RefreshSpawnPoints();
             }
 
+            startTime = Mathf.Max(0f, startTime);
             _pendingEntries.Clear();
-            _pendingEntries.AddRange(wave.spawnEntries.OrderBy(e => e.triggerTime));
-            ElapsedTime = 0f;
+            _pendingEntries.AddRange(wave.spawnEntries.Where(e => e.triggerTime >= startTime - 1e-4f).OrderBy(e => e.triggerTime));
+            ElapsedTime = startTime;
             IsPlaying = true;
         }
 
@@ -81,6 +92,8 @@ namespace MS2026.Fortress
         {
             IsPlaying = false;
             CancelInvoke(nameof(StartWave));
+            // 「数」が2以上の行が1体ずつ湧いている途中なら、それも止める（止めたのに湧き続けないように）。
+            StopAllCoroutines();
             _pendingEntries.Clear();
         }
 

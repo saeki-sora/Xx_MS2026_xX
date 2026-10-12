@@ -14,6 +14,7 @@ namespace MS2026.Fortress.EditorTools
     public sealed class EnemyWavesTabView : VisualElement
     {
         private readonly IMGUIContainer _imgui;
+        private readonly WavePlayControls _playControls = new WavePlayControls();
         private readonly SpawnPointsPanel _spawnPointsPanel = new SpawnPointsPanel();
         private readonly WaveTimelinePanel _timeline = new WaveTimelinePanel();
 
@@ -75,6 +76,8 @@ namespace MS2026.Fortress.EditorTools
                 EditorGUILayout.LabelField($"シーン内のスポーン地点: {pointCount}箇所", EditorStyles.miniLabel);
             }
 
+            _playControls.Draw(director, wave, SelectedEntryTime(wave));
+
             EditorGUILayout.Space(6);
             _spawnPointsPanel.Draw(director, wave);
 
@@ -86,6 +89,16 @@ namespace MS2026.Fortress.EditorTools
 
             EditorGUILayout.Space(8);
             DrawWaveEditor(wave, director);
+        }
+
+        private float? SelectedEntryTime(EnemyWaveConfig wave)
+        {
+            if (wave == null || _entriesList == null || _cachedWave != wave || _entriesList.index < 0 || _entriesList.index >= wave.spawnEntries.Count)
+            {
+                return null;
+            }
+
+            return wave.spawnEntries[_entriesList.index]?.triggerTime;
         }
 
         private static EnemyWaveConfig CreateNewWaveAsset()
