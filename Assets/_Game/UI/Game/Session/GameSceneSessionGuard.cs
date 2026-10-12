@@ -17,8 +17,32 @@ namespace MS2026.UI.Game
         [Tooltip("このシーンだけで遊ぶとき用の物。ロビーから来たときは、これらを外してロビーの物を使う。")]
         public GameObject[] standaloneOnly = System.Array.Empty<GameObject>();
 
+        [Header("このシーンだけで遊ぶとき")]
+        [Tooltip("ONなら、このシーンだけを再生したとき（エディタ・テスト用の bat）も、ゲーム中HUD（撃破数など）を開く。\n" +
+                 "ロビーから来たときはロビー（GameSession）が開くので、ここでは何もしない。")]
+        public bool openHudWhenStandalone = true;
+
+        [Tooltip("開く画面の名前（UIスタジオの画面の一覧の名前）。")]
+        public string hudScreenId = "Hud";
+
         /// <summary>今回の読み込みで外したか。</summary>
         public bool RemovedForSession { get; private set; }
+
+        private System.Collections.IEnumerator Start()
+        {
+            if (RemovedForSession || GameSession.Active != null || !openHudWhenStandalone || string.IsNullOrEmpty(hudScreenId))
+            {
+                yield break;
+            }
+
+            // UIの置き場所（UiRoot）の準備（画面の登録）が終わってから開く。
+            yield return null;
+            var root = UiRoot.Active;
+            if (root != null && !root.IsOpen(hudScreenId))
+            {
+                root.Open(hudScreenId);
+            }
+        }
 
         private void Awake()
         {

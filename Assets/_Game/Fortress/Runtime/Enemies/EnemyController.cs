@@ -22,7 +22,7 @@ namespace MS2026.Fortress
     /// 進行方向はEnemyNavigation.Current（経路探索）に問い合わせ、無ければ目標へ直進する。
     /// ネット対戦のClientでは<see cref="IsReplica"/>になり、Hostから届いた位置を表示するだけになる(移動・ダメージ・消滅はHostが決める)。
     /// </summary>
-    public sealed class EnemyController : MonoBehaviour, ILaserTarget
+    public sealed class EnemyController : MonoBehaviour, IAttributedLaserTarget
     {
         public EnemyTypeDefinition definition;
         public Transform target;
@@ -43,6 +43,9 @@ namespace MS2026.Fortress
 
         /// <summary>今の移動速度(ワールド単位/秒)。見た目(向き・アニメーション)を変えたいスクリプトが読む。Clientでも有効。</summary>
         public Vector2 Velocity { get; private set; }
+
+        /// <summary>最後にダメージを与えたプレイヤー(0〜3、-1=不明)。倒されたとき「だれの撃破か」を数えるのに使う(Hostだけで正しい)。</summary>
+        public int LastAttackerIndex { get; private set; } = -1;
 
         /// <summary>trueの間は自分で動かず、Hostから届いた位置を表示するだけ(ネット対戦のClient側)。</summary>
         public bool IsReplica { get; private set; }
@@ -184,6 +187,17 @@ namespace MS2026.Fortress
 
         public void ApplyLaserDamage(float baseDamage, LaserTuningConfig tuning)
         {
+            TakeDamage(baseDamage);
+        }
+
+        /// <summary>だれのレーザーかが分かるダメージ。倒したときの撃破数に使う。</summary>
+        public void ApplyLaserDamage(float baseDamage, LaserTuningConfig tuning, LaserTurret attacker)
+        {
+            if (!IsReplica && attacker != null && baseDamage > 0f)
+            {
+                LastAttackerIndex = attacker.playerIndex;
+            }
+
             TakeDamage(baseDamage);
         }
 

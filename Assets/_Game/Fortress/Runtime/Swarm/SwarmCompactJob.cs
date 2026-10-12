@@ -10,6 +10,7 @@ namespace MS2026.Fortress
     /// keepListに並べる。これにより、次フレーム以降は近くの敵がメモリ上でも近くに並び、近傍探索が速くなる。
     /// コア到達時の扱いは arrivalMode（消える／張り付く）で切り替わる。
     /// counters: [0]=生存数 [1]=撃破数 [2]=到達数 [3]=消えた敵の数(removedIds/removedReasonsに記録) / yRange: [0]=最小Y [1]=最大Y（描画のYソート用）
+    /// killsByPlayer: このフレームに各プレイヤー(0〜3)が倒した数（最後にダメージを与えた人。だれか不明な撃破は数えない）。
     ///
     /// ネット対戦のClient(replicaMode=1)では、自分の判断では消さない(体力・コア到達を見ない)。Hostが消した敵の番号
     /// (removeIds)だけを消す。コアに着いた敵は、張り付くモードなら張り付き、消えるモードならHostからの通知を待つ。
@@ -25,6 +26,7 @@ namespace MS2026.Fortress
         public NativeArray<int> state;
         [ReadOnly] public NativeArray<SwarmTypeParams> types;
         [ReadOnly] public NativeArray<int> netId;
+        [ReadOnly] public NativeArray<int> lastHit;
         [ReadOnly] public NativeHashSet<int> removeIds;
         public int count;
         public int arrivalMode;
@@ -35,6 +37,7 @@ namespace MS2026.Fortress
         public NativeArray<float> goalDamage;
         public NativeArray<int> attached;
         public NativeArray<int> killsByType;
+        public NativeArray<int> killsByPlayer;
         public NativeArray<float> yRange;
         public NativeArray<int> removedIds;
         public NativeArray<byte> removedReasons;
@@ -53,6 +56,11 @@ namespace MS2026.Fortress
             for (var t = 0; t < killsByType.Length; t++)
             {
                 killsByType[t] = 0;
+            }
+
+            for (var p = 0; p < killsByPlayer.Length; p++)
+            {
+                killsByPlayer[p] = 0;
             }
 
             var minY = float.MaxValue;
@@ -85,6 +93,12 @@ namespace MS2026.Fortress
                     {
                         counters[1] = counters[1] + 1;
                         killsByType[type] = killsByType[type] + 1;
+                        var killer = lastHit[read];
+                        if (killer >= 0 && killer < killsByPlayer.Length)
+                        {
+                            killsByPlayer[killer] = killsByPlayer[killer] + 1;
+                        }
+
                         Record(id, EnemyRemovalReason.Died);
                         continue;
                     }
@@ -148,6 +162,7 @@ namespace MS2026.Fortress
         [ReadOnly] public NativeArray<int> goalOf;
         [ReadOnly] public NativeArray<int> netId;
         [ReadOnly] public NativeArray<float2> correction;
+        [ReadOnly] public NativeArray<int> lastHit;
 
         [WriteOnly] public NativeArray<float2> posOut;
         [WriteOnly] public NativeArray<float2> velOut;
@@ -161,6 +176,7 @@ namespace MS2026.Fortress
         [WriteOnly] public NativeArray<int> goalOfOut;
         [WriteOnly] public NativeArray<int> netIdOut;
         [WriteOnly] public NativeArray<float2> correctionOut;
+        [WriteOnly] public NativeArray<int> lastHitOut;
 
         public void Execute(int j)
         {
@@ -182,6 +198,7 @@ namespace MS2026.Fortress
             goalOfOut[j] = goalOf[s];
             netIdOut[j] = netId[s];
             correctionOut[j] = correction[s];
+            lastHitOut[j] = lastHit[s];
         }
     }
 }

@@ -18,6 +18,29 @@ namespace MS2026.UI.Game
     {
         private const float RefreshInterval = 1f;
 
+        [Header("撃破数")]
+        [Tooltip("撃破数を画面へ書く間隔（秒）。敵がたくさん倒れても、数字の弾む動きが毎フレームやり直しにならないよう、まとめて書く。")]
+        [Min(0f)]
+        public float killPublishInterval = 0.1f;
+
+        [Tooltip("この秒数のあいだ自分が倒さなければ、コンボが途切れる。")]
+        [Min(0.1f)]
+        public float comboWindowSeconds = 2.5f;
+
+        [Tooltip("お祝いする全員の撃破数（小さい順）。")]
+        public int[] killMilestones = { 100, 250, 500, 1000 };
+
+        [Tooltip("最後の区切りより後は、この数ごとにお祝いする（0 = しない）。")]
+        [Min(0)]
+        public int killMilestoneStepAfterLast = 1000;
+
+        [Tooltip("お祝いを出しておく秒数。")]
+        [Min(0.2f)]
+        public float killMilestoneShowSeconds = 2.2f;
+
+        private readonly KillHudLogic _killLogic = new KillHudLogic();
+        private float _nextKillPublish;
+
         private readonly List<LaserTurret> _turrets = new List<LaserTurret>();
         private readonly string[] _labels = { "P1", "P2", "P3", "P4" };
         private CoreCrystalController _core;
@@ -42,6 +65,7 @@ namespace MS2026.UI.Game
             PublishPlayers(local);
             PublishCore();
             PublishEnemies();
+            PublishKills(local);
             PublishNet(local);
         }
 
@@ -125,6 +149,36 @@ namespace MS2026.UI.Game
             {
                 UiValues.Set(FortressUiKeys.WaveTime, Mathf.Floor(_director.ElapsedTime * 10f) / 10f);
                 UiValues.Set(FortressUiKeys.WavePlaying, _director.IsPlaying);
+            }
+        }
+
+        // 撃破数（EnemyKillCounter。Host が数えて全員に配る）と、コンボ・お祝い（各PCで計算）。
+        private void PublishKills(int local)
+        {
+            var now = Time.unscaledTime;
+            if (now < _nextKillPublish)
+            {
+                return;
+            }
+
+            _nextKillPublish = now + killPublishInterval;
+            var own = EnemyKillCounter.ByPlayer(local);
+            var total = EnemyKillCounter.Total;
+            _killLogic.comboWindowSeconds = comboWindowSeconds;
+            _killLogic.milestones = killMilestones;
+            _killLogic.milestoneStepAfterLast = killMilestoneStepAfterLast;
+            _killLogic.milestoneShowSeconds = killMilestoneShowSeconds;
+            _killLogic.Update(own, total, now);
+
+            UiValues.Set(FortressUiKeys.KillsTotal, total);
+            UiValues.Set(FortressUiKeys.KillsLocal, own);
+            UiValues.Set(FortressUiKeys.KillsCombo, _killLogic.Combo);
+            UiValues.Set(FortressUiKeys.KillsComboTime01, _killLogic.ComboRemaining01);
+            UiValues.Set(FortressUiKeys.KillsMilestone, _killLogic.Milestone);
+            UiValues.Set(FortressUiKeys.KillsMilestoneShowing, _killLogic.MilestoneShowing);
+            for (var p = 0; p < EnemyKillCounter.PlayerCount; p++)
+            {
+                UiValues.Set(FortressUiKeys.PlayerKills(p), EnemyKillCounter.ByPlayer(p));
             }
         }
 

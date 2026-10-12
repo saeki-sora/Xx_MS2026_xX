@@ -23,6 +23,13 @@ namespace MS2026.UI.Game
         public const string CoreDestroyed = "core.destroyed";
 
         public const string SwarmAlive = "swarm.alive";
+
+        public const string KillsTotal = "kills.total";
+        public const string KillsLocal = "kills.local";
+        public const string KillsCombo = "kills.combo";
+        public const string KillsComboTime01 = "kills.comboTime01";
+        public const string KillsMilestone = "kills.milestone";
+        public const string KillsMilestoneShowing = "kills.milestoneShowing";
         public const string WaveTime = "wave.time";
         public const string WavePlaying = "wave.playing";
 
@@ -67,6 +74,7 @@ namespace MS2026.UI.Game
         public static string PlayerIsLocal(int player) => $"player.{player + 1}.isLocal";
         public static string PlayerPing(int player) => $"player.{player + 1}.ping";
         public static string PlayerTaken(int player) => $"player.{player + 1}.taken";
+        public static string PlayerKills(int player) => $"player.{player + 1}.kills";
 
         /// <summary>UIスタジオの値の一覧に登録する内容（キー、表示名、説明、種類、分類、範囲、サンプル値）。</summary>
         public static (string key, string label, string description, UiValueKind kind, string category, Vector2 range, float sample)[] Describe()
@@ -86,6 +94,12 @@ namespace MS2026.UI.Game
                 (CoreHp01, "コアのHP（割合）", "1=満タン、0=壊れた。", UiValueKind.Number, "コア", Vector2.up, 0.7f),
                 (CoreDestroyed, "コアが壊れた", "壊れたらON（負け）。", UiValueKind.Bool, "コア", Vector2.up, 0),
                 (SwarmAlive, "敵の数", "今いる群衆の敵の数。", UiValueKind.Number, "敵", new Vector2(0, 5000), 1200),
+                (KillsTotal, "全員の撃破数", "この試合で全員が倒した敵の数（コアに着いて消えた敵は数えない）。全員の画面で同じ数。", UiValueKind.Number, "撃破", new Vector2(0, 5000), 1234),
+                (KillsLocal, "自分の撃破数", "この試合で自分のレーザーが倒した数（最後にダメージを与えた人の撃破）。", UiValueKind.Number, "撃破", new Vector2(0, 2000), 321),
+                (KillsCombo, "自分のコンボ", "自分の撃破が途切れずに続いた数（少しの間倒さないと0に戻る）。", UiValueKind.Number, "撃破", new Vector2(0, 200), 25),
+                (KillsComboTime01, "コンボの残り時間（割合）", "1=倒した直後、0=コンボが途切れた。", UiValueKind.Number, "撃破", Vector2.up, 0.6f),
+                (KillsMilestone, "お祝いの撃破数", "全員の撃破数が届いた区切りの数（100, 250, 500, 1000, 2000…）。", UiValueKind.Number, "撃破", new Vector2(0, 5000), 1000),
+                (KillsMilestoneShowing, "お祝い中", "区切りの数に届いてから少しの間だけON。", UiValueKind.Bool, "撃破", Vector2.up, 1),
                 (WaveTime, "ウェーブの経過秒", "ウェーブが始まってからの秒数。", UiValueKind.Number, "敵", new Vector2(0, 300), 42),
                 (WavePlaying, "ウェーブ中", "敵が湧いている間ON。", UiValueKind.Bool, "敵", Vector2.up, 1),
                 (NetMode, "通信の状態", "オフライン / ホスト / 参加中。", UiValueKind.Text, "通信", Vector2.up, 0),
@@ -130,6 +144,7 @@ namespace MS2026.UI.Game
                 list.Add((PlayerIsHost(p), $"{name}がホスト", "部屋を作った人のときON。", UiValueKind.Bool, "プレイヤー", Vector2.up, p == 0 ? 1 : 0));
                 list.Add((PlayerIsLocal(p), $"{name}が自分", "このPCのプレイヤーのときON。", UiValueKind.Bool, "プレイヤー", Vector2.up, p == 0 ? 1 : 0));
                 list.Add((PlayerPing(p), $"{name}の通信の遅れ", "ホストとの往復の時間（ミリ秒）。", UiValueKind.Number, "プレイヤー", new Vector2(0, 300), 12));
+                list.Add((PlayerKills(p), $"{name}の撃破数", "その人が倒した数（全員の画面で同じ）。", UiValueKind.Number, "プレイヤー", new Vector2(0, 2000), 100 + 50 * p));
                 list.Add((PlayerTaken(p), $"{name}がもう使われている", "参加する部屋で、その番号がほかの人に使われているときON。", UiValueKind.Bool, "プレイヤー", Vector2.up, p == 1 ? 1 : 0));
             }
 

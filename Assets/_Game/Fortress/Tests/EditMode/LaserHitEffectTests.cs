@@ -55,6 +55,7 @@ namespace MS2026.Fortress.Tests.EditMode
         private NativeArray<float2> _pos;
         private NativeArray<float> _hp;
         private NativeArray<float> _flash;
+        private NativeArray<int> _lastHit;
         private NativeArray<int> _typeIdx;
         private NativeArray<SwarmTypeParams> _types;
         private NativeArray<SwarmBeam> _beams;
@@ -71,6 +72,12 @@ namespace MS2026.Fortress.Tests.EditMode
             _pos = new NativeArray<float2>(Capacity, Allocator.Persistent);
             _hp = new NativeArray<float>(Capacity, Allocator.Persistent);
             _flash = new NativeArray<float>(Capacity, Allocator.Persistent);
+            _lastHit = new NativeArray<int>(Capacity, Allocator.Persistent);
+            for (var i = 0; i < Capacity; i++)
+            {
+                _lastHit[i] = -1;
+            }
+
             _typeIdx = new NativeArray<int>(Capacity, Allocator.Persistent);
             _types = new NativeArray<SwarmTypeParams>(1, Allocator.Persistent);
             _types[0] = new SwarmTypeParams { radius = 0.2f };
@@ -89,6 +96,7 @@ namespace MS2026.Fortress.Tests.EditMode
             _pos.Dispose();
             _hp.Dispose();
             _flash.Dispose();
+            _lastHit.Dispose();
             _typeIdx.Dispose();
             _types.Dispose();
             _beams.Dispose();
@@ -121,6 +129,7 @@ namespace MS2026.Fortress.Tests.EditMode
                 pos = _pos,
                 hp = _hp,
                 flash = _flash,
+                lastHit = _lastHit,
                 typeIdx = _typeIdx,
                 types = _types,
                 beams = _beams,
@@ -140,6 +149,26 @@ namespace MS2026.Fortress.Tests.EditMode
                 maxNewHits = maxNewHits,
                 beamOffset = beamOffset
             }.Run();
+        }
+
+        [Test]
+        public void RemembersWhoDealtTheLastDamage()
+        {
+            PlaceEnemies(2f, 5f);
+            _beams[0] = Beam(2);
+            Run(1, 16);
+            Assert.AreEqual(2, _lastHit[0], "撃破を数えるため、最後にダメージを与えたプレイヤーを覚える");
+            Assert.AreEqual(2, _lastHit[1]);
+
+            _beams[0] = Beam(-1);
+            Run(1, 16);
+            Assert.AreEqual(2, _lastHit[0], "だれのビームか分からないときは書き換えない");
+
+            var zero = Beam(1);
+            zero.damagePerSecond = 0f;
+            _beams[0] = zero;
+            Run(1, 16);
+            Assert.AreEqual(2, _lastHit[0], "ダメージ0（参加側の見た目だけのビーム）では書き換えない");
         }
 
         private static SwarmBeam Beam(int owner, int maxHits = 0)

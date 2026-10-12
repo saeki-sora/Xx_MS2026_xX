@@ -291,6 +291,9 @@ namespace MS2026.UI.Game
                 Destroy(NetworkManager.Singleton.gameObject);
             }
 
+            // 消す前に、鳴っている音を止めておく（消えかけの音の部品を D-Drive が止めようとしてエラーになるのを防ぐ）。
+            FortressAudioShutdown.StopAllNow();
+
             // シーンをまたいで残る設定になっている物（D-Drive・UIの置き場所）も、ロビーの物ならここで消す。
             DestroyIfPersistent(DDriveRuntimeBootstrap.Instance != null ? DDriveRuntimeBootstrap.Instance.gameObject : null);
             DestroyIfPersistent(UiRoot.Active != null ? UiRoot.Active.gameObject : null);
@@ -399,7 +402,8 @@ namespace MS2026.UI.Game
             _localReady = false;
             _forcedStart = false;
             PlayLobbyBgm();
-            if (IsOnline && State != SessionState.Leaving)
+            // 部屋にいる・遊んでいるときだけ部屋の画面へ（展示用の自動接続で、さがし直している途中に外れたときは戻らない）。
+            if (IsOnline && (State == SessionState.InGame || State == SessionState.Room))
             {
                 SetState(SessionState.Room);
                 OpenMenu(roomScreen);

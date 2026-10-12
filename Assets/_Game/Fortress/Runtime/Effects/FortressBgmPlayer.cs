@@ -128,7 +128,8 @@ namespace MS2026.Fortress
                 _starting = null;
             }
 
-            if (stopOnDisable && _playing && Audio.IsBound)
+            // 終了の途中（Play を止めた・アプリを閉じた）は、音はもう止めてあり、D-Drive の音の部品が消えていることがあるので触らない。
+            if (stopOnDisable && _playing && Audio.IsBound && !FortressAudioShutdown.IsShuttingDown)
             {
                 Audio.StopBgm(fadeOutSeconds);
             }

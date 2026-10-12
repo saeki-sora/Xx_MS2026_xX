@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net;
 using MS2026.UI.Game;
 using NUnit.Framework;
@@ -89,7 +90,8 @@ namespace MS2026.UI.Tests.EditMode
                 takenMask = 0b0101,
                 phase = LobbyPhase.InGame,
                 players = 2,
-                build = "0.1.0"
+                build = "0.1.0",
+                roomId = 123456789
             };
 
             Assert.IsTrue(LanDiscovery.TryParseReply(LanDiscovery.FormatReply(reply), out var parsed));
@@ -99,6 +101,94 @@ namespace MS2026.UI.Tests.EditMode
             Assert.AreEqual(LobbyPhase.InGame, parsed.phase);
             Assert.AreEqual(2, parsed.players);
             Assert.AreEqual("0.1.0", parsed.build);
+            Assert.AreEqual(123456789, parsed.roomId);
+        }
+
+        [Test]
+        public void Discovery_ReadsOldReplyWithoutRoomId()
+        {
+            Assert.IsTrue(LanDiscovery.TryParseReply("MS2026LOBBY|1|!|a|7777|1|0|1|x", out var parsed), "部屋の番号が無い古い返事も読める");
+            Assert.AreEqual(0, parsed.roomId);
+            Assert.IsFalse(LanDiscovery.TryParseReply("MS2026LOBBY|1|!|a|7777|1|0|1|x|abc", out _), "番号が数字でなければ無視する");
+        }
+
+        // ───────── 展示用の自動接続 ─────────
+
+        private static LanDiscovery.FoundHost Room(int roomId, int takenMask, LobbyPhase phase = LobbyPhase.CharacterSelect, bool sameBuild = true)
+        {
+            var players = 0;
+            for (var i = 0; i < 4; i++)
+            {
+                players += (takenMask >> i) & 1;
+            }
+
+            return new LanDiscovery.FoundHost
+            {
+                address = $"192.168.0.{roomId % 250}",
+                sameBuild = sameBuild,
+                reply = new LanDiscovery.Reply { roomId = roomId, takenMask = takenMask, players = players, phase = phase }
+            };
+        }
+
+        [Test]
+        public void Auto_FirstFreeSeatIsArrivalOrder()
+        {
+            Assert.AreEqual(0, AutoMatchRules.FirstFreeSeat(0));
+            Assert.AreEqual(1, AutoMatchRules.FirstFreeSeat(0b0001));
+            Assert.AreEqual(2, AutoMatchRules.FirstFreeSeat(0b1011), "抜けた人の席から埋める");
+            Assert.AreEqual(-1, AutoMatchRules.FirstFreeSeat(0b1111));
+        }
+
+        [Test]
+        public void Auto_ChoosesTheBiggestJoinableRoom()
+        {
+            var hosts = new List<LanDiscovery.FoundHost> { Room(50, 0b0001), Room(70, 0b0011), Room(10, 0b0001) };
+            Assert.AreEqual(AutoMatchChoice.Join, AutoMatchRules.Choose(hosts, 0, out var index));
+            Assert.AreEqual(1, index, "人が多い部屋");
+
+            hosts.RemoveAt(1);
+            AutoMatchRules.Choose(hosts, 0, out index);
+            Assert.AreEqual(1, index, "同じ人数なら部屋の番号が小さい方");
+
+            AutoMatchRules.Choose(hosts, 10, out index);
+            Assert.AreEqual(0, index, "自分が前に作った部屋は選ばない");
+        }
+
+        [Test]
+        public void Auto_JoinsRoomsInAnyPlayablePhase()
+        {
+            foreach (var phase in new[] { LobbyPhase.Waiting, LobbyPhase.CharacterSelect, LobbyPhase.InGame, LobbyPhase.Countdown })
+            {
+                Assert.AreEqual(AutoMatchChoice.Join, AutoMatchRules.Choose(new[] { Room(5, 0b0001, phase) }, 0, out _), phase.ToString());
+            }
+        }
+
+        [Test]
+        public void Auto_WaitsInsteadOfHostingWhenARoomIsBusy()
+        {
+            Assert.AreEqual(AutoMatchChoice.Wait, AutoMatchRules.Choose(new[] { Room(5, 0b0001, LobbyPhase.Loading) }, 0, out _), "読み込み中は待つ");
+            Assert.AreEqual(AutoMatchChoice.Wait, AutoMatchRules.Choose(new[] { Room(5, 0b0001, LobbyPhase.Returning) }, 0, out _));
+            Assert.AreEqual(AutoMatchChoice.Wait, AutoMatchRules.Choose(new[] { Room(5, 0b1111) }, 0, out _), "満員なら待つ");
+            Assert.AreEqual(AutoMatchChoice.None, AutoMatchRules.Choose(new[] { Room(5, 0b0001, sameBuild: false) }, 0, out _), "違うビルドの部屋は無いものとする");
+            Assert.AreEqual(AutoMatchChoice.None, AutoMatchRules.Choose(new LanDiscovery.FoundHost[0], 0, out _));
+        }
+
+        [Test]
+        public void Auto_OnlyOneOfTwoHostsYields()
+        {
+            var a = Room(100, 0b0001);
+            var b = Room(200, 0b0001);
+            Assert.IsFalse(AutoMatchRules.ShouldYield(1, 100, b), "番号が小さい部屋は残る");
+            Assert.IsTrue(AutoMatchRules.ShouldYield(1, 200, a), "番号が大きい部屋が譲る");
+
+            var bigger = Room(300, 0b0011);
+            Assert.IsTrue(AutoMatchRules.ShouldYield(1, 100, bigger), "人が少ない部屋が譲る");
+            Assert.IsFalse(AutoMatchRules.ShouldYield(2, 300, a));
+
+            Assert.IsFalse(AutoMatchRules.ShouldYield(1, 100, Room(100, 0b0001)), "自分の部屋には譲らない");
+            Assert.IsFalse(AutoMatchRules.ShouldYield(1, 200, Room(100, 0b1111)), "満員の部屋には譲らない");
+            Assert.IsFalse(AutoMatchRules.ShouldYield(1, 200, Room(100, 0b0001, sameBuild: false)), "違うビルドには譲らない");
+            Assert.IsFalse(AutoMatchRules.ShouldYield(1, 200, Room(0, 0b0001)), "番号の無い古いビルドには譲らない");
         }
 
         [Test]

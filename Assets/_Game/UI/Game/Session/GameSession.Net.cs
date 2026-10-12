@@ -38,6 +38,7 @@ namespace MS2026.UI.Game
                 return;
             }
 
+            _roomId = UnityEngine.Random.Range(1, int.MaxValue);
             var manager = NetworkManager.Singleton;
             // 参加した人は「すでに読み込んでいるロビーのシーン」をそのまま使い、ゲームのシーンだけを重ねて読み込む。
             manager.SceneManager.SetClientSynchronizationMode(LoadSceneMode.Additive);
@@ -227,7 +228,8 @@ namespace MS2026.UI.Game
                 takenMask = mask,
                 phase = Roster.phase,
                 players = Roster.PresentCount,
-                build = LanDiscovery.BuildId
+                build = LanDiscovery.BuildId,
+                roomId = _roomId
             };
         }
 
@@ -343,6 +345,13 @@ namespace MS2026.UI.Game
         /// <summary>切断などのあと、最初の画面（つながらなかったときは部屋選び）へ戻ってお知らせを出す。</summary>
         private void ReturnAfterProblem(string title, string body, bool backToBrowsing)
         {
+            if (IsAutoConnect)
+            {
+                // 展示用: お知らせは出さず（押せる人がいない）、幕で隠してさがし直す。
+                AutoRecover($"{title}（{body.Replace("\n", " ")}）");
+                return;
+            }
+
             Roster.Clear();
             _localReady = false;
             _forcedStart = false;
@@ -445,6 +454,12 @@ namespace MS2026.UI.Game
                 _expectingDisconnect = true;
                 StopNetworking();
                 _expectingDisconnect = false;
+                if (IsAutoConnect)
+                {
+                    AutoRecover($"{connectTimeoutSeconds:0}秒待ってもつながりませんでした");
+                    return;
+                }
+
                 SetState(SessionState.Browsing);
                 OpenMenu(joinScreen);
                 Discovery.StartSearch();

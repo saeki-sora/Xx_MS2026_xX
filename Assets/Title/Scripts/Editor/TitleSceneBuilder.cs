@@ -230,11 +230,80 @@ namespace MS2026.Title.EditorTools
             }
 
             AddSceneToBuildList();
+            EnsureGripReader(scene);
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             Selection.activeGameObject = root;
-            Debug.Log("[Title] タイトルシーンを組み立てました。再生して A キーでゲームのシーンへ進みます。画像は各オブジェクトの子「Sprite」の Sprite を差し替えてください。");
+            Debug.Log("[Title] タイトルシーンを組み立てました。再生して A キー（または握力センサーを握る）でゲームのシーンへ進みます。画像は各オブジェクトの子「Sprite」の Sprite を差し替えてください。");
+        }
+
+        // 握力センサーの読み取り（ArduinoSerialReader）。Assembly-CSharp にあって参照できないので、型の名前で探す。
+        private const string GripReaderType = "ArduinoSerialReader, Assembly-CSharp";
+        private const string GripReaderObjectName = "Arduino";
+        // ロビー・ゲームのシーンと同じポート（PCごとに違っても、読み取りが自動で別のポートもさがす）。
+        private const string GripReaderPort = "COM5";
+
+        /// <summary>
+        /// タイトルのシーンに握力センサーの読み取りを置く（無ければ作る。あればポートなどの設定はそのままで「シーンをまたぐ」だけONにする）。
+        /// タイトルで握ってスタートするため。シーンをまたいで残るので、ロビー・キャラ選択・ゲームでもポートを開け直さずに使い続ける。
+        /// [Title] の外（シーンの一番上）に置くので、作り直しても消えない。
+        /// タイトルシーンを組み立てるときにも行う。このメニューは、組み立て直さずにこれだけ行う。
+        /// </summary>
+        [MenuItem("Tools/タイトル/握力センサーの読み取りを置く")]
+        private static void PlaceGripReaderOnly()
+        {
+            if (EditorApplication.isPlaying)
+            {
+                EditorUtility.DisplayDialog("タイトル", "再生中は置けません。再生を止めてから実行してください。", "OK");
+                return;
+            }
+
+            if (!OpenTitleScene()) return;
+            var scene = SceneManager.GetActiveScene();
+            EnsureGripReader(scene);
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+        }
+
+        // 無ければ作る。あればポートなどの設定はそのままで「シーンをまたぐ」だけONにする。
+        private static void EnsureGripReader(Scene scene)
+        {
+            var type = System.Type.GetType(GripReaderType);
+            if (type == null)
+            {
+                Debug.LogWarning("[Title] ArduinoSerialReader が見つからないため、握力センサーの読み取りをタイトルに置けませんでした（タイトルはキーでしかスタートできません）。");
+                return;
+            }
+
+            Component reader = null;
+            foreach (var go in scene.GetRootGameObjects())
+            {
+                reader = go.GetComponentInChildren(type, true);
+                if (reader != null) break;
+            }
+
+            var created = reader == null;
+            if (created)
+            {
+                var go = new GameObject(GripReaderObjectName);
+                Undo.RegisterCreatedObjectUndo(go, "タイトルシーンを組み立てる");
+                reader = go.AddComponent(type);
+            }
+
+            var so = new SerializedObject(reader);
+            if (created)
+            {
+                var port = so.FindProperty("portName");
+                if (port != null) port.stringValue = GripReaderPort;
+            }
+
+            var keep = so.FindProperty("keepAcrossScenes");
+            if (keep != null) keep.boolValue = true;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            Debug.Log(created
+                ? $"[Title] 握力センサーの読み取り「{GripReaderObjectName}」を置きました（{GripReaderPort}。開けない・値が届かなければほかのポートも自動でさがします）。"
+                : $"[Title] 握力センサーの読み取り「{reader.name}」の「シーンをまたぐ」をONにしました。");
         }
 
         private static bool OpenTitleScene()

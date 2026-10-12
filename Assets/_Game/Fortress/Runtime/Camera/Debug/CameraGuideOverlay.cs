@@ -36,7 +36,8 @@ namespace MS2026.Fortress.Cameras
         private void OnGUI()
         {
             var currentRig = Rig;
-            if (currentRig == null)
+            // ビルドしたゲームでは出さない（起動オプション -debug-ui で出す。Hud/DebugUi.cs）。
+            if (currentRig == null || !Hud.DebugUi.Visible)
             {
                 return;
             }

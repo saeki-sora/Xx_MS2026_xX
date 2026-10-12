@@ -65,6 +65,12 @@ namespace MS2026.UI.EditorTools
                 StudioUi.Button("ロビーのシーンを開く", () => OpenScene(SessionFlowBuilder.LobbyScenePath), "Assets/Scenes/Lobby.unity を開きます。", small: true),
                 StudioUi.Button("タイトルから Play", PlayFromTitle, "タイトルのシーンを開いて Play します（タイトル → ロビー → ゲームの順に進みます）。", small: true)));
 
+            root.Add(StudioUi.Section("撃破数とコアの体力（ゲーム中HUD）", "倒した敵の数（全員の合計＋自分の分）・コンボ・区切りの数のお祝いと、コアの体力バーを、同じ見た目でゲーム中HUDに入れます。"));
+            root.Add(StudioUi.Note("ゲーム中HUD（画面 Hud）の自分の熱ゲージと古いコアのバーを隠し、撃破数（下の中央）とコアの体力バー（上の中央）を作ります（古い物は消さずに隠すだけ）。" +
+                                   "何度押しても作り直すだけです。見た目・動き・値のつなぎは、作ったあと「画面」「レイヤー」「動き」ページで自由に直せます。", NoteKind.Info));
+            root.Add(StudioUi.Row(
+                StudioUi.Button("撃破数とコアの体力バーを入れる", () => HudKillCounterBuilder.Build(true), "画面 Hud に、コアの体力（上の中央）・撃破数（下の中央）・コンボ（その上）・お祝い（画面の中央）を入れます。", primary: true, small: true)));
+
             root.Add(StudioUi.Section("用語"));
             var words = StudioUi.Card();
             words.Add(StudioUi.Styled(new Label(

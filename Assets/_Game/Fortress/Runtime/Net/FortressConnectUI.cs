@@ -77,6 +77,13 @@ namespace MS2026.Fortress.Net
                 overlay.useGUILayout = false;
             }
 
+            // ビルドしたゲームではデバッグ用の接続画面を出さない（起動オプション -debug-ui で出す。Hud/DebugUi.cs）。
+            if (!Hud.DebugUi.Visible)
+            {
+                enabled = false;
+                return;
+            }
+
             if (bootstrap == null)
             {
                 bootstrap = FortressNetworkBootstrap.Instance;

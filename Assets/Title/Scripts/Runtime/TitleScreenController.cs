@@ -1,5 +1,6 @@
 using System.Linq;
 using MS2026.Fortress;
+using MS2026.GripInputBridge.Processing;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -12,7 +13,8 @@ namespace MS2026.Title
     /// → 入力待ち → スタート演出 → ロビーのシーンへ（ロビーで部屋を作る・参加する → ゲーム）。
     /// テスト用の起動（-fortress-… の引数つき。Tools/NetTest の bat）では、タイトルとロビーを飛ばしてすぐゲームのシーンへ進む。
     /// 演出の途中で入力すると演出を飛ばす（もう一度入力でスタート）。
-    /// 握力センサーなど別の入力から始めたいときは <see cref="RequestStart"/> を呼ぶ。
+    /// スタートの入力は仮のキー（A）か握力センサー（一定以上の強さで握る。2026-10-12、展示の会場はキーボード無しのため）。
+    /// ほかの入力から始めたいときは <see cref="RequestStart"/> を呼ぶ。
     /// </summary>
     public sealed class TitleScreenController : MonoBehaviour
     {
@@ -23,6 +25,20 @@ namespace MS2026.Title
         public string directSceneForTestLaunch = "Game";
         [Tooltip("仮のスタート用キー。")]
         public Key startKey = Key.A;
+
+        [Header("握力センサーでスタート")]
+        [Tooltip("ONなら、握力センサーをしきい値以上に握るとスタート（キーと同じ扱い。演出中なら演出を飛ばす）。一度ゆるめるまで次は数えない。\n" +
+                 "読むのは握力入力ブリッジの値（1〜4人目のどれか。このPCのセンサーは1人目）。キーボードの握力の代わりのキー（Q/W/O/P）でもスタートする。\n" +
+                 "実機の値を読むには、タイトルのシーンに「Arduino」（ArduinoSerialReader、シーンをまたぐ ON）が要る（タイトルシーンを組み立てると置かれる）。")]
+        public bool startByGrip = true;
+
+        [Tooltip("この強さ（0〜1）以上に握ったらスタート。")]
+        [Range(0.05f, 1f)]
+        public float gripStartThreshold = 0.35f;
+
+        [Tooltip("一度スタートを数えたら、この強さ（0〜1）より弱くゆるめるまで次を数えない。タイトルが出たときに握っていた人も、一度ゆるめるまで数えない。スタートのしきい値より小さくする。")]
+        [Range(0f, 1f)]
+        public float gripReleaseThreshold = 0.2f;
 
         [Header("オープニング（歯磨き粉）")]
         [Tooltip("歯磨き粉をつまんで噴き出させ、画面を塗り替える演出。幕が抜け始めた後にロゴ・キャラ・スタートの文字が登場する。空なら最初から登場する。")]
@@ -68,6 +84,8 @@ namespace MS2026.Title
         private float holdSeconds;
         private bool fadeOutStarted;
         private bool loadRequested;
+        private GripEdgeDetector gripDetector;
+        private bool gripArmed;
 
         private TitleElementMotion[] AllElements =>
             new[] { background }.Concat(afterOpening ?? System.Array.Empty<TitleElementMotion>()).Where(e => e != null).Distinct().ToArray();
@@ -299,7 +317,42 @@ namespace MS2026.Title
         private bool StartPressed()
         {
             var keyboard = Keyboard.current;
-            return keyboard != null && keyboard[startKey].wasPressedThisFrame;
+            var keyPressed = keyboard != null && keyboard[startKey].wasPressedThisFrame;
+            // センサーは毎フレーム読む（握りっぱなし・ゆるめたかを見失わないように）。
+            var gripPressed = GripPressed();
+            return keyPressed || gripPressed;
+        }
+
+        // 握力センサーを、しきい値をまたいで握った瞬間だけ true（キーを押した瞬間と同じ扱い）。
+        private bool GripPressed()
+        {
+            if (!startByGrip)
+            {
+                return false;
+            }
+
+            var provider = MS2026.GripInputBridge.GripInputBridge.Provider;
+            var grip = 0f;
+            for (var player = 0; player < 4; player++)
+            {
+                grip = Mathf.Max(grip, provider.GetGripValue(player));
+            }
+
+            var off = Mathf.Min(gripReleaseThreshold, gripStartThreshold);
+            if (gripDetector == null)
+            {
+                gripDetector = new GripEdgeDetector(gripStartThreshold, off);
+                gripArmed = false;
+            }
+
+            // タイトルが出たときから握っていたら、一度ゆるめるまで数えない。
+            if (!gripArmed)
+            {
+                gripArmed = grip <= off;
+                return false;
+            }
+
+            return gripDetector.Update(grip) && gripDetector.IsGripping;
         }
 
         private void LoadGameScene()

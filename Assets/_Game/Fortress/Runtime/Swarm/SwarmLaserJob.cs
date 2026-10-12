@@ -17,6 +17,7 @@ namespace MS2026.Fortress
         [ReadOnly] public NativeArray<float2> pos;
         public NativeArray<float> hp;
         public NativeArray<float> flash;
+        public NativeArray<int> lastHit;
         [ReadOnly] public NativeArray<int> typeIdx;
         [ReadOnly] public NativeArray<SwarmTypeParams> types;
         [ReadOnly] public NativeArray<SwarmBeam> beams;
@@ -136,6 +137,12 @@ namespace MS2026.Fortress
 
             hp[j] = hp[j] - damage;
             flash[j] = 1f;
+
+            // 最後にダメージを与えたプレイヤー（倒したときに、だれの撃破として数えるか）。Clientのビームはダメージ0なので書かない。
+            if (owner >= 0 && damage > 0f)
+            {
+                lastHit[j] = owner;
+            }
         }
     }
 }

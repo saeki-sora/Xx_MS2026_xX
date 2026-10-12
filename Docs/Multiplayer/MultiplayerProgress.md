@@ -1,7 +1,7 @@
 # マルチプレイ化 進捗と宿題（4人対戦・LAN）
 
 > 別のチャット（Claude Code のセッション）で作業を再開するときは、まずこのファイルを読んでください。
-> 最終更新: 2026-10-08（ロビーのシーンを追加。5b章／ロビーとゲームの間にキャラクター選択を追加。5c章）。コードの詳細は `Docs/Tools/FortressDesigner_AI_Reference.md` の「Net」「Hud」「Swarm」節にあります。
+> 最終更新: 2026-10-12（展示用の自動接続: ロビーの画面を出さずに タイトル → キャラ選択 → ゲーム。5d章）。2026-10-08（ロビーのシーンを追加。5b章／ロビーとゲームの間にキャラクター選択を追加。5c章）。コードの詳細は `Docs/Tools/FortressDesigner_AI_Reference.md` の「Net」「Hud」「Swarm」節にあります。
 > 最初の計画書（承認済み）: `C:\Users\soret\.claude\plans\snoopy-forging-castle.md`。
 
 ## 1. 目標と方針（ユーザー承認済み）
@@ -233,7 +233,8 @@
 - PC B にプロジェクトが無い場合: `Builds\TestBuild` をフォルダごと PC B の `ダウンロード\TestBuild` にコピーし、`Tools\NetTest` の bat（`run_instance.bat` と `launch_2pc_B.bat`、計測なら `bench_2pc_B.bat` も）を同じ場所に置けば、ビルドは自動で見つかる。
 - 1台で4つ起動して確認済み（2026-10-08、接続先 127.0.0.1）: 3人とも写真を受信、立て直し0回。
 - bat はテスト用の起動なので、タイトル・ロビーを飛ばしてすぐゲームに入る（`TitleScreenController.directSceneForTestLaunch`）。
-- 本番と同じ流れ（タイトル → ロビー → ゲーム）を2台で試すときは、bat を使わず `MS2026.exe` を各PCで2回ずつ普通に起動する（Alt+Enter でウィンドウにできる）。PC A の1つ目で「部屋を作る」、残り3つは「部屋に参加する」で見つかった部屋を選ぶ（見つからなければ PC A のアドレスを入力）。席は P1〜P4 を別々に選ぶ。全員「準備OK」→ ホストが「ゲーム開始！」。ロビーの2台での動作はまだ未確認（`Docs/Tools/UIStudio_AI_Reference.md`）。部屋探しは UDP 47777、ゲームは UDP 7777 を使う。Windows のネットワークが「パブリック」だと通らないことがあるので「プライベート」にする。
+- **本番（展示）と同じ流れ（タイトル → キャラ選択 → ゲーム、自動でつながる。5d章）**を試すときは、bat を使わず `MS2026.exe` を普通に起動し、それぞれタイトルで A キーでスタートするだけ（1台に2つ起動してもよい。Alt+Enter でウィンドウにできる）。最初にスタートした1つがホスト（P1）、あとは来た順に P2〜P4 で同じキャラ選択に入る。
+- ロビーの画面（デバッグ用）で試すときは、`MS2026.exe -lobby` で起動する（ショートカットのリンク先の最後に ` -lobby`）。PC A の1つ目で「部屋を作る」、残り3つは「部屋に参加する」で見つかった部屋を選ぶ（見つからなければ PC A のアドレスを入力）。席は P1〜P4 を別々に選ぶ。全員「準備OK」→ ホストが「ゲーム開始！」。ロビーの2台での動作はまだ未確認（`Docs/Tools/UIStudio_AI_Reference.md`）。部屋探しは UDP 47777、ゲームは UDP 7777 を使う。Windows のネットワークが「パブリック」だと通らないことがあるので「プライベート」にする。
 
 負荷計測（2台）
 - Host側PC: `run_instance.bat host 0 - -fortress-bench -fortress-bench-burst 30000 -fortress-bench-clients 1 -fortress-bench-quit 60 -fortress-bench-no-wave`
@@ -274,6 +275,24 @@
 - 選択中も Esc の一時メニュー（全員でロビーに戻る／試合から抜ける／タイトルへ）が使える。
 - **宿題（未確認）**: Unity でまだ一度も動かしていない（コードは Unity の外でコンパイル・テスト済み）。シーンの中身は `Tools/キャラ選択/シーンを組み立てる` を実行して作る。1台での確認 → 2台以上での確認（参加側の操作がホストに届くか・同じ画面になるか・途中参加・抜けたとき）。
 
+## 5d. 展示用の自動接続（2026-10-12）
+
+ユーザー決定: 会場ではキーボードを置かず、自作の握力デバイスだけをつなぐ。ビルドした .exe は **タイトル → キャラ選択 → ゲーム**（ロビーの画面はデバッグ用に残し、起動オプション `-lobby` で出す）。最初にキャラ選択に行った人が自動でホストになり、あとの人は自動でそこへつながる。席は**来た順**（P1, P2, …）。ゲームへ進む条件は今のまま（**その場にいる全員が決定したら開始**）。**試合中に来た人は途中から参加**。詳しくは `Docs/Tools/UIStudio_AI_Reference.md` 7章の「Exhibition auto-connect」、人間向けは `UIStudio_ガイド.html` の「会場（キーボード無し）で…」。
+
+- 仕組み: ロビーのシーン（通信の土台）はそのまま使い、`GameSession` がロビーの画面を出さずに自動で進める（`GameSession.Auto.cs`）。タイトルからロビーのシーンに来たら、歯磨き粉の幕で隠したまま UDP 47777 で部屋を約1.5〜2.5秒さがす（PCごとにばらつき）。部屋があれば空いている一番小さい席で参加、無ければホスト（P1）になってすぐキャラ選択（`BeginCharacterSelect`）。参加側は今までの「途中参加」の流れで、キャラ選択中ならキャラ選択に、試合中ならゲームに入る。
+- ほぼ同時に2台がホストになったとき: ホストもさがし続け、キャラ選択中に別の部屋を見つけたら、人が少ない方（同じなら部屋の番号 `roomId` が大きい方）が通信を止めて相手の部屋に入り直す（`AutoMatchRules.ShouldYield`。両方のPCで同じ答えになる）。始まった試合はまとめない。部屋さがしの返事に `roomId` を追加した（古い形も読める）。
+- 困ったとき: 切れた・断られた（席の取り合いなど）・時間切れは、お知らせを出さずに幕で隠して1.5秒後にさがし直す（`AutoRecover`）。ホストが落ちたら、残った人の中で最初にさがし終えた人が新しいホストになり、キャラ選択からやり直し。お知らせの小窓・通知（○○が入りました）は自動接続中は出さず、記録（Player.log）に `[Lobby] 自動接続:` などで残す。
+- 確認済み: Unity の外でコンパイル、EditMode テスト（LobbyTests 14件。うち自動接続の決まり5件）が通る。
+- **2026-10-13 ビルドで見つかった不具合と修正**: ①キャラ選択の上に旧ロビーの部屋の画面が重なり、ボタンも効かない → ホストになった直後の「部屋の画面へ（ワイプつき）」の切り替えが、キャラ選択の読み込みより後に終わっていた。自動接続中はロビーの画面を一切開かないようにした（`GameSession.OpenMenu`）。②部屋さがしで「既存の接続はリモート ホストに強制的に切断されました」→ Windows の UDP の仕様。知らせを止め、受信で読み飛ばすようにした（`LanDiscovery`）。**修正後のビルドでの確認はまだ**。
+- **宿題（未確認）**: ① 1台で .exe を2〜4つ起動して、1つ目がホスト・残りが自動参加になるか（同じPCでは 127.0.0.1 で見つかる）。② 2台以上で、ほぼ同時にスタートしたときに1つの部屋にまとまるか。③ 試合中に来た人が途中から入れるか。④ ホストを閉じたとき、残りが新しい部屋にまとまるか。
+- **タイトルを握ってスタート（2026-10-12 追加）**: タイトルは A キーか、握力センサーを一定以上（0.35）握った瞬間にスタート。タイトルのシーンに置いた「Arduino」（`ArduinoSerialReader`、シーンをまたぐ ON）がシーンをまたいで残り、ロビー・キャラ選択・ゲームでも同じポートを使い続ける（開け直すと Uno が約2秒再起動するため）。COM ポートはPCごとに違ってよい（値が届くポートを自動でさがす。見つからなければ5秒ごとにさがし直す）。USB を挿し直しても、3秒値が届かなければキーボードに切り替えてさがし直し、挿し直すと自動で実機に戻る（試合は止まらない）。**Unity で一度 `Tools/タイトル/握力センサーの読み取りを置く` を実行してからビルドする**（宿題: 実機で確認）。詳細は `Docs/Tools/TitleScreen_AI_Reference.md` 5章、`GripInputBridge_AI_Reference.md` 6章。
+- **残っていること（今回の範囲外）**: 試合の終わり（Phase 5）が無いので、試合のあとの流れ（次の試合・タイトルへ）は未定。席を立った人のPCがキャラ選択で「いる」ままだと、全員決定にならず始まらない（キャラ選択の制限時間 `timeLimitSeconds` で自動決定にはできる）。
+
+## 5e. ビルドではデバッグ表示を出さない／撃破数（2026-10-13）
+
+- ユーザー決定: ビルドした .exe ではデバッグ表示（D-Drive の通信状態・群衆の計測・カメラの視点表示・右上の接続画面・エラーの赤い窓）を出さない。Unity の中では今まで通り。ビルドでも起動オプション `-debug-ui` で出せる。**`Tools/NetTest/run_instance.bat` は `-debug-ui` を付ける**ので、bat でのテスト・計測は今まで通り計測表示が見える。仕組みは `Docs/Tools/FortressDesigner_AI_Reference.md` の Hud 節（`DebugUi`）。
+- 撃破数: Host が数え（群衆は「最後にダメージを与えたレーザーの持ち主」を敵ごとに覚える）、名前つきメッセージ `MS2026.Fortress.Kills`（約20バイト、変わったときに1秒10回まで＋2秒ごと）で全員に配る。Client は自分では数えない。新しい試合で0。画面は UIスタジオのゲーム中HUD（`UIStudio_AI_Reference.md` 4d章）。Unity の中（1台・オフライン）では数・だれの撃破か・コンボ・お祝いを確認済み（2026-10-13）。**宿題（未確認）**: 2台で、参加側にホストの数が届くか。
+
 ## 6. 主なファイル
 
 | 何 | 場所 |
@@ -285,6 +304,6 @@
 | 計測 | `Runtime/Net/Bench/NetBenchmarkRunner.cs`, `NetBenchmarkArgs.cs`, `NetTrafficStats.cs` |
 | シーンへの配置 | メニュー `Tools/要塞/ネットワーク/同期オブジェクトをシーンに配置`（`Editor/Net/FortressNetSceneSetup.cs`） |
 | キャラクター選択 | `Assets/CharacterSelect/`（`CharacterSelectController`・`CharacterSelectBoard`・`CharacterSelectMessages`）、`Assets/_Game/UI/Game/Session/GameSession.CharacterSelect.cs`、`Assets/Scenes/Character_Select.unity` |
-| ロビー（タイトル→ロビー→ゲーム） | `Assets/_Game/UI/Game/Session/`（`GameSession`・`LobbyRoster`・`LobbyMessages`・`LanDiscovery`・`GameSceneSessionGuard`・画面の部品）、`Assets/Scenes/Lobby.unity`、組み立て `Assets/_Game/UI/Editor/Session/SessionFlowBuilder.cs` |
+| ロビー（タイトル→ロビー→ゲーム） | `Assets/_Game/UI/Game/Session/`（`GameSession`・展示用の自動接続 `GameSession.Auto`・`AutoMatchRules`・`LobbyRoster`・`LobbyMessages`・`LanDiscovery`・`GameSceneSessionGuard`・画面の部品）、`Assets/Scenes/Lobby.unity`、組み立て `Assets/_Game/UI/Editor/Session/SessionFlowBuilder.cs` |
 | 起動用bat | `Tools/NetTest/`（`launch_2p/4p`, `launch_ui_2p`, `launch_duplicate_test`, `bench_2p`, `bench_4p`, `bench_4p_latejoin`, `bench_offline`, `run_instance`） |
 | 画面のUI配置 | `Runtime/Hud/DebugOverlayLayout.cs`（左上の縦積み）、`LocalTurretGaugeHud.cs` |

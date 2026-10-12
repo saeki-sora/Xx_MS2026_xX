@@ -49,14 +49,31 @@ namespace MS2026.GripInputBridge.Transports
 
         private volatile bool _isRunning;
 
+        // USBが抜けた等でポートが使えなくなった（受信スレッドは止まっている）。
+        private volatile bool _portLost;
+
+        // 受信スレッド専用。続けて起きた受信エラーの数（正しく1行読めたら 0 に戻す）。
+        private int _consecutiveErrors;
+
+        // 受信エラーがこの回数続いたら、ポートが使えなくなったとみなす（約0.5秒）。
+        private const int LostAfterErrors = 5;
+
         public event Action<int> OnConnected;
 #pragma warning disable CS0067 // 未使用でもインターフェースの都合で必要なイベント
         public event Action<int> OnDisconnected;
 #pragma warning restore CS0067
 
-        public SerialGripTransport(GripDeviceConfig config)
+        private readonly bool _logOpenError;
+
+        public SerialGripTransport(GripDeviceConfig config) : this(config, true)
+        {
+        }
+
+        /// <param name="logOpenError">false なら、ポートを開けなかったときにエラーを出さない（ポートを自動でさがすとき用）。</param>
+        public SerialGripTransport(GripDeviceConfig config, bool logOpenError)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
+            _logOpenError = logOpenError;
 
             for (var i = 0; i < _lastReceivedAtMs.Length; i++)
             {
@@ -81,6 +98,61 @@ namespace MS2026.GripInputBridge.Transports
 
         /// <summary>COMポートを開けて受信を始められたか。falseなら(ポートが無い・使用中など)この入力元からは何も届かない。</summary>
         public bool IsPortOpen => _isRunning;
+
+        /// <summary>このトランスポートが開いているポートの名前。</summary>
+        public string PortName => _config.serialPortName;
+
+        /// <summary>正しい形の値を一度でも受け取ったか（そのポートの先に握力デバイスがつながっている目印）。</summary>
+        public bool HasReceivedData
+        {
+            get
+            {
+                for (var i = 0; i < _lastReceivedAtMs.Length; i++)
+                {
+                    if (Volatile.Read(ref _lastReceivedAtMs[i]) != long.MinValue)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// USBが抜けた等でポートが使えなくなったか（受信エラーが続いた・ポートが閉じられた）。true になったら受信は止まっているので、
+        /// Dispose して、さがし直す（<see cref="SerialGripPortSearch"/>）。
+        /// </summary>
+        public bool IsPortLost => _portLost;
+
+        /// <summary>最後に値が届いてからの秒数（どのプレイヤーの値でもよい。一度も届いていなければ +∞）。</summary>
+        public double SecondsSinceLastData
+        {
+            get
+            {
+                var latest = long.MinValue;
+                for (var i = 0; i < _lastReceivedAtMs.Length; i++)
+                {
+                    latest = Math.Max(latest, Volatile.Read(ref _lastReceivedAtMs[i]));
+                }
+
+                return latest == long.MinValue ? double.PositiveInfinity : (_clock.ElapsedMilliseconds - latest) / 1000.0;
+            }
+        }
+
+        /// <summary>このPCにあるCOMポートの名前（取れなければ空）。</summary>
+        public static string[] GetAvailablePortNames()
+        {
+            try
+            {
+                return SerialPort.GetPortNames();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[GripInputBridge] COMポートの一覧を取れませんでした: {ex.Message}");
+                return Array.Empty<string>();
+            }
+        }
 
         public bool IsConnected(int playerIndex)
         {
@@ -151,8 +223,12 @@ namespace MS2026.GripInputBridge.Transports
             }
             catch (Exception ex)
             {
-                // ここで例外を握りつぶさずログに残す(設計書13.2セルフチェック項目)。
-                Debug.LogError($"[GripInputBridge] シリアルポート '{_config.serialPortName}' を開けませんでした: {ex.Message}");
+                // ここで例外を握りつぶさずログに残す(設計書13.2セルフチェック項目)。自動でさがすときは、さがす側がまとめて知らせる。
+                if (_logOpenError)
+                {
+                    Debug.LogError($"[GripInputBridge] シリアルポート '{_config.serialPortName}' を開けませんでした: {ex.Message}");
+                }
+
                 return false;
             }
         }
@@ -179,13 +255,26 @@ namespace MS2026.GripInputBridge.Transports
                         break;
                     }
 
-                    // ケーブル抜け等。次の IsConnected 呼び出しでタイムアウトとして検知されるため、
-                    // ここではログのみ残してループを継続する(通信全体を落とさない、設計書6.3)。
-                    Debug.LogWarning($"[GripInputBridge] シリアル受信エラー: {ex.Message}");
+                    // ケーブル抜け等。一時的なエラーなら続ける(通信全体を落とさない、設計書6.3)。
+                    // 続けて起きる・ポートが閉じられたときは「使えなくなった」として受信を止める（USBを挿し直したら、使う側がさがし直す）。
+                    _consecutiveErrors++;
+                    if (_consecutiveErrors == 1)
+                    {
+                        Debug.LogWarning($"[GripInputBridge] シリアル受信エラー（{_config.serialPortName}）: {ex.Message}");
+                    }
+
+                    if (_consecutiveErrors >= LostAfterErrors || !_serialPort.IsOpen)
+                    {
+                        _portLost = true;
+                        Debug.LogWarning($"[GripInputBridge] {_config.serialPortName} が使えなくなりました（USBが抜けた など）。受信を止めます。");
+                        break;
+                    }
+
                     Thread.Sleep(100);
                     continue;
                 }
 
+                _consecutiveErrors = 0;
                 if (!GripSerialProtocol.TryParseSamples(line, _parsedSamples))
                 {
                     continue; // 化けた1行はスキップする(設計書6.3)。

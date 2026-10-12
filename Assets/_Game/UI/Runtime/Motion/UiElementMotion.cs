@@ -243,13 +243,70 @@ namespace MS2026.UI
                     {
                         if (entry != null && entry.trigger == trigger && entry.valueKey == key && !entry.motion.IsEmpty)
                         {
-                            Schedule(entry);
+                            RestartValueMotion(entry);
                         }
                     }
                 }
             }
 
             _lastValues[key] = number;
+        }
+
+        // 値が続けて変わると（撃破数など）、前の動きが終わる前に次の動きが始まる。そのまま重ねると、前の動きで大きくなった・ずれた形を
+        // 「元の形」として次が始まり、どんどん大きくなってしまう（2026-10-13、撃破数の札が画面いっぱいに広がった）。
+        // そこで、同じ動きが再生中なら止めて、動き出す前の形（大きさ・回転・位置）に戻してから始め直す。
+        private readonly Dictionary<Entry, Handle<UiTweenMarker>> _valueHandles = new Dictionary<Entry, Handle<UiTweenMarker>>();
+        private readonly Dictionary<RectTransform, (Vector3 scale, Vector3 euler, Vector2 position)> _restPoses = new Dictionary<RectTransform, (Vector3, Vector3, Vector2)>();
+
+        private void RestartValueMotion(Entry entry)
+        {
+            var player = UiMotionPlayers.Current;
+            if (!player.CanPlay)
+            {
+                return;
+            }
+
+            var target = entry.target != null ? entry.target : transform as RectTransform;
+            if (target == null)
+            {
+                return;
+            }
+
+            var busy = false;
+            foreach (var pair in _valueHandles)
+            {
+                if ((pair.Key.target != null ? pair.Key.target : transform as RectTransform) == target && player.IsPlaying(pair.Value))
+                {
+                    busy = true;
+                }
+            }
+
+            if (!busy)
+            {
+                _restPoses[target] = (target.localScale, target.localEulerAngles, target.anchoredPosition);
+            }
+
+            if (_valueHandles.TryGetValue(entry, out var running) && player.IsPlaying(running))
+            {
+                player.Stop(running, true);
+            }
+
+            if (_restPoses.TryGetValue(target, out var rest))
+            {
+                target.localScale = rest.scale;
+                target.localEulerAngles = rest.euler;
+                target.anchoredPosition = rest.position;
+            }
+
+            if (entry.motion.delay > 0f)
+            {
+                Schedule(entry);
+                return;
+            }
+
+            var handle = player.Play(entry.motion, target);
+            _running.Add(handle);
+            _valueHandles[entry] = handle;
         }
 
         private void FinishHideWait()

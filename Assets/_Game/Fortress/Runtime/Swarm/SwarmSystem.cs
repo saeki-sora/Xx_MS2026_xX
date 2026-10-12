@@ -50,6 +50,18 @@ namespace MS2026.Fortress
         public SwarmSpatialGrid Grid { get; private set; }
         public SwarmNavigationData Navigation { get; private set; }
         public SwarmStats Stats => _stats;
+
+        // 「だれが倒したか」を数えるプレイヤーの数（P1〜P4）。
+        private const int KillPlayerCount = 4;
+
+        /// <summary>
+        /// このプレイヤー(0〜3)が倒した数の合計（最後にダメージを与えた人の撃破。Host・オフラインだけで数える。Clientでは0のまま）。
+        /// 全員の合計（だれか不明な撃破も含む）は <see cref="SwarmStats.totalKilled"/>。
+        /// </summary>
+        public int KilledByPlayer(int player)
+        {
+            return player >= 0 && player < KillPlayerCount ? _totalKilledByPlayer[player] : 0;
+        }
         public SwarmSettings ActiveSettings => _settings;
         public IReadOnlyList<EnemyTypeDefinition> RegisteredTypes => _types;
         public float[] FrameMsHistory { get; } = new float[HistoryLength];
@@ -100,6 +112,8 @@ namespace MS2026.Fortress
         private NativeArray<float> _goalDamage;
         private NativeArray<int> _attached;
         private NativeArray<int> _killsByType;
+        private NativeArray<int> _killsByPlayer;
+        private readonly int[] _totalKilledByPlayer = new int[KillPlayerCount];
         private NativeArray<SwarmInstance> _instances;
         private NativeArray<SwarmInstance> _tmpInstances;
         private NativeArray<int> _typeStart;
@@ -164,6 +178,7 @@ namespace MS2026.Fortress
             _goalDamage = new NativeArray<float>(SwarmLimits.MaxGoals, Allocator.Persistent);
             _attached = new NativeArray<int>(SwarmLimits.MaxGoals, Allocator.Persistent);
             _killsByType = new NativeArray<int>(SwarmLimits.MaxTypes, Allocator.Persistent);
+            _killsByPlayer = new NativeArray<int>(KillPlayerCount, Allocator.Persistent);
             _instances = new NativeArray<SwarmInstance>(capacity, Allocator.Persistent);
             _tmpInstances = new NativeArray<SwarmInstance>(capacity, Allocator.Persistent);
             _typeStart = new NativeArray<int>(SwarmLimits.MaxTypes + 1, Allocator.Persistent);
@@ -464,6 +479,13 @@ namespace MS2026.Fortress
             CollectBeamHits();
             _stats.totalKilled += _counters[1];
             _stats.totalArrived += _counters[2];
+            if (!IsReplica)
+            {
+                for (var p = 0; p < KillPlayerCount; p++)
+                {
+                    _totalKilledByPlayer[p] += _killsByPlayer[p];
+                }
+            }
 
             if (detailedProfiling)
             {
@@ -538,6 +560,7 @@ namespace MS2026.Fortress
                     pos = Storage.pos,
                     hp = Storage.hp,
                     flash = Storage.flash,
+                    lastHit = Storage.lastHit,
                     typeIdx = Storage.typeIdx,
                     types = _typeParams,
                     beams = _beamsJob,
@@ -696,6 +719,7 @@ namespace MS2026.Fortress
                 state = Storage.state,
                 types = _typeParams,
                 netId = Storage.netId,
+                lastHit = Storage.lastHit,
                 removeIds = _removeIds,
                 count = count,
                 arrivalMode = (int)_settings.arrivalMode,
@@ -707,6 +731,7 @@ namespace MS2026.Fortress
                 goalDamage = _goalDamage,
                 attached = _attached,
                 killsByType = _killsByType,
+                killsByPlayer = _killsByPlayer,
                 yRange = _yRange
             }.Schedule(handle);
 
@@ -726,6 +751,7 @@ namespace MS2026.Fortress
                 goalOf = Storage.goalOf,
                 netId = Storage.netId,
                 correction = Storage.correction,
+                lastHit = Storage.lastHit,
                 posOut = Storage.posB,
                 velOut = Storage.velB,
                 facingOut = Storage.facingB,
@@ -737,7 +763,8 @@ namespace MS2026.Fortress
                 stateOut = Storage.stateB,
                 goalOfOut = Storage.goalOfB,
                 netIdOut = Storage.netIdB,
-                correctionOut = Storage.correctionB
+                correctionOut = Storage.correctionB,
+                lastHitOut = Storage.lastHitB
             }.Schedule(count, 256, handle);
             Mark(ref handle, 5);
 
@@ -984,7 +1011,8 @@ namespace MS2026.Fortress
 
         private void OnGUI()
         {
-            if (showHud)
+            // ビルドしたゲームでは出さない（起動オプション -debug-ui で出す。Hud/DebugUi.cs）。
+            if (showHud && Hud.DebugUi.Visible)
             {
                 SwarmHud.Draw(this);
             }
@@ -1021,6 +1049,7 @@ namespace MS2026.Fortress
             DisposeArray(ref _goalDamage);
             DisposeArray(ref _attached);
             DisposeArray(ref _killsByType);
+            DisposeArray(ref _killsByPlayer);
             DisposeArray(ref _instances);
             DisposeArray(ref _tmpInstances);
             DisposeArray(ref _typeStart);

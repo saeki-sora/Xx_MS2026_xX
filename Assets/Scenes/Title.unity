@@ -541,6 +541,9 @@ MonoBehaviour:
   gameSceneName: Lobby
   directSceneForTestLaunch: Game
   startKey: 15
+  startByGrip: 1
+  gripStartThreshold: 0.35
+  gripReleaseThreshold: 0.2
   opening: {fileID: 1297605039}
   background: {fileID: 10877400}
   afterOpening:
@@ -672,6 +675,64 @@ Transform:
   m_Children:
   - {fileID: 2101668817}
   m_Father: {fileID: 305972123}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &370010037
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 370010039}
+  - component: {fileID: 370010038}
+  m_Layer: 0
+  m_Name: Arduino
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &370010038
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 370010037}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 870a4ab18665d40479bf8e4166096517, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArduinoSerialReader
+  deviceConfig: {fileID: 0}
+  portName: COM5
+  baudRate: 9600
+  heartbeatTimeoutMs: 1000
+  centeredSensor: 1
+  sensorCenter01: 0.5
+  autoFindPort: 1
+  portSearchSeconds: 4
+  portRetrySeconds: 5
+  deviceLostSeconds: 3
+  keepAcrossScenes: 1
+  logValues: 1
+  logIntervalSeconds: 0.3
+  logPlayerCount: 2
+--- !u!4 &370010039
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 370010037}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &436095637
 GameObject:
@@ -17154,3 +17215,4 @@ SceneRoots:
   - {fileID: 1232967107}
   - {fileID: 1906475386}
   - {fileID: 305972123}
+  - {fileID: 370010039}

@@ -196,6 +196,7 @@ namespace MS2026.UI.Game
             network = network != null ? network : FindFirstObjectByType<FortressNetworkBootstrap>();
             Discovery = new LanDiscovery(discoveryPort);
             Discovery.Changed += RaiseChanged;
+            InitAutoConnect();
             LoadPrefs();
         }
 
@@ -206,7 +207,16 @@ namespace MS2026.UI.Game
             // UIの置き場所（UiRoot）の準備が終わってから画面を出す。
             yield return null;
             ShowLobbyLook(true);
-            OpenFirstScreen();
+            if (IsAutoConnect)
+            {
+                // 展示用: ロビーの画面は出さず、幕で隠して部屋をさがす（GameSession.Auto.cs）。
+                _autoStarted = true;
+            }
+            else
+            {
+                OpenFirstScreen();
+            }
+
             PlayLobbyBgm();
         }
 
@@ -228,6 +238,7 @@ namespace MS2026.UI.Game
             var now = Time.unscaledTime;
             Discovery?.Tick(now);
             TickNetwork(now);
+            TickAuto(now);
             TickCountdown(now);
             TickGripReady(Time.unscaledDeltaTime);
             TickInput();
@@ -271,7 +282,8 @@ namespace MS2026.UI.Game
 
         private void LoadPrefs()
         {
-            LocalName = PlayerPrefs.GetString(PrefName, string.Empty);
+            // 展示用の自動接続では、デバッグで入れた名前は使わない（P1〜P4 と表示する）。
+            LocalName = IsAutoConnect ? string.Empty : PlayerPrefs.GetString(PrefName, string.Empty);
             SelectedSeat = Mathf.Clamp(PlayerPrefs.GetInt(PrefSeat, 0), 0, LobbyRoster.SeatCount - 1);
             LastAddress = PlayerPrefs.GetString(PrefAddress, defaultAddress);
             if (network != null && network.LaunchArgs.PlayerIndex.HasValue)

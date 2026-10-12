@@ -30,6 +30,9 @@ namespace MS2026.Fortress
         /// <summary>Client側で、Hostの位置とのズレのうち、まだ詰め終わっていない分。毎フレーム少しずつ位置へ足し込む。</summary>
         public NativeArray<float2> correction;
 
+        /// <summary>最後にダメージを与えたプレイヤー(0〜3、-1=不明)。倒したときに「だれが倒したか」を数えるのに使う。Hostだけが書く。</summary>
+        public NativeArray<int> lastHit;
+
         // 詰め直し先（Swapで入れ替わる）
         public NativeArray<float2> posB;
         public NativeArray<float2> velB;
@@ -43,6 +46,7 @@ namespace MS2026.Fortress
         public NativeArray<int> goalOfB;
         public NativeArray<int> netIdB;
         public NativeArray<float2> correctionB;
+        public NativeArray<int> lastHitB;
 
         // 押し合い計算の一時領域
         public NativeArray<float2> predA;
@@ -66,6 +70,7 @@ namespace MS2026.Fortress
             goalOf = Alloc<int>(capacity);
             netId = Alloc<int>(capacity);
             correction = Alloc<float2>(capacity);
+            lastHit = Alloc<int>(capacity);
 
             posB = Alloc<float2>(capacity);
             velB = Alloc<float2>(capacity);
@@ -79,6 +84,7 @@ namespace MS2026.Fortress
             goalOfB = Alloc<int>(capacity);
             netIdB = Alloc<int>(capacity);
             correctionB = Alloc<float2>(capacity);
+            lastHitB = Alloc<int>(capacity);
 
             predA = Alloc<float2>(capacity);
             predB = Alloc<float2>(capacity);
@@ -104,6 +110,7 @@ namespace MS2026.Fortress
             goalOf[i] = -1;
             netId[i] = id;
             correction[i] = float2.zero;
+            lastHit[i] = -1;
             return true;
         }
 
@@ -127,6 +134,7 @@ namespace MS2026.Fortress
             Exchange(ref goalOf, ref goalOfB);
             Exchange(ref netId, ref netIdB);
             Exchange(ref correction, ref correctionB);
+            Exchange(ref lastHit, ref lastHitB);
         }
 
         public void Dispose()
@@ -143,6 +151,7 @@ namespace MS2026.Fortress
             Free(ref goalOf);
             Free(ref netId);
             Free(ref correction);
+            Free(ref lastHit);
 
             Free(ref posB);
             Free(ref velB);
@@ -156,6 +165,7 @@ namespace MS2026.Fortress
             Free(ref goalOfB);
             Free(ref netIdB);
             Free(ref correctionB);
+            Free(ref lastHitB);
 
             Free(ref predA);
             Free(ref predB);

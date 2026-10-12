@@ -39,8 +39,10 @@ namespace MS2026.UI.Game
         private void OpenMenu(string screenId, UiScreenTransition transition = null)
         {
             var root = UiRoot.Active;
-            if (root == null)
+            if (root == null || IsAutoConnect)
             {
+                // 展示用の自動接続ではロビーの画面（最初の画面・部屋の画面など）を出さない。
+                // 出すと、幕つきの切り替えが遅れて終わったとき、キャラ選択の上に部屋の画面が重なってしまう（2026-10-13 のビルドで発生）。
                 return;
             }
 
@@ -57,6 +59,13 @@ namespace MS2026.UI.Game
         /// <summary>お知らせの小窓を出す（OKで閉じる）。</summary>
         public void ShowMessage(string title, string body)
         {
+            if (IsAutoConnect)
+            {
+                // 展示用: 小窓を閉じる人（キーボード）がいないので、記録に残すだけ。
+                Debug.LogWarning($"[Lobby] {title}: {body}");
+                return;
+            }
+
             UiValues.Set(FortressUiKeys.MessageTitle, title ?? string.Empty);
             UiValues.Set(FortressUiKeys.MessageBody, body ?? string.Empty);
             FortressEffectPlayer.PlaySound(onProblem, Vector3.zero);
@@ -70,6 +79,13 @@ namespace MS2026.UI.Game
         /// <summary>画面の端に少しだけ出る通知。</summary>
         public void Toast(string text)
         {
+            if (IsAutoConnect)
+            {
+                // 展示用: キャラ選択・試合の画面に「○○が入りました」などを重ねない（記録に残すだけ）。
+                Debug.Log($"[Lobby] {text}");
+                return;
+            }
+
             UiValues.Set(FortressUiKeys.ToastText, text ?? string.Empty);
             var root = UiRoot.Active;
             if (root == null)

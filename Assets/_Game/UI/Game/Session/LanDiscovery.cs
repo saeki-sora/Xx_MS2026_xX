@@ -31,6 +31,9 @@ namespace MS2026.UI.Game
             public LobbyPhase phase;
             public int players;
             public string build;
+
+            /// <summary>部屋ごとの番号（ホストになるたびに変わる。0 = 古いビルド）。展示用の自動接続で、自分の部屋の見分けと、部屋が2つできたときの譲り合いに使う。</summary>
+            public int roomId;
         }
 
         /// <summary>見つかった部屋。</summary>
@@ -77,6 +80,7 @@ namespace MS2026.UI.Game
                 client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 client.Client.Bind(new IPEndPoint(IPAddress.Any, _port));
                 client.EnableBroadcast = true;
+                DisableConnectionReset(client);
                 _responder = client;
             }
             catch (Exception e)
@@ -102,6 +106,7 @@ namespace MS2026.UI.Game
             try
             {
                 var client = new UdpClient(new IPEndPoint(IPAddress.Any, 0)) { EnableBroadcast = true };
+                DisableConnectionReset(client);
                 _searcher = client;
                 _nextSearch = 0f;
             }
@@ -190,10 +195,20 @@ namespace MS2026.UI.Game
                     }
                 }
 
-                while (_searcher.Available > 0)
+                for (var guard = 0; _searcher.Available > 0 && guard < 64; guard++)
                 {
                     var from = new IPEndPoint(IPAddress.Any, 0);
-                    var data = _searcher.Receive(ref from);
+                    byte[] data;
+                    try
+                    {
+                        data = _searcher.Receive(ref from);
+                    }
+                    catch (SocketException e) when (e.SocketErrorCode == SocketError.ConnectionReset)
+                    {
+                        // 相手がいない宛先へ送った知らせ（Windows）。ほかの返事は読み続ける。
+                        continue;
+                    }
+
                     if (TryParseReply(Encoding.UTF8.GetString(data), out var reply))
                     {
                         changed |= Upsert(from.Address.ToString(), reply, now);
@@ -230,12 +245,32 @@ namespace MS2026.UI.Game
                     var before = _hosts[i];
                     _hosts[i] = found;
                     return before.reply.takenMask != reply.takenMask || before.reply.phase != reply.phase || before.reply.hostName != reply.hostName ||
-                           before.reply.players != reply.players;
+                           before.reply.players != reply.players || before.reply.roomId != reply.roomId;
                 }
             }
 
             _hosts.Add(found);
             return true;
+        }
+
+        // Windows では、相手がいない宛先（まだ部屋が無いときの自分のPCの 47777 など）へ送ると、次の受信で
+        // 「既存の接続はリモート ホストに強制的に切断されました」の例外が出て、届いている返事まで読めなくなる。それを止める（SIO_UDP_CONNRESET）。
+        private static void DisableConnectionReset(UdpClient client)
+        {
+            if (Application.platform != RuntimePlatform.WindowsPlayer && Application.platform != RuntimePlatform.WindowsEditor)
+            {
+                return;
+            }
+
+            try
+            {
+                const int SioUdpConnReset = -1744830452;
+                client.Client.IOControl(SioUdpConnReset, new byte[] { 0, 0, 0, 0 }, null);
+            }
+            catch (Exception)
+            {
+                // 使えない環境では今まで通り（受信側で読み飛ばす）。
+            }
         }
 
         private void WarnOnce(string message)
@@ -262,14 +297,16 @@ namespace MS2026.UI.Game
         {
             return string.Join("|", Magic, Protocol.ToString(CultureInfo.InvariantCulture), "!", Sanitize(reply.hostName),
                 reply.gamePort.ToString(CultureInfo.InvariantCulture), reply.takenMask.ToString(CultureInfo.InvariantCulture),
-                ((int)reply.phase).ToString(CultureInfo.InvariantCulture), reply.players.ToString(CultureInfo.InvariantCulture), Sanitize(reply.build));
+                ((int)reply.phase).ToString(CultureInfo.InvariantCulture), reply.players.ToString(CultureInfo.InvariantCulture), Sanitize(reply.build),
+                reply.roomId.ToString(CultureInfo.InvariantCulture));
         }
 
         public static bool TryParseReply(string text, out Reply reply)
         {
             reply = default;
             var parts = (text ?? string.Empty).Split('|');
-            if (parts.Length != 9 || parts[0] != Magic || parts[1] != Protocol.ToString(CultureInfo.InvariantCulture) || parts[2] != "!")
+            // 9個は部屋の番号が無い古い形（番号は 0 とみなす）。
+            if ((parts.Length != 9 && parts.Length != 10) || parts[0] != Magic || parts[1] != Protocol.ToString(CultureInfo.InvariantCulture) || parts[2] != "!")
             {
                 return false;
             }
@@ -282,6 +319,12 @@ namespace MS2026.UI.Game
                 return false;
             }
 
+            var roomId = 0;
+            if (parts.Length == 10 && !int.TryParse(parts[9], NumberStyles.Integer, CultureInfo.InvariantCulture, out roomId))
+            {
+                return false;
+            }
+
             reply = new Reply
             {
                 hostName = parts[3],
@@ -289,7 +332,8 @@ namespace MS2026.UI.Game
                 takenMask = mask & 0xF,
                 phase = Enum.IsDefined(typeof(LobbyPhase), (byte)phase) ? (LobbyPhase)phase : LobbyPhase.Waiting,
                 players = players,
-                build = parts[8]
+                build = parts[8],
+                roomId = roomId
             };
             return true;
         }

@@ -112,7 +112,8 @@
     </div></div>
     <div class="step rv"><div class="n">2</div><div>
       <h3>再生して確かめる</h3>
-      <p>▶ Play。演出が終わったら <kbd>A</kbd> でロビー（部屋を作る・参加する）のシーンへ進み、キャラクター選択（<a href="CharacterSelect_ガイド.html">ガイド</a>）を経てゲームへ進みます。ロビーは UIスタジオで作ります（<a href="UIStudio_ガイド.html#rc-ui-flow">タイトル → ロビー → ゲームのレシピ</a>）。テスト用の bat で起動したときは、タイトルとロビーを飛ばしてすぐゲームのシーンへ進みます。</p>
+      <p>▶ Play。演出が終わったら <kbd>A</kbd> でロビー（部屋を作る・参加する）のシーンへ進み、キャラクター選択（<a href="CharacterSelect_ガイド.html">ガイド</a>）を経てゲームへ進みます。ロビーは UIスタジオで作ります（<a href="UIStudio_ガイド.html#rc-ui-flow">タイトル → ロビー → ゲームのレシピ</a>）。テスト用の bat で起動したときは、タイトルとロビーを飛ばしてすぐゲームのシーンへ進みます。<br><b>握力センサーでもスタートできます</b>（一定以上の強さで握った瞬間＝<kbd>A</kbd> と同じ。演出中なら演出を飛ばす。一度ゆるめるまで次は数えない）。実機を読むには、メニュー <span class="mp">Tools<i>›</i>タイトル<i>›</i>握力センサーの読み取りを置く</span> を<b>一度だけ</b>実行して、タイトルのシーンに「Arduino」を置いてください（タイトルを作り直さなくてよい。作り直したときも自動で置かれます）。この「Arduino」はシーンが変わっても残り、ロビー・キャラ選択・ゲームでも同じセンサーをそのまま使います。COM ポートの番号が PC ごとに違っても、値が届くポートを自動でさがします（<a href="GripInputBridge_ガイド.html">握力入力ブリッジのガイド</a>）。強さは <b>[Title]</b> の <b>握力センサーでスタート</b> › <b>Grip Start Threshold</b>（既定 0.35）・<b>Grip Release Threshold</b>（既定 0.2）。
+      <br><b>展示用の自動接続</b>（最初からON）のときは、ロビーの画面は出ずに歯磨き粉の幕 → そのままキャラクター選択になります（最初にスタートしたPCがホスト、あとは自動で参加。<a href="UIStudio_ガイド.html#rc-ui-auto">展示用の自動接続</a>）。ロビーの画面を使うときは .exe を <code>-lobby</code> 付きで起動するか、ロビーのシーンの <b>[Lobby] Session</b> › <b>Auto Connect</b> をOFFにします。</p>
     </div></div>
     <div class="step rv"><div class="n">3</div><div class="step-body">
       <div><h3>画像を差し替える</h3>
