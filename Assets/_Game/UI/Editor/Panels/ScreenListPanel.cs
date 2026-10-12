@@ -10,12 +10,20 @@ namespace MS2026.UI.EditorTools
     public sealed class ScreenListPanel : VisualElement
     {
         private readonly UiStudioContext _context;
+        private readonly TextField _search;
+        private readonly VisualElement _rows;
         private int _signature;
 
         public ScreenListPanel(UiStudioContext context)
         {
             _context = context;
             AddToClassList("sk-list");
+            _search = new TextField { tooltip = "画面の表示名・名前（screenId）・メモ・レイヤーの一部で絞り込みます（例: Lobby、ポーズ）。" };
+            _search.AddToClassList("sk-search");
+            _search.RegisterValueChangedCallback(_ => Rebuild());
+            Add(_search);
+            _rows = new VisualElement();
+            Add(_rows);
             RegisterCallback<AttachToPanelEvent>(_ => _context.Changed += Rebuild);
             RegisterCallback<DetachFromPanelEvent>(_ => _context.Changed -= Rebuild);
         }
@@ -30,14 +38,34 @@ namespace MS2026.UI.EditorTools
             }
         }
 
+        private bool Matches(UiScreen screen, string filter)
+        {
+            if (string.IsNullOrEmpty(filter))
+            {
+                return true;
+            }
+
+            var layer = UiStudioSetup.LayerSettings.Find(screen.layer);
+            foreach (var text in new[] { screen.Label, screen.screenId, screen.memo, screen.layer, layer?.label })
+            {
+                if (!string.IsNullOrEmpty(text) && text.IndexOf(filter, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private void Rebuild()
         {
-            Clear();
+            _rows.Clear();
             var settings = UiStudioSetup.LayerSettings;
             var byLayer = new Dictionary<string, List<UiScreen>>();
+            var filter = _search.value?.Trim();
             foreach (var screen in _context.Screens)
             {
-                if (screen == null)
+                if (screen == null || !Matches(screen, filter))
                 {
                     continue;
                 }
@@ -62,7 +90,7 @@ namespace MS2026.UI.EditorTools
                 AddHeader(layer.label, layer.color, layer.description);
                 foreach (var screen in screens)
                 {
-                    Add(BuildRow(screen, layer.color));
+                    _rows.Add(BuildRow(screen, layer.color));
                 }
 
                 byLayer.Remove(layer.id);
@@ -73,13 +101,17 @@ namespace MS2026.UI.EditorTools
                 AddHeader($"不明なレイヤー「{pair.Key}」", Color.gray, "レイヤーの一覧に無い名前の画面です。");
                 foreach (var screen in pair.Value)
                 {
-                    Add(BuildRow(screen, Color.gray));
+                    _rows.Add(BuildRow(screen, Color.gray));
                 }
             }
 
             if (_context.Screens.Count == 0)
             {
-                Add(StudioUi.Styled(new Label("まだ画面がありません。右の雛形から作ってください。"), "sk-muted"));
+                _rows.Add(StudioUi.Styled(new Label("まだ画面がありません。右の雛形から作ってください。"), "sk-muted"));
+            }
+            else if (_rows.childCount == 0)
+            {
+                _rows.Add(StudioUi.Styled(new Label("絞り込みに合う画面がありません。"), "sk-muted"));
             }
         }
 
@@ -90,7 +122,7 @@ namespace MS2026.UI.EditorTools
             header.style.marginTop = 8;
             header.style.marginBottom = 2;
             header.tooltip = tooltip;
-            Add(header);
+            _rows.Add(header);
         }
 
         private VisualElement BuildRow(UiScreen screen, Color layerColor)
