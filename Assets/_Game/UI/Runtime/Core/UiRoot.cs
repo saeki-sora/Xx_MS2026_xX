@@ -48,6 +48,9 @@ namespace MS2026.UI
 
         public UiTransitionOverlay Overlay => _overlay;
 
+        /// <summary>Play 中、この [UI] が最初に置かれていたシーンのパス（DontDestroyOnLoad で移っても変わらない）。</summary>
+        public string OriginScenePath { get; private set; }
+
         /// <summary>画面が開いた／閉じたとき（名前）。</summary>
         public event Action<string> ScreenOpened;
         public event Action<string> ScreenClosed;
@@ -62,6 +65,12 @@ namespace MS2026.UI
             }
 
             Active = this;
+            if (Application.isPlaying && string.IsNullOrEmpty(OriginScenePath))
+            {
+                // DontDestroyOnLoad で移る前に、元のシーンを覚えておく（UIスタジオが Play 中の変更をシーンへ書き戻すため）。
+                OriginScenePath = gameObject.scene.path;
+            }
+
             EnsureLayers();
         }
 
@@ -251,6 +260,10 @@ namespace MS2026.UI
         /// <summary>名前の画面（無ければ一覧から作る）。</summary>
         public UiScreen Get(string screenId) => Resolve(screenId);
 
+        /// <summary>すでに作られている（シーンに置いた物か、一度開いた）画面だけを返す。無ければ null（作らない）。</summary>
+        public UiScreen GetIfCreated(string screenId) =>
+            !string.IsNullOrEmpty(screenId) && _screens.TryGetValue(screenId, out var screen) && screen != null ? screen : null;
+
         // ───────── レイヤー ─────────
 
         /// <summary>レイヤーごとの Canvas をそろえる（無い物は作り、順番と大きさの設定を合わせる）。</summary>
@@ -334,6 +347,7 @@ namespace MS2026.UI
             var parent = LayerCanvas(prefab.layer);
             screen = Instantiate(prefab, parent != null ? parent.transform : transform);
             screen.name = prefab.name;
+            screen.SourcePrefab = prefab;
             screen.SetVisibleImmediate(false);
             _screens[screen.screenId] = screen;
             return screen;

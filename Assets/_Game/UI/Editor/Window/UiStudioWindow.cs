@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using MS2026.StudioKit;
 using UnityEditor;
 using UnityEngine;
@@ -18,6 +20,8 @@ namespace MS2026.UI.EditorTools
         private StudioShell _shell;
         private UiStudioHeader _header;
         private double _nextTick;
+        private readonly List<IStudioPage> _pages = new List<IStudioPage>();
+        private Type _restorePage;
 
         [MenuItem("Tools/UIスタジオ/UIスタジオを開く", priority = 0)]
         public static void Open()
@@ -41,28 +45,82 @@ namespace MS2026.UI.EditorTools
             _context.Tick();
 
             _shell = new StudioShell("U", "UIスタジオ", "画面を重ねて、動かして、ゲームの値とつなぐ", "マウスを項目に乗せると、ここに説明が出ます。");
-            _header = new UiStudioHeader(_context);
+            _header = new UiStudioHeader(_context, () => _shell.ShowPage<UiPlayChangesPage>());
             _shell.HeaderSlot.Add(_header);
 
-            _shell.AddPage(new UiStartPage(_context, _shell));
-            _shell.AddPage(new UiScreensPage(_context));
-            _shell.AddPage(new UiLayersPage(_context));
-            _shell.AddPage(new UiMotionPage(_context));
-            _shell.AddPage(new UiTransitionsPage(_context));
-            _shell.AddPage(new UiValuesPage(_context));
-            _shell.AddPage(new UiCheckPage(_context));
-            _shell.ShowPage<UiStartPage>();
+            _pages.Clear();
+            AddPage(new UiStartPage(_context, _shell));
+            AddPage(new UiScreensPage(_context));
+            AddPage(new UiLayersPage(_context));
+            AddPage(new UiMotionPage(_context));
+            AddPage(new UiTransitionsPage(_context));
+            AddPage(new UiValuesPage(_context));
+            AddPage(new UiPlayChangesPage(_context));
+            AddPage(new UiCheckPage(_context));
+            ShowRestoredPage();
 
             rootVisualElement.Clear();
             rootVisualElement.Add(_shell);
             _nextTick = 0;
         }
 
+        private void OnEnable()
+        {
+            EditorApplication.playModeStateChanged += OnPlayModeChanged;
+        }
+
         // OnDisable は Play の前後やレイアウトの切り替えで一時的に隠れたときにも呼ばれるので、
         // ここでは試している動きを止めるだけにし、状態を捨てるのは本当に閉じたとき（OnDestroy）だけにする。
         private void OnDisable()
         {
+            EditorApplication.playModeStateChanged -= OnPlayModeChanged;
             UiMotionPreview.Stop();
+        }
+
+        // Play の始め・終わりには、ページが覚えている物（Play 中だけの画面・部品）が消えたり入れ替わったりする。
+        // 古い物を触り続けないよう、開いているページはそのままに、中身をすべて作り直す。
+        private void OnPlayModeChanged(PlayModeStateChange state)
+        {
+            if (state != PlayModeStateChange.EnteredPlayMode && state != PlayModeStateChange.EnteredEditMode)
+            {
+                return;
+            }
+
+            _restorePage = _shell?.Current?.GetType();
+            var selectedId = _context?.SelectedScreen != null ? _context.SelectedScreen.screenId : null;
+            var selectedWasAsset = _context?.SelectedScreen != null && EditorUtility.IsPersistent(_context.SelectedScreen);
+            var selectedAsset = selectedWasAsset ? _context.SelectedScreen : null;
+            CreateGUI();
+            if (selectedAsset != null)
+            {
+                _context.SelectScreen(selectedAsset);
+            }
+            else if (!string.IsNullOrEmpty(selectedId))
+            {
+                _context.SelectScreenById(selectedId);
+            }
+        }
+
+        private void AddPage(IStudioPage page)
+        {
+            _pages.Add(page);
+            _shell.AddPage(page);
+        }
+
+        private void ShowRestoredPage()
+        {
+            var type = _restorePage;
+            _restorePage = null;
+            foreach (var page in _pages)
+            {
+                if (type != null && page.GetType() == type)
+                {
+                    _shell.Show(page);
+                    return;
+                }
+            }
+
+            _shell.Show(_pages[0]);
         }
 
         private void OnDestroy()

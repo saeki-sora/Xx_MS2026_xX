@@ -68,6 +68,12 @@ namespace MS2026.UI.EditorTools
                 return;
             }
 
+            if (Application.isPlaying)
+            {
+                PlayScreenLive(screen, show);
+                return;
+            }
+
             Stop();
             var root = (RectTransform)screen.transform;
             var rootMotion = show ? screen.showMotion : screen.hideMotion;
@@ -86,6 +92,29 @@ namespace MS2026.UI.EditorTools
                         Schedule(entry.motion, entry.target != null ? entry.target : (RectTransform)element.transform, 0f);
                     }
                 }
+            }
+        }
+
+        // Play 中は、手元の計算役で動かすとゲームの動きとぶつかるので、本物の開け閉め（UiRoot）で見せる。
+        private static void PlayScreenLive(UiScreen screen, bool show)
+        {
+            var root = UiRoot.Active;
+            if (root == null || EditorUtility.IsPersistent(screen))
+            {
+                return;
+            }
+
+            if (!show)
+            {
+                root.Close(screen.screenId);
+            }
+            else if (root.IsOpen(screen.screenId))
+            {
+                screen.Show();
+            }
+            else
+            {
+                root.Open(screen.screenId);
             }
         }
 

@@ -4,6 +4,7 @@
     "references": [
         "MS2026.UI.Runtime",
         "MS2026.UI.Game",
+        "MS2026.UI.Editor",
         "DDrive.Runtime",
         "DDrive.Foundation",
         "UnityEngine.TestRunner",

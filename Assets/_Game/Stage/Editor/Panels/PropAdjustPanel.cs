@@ -8,7 +8,7 @@ using UnityEngine.UIElements;
 namespace MS2026.Stage.EditorTools
 {
     /// <summary>
-    /// 配置ページの右の欄: 選んでいる背景の位置・向き・大きさ・床からの高さ。
+    /// 配置ページの右の欄: 選んでいる背景の位置・向き・傾き・大きさ・床からの高さ。
     /// 数字は打たなくてよい: 欄の名前（「向き」など）を左右にドラッグすると値が動き、ボタンで決まった量だけ動かせる。
     /// 複数選んでいるときは、変えた分を全部に同じだけ掛ける。下に、各視点での見た目のずれと、砲台・コアとの距離。
     /// </summary>
@@ -23,6 +23,9 @@ namespace MS2026.Stage.EditorTools
         private readonly FloatField _x;
         private readonly FloatField _y;
         private readonly FloatField _yaw;
+        private readonly FloatField _tiltX;
+        private readonly FloatField _tiltY;
+        private readonly Label _tiltNote;
         private readonly FloatField _width;
         private readonly FloatField _depth;
         private readonly FloatField _height;
@@ -67,6 +70,22 @@ namespace MS2026.Stage.EditorTools
                 Small("0°", "向きを0°に戻します。", () => StageSelectionAdjust.SetYaw(_context.SelectedProps, 0f)),
                 Small("↻15°", "右に15°回します。", () => StageSelectionAdjust.Rotate(_context.SelectedProps, -15f)),
                 Small("↻90°", "右に90°回します。", () => StageSelectionAdjust.Rotate(_context.SelectedProps, -90f))));
+
+            _body.Add(Group("傾き（°）", "見た目のモデルだけを X 軸・Y 軸のまわりに倒します（根元の向きが基準）。床に置いた物は床に置いたまま斜めに立ち、敵が通れない範囲は倒れた形に合わせて作り直されます。"));
+            _tiltX = Field("傾き X", "X 軸のまわりに倒す角度（度）。プラスで +Y 側（向き0°のとき床の上側）へ倒れます。名前を左右にドラッグで動かせます。",
+                (o, n) => StageSelectionAdjust.Tilt(_context.SelectedProps, new Vector2(Mathf.DeltaAngle(o, n), 0f)));
+            _tiltY = Field("傾き Y", "Y 軸のまわりに倒す角度（度）。プラスで −X 側（向き0°のとき左）へ倒れます。名前を左右にドラッグで動かせます。",
+                (o, n) => StageSelectionAdjust.Tilt(_context.SelectedProps, new Vector2(0f, Mathf.DeltaAngle(o, n))));
+            _body.Add(StudioUi.Row(_tiltX, _tiltY));
+            _body.Add(StudioUi.Row(
+                Small("X−5°", "X 軸のまわりに −5° 倒します。", () => StageSelectionAdjust.Tilt(_context.SelectedProps, new Vector2(-5f, 0f))),
+                Small("X+5°", "X 軸のまわりに +5° 倒します。", () => StageSelectionAdjust.Tilt(_context.SelectedProps, new Vector2(5f, 0f))),
+                Small("Y−5°", "Y 軸のまわりに −5° 倒します。", () => StageSelectionAdjust.Tilt(_context.SelectedProps, new Vector2(0f, -5f))),
+                Small("Y+5°", "Y 軸のまわりに +5° 倒します。", () => StageSelectionAdjust.Tilt(_context.SelectedProps, new Vector2(0f, 5f))),
+                Small("まっすぐ", "傾きを 0° に戻して、まっすぐ立てます。", () => StageSelectionAdjust.SetTilt(_context.SelectedProps, Vector2.zero))));
+            _body.Add(Hint("ゲーム画面では、てっぺんのピンクの丸をつかんで倒したい方へ引きます（5°ごと。Ctrl で自由に）。Ctrl+矢印キーで画面の向きに5°ずつ倒れます。"));
+            _tiltNote = Hint("通れない範囲を手で直しているので、傾けても形は変わりません（オブジェクトページの「作り直す」で今の形に合わせられます）。");
+            _body.Add(_tiltNote);
 
             _body.Add(Group("大きさ（m）", "見た目の幅・奥行き・高さ。どれを変えても形はそのまま全体が大きく／小さくなります（足元が中心）。ゲーム画面では Shift+ホイール、- / + キー。"));
             _width = Field("幅", "見た目の横幅（m）。変えると全体がその幅になるように大きさが変わります。", (o, n) => ScaleTo(o, n));
@@ -125,6 +144,10 @@ namespace MS2026.Stage.EditorTools
             Show(_x, p.x);
             Show(_y, p.y);
             Show(_yaw, Mathf.Repeat(StagePropTransformOps.Yaw(prop), 360f));
+            var tilt = StagePropTransformOps.Tilt(prop);
+            Show(_tiltX, tilt.x);
+            Show(_tiltY, tilt.y);
+            _tiltNote.style.display = prop.footprint != null && prop.footprint.manuallyEdited && tilt.sqrMagnitude > 1e-4f ? DisplayStyle.Flex : DisplayStyle.None;
             Show(_width, size.x);
             Show(_depth, size.y);
             Show(_height, size.z);

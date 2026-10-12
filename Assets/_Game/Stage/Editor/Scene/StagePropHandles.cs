@@ -9,12 +9,14 @@ namespace MS2026.Stage.EditorTools
     /// ・床の輪（回す。Z軸だけ。吸着なら決めた角度ごと）
     /// ・輪の右下の四角（外へ引くと大きく、内へ押すと小さく。足元を中心に）
     /// ・「↕ 高さ」の札（上下に引くと床から浮かせる／沈める。床の近くでは床にくっつく）
+    /// ・てっぺんのピンクの丸（倒したい方へ引くと、見た目のモデルがその向きに傾く。5°ごと、Ctrl で自由に）
     /// 複数選んでいるときは、いちばん最初に選んだ物に取っ手を出し、変えた分を全部に同じだけ掛ける。
     /// </summary>
     public sealed class StagePropHandles
     {
         private static readonly int ScaleHash = "StageScaleHandle".GetHashCode();
         private static readonly int LiftHash = "StageLiftHandle".GetHashCode();
+        private static readonly int TiltHash = "StageTiltHandle".GetHashCode();
         private static readonly Color RingColor = new Color(1f, 0.83f, 0.35f, 0.9f);
 
         private readonly List<float> _startLifts = new List<float>();
@@ -33,6 +35,10 @@ namespace MS2026.Stage.EditorTools
         private Vector3 _knob;
         private Rect _pillRect;
         private int _rotateGroup = -1;
+        private readonly StageTiltSession _tilt = new StageTiltSession();
+        private bool _hasKnob;
+        private Vector3 _tiltPivot;
+        private Vector3 _tiltTop;
 
         public bool IsDragging { get; private set; }
 
@@ -51,13 +57,15 @@ namespace MS2026.Stage.EditorTools
             _knob = _pivot + new Vector3(0.7071f, -0.7071f, 0f) * _radius;
             var top = HandleUtility.WorldToGUIPoint(new Vector3(_bounds.center.x, _bounds.center.y, _bounds.min.z));
             _pillRect = new Rect(top.x + 18f, top.y - 11f, 104f, 22f);
+            _hasKnob = StagePlaceSettings.TiltKnob && StageTiltSession.TryGetKnob(_primary, out _tiltPivot, out _tiltTop);
         }
 
         /// <summary>マウスが大きさの四角か高さの札の上にあるか（そこでは本体をつかまない）。</summary>
         public bool IsOverHandle(Vector2 mouse)
         {
             return _primary != null &&
-                   (_pillRect.Contains(mouse) || Vector2.Distance(HandleUtility.WorldToGUIPoint(_knob), mouse) < 12f);
+                   (_pillRect.Contains(mouse) || Vector2.Distance(HandleUtility.WorldToGUIPoint(_knob), mouse) < 12f ||
+                    _hasKnob && Vector2.Distance(HandleUtility.WorldToGUIPoint(_tiltTop), mouse) < 12f);
         }
 
         public void OnSceneGui(SceneView view, IReadOnlyList<StageProp> selection)
@@ -71,6 +79,76 @@ namespace MS2026.Stage.EditorTools
             RotateRing(selection, _primary, _pivot, _radius);
             ScaleKnob(selection, _pivot, _knob);
             LiftPill(selection, _primary, _bounds);
+            if (_hasKnob || _tilt.IsActive)
+            {
+                TiltKnob(selection);
+            }
+        }
+
+        private void TiltKnob(IReadOnlyList<StageProp> selection)
+        {
+            var e = Event.current;
+            var id = GUIUtility.GetControlID(TiltHash, FocusType.Passive);
+            var size = HandleUtility.GetHandleSize(_tiltTop) * 0.09f;
+
+            switch (e.GetTypeForControl(id))
+            {
+                case EventType.Layout:
+                case EventType.MouseMove:
+                    HandleUtility.AddControl(id, HandleUtility.DistanceToCircle(_tiltTop, size * 1.3f));
+                    break;
+                case EventType.MouseDown:
+                    if (e.button == 0 && !e.alt && HandleUtility.nearestControl == id && _tilt.Begin(selection))
+                    {
+                        GUIUtility.hotControl = id;
+                        IsDragging = true;
+                        e.Use();
+                    }
+
+                    break;
+                case EventType.MouseDrag:
+                    if (GUIUtility.hotControl == id)
+                    {
+                        _tilt.Update(HandleUtility.GUIPointToWorldRay(e.mousePosition), StagePlaceSettings.SnapActive(e));
+                        e.Use();
+                    }
+
+                    break;
+                case EventType.MouseUp:
+                    if (GUIUtility.hotControl == id && e.button == 0)
+                    {
+                        GUIUtility.hotControl = 0;
+                        IsDragging = false;
+                        _tilt.End();
+                        e.Use();
+                    }
+
+                    break;
+                case EventType.KeyDown:
+                    if (GUIUtility.hotControl == id && e.keyCode == KeyCode.Escape)
+                    {
+                        GUIUtility.hotControl = 0;
+                        IsDragging = false;
+                        _tilt.Cancel();
+                        e.Use();
+                    }
+
+                    break;
+                case EventType.Repaint:
+                    var hot = GUIUtility.hotControl == id || HandleUtility.nearestControl == id && GUIUtility.hotControl == 0;
+                    var color = StagePreviewView.TiltColor;
+                    Handles.color = new Color(color.r, color.g, color.b, hot ? 1f : 0.85f);
+                    Handles.DrawDottedLine(_tiltPivot, _tiltTop, 3f);
+                    Handles.SphereHandleCap(id, _tiltTop, Quaternion.identity, size * (hot ? 1.3f : 1f), EventType.Repaint);
+                    if (hot)
+                    {
+                        var tilt = StagePropTransformOps.Tilt(selection[0]);
+                        Handles.Label(_tiltTop + Vector3.back * size * 2f,
+                            GUIUtility.hotControl == id ? $"傾き X {tilt.x:0}°  Y {tilt.y:0}°" : "引いて傾ける", _label);
+                    }
+
+                    break;
+            }
         }
 
         private void RotateRing(IReadOnlyList<StageProp> selection, StageProp primary, Vector3 pivot, float radius)

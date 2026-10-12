@@ -22,6 +22,8 @@ namespace MS2026.UI.EditorTools
         private readonly VisualElement _selection;
         private readonly Slider _opacity;
         private readonly TextField _name;
+        private readonly List<Button> _structureButtons = new List<Button>();
+        private readonly VisualElement _playNote;
         private int _signature;
 
         public ElementLayersPanel(UiStudioContext context)
@@ -32,11 +34,15 @@ namespace MS2026.UI.EditorTools
             _search.RegisterValueChangedCallback(_ => _signature = 0);
             Add(_search);
 
-            Add(StudioUi.Row(
-                StudioUi.Button("＋ グループにまとめる", Group, "選んでいる部品を、新しいグループ（空の枠）の中にまとめます。まとめて動かす・隠すのに便利。", small: true),
-                StudioUi.Button("グループを解く", Ungroup, "選んでいるグループの中身を外に出して、グループを消します。", small: true),
-                StudioUi.Button("複製", Duplicate, "選んでいる部品をコピーします（Ctrl+D と同じ）。", small: true),
-                StudioUi.Button("削除", Delete, "選んでいる部品を消します（元に戻すは Ctrl+Z）。", small: true)));
+            _structureButtons.Add(StudioUi.Button("＋ グループにまとめる", Group, "選んでいる部品を、新しいグループ（空の枠）の中にまとめます。まとめて動かす・隠すのに便利。Play 中は使えません。", small: true));
+            _structureButtons.Add(StudioUi.Button("グループを解く", Ungroup, "選んでいるグループの中身を外に出して、グループを消します。Play 中は使えません。", small: true));
+            _structureButtons.Add(StudioUi.Button("複製", Duplicate, "選んでいる部品をコピーします（Ctrl+D と同じ）。Play 中は使えません。", small: true));
+            _structureButtons.Add(StudioUi.Button("削除", Delete, "選んでいる部品を消します（元に戻すは Ctrl+Z）。Play 中は使えません。", small: true));
+            Add(StudioUi.Row(_structureButtons.ToArray()));
+
+            // 部品を足す・消す・並べ替える操作は、止めたときに消え、Play中の変更としても残せないので、Play 中は止める。
+            _playNote = StudioUi.Note("Play 中は、部品のまとめる・解く・複製・削除・並べ替え（↑↓）はできません（止めると消えるため）。名前・表示・濃さなどの値の変更は、止めたときに残せます。", NoteKind.Info);
+            Add(_playNote);
 
             _rows = new VisualElement { style = { marginTop = 6 } };
             Add(_rows);
@@ -53,6 +59,13 @@ namespace MS2026.UI.EditorTools
 
         public void Refresh()
         {
+            var playing = Application.isPlaying;
+            foreach (var button in _structureButtons)
+            {
+                button.SetEnabled(!playing);
+            }
+
+            _playNote.style.display = playing ? DisplayStyle.Flex : DisplayStyle.None;
             var screen = _context.EditingScreen;
             var signature = Signature(screen);
             if (signature != _signature)
@@ -145,8 +158,11 @@ namespace MS2026.UI.EditorTools
                 row.Add(StudioUi.Chip("動", ChipKind.Info, "動きが付いています。"));
             }
 
-            row.Add(IconButton("↑", "1つ手前へ。", () => Move(element, +1)));
-            row.Add(IconButton("↓", "1つ奥へ。", () => Move(element, -1)));
+            if (!Application.isPlaying)
+            {
+                row.Add(IconButton("↑", "1つ手前へ。", () => Move(element, +1)));
+                row.Add(IconButton("↓", "1つ奥へ。", () => Move(element, -1)));
+            }
 
             row.RegisterCallback<ClickEvent>(e =>
             {

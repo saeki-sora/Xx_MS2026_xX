@@ -41,6 +41,14 @@ namespace MS2026.Stage
         [Tooltip("取り込んだ3Dモデルの実体。差し替えボタンはここを入れ替える。")]
         public Transform modelRoot;
 
+        [Tooltip("見た目のモデルの傾き（度。X=前後・Y=左右に倒す。根元の向きが基準）。ステージ背景スタジオの「傾き」で変える（ここを直接書き換えてもモデルは回らない）。")]
+        [HideInInspector]
+        public Vector2 modelTilt;
+
+        [Tooltip("傾けるときの支点（モデルの中の位置）。何度傾け直しても足元がずれていかないように、スタジオが覚えておく。")]
+        [HideInInspector]
+        public Vector3 modelTiltPivot;
+
         [Tooltip("差し替えの元になったモデルのアセット（FBXやPrefab）。")]
         public GameObject sourceModel;
 

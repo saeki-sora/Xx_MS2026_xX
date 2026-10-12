@@ -40,6 +40,54 @@ namespace MS2026.Stage.EditorTools
             });
         }
 
+        /// <summary>見た目のモデルの傾きを足す（度。それぞれの根元の向きが基準）。</summary>
+        public static void Tilt(IReadOnlyList<StageProp> props, Vector2 delta)
+        {
+            Run(props, "背景を傾ける", prop => StagePropTransformOps.SetTilt(prop, StagePropTransformOps.Tilt(prop) + delta));
+        }
+
+        /// <summary>傾きをそろえる（度。0, 0 でまっすぐに立てる）。</summary>
+        public static void SetTilt(IReadOnlyList<StageProp> props, Vector2 tilt)
+        {
+            Run(props, "背景を傾ける", prop => StagePropTransformOps.SetTilt(prop, tilt));
+        }
+
+        /// <summary>X か Y の片方だけをそろえる（axis 0 = X、1 = Y）。</summary>
+        public static void SetTiltAxis(IReadOnlyList<StageProp> props, int axis, float degrees)
+        {
+            Run(props, "背景を傾ける", prop =>
+            {
+                var tilt = StagePropTransformOps.Tilt(prop);
+                tilt[axis] = degrees;
+                StagePropTransformOps.SetTilt(prop, tilt);
+            });
+        }
+
+        /// <summary>
+        /// てっぺんを床の上の向き worldDirection（画面の上下左右など）へ degrees だけ倒す。
+        /// 根元の向きに関係なく、見たとおりの向きに倒れる。
+        /// </summary>
+        public static void Lean(IReadOnlyList<StageProp> props, Vector2 worldDirection, float degrees)
+        {
+            if (worldDirection.sqrMagnitude < 1e-8f)
+            {
+                return;
+            }
+
+            Run(props, "背景を傾ける", prop =>
+            {
+                var up = StagePropTransformOps.TiltUpWorld(prop);
+                var axis = Vector3.Cross(up, new Vector3(worldDirection.x, worldDirection.y, 0f));
+                if (axis.sqrMagnitude < 1e-8f)
+                {
+                    return; // もうその向きに真横まで倒れている
+                }
+
+                var newUp = Quaternion.AngleAxis(degrees, axis.normalized) * up;
+                StagePropTransformOps.SetTilt(prop, StagePlaceMath.TiltFromUp(Quaternion.Inverse(prop.transform.rotation) * newUp));
+            });
+        }
+
         /// <summary>大きさを倍にする（足元を中心に）。</summary>
         public static void Scale(IReadOnlyList<StageProp> props, float factor)
         {

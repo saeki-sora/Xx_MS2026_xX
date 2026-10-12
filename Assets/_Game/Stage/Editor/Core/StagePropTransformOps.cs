@@ -8,8 +8,8 @@ namespace MS2026.Stage.EditorTools
     /// <summary>
     /// 背景オブジェクトの置き方を変える操作（すべて Undo 対応）。シーンの配置ツールと「ステージ配置」パネルが使う。
     /// ・位置・向き … 根元（StageProp）を動かす。通れない範囲は根元の子なので一緒に付いてくる（作り直し不要）
-    /// ・大きさ・高さ … 中のモデルだけを変える（根元の大きさは1のまま。すき間の余白などをメートルのまま保つため）。
-    ///                  変えた後は通れない範囲を作り直す（<see cref="StageFootprintRefresher"/>）
+    /// ・大きさ・高さ・傾き … 中のモデルだけを変える（根元の大きさは1のまま・根元は傾けない。すき間の余白などをメートルのまま保ち、
+    ///                  2D の通れない範囲がずれないようにするため）。変えた後は通れない範囲を作り直す（<see cref="StageFootprintRefresher"/>）
     /// </summary>
     public static class StagePropTransformOps
     {
@@ -22,11 +22,14 @@ namespace MS2026.Stage.EditorTools
         /// <summary>見た目全体の箱（ワールド）。描画する物が無ければ根元の点。</summary>
         public static Bounds VisualBounds(StageProp prop) => prop.VisualBounds;
 
-        /// <summary>床からの高さ（見た目のいちばん下が床からどれだけ浮いているか。マイナスなら床に埋まっている）。</summary>
+        /// <summary>
+        /// 床からの高さ（見た目のいちばん下が床からどれだけ浮いているか。マイナスなら床に埋まっている）。
+        /// 頂点で測る（傾けた物は見た目の箱が実際より下にはみ出すため）。
+        /// </summary>
         public static float Lift(StageProp prop)
         {
-            var bounds = VisualBounds(prop);
-            return prop.transform.position.z - bounds.max.z;
+            var bottom = StagePropShape.TryLowestZ(prop, out var z) ? z : VisualBounds(prop).max.z;
+            return prop.transform.position.z - bottom;
         }
 
         /// <summary>見た目の大きさ（幅・奥行き・高さ、メートル）。</summary>
@@ -54,6 +57,71 @@ namespace MS2026.Stage.EditorTools
         }
 
         public static float Yaw(StageProp prop) => prop.transform.eulerAngles.z;
+
+        /// <summary>見た目のモデルの傾き（度。根元の向きが基準。X = X軸まわり、Y = Y軸まわり）。</summary>
+        public static Vector2 Tilt(StageProp prop) => prop.modelTilt;
+
+        /// <summary>傾ける支点: 根元の真下（真上）の、見た目のいちばん下の高さの点。</summary>
+        public static Vector3 TiltPivot(StageProp prop) => prop.transform.position + Vector3.back * Lift(prop);
+
+        /// <summary>今の傾きでの見た目の「上」の向き（ワールド）。</summary>
+        public static Vector3 TiltUpWorld(StageProp prop) => prop.transform.rotation * StagePlaceMath.TiltUp(prop.modelTilt);
+
+        /// <summary>
+        /// 見た目のモデルを傾ける（根元は傾けない）。根元の真下の床の点を中心に回し、床からの高さは傾ける前のまま保つ
+        /// （床に置いた物は床に置いたまま、斜めに立つ）。通れない範囲は作り直す。
+        /// </summary>
+        public static void SetTilt(StageProp prop, Vector2 tilt)
+        {
+            tilt = StagePlaceMath.WrapTilt(tilt);
+            var old = prop.modelTilt;
+            var model = Model(prop);
+            if (model == prop.transform || (StagePlaceMath.WrapTilt(tilt - old)).sqrMagnitude < 1e-8f)
+            {
+                return;
+            }
+
+            var lift = Lift(prop);
+            var pivot = ModelTiltPivot(prop, model);
+            Undo.RecordObject(model, "傾ける");
+            Undo.RecordObject(prop, "傾ける");
+            var root = prop.transform.rotation;
+            var delta = root * StagePlaceMath.TiltRotation(tilt) * Quaternion.Inverse(StagePlaceMath.TiltRotation(old)) * Quaternion.Inverse(root);
+            model.SetPositionAndRotation(pivot + delta * (model.position - pivot), delta * model.rotation);
+            prop.modelTilt = tilt;
+            // 支点はモデルに付いた点として覚える（高さを直すとモデルと一緒に上下するので、傾け直しを重ねても足元が横にずれない）。
+            prop.modelTiltPivot = model.InverseTransformPoint(pivot);
+            SetLift(prop, lift);
+            StageFootprintRefresher.Request(prop, 1f);
+        }
+
+        // 傾けている間は、覚えておいた支点（モデルに付いた点）を使う。まっすぐのとき・覚えた点が根元の真上から外れているとき
+        // （モデルを差し替えた・手で動かした など）は、根元の真下の、見た目のいちばん下の点にする。
+        private static Vector3 ModelTiltPivot(StageProp prop, Transform model)
+        {
+            if (prop.modelTilt.sqrMagnitude > 1e-6f)
+            {
+                var stored = model.TransformPoint(prop.modelTiltPivot);
+                var root = prop.transform.position;
+                if (new Vector2(stored.x - root.x, stored.y - root.y).sqrMagnitude < 1e-6f)
+                {
+                    return stored;
+                }
+            }
+
+            return TiltPivot(prop);
+        }
+
+        /// <summary>
+        /// 根元が X/Y に傾いているときに、見た目はそのままで根元だけまっすぐにした後、モデルの傾きの記録を今の見た目に合わせる。
+        /// oldRoot はまっすぐにする前の根元の向き。
+        /// </summary>
+        public static void AdoptTilt(StageProp prop, Quaternion oldRoot)
+        {
+            var upWorld = oldRoot * StagePlaceMath.TiltUp(prop.modelTilt);
+            Undo.RecordObject(prop, "根元をまっすぐにする");
+            prop.modelTilt = StagePlaceMath.TiltFromUp(Quaternion.Inverse(prop.transform.rotation) * upWorld);
+        }
 
         /// <summary>モデルを根元（足元）を中心に factor 倍にする。高さ（浮き）も同じ倍率で変わる。</summary>
         public static void ScaleModel(StageProp prop, float factor)

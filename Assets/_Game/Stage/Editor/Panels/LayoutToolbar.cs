@@ -9,7 +9,7 @@ using UnityEngine.UIElements;
 namespace MS2026.Stage.EditorTools
 {
     /// <summary>
-    /// 配置ページの上の帯: どの視点で見るか（全体・P1〜P4・4人並べる）、吸着（マス目・角度・端）、ゲーム画面に重ねる物（輪郭・距離）。
+    /// 配置ページの上の帯: どの視点で見るか（全体・P1〜P4・4人並べる）、吸着（マス目・角度・端）、ゲーム画面に重ねる物（輪郭・距離・傾ける丸）。
     /// 札（チップ）を押して切り替える。オンの札はオレンジ。設定はこのPCだけに保存される。
     /// </summary>
     public sealed class LayoutToolbar : VisualElement
@@ -59,6 +59,8 @@ namespace MS2026.Stage.EditorTools
                 () => StagePlaceSettings.PreviewOutlines, () => StagePlaceSettings.PreviewOutlines = !StagePlaceSettings.PreviewOutlines));
             view.Add(Toggle("距離", "選んでいる背景から、近くの砲台・コア・湧き位置までの距離を出します（近すぎると赤）。",
                 () => StagePlaceSettings.ShowDistances, () => StagePlaceSettings.ShowDistances = !StagePlaceSettings.ShowDistances));
+            view.Add(Toggle("傾ける丸", "選んでいる背景のてっぺんに、ピンクの丸を出します。つかんで倒したい方へ引くと、その向きに傾きます（シーンビューの配置ツールにも出ます）。",
+                () => StagePlaceSettings.TiltKnob, () => StagePlaceSettings.TiltKnob = !StagePlaceSettings.TiltKnob));
             Add(view);
 
             var snap = StudioUi.Row();

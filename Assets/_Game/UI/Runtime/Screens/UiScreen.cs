@@ -82,6 +82,9 @@ namespace MS2026.UI
 
         public string Label => string.IsNullOrWhiteSpace(displayName) ? screenId : displayName;
 
+        /// <summary>Play 中に一覧（UiScreenCatalog）の Prefab から作られた画面なら、その元の Prefab。シーンに置いた画面は null。</summary>
+        public UiScreen SourcePrefab { get; internal set; }
+
         public event Action<UiScreen> Shown;
         public event Action<UiScreen> Hidden;
 

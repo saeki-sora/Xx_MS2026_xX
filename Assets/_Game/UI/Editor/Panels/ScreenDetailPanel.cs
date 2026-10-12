@@ -31,6 +31,8 @@ namespace MS2026.UI.EditorTools
         private readonly VisualElement _body;
         private readonly Label _previewNote;
         private UiScreen _bound;
+        private UiScreen _live;
+        private Button _delete;
 
         public ScreenDetailPanel(UiStudioContext context)
         {
@@ -43,18 +45,25 @@ namespace MS2026.UI.EditorTools
 
         public void Refresh()
         {
-            if (_bound != _context.SelectedScreen)
+            var live = UiStudioContext.LiveInstanceOf(_context.SelectedScreen);
+            if (_bound != _context.SelectedScreen || _live != live)
             {
                 _bound = _context.SelectedScreen;
+                _live = live;
                 Rebuild();
             }
 
             if (_bound != null)
             {
                 var instance = PreviewInstance();
-                _previewNote.text = Application.isPlaying
-                    ? "Play中: 「開く」「閉じる」で実際に開け閉めできます。"
-                    : instance != null ? "「出る／消える動きを試す」で、Playせずに動きを確かめられます。" : "動きを試すには、先に「この画面を編集」で開いてください。";
+                _previewNote.text = !Application.isPlaying
+                    ? instance != null ? "「出る／消える動きを試す」で、Playせずに動きを確かめられます。" : "動きを試すには、先に「この画面を編集」で開いてください。"
+                    : _live != null
+                        ? "Play中: 下の設定は、動いている画面をその場で変えます。止めたときに Prefab に残すかたずねます。「開く」「閉じる」で開け閉めできます。"
+                        : EditorUtility.IsPersistent(_bound)
+                            ? "Play中: この画面はまだ開いていません。下の設定は Prefab ファイルを直接変えます（止めても消えません）。「開く」で動いている画面を触れます。"
+                            : "Play中: シーンに置いた画面をその場で変えます。止めたときにシーンに残すかたずねます。";
+                _delete?.SetEnabled(!Application.isPlaying);
             }
         }
 
@@ -82,7 +91,8 @@ namespace MS2026.UI.EditorTools
                 StudioUi.Button("閉じる", () => WithRoot(r => r.Close(_bound.screenId)), "Play中に、この画面を閉じます。", small: true)));
             _body.Add(_previewNote);
 
-            var so = new SerializedObject(_bound);
+            // Play 中で動いている画面があれば、そちらの値を見せて変える（その場で反映され、止めたときに残すかたずねる）。
+            var so = new SerializedObject(_live != null ? _live : _bound);
             var card = StudioUi.Card();
             foreach (var (path, label) in Fields)
             {
@@ -101,7 +111,7 @@ namespace MS2026.UI.EditorTools
             _body.Add(StudioUi.Row(
                 StudioUi.Button("複製", Duplicate, "この画面をコピーして、別の名前の新しい画面を作ります。", small: true),
                 StudioUi.Button("一覧から外す", RemoveFromCatalog, "画面の一覧から外します（Prefab ファイルは消しません）。", small: true),
-                StudioUi.Button("この画面を削除", Delete, "画面を一覧から外し、Prefab ファイルも消します（ファイルはパソコンのごみ箱へ移るので、そこから戻せます）。シーンに直接置いた画面はシーンから消します（Ctrl+Z で戻せます）。", small: true)));
+                _delete = StudioUi.Button("この画面を削除", Delete, "画面を一覧から外し、Prefab ファイルも消します（ファイルはパソコンのごみ箱へ移るので、そこから戻せます）。シーンに直接置いた画面はシーンから消します（Ctrl+Z で戻せます）。Play 中は使えません。", small: true)));
         }
 
         private void Reveal()
@@ -159,6 +169,11 @@ namespace MS2026.UI.EditorTools
                 return null;
             }
 
+            if (_live != null)
+            {
+                return _live;
+            }
+
             if (!EditorUtility.IsPersistent(_bound))
             {
                 return _bound;
@@ -173,6 +188,23 @@ namespace MS2026.UI.EditorTools
         private void Preview(bool show)
         {
             var instance = PreviewInstance();
+            if (instance == null && Application.isPlaying)
+            {
+                // Play 中でまだ開いていない画面は、本当に開け閉めして見せる。
+                WithRoot(r =>
+                {
+                    if (show)
+                    {
+                        r.Open(_bound.screenId);
+                    }
+                    else
+                    {
+                        r.Close(_bound.screenId);
+                    }
+                });
+                return;
+            }
+
             if (instance == null)
             {
                 UiStudioContext.OpenForEditing(_bound);

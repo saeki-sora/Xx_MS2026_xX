@@ -2386,6 +2386,8 @@ MonoBehaviour:
     wobbleStrength: 1
   visualRoot: {fileID: 291349454}
   modelRoot: {fileID: 464421716}
+  modelTilt: {x: 0, y: 0}
+  modelTiltPivot: {x: 0, y: 0, z: 0}
   sourceModel: {fileID: 919132149155446097, guid: ff80dc35cc55330469fe685ecd69a672, type: 3}
   sourceNodePath: pTorus1
   footprint: {fileID: 340791001}
@@ -3682,6 +3684,8 @@ MonoBehaviour:
     wobbleStrength: 1
   visualRoot: {fileID: 591130275}
   modelRoot: {fileID: 2072220258}
+  modelTilt: {x: 0, y: 0}
+  modelTiltPivot: {x: 0, y: 0, z: 0}
   sourceModel: {fileID: 919132149155446097, guid: ff80dc35cc55330469fe685ecd69a672, type: 3}
   sourceNodePath: pCube2
   footprint: {fileID: 300717887}
@@ -3860,6 +3864,8 @@ MonoBehaviour:
     wobbleStrength: 1
   visualRoot: {fileID: 458184674}
   modelRoot: {fileID: 1743835930}
+  modelTilt: {x: 0, y: 0}
+  modelTiltPivot: {x: 0, y: 0, z: 0}
   sourceModel: {fileID: 919132149155446097, guid: ff80dc35cc55330469fe685ecd69a672, type: 3}
   sourceNodePath: pPlane2
   footprint: {fileID: 137067862}
@@ -4589,6 +4595,8 @@ MonoBehaviour:
     wobbleStrength: 1
   visualRoot: {fileID: 460989419}
   modelRoot: {fileID: 2053866266}
+  modelTilt: {x: 0, y: 0}
+  modelTiltPivot: {x: 0, y: 0, z: 0}
   sourceModel: {fileID: 919132149155446097, guid: ff80dc35cc55330469fe685ecd69a672, type: 3}
   sourceNodePath: pPlane1
   footprint: {fileID: 467854185}
@@ -6067,6 +6075,8 @@ MonoBehaviour:
     wobbleStrength: 1
   visualRoot: {fileID: 880640945}
   modelRoot: {fileID: 2119342820}
+  modelTilt: {x: 0, y: 0}
+  modelTiltPivot: {x: 0, y: 0, z: 0}
   sourceModel: {fileID: 919132149155446097, guid: ff80dc35cc55330469fe685ecd69a672, type: 3}
   sourceNodePath: pCylinder1
   footprint: {fileID: 1476897203}

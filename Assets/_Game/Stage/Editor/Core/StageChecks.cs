@@ -86,7 +86,7 @@ namespace MS2026.Stage.EditorTools
                 if (Mathf.Abs(Mathf.DeltaAngle(euler.x, 0f)) > 0.01f || Mathf.Abs(Mathf.DeltaAngle(euler.y, 0f)) > 0.01f)
                 {
                     issues.Add(new StudioIssue(StudioIssueSeverity.Error, $"{name}: 根元が傾いています",
-                            "根元（一番上の物）は床の上で回す（Z軸だけ）ようにしてください。傾けると敵の通れない範囲がずれます。見た目を傾けたいときは Visual の下のモデルを回します。", prop)
+                            "根元（一番上の物）は床の上で回す（Z軸だけ）ようにしてください。傾けると敵の通れない範囲がずれます。見た目を傾けたいときは、配置ページの「傾き」を使います（中のモデルだけが傾きます）。直すと、見た目の傾きはそのまま残して根元だけまっすぐにします。", prop)
                         .WithFix("根元をまっすぐにする", () => StraightenRoot(prop)));
                 }
 
@@ -229,7 +229,9 @@ namespace MS2026.Stage.EditorTools
             }
 
             Undo.RecordObject(t, "根元をまっすぐにする");
-            t.rotation = Quaternion.Euler(0f, 0f, t.eulerAngles.z);
+            var oldRoot = t.rotation;
+            var right = oldRoot * Vector3.right;
+            t.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(right.y, right.x) * Mathf.Rad2Deg);
             foreach (var (child, position, rotation) in children)
             {
                 child.SetPositionAndRotation(position, rotation);
@@ -240,6 +242,8 @@ namespace MS2026.Stage.EditorTools
                 prop.footprint.transform.localRotation = Quaternion.identity;
             }
 
+            // 見た目はそのまま残るので、その傾きを「傾き」の欄の値として引き継ぐ。
+            StagePropTransformOps.AdoptTilt(prop, oldRoot);
             StagePropComposer.RebuildFootprint(prop);
         }
     }
