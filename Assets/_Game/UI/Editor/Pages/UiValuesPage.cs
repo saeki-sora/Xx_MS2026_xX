@@ -16,6 +16,9 @@ namespace MS2026.UI.EditorTools
         private readonly List<(string key, Label live)> _liveLabels = new List<(string, Label)>();
         private VisualElement _list;
         private int _signature;
+        private TextField _search;
+        private Toggle _usedOnly;
+        private Label _count;
 
         public UiValuesPage(UiStudioContext context) : base(context)
         {
@@ -34,6 +37,7 @@ namespace MS2026.UI.EditorTools
             root.Add(StudioUi.Row(
                 StudioUi.Button("ゲームの値を一覧に登録", Register, "熱・オーバーヒート・コアのHP・敵の数・通信の状態など、ゲームが書き込む値を一覧に足します（無い物だけ）。", primary: true, small: true),
                 StudioUi.Button("＋ 値を足す", AddValue, "自分で値を足します（ゲームのプログラムが同じ名前で書き込むと表示されます）。", small: true)));
+            root.Add(BuildFilters());
             _list = new VisualElement { style = { marginTop = 8 } };
             root.Add(_list);
             return root;
@@ -58,6 +62,49 @@ namespace MS2026.UI.EditorTools
             }
         }
 
+        // 値はたくさんある（4人分の player.N.* など）ので、名前・表示名・説明・分類で絞り込めるようにする。
+        private VisualElement BuildFilters()
+        {
+            _search = new TextField { tooltip = "値の名前・表示名・説明・分類の一部を入れると、合う物だけ出します（例: heat、コア、lobby）。" };
+            _search.AddToClassList("sk-search");
+            _search.style.flexGrow = 1;
+            _search.style.minWidth = 160;
+            _search.RegisterValueChangedCallback(_ => _signature = 0);
+            _usedOnly = new Toggle("使っている値だけ") { tooltip = "ONなら、画面の部品がどこかで使っている値だけ出します。" };
+            _usedOnly.RegisterValueChangedCallback(_ => _signature = 0);
+            _usedOnly.labelElement.style.minWidth = StyleKeyword.Auto;
+            _usedOnly.style.marginLeft = 8;
+            _count = StudioUi.Styled(new Label(), "sk-muted");
+            _count.style.marginLeft = 8;
+            var row = StudioUi.Row(new Label("絞り込み") { style = { marginRight = 6 } }, _search, _usedOnly, _count);
+            row.style.marginTop = 8;
+            return row;
+        }
+
+        private bool Matches(UiValueCatalog.Item item, Dictionary<string, int> usage)
+        {
+            if (_usedOnly != null && _usedOnly.value && (!usage.TryGetValue(item.key ?? "", out var used) || used == 0))
+            {
+                return false;
+            }
+
+            var text = _search?.value?.Trim();
+            if (string.IsNullOrEmpty(text))
+            {
+                return true;
+            }
+
+            foreach (var field in new[] { item.key, item.label, item.description, item.category })
+            {
+                if (!string.IsNullOrEmpty(field) && field.IndexOf(text, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private void Rebuild(UiValueCatalog catalog)
         {
             _list.Clear();
@@ -68,9 +115,23 @@ namespace MS2026.UI.EditorTools
             var items = so.FindProperty("items");
 
             var categories = new List<string>();
+            var shown = 0;
             foreach (var item in catalog.items)
             {
-                if (item != null && !categories.Contains(item.category))
+                if (item != null && Matches(item, usage))
+                {
+                    shown++;
+                }
+            }
+
+            if (_count != null)
+            {
+                _count.text = $"{shown} / {catalog.items.Count} 個";
+            }
+
+            foreach (var item in catalog.items)
+            {
+                if (item != null && Matches(item, usage) && !categories.Contains(item.category))
                 {
                     categories.Add(item.category);
                 }
@@ -82,11 +143,16 @@ namespace MS2026.UI.EditorTools
                 for (var i = 0; i < catalog.items.Count; i++)
                 {
                     var item = catalog.items[i];
-                    if (item != null && item.category == category)
+                    if (item != null && item.category == category && Matches(item, usage))
                     {
                         _list.Add(BuildItem(item, items.GetArrayElementAtIndex(i), usage));
                     }
                 }
+            }
+
+            if (catalog.items.Count > 0 && shown == 0)
+            {
+                _list.Add(StudioUi.Note("絞り込みに合う値がありません。言葉を変えるか、「使っている値だけ」を OFF にしてください。", NoteKind.Info));
             }
 
             if (catalog.items.Count == 0)
