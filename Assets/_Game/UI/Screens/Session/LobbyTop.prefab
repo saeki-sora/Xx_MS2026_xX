@@ -837,8 +837,8 @@ MonoBehaviour:
     motion:
       source: 0
       preset:
-        Preset: 50
-        Duration: 0.25
+        Preset: 49
+        Duration: 0.15
         Distance: 0
         EaseOverride:
           Kind: 0
