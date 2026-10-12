@@ -20,6 +20,7 @@ namespace MS2026.Fortress.EditorTools
         private EnemyWaveConfig _cachedWave;
         private SerializedObject _serializedWave;
         private ReorderableList _entriesList;
+        private readonly WaveEntryToolbar _entryToolbar = new WaveEntryToolbar();
 
         public EnemyWavesTabView()
         {
@@ -121,6 +122,8 @@ namespace MS2026.Fortress.EditorTools
             EditorGUILayout.Space(6);
 
             _entriesList.DoLayoutList();
+            _entryToolbar.Draw(wave, _serializedWave, _entriesList);
+            EditorGUILayout.Space(4);
 
             var loopProp = _serializedWave.FindProperty("loop");
             EditorGUILayout.PropertyField(loopProp, new GUIContent("ループ再生", "最後のエントリの後、最初から繰り返す。"));
@@ -142,7 +145,7 @@ namespace MS2026.Fortress.EditorTools
             _entriesList = new ReorderableList(serializedWave, entriesProperty, true, true, true, true)
             {
                 drawHeaderCallback = rect => EditorGUI.LabelField(rect, "湧きエントリ（発生時刻順に自動再生されます）"),
-                elementHeightCallback = _ => EditorGUIUtility.singleLineHeight * 5f + 16f,
+                elementHeightCallback = _ => EditorGUIUtility.singleLineHeight * 6f + 18f,
                 drawElementCallback = (rect, index, active, focused) =>
                 {
                     var element = entriesProperty.GetArrayElementAtIndex(index);
@@ -150,6 +153,14 @@ namespace MS2026.Fortress.EditorTools
                     var lineHeight = EditorGUIUtility.singleLineHeight;
                     var lineSpacing = lineHeight + 2f;
 
+                    // 行の中身を1行で（「12.0秒｜Spawn_0｜スライム ×20（0.3秒おき・6.0秒かけて）」）。
+                    var entry = index < _cachedWave.spawnEntries.Count ? _cachedWave.spawnEntries[index] : null;
+                    if (entry != null)
+                    {
+                        EditorGUI.LabelField(new Rect(rect.x, rect.y, rect.width, lineHeight), WaveEntryToolbar.Summary(entry), EditorStyles.miniBoldLabel);
+                    }
+
+                    rect.y += lineSpacing;
                     var triggerTimeRect = new Rect(rect.x, rect.y, rect.width, lineHeight);
                     EditorGUI.PropertyField(triggerTimeRect, element.FindPropertyRelative("triggerTime"),
                         new GUIContent("発生時刻(秒)"));
