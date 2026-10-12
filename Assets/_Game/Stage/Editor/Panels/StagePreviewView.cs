@@ -450,6 +450,15 @@ namespace MS2026.Stage.EditorTools
                     }
 
                     break;
+                case EventType.ValidateCommand:
+                case EventType.ExecuteCommand:
+                    // Ctrl+D（複製）・Delete（消す）は、Unity から「コマンド」として届く。
+                    if (GUIUtility.keyboardControl == id && _context.SelectedProps.Count > 0 && OnCommand(e.commandName, e.type == EventType.ExecuteCommand))
+                    {
+                        e.Use();
+                    }
+
+                    break;
             }
 
             EditorGUIUtility.AddCursorRect(rect, _tilt.IsActive || _overKnob ? MouseCursor.RotateArrow
@@ -527,6 +536,30 @@ namespace MS2026.Stage.EditorTools
             }
 
             return true;
+        }
+
+        private bool OnCommand(string command, bool execute)
+        {
+            switch (command)
+            {
+                case "Duplicate":
+                    if (execute)
+                    {
+                        EditorApplication.delayCall += () => StagePropDuplicateOps.Duplicate(_context.SelectedProps);
+                    }
+
+                    return true;
+                case "Delete":
+                case "SoftDelete":
+                    if (execute)
+                    {
+                        EditorApplication.delayCall += () => StagePropDuplicateOps.Delete(_context.SelectedProps);
+                    }
+
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         private bool OnKey(Event e, int id)

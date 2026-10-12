@@ -118,6 +118,13 @@ namespace MS2026.Stage.EditorTools
             _distances = new VisualElement();
             _body.Add(_distances);
 
+            _body.Add(Group("複製・消す", "選んでいる背景をコピーする／シーンから消す。ゲーム画面をクリックしてから Ctrl+D（複製）・Delete（消す）でも同じです。どちらも Ctrl+Z で戻せます。"));
+            _body.Add(StudioUi.Row(
+                Small("複製", "選んでいる背景をコピーして、少し右下にずらして置きます（役割・通れない範囲・見た目の反応もそのまま）。Ctrl+D と同じ。",
+                    () => UnityEditor.EditorApplication.delayCall += () => StagePropDuplicateOps.Duplicate(_context.SelectedProps)),
+                Small("消す", "選んでいる背景をシーンから消します（確認が出ます。Ctrl+Z で戻せます）。Delete キーと同じ。",
+                    () => UnityEditor.EditorApplication.delayCall += () => StagePropDuplicateOps.Delete(_context.SelectedProps))));
+
             _body.Add(StudioUi.Row(
                 StudioUi.Button("シーンで見る", () => StageStudioContext.Frame(_context.Primary), "選んでいる背景をシーンビューの真ん中に映します（ゲーム画面で F キーでも）。", small: true),
                 StudioUi.Button("役割・反応を変える", _openDetails, "オブジェクトページで、役割・通れない範囲・見た目の反応・モデルを変えます。", small: true)));
