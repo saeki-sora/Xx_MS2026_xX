@@ -12,10 +12,14 @@ namespace MS2026.Fortress.EditorTools
     /// </summary>
     public sealed class SpawnPointsPanel
     {
-        private bool _foldout = true;
+        private const string PrefPrefix = "MS2026.FortressDesigner.SpawnPoints.";
 
-        private bool _snapEnabled;
-        private float _gridSize = 0.5f;
+        private bool _foldout = true;
+        private bool _ringFoldout;
+
+        // スナップの設定は、ウィンドウを閉じても・スクリプトを読み直しても覚えておく（パソコンごと）。
+        private bool _snapEnabled = EditorPrefs.GetBool(PrefPrefix + "Snap", false);
+        private float _gridSize = EditorPrefs.GetFloat(PrefPrefix + "Grid", 0.5f);
 
         private int _ringCount = 8;
         private float _ringRadius = 10f;
@@ -47,6 +51,8 @@ namespace MS2026.Fortress.EditorTools
             EditorGUILayout.Space(4);
 
             var usage = CountEnemiesPerPoint(wave);
+            SpawnPointSceneOverlay.EnemiesById = usage;
+            DrawMissingPoints(director, wave, points);
             var duplicatedIds = points.GroupBy(p => p.ResolvedId).Where(g => g.Count() > 1).Select(g => g.Key).ToHashSet();
 
             foreach (var point in points)
@@ -67,7 +73,12 @@ namespace MS2026.Fortress.EditorTools
             EditorGUILayout.Space(4);
             DrawAddAndSnapButtons(director, points);
             EditorGUILayout.Space(4);
-            DrawRingGenerator(director, wave, points);
+            _ringFoldout = EditorGUILayout.Foldout(_ringFoldout, "リング状に自動配置（コアのまわりに等間隔で作り直す）", true);
+            if (_ringFoldout)
+            {
+                DrawRingGenerator(director, wave, points);
+            }
+
             EditorGUILayout.Space(8);
         }
 
@@ -93,7 +104,52 @@ namespace MS2026.Fortress.EditorTools
                 }
             }
 
+            if (GUI.changed)
+            {
+                EditorPrefs.SetBool(PrefPrefix + "Snap", _snapEnabled);
+                EditorPrefs.SetFloat(PrefPrefix + "Grid", _gridSize);
+            }
+
             SpawnPointSceneOverlay.SnapSize = _snapEnabled ? _gridSize : 0f;
+        }
+
+        /// <summary>ウェーブでは使っているのにシーンに無い湧き位置を知らせ、ボタン1つで作れるようにする。</summary>
+        private static void DrawMissingPoints(EnemySpawnDirector director, EnemyWaveConfig wave, EnemySpawnPoint[] points)
+        {
+            if (wave == null)
+            {
+                return;
+            }
+
+            var known = points.Select(p => p.ResolvedId).ToHashSet();
+            var missing = wave.spawnEntries
+                .Where(e => e != null && !string.IsNullOrEmpty(e.spawnPointId) && !known.Contains(e.spawnPointId))
+                .Select(e => e.spawnPointId)
+                .Distinct()
+                .ToList();
+            if (missing.Count == 0)
+            {
+                return;
+            }
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.HelpBox($"ウェーブで使っているのに、シーンに無い湧き位置があります: {string.Join(", ", missing)}（この行の敵は湧きません）", MessageType.Warning);
+                if (GUILayout.Button(new GUIContent("足りない湧き位置を作る", "その名前の湧き位置を、シーンビューの中心のまわりに作ります。あとで位置を直してください。"), GUILayout.Width(150), GUILayout.Height(38)))
+                {
+                    var center = SceneView.lastActiveSceneView != null ? (Vector2)SceneView.lastActiveSceneView.pivot : Vector2.zero;
+                    for (var i = 0; i < missing.Count; i++)
+                    {
+                        var created = CreatePoint(director, center + Vector2.right * (i * 1.5f), null);
+                        Undo.RecordObject(created, "Add Spawn Point");
+                        Undo.RecordObject(created.gameObject, "Add Spawn Point");
+                        created.spawnPointId = missing[i];
+                        created.gameObject.name = missing[i];
+                    }
+
+                    SyncDirector(director);
+                }
+            }
         }
 
         private void DrawRow(
