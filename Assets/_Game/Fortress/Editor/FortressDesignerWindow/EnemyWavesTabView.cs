@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using MS2026.Fortress;
 using UnityEditor;
@@ -8,12 +9,13 @@ using UnityEngine.UIElements;
 namespace MS2026.Fortress.EditorTools
 {
     /// <summary>
-    /// 「敵ウェーブ」タブ。敵の湧く位置・数・タイミングを一覧編集し、簡易タイムラインで俯瞰できる。
+    /// 「敵ウェーブ」タブ。敵の湧く位置・数・タイミングを一覧編集し、湧き位置ごとのタイムライン（WaveTimelinePanel）で俯瞰できる。
     /// </summary>
     public sealed class EnemyWavesTabView : VisualElement
     {
         private readonly IMGUIContainer _imgui;
         private readonly SpawnPointsPanel _spawnPointsPanel = new SpawnPointsPanel();
+        private readonly WaveTimelinePanel _timeline = new WaveTimelinePanel();
 
         private EnemyWaveConfig _cachedWave;
         private SerializedObject _serializedWave;
@@ -82,7 +84,7 @@ namespace MS2026.Fortress.EditorTools
             }
 
             EditorGUILayout.Space(8);
-            DrawWaveEditor(wave);
+            DrawWaveEditor(wave, director);
         }
 
         private static EnemyWaveConfig CreateNewWaveAsset()
@@ -101,7 +103,7 @@ namespace MS2026.Fortress.EditorTools
             return asset;
         }
 
-        private void DrawWaveEditor(EnemyWaveConfig wave)
+        private void DrawWaveEditor(EnemyWaveConfig wave, EnemySpawnDirector director)
         {
             if (_cachedWave != wave || _serializedWave == null || _serializedWave.targetObject == null)
             {
@@ -115,7 +117,7 @@ namespace MS2026.Fortress.EditorTools
             EditorGUILayout.PropertyField(_serializedWave.FindProperty("waveName"), new GUIContent("ウェーブ名"));
 
             EditorGUILayout.Space(6);
-            DrawTimeline(wave);
+            _timeline.Draw(wave, director, KnownSpawnPointIds(), _entriesList.index, index => _entriesList.index = index);
             EditorGUILayout.Space(6);
 
             _entriesList.DoLayoutList();
@@ -171,37 +173,14 @@ namespace MS2026.Fortress.EditorTools
             };
         }
 
-        private static void DrawTimeline(EnemyWaveConfig wave)
-        {
-            if (wave.spawnEntries == null || wave.spawnEntries.Count == 0)
-            {
-                return;
-            }
-
-            var maxTime = Mathf.Max(1f, wave.spawnEntries.Max(e => e.triggerTime));
-            var rect = GUILayoutUtility.GetRect(10, 28, GUILayout.ExpandWidth(true));
-            EditorGUI.DrawRect(rect, new Color(0f, 0f, 0f, 0.15f));
-
-            foreach (var entry in wave.spawnEntries)
-            {
-                var t = Mathf.Clamp01(entry.triggerTime / maxTime);
-                var x = rect.x + t * (rect.width - 6f);
-                var tickRect = new Rect(x, rect.y + 3f, 6f, rect.height - 6f);
-                EditorGUI.DrawRect(tickRect, new Color(1f, 0.55f, 0.15f, 0.9f));
-            }
-
-            var labelRect = new Rect(rect.x, rect.y + rect.height, rect.width, 16f);
-            EditorGUI.LabelField(labelRect, "0秒", EditorStyles.miniLabel);
-            var endLabelRect = new Rect(rect.x + rect.width - 60f, rect.y + rect.height, 60f, 16f);
-            EditorGUI.LabelField(endLabelRect, $"{maxTime:0.0}秒", EditorStyles.miniLabel);
-            GUILayout.Space(16f);
-        }
+        private static HashSet<string> KnownSpawnPointIds() =>
+            Object.FindObjectsByType<EnemySpawnPoint>(FindObjectsSortMode.None)
+                .Select(sp => sp.ResolvedId)
+                .ToHashSet();
 
         private static void DrawValidationSummary(EnemyWaveConfig wave)
         {
-            var knownIds = Object.FindObjectsByType<EnemySpawnPoint>(FindObjectsSortMode.None)
-                .Select(sp => sp.ResolvedId)
-                .ToHashSet();
+            var knownIds = KnownSpawnPointIds();
 
             var missingSpawnPoint = wave.spawnEntries.Count(e => !knownIds.Contains(e.spawnPointId));
             var missingEnemyType = wave.spawnEntries.Count(e => e.enemyType == null);
