@@ -11,6 +11,7 @@ namespace MS2026.UI.EditorTools
         private MotionEntriesPanel _entries;
         private PresetGalleryPanel _gallery;
         private VisualElement _screenHost;
+        private ScreenMotionOverviewPanel _overview;
         private UiScreen _boundScreen;
 
         public UiMotionPage(UiStudioContext context) : base(context)
@@ -38,6 +39,10 @@ namespace MS2026.UI.EditorTools
             root.Add(StudioUi.Section("画面全体が出る・消えるときの動き", "画面のルートの動き。子の部品の「出たとき／消えるとき」の動きと同時に始まります。"));
             _screenHost = new VisualElement();
             root.Add(_screenHost);
+
+            root.Add(StudioUi.Section("この画面の動きの一覧（きっかけごと・出てくる順）", "画面の中の全部の部品の動きを、きっかけごとに「遅らせる（秒）」の小さい順に並べます。クリックでその部品を選び、▶ で試せます。"));
+            _overview = new ScreenMotionOverviewPanel(Context);
+            root.Add(_overview);
             return root;
         }
 
@@ -45,6 +50,7 @@ namespace MS2026.UI.EditorTools
         {
             _entries.Refresh();
             _gallery.Refresh();
+            _overview.Refresh();
             var screen = Context.EditingScreen;
             if (screen == _boundScreen)
             {
