@@ -11,7 +11,9 @@ namespace MS2026.Stage.EditorTools
     /// 配置ページの「ゲーム画面」1枚: 選んだ視点のゲームのカメラで映した絵の上で、背景を直接さわれる。
     /// ・クリックで選ぶ（Shift で追加・外す）、そのままドラッグで床の上を動かす（つかんだ所が付いてくる。吸着あり、Ctrl で逆）
     /// ・ホイールで回す／Shift+ホイールで大きさ／Alt+ホイールで高さ
-    /// ・矢印キーで少しずらす、Q/E で回す、-/+ で大きさ、PageUp/PageDown で高さ、F でシーンビューに映す、Esc でやめる
+    /// ・てっぺんのピンクの丸（傾ける丸）をつかんで引くと、その向きに傾く（5°ごと。Ctrl で自由に）
+    /// ・矢印キーで少しずらす、Ctrl+矢印キーで画面の向きに傾ける、Q/E で回す、-/+ で大きさ、PageUp/PageDown で高さ、
+    ///   F でシーンビューに映す、Esc でやめる
     /// 絵の上には、通れない範囲の輪郭（役割の色）・選んでいる物の縁取り・砲台などとの距離・吸着の線を重ねる。
     /// 絵の描き直しはシーンが変わったとき（StageGameCamera.Version）と大きさが変わったときだけ。Play中は1秒20回。
     /// </summary>
@@ -20,12 +22,15 @@ namespace MS2026.Stage.EditorTools
         private static readonly int Hash = "StagePreviewView".GetHashCode();
         private static readonly Color SelectColor = new Color(1f, 0.48f, 0.24f);
         private static readonly Color GuideColor = new Color(0.35f, 0.85f, 1f, 0.95f);
+        internal static readonly Color TiltColor = new Color(1f, 0.42f, 0.78f);
+        private const float KnobRadius = 7f;
 
         private readonly StageStudioContext _context;
         private readonly Func<int> _viewer;
         private readonly IMGUIContainer _gui;
         private readonly StageGamePreview _preview = new StageGamePreview();
         private readonly StageMoveSession _move = new StageMoveSession();
+        private readonly StageTiltSession _tilt = new StageTiltSession();
         private readonly List<Vector2> _scratch = new List<Vector2>(2048);
         private int _renderedVersion = -1;
         private int _renderedViewer = int.MinValue;
@@ -33,6 +38,7 @@ namespace MS2026.Stage.EditorTools
         private double _nextPlayRender;
         private bool _hasImage;
         private StageProp _hover;
+        private bool _overKnob;
         private GUIStyle _label;
         private GUIStyle _badge;
 
@@ -61,6 +67,7 @@ namespace MS2026.Stage.EditorTools
                 EditorApplication.update -= Tick;
                 _context.SelectionChanged -= _gui.MarkDirtyRepaint;
                 _move.Cancel();
+                _tilt.Cancel();
                 _preview.Dispose();
                 _renderedVersion = -1;
             });
@@ -165,6 +172,7 @@ namespace MS2026.Stage.EditorTools
             }
 
             DrawSnapGuides(rect);
+            DrawTiltKnob(rect);
             DrawPrimaryLabel(rect);
             DrawViewerBadge(rect);
         }
@@ -262,6 +270,44 @@ namespace MS2026.Stage.EditorTools
                 DrawWorldLine(rect, new Vector2(area.xMin - extend, snap.GuideY), new Vector2(area.xMax + extend, snap.GuideY));
             }
         }
+
+        private void DrawTiltKnob(Rect rect)
+        {
+            if (!KnobAt(rect, out var pivot, out var top))
+            {
+                return;
+            }
+
+            var hot = _tilt.IsActive || _overKnob;
+            Handles.color = new Color(TiltColor.r, TiltColor.g, TiltColor.b, hot ? 1f : 0.8f);
+            Handles.DrawDottedLine(pivot, top, 3f);
+            var r = KnobRadius * (hot ? 1.25f : 1f);
+            Handles.DrawSolidDisc(top, Vector3.forward, r);
+            Handles.color = Color.white;
+            Handles.DrawWireDisc(top, Vector3.forward, r);
+
+            if (hot)
+            {
+                var tilt = StagePropTransformOps.Tilt(_context.Primary);
+                var text = _tilt.IsActive ? $"傾き X {tilt.x:0}°  Y {tilt.y:0}°" : "引いて傾ける";
+                var size = _label.CalcSize(new GUIContent(text));
+                var box = new Rect(top.x + 12f, top.y - 9f, size.x + 12f, 18f);
+                EditorGUI.DrawRect(box, new Color(0f, 0f, 0f, 0.7f));
+                Text(box, text, TiltColor);
+            }
+        }
+
+        // 傾ける丸の場所（画面の座標）。最初に選んだ物だけに出す。
+        private bool KnobAt(Rect rect, out Vector2 pivot, out Vector2 top)
+        {
+            pivot = top = default;
+            return StagePlaceSettings.TiltKnob && _preview.Camera != null && !_move.IsActive &&
+                   StageTiltSession.TryGetKnob(_context.Primary, out var pivotWorld, out var topWorld) &&
+                   ToGui(rect, pivotWorld, out pivot) && ToGui(rect, topWorld, out top);
+        }
+
+        private bool IsOverKnob(Rect rect, Vector2 mouse) =>
+            KnobAt(rect, out _, out var top) && Vector2.Distance(top, mouse) <= KnobRadius + 5f;
 
         private void DrawPrimaryLabel(Rect rect)
         {
@@ -362,19 +408,30 @@ namespace MS2026.Stage.EditorTools
                     e.Use();
                     break;
                 case EventType.MouseDrag when GUIUtility.hotControl == id:
-                    _move.Update(RayAt(rect, e.mousePosition), StagePlaceSettings.SnapActive(e));
+                    if (_tilt.IsActive)
+                    {
+                        _tilt.Update(RayAt(rect, e.mousePosition), StagePlaceSettings.SnapActive(e));
+                    }
+                    else
+                    {
+                        _move.Update(RayAt(rect, e.mousePosition), StagePlaceSettings.SnapActive(e));
+                    }
+
                     e.Use();
                     break;
                 case EventType.MouseUp when GUIUtility.hotControl == id:
                     GUIUtility.hotControl = 0;
                     _move.End();
+                    _tilt.End();
                     e.Use();
                     break;
                 case EventType.MouseMove:
-                    var hover = StagePropShape.Pick(RayAt(rect, e.mousePosition), _context.Props, out var over, out _) ? over : null;
-                    if (hover != _hover)
+                    var overKnob = IsOverKnob(rect, e.mousePosition);
+                    var hover = !overKnob && StagePropShape.Pick(RayAt(rect, e.mousePosition), _context.Props, out var over, out _) ? over : null;
+                    if (hover != _hover || overKnob != _overKnob)
                     {
                         _hover = hover;
+                        _overKnob = overKnob;
                         _gui.MarkDirtyRepaint();
                     }
 
@@ -395,11 +452,17 @@ namespace MS2026.Stage.EditorTools
                     break;
             }
 
-            EditorGUIUtility.AddCursorRect(rect, _move.IsActive || _hover != null ? MouseCursor.MoveArrow : MouseCursor.Arrow);
+            EditorGUIUtility.AddCursorRect(rect, _tilt.IsActive || _overKnob ? MouseCursor.RotateArrow
+                : _move.IsActive || _hover != null ? MouseCursor.MoveArrow : MouseCursor.Arrow);
         }
 
         private bool OnMouseDown(Rect rect, Event e)
         {
+            if (!e.shift && IsOverKnob(rect, e.mousePosition))
+            {
+                return _tilt.Begin(_context.SelectedProps);
+            }
+
             var ray = RayAt(rect, e.mousePosition);
             if (!StagePropShape.Pick(ray, _context.Props, out var prop, out var hit))
             {
@@ -476,10 +539,11 @@ namespace MS2026.Stage.EditorTools
             var selection = _context.SelectedProps;
             if (e.keyCode == KeyCode.Escape)
             {
-                if (_move.IsActive)
+                if (_move.IsActive || _tilt.IsActive)
                 {
                     GUIUtility.hotControl = 0;
                     _move.Cancel();
+                    _tilt.Cancel();
                 }
                 else
                 {
@@ -492,6 +556,19 @@ namespace MS2026.Stage.EditorTools
             if (selection.Count == 0)
             {
                 return false;
+            }
+
+            if (e.control || e.command)
+            {
+                // Ctrl+矢印: 画面のその向きへ、てっぺんを倒す（Shift で 1°ずつ）。
+                var degrees = e.shift ? 1f : StageTiltSession.SnapDegrees;
+                switch (e.keyCode)
+                {
+                    case KeyCode.LeftArrow: StageSelectionAdjust.Lean(selection, ScreenDirection(Vector2.left), degrees); return true;
+                    case KeyCode.RightArrow: StageSelectionAdjust.Lean(selection, ScreenDirection(Vector2.right), degrees); return true;
+                    case KeyCode.UpArrow: StageSelectionAdjust.Lean(selection, ScreenDirection(Vector2.up), degrees); return true;
+                    case KeyCode.DownArrow: StageSelectionAdjust.Lean(selection, ScreenDirection(Vector2.down), degrees); return true;
+                }
             }
 
             var step = (StagePlaceSettings.Snap ? StagePlaceSettings.GridStep : 0.05f) * (e.shift ? 0.2f : 1f);

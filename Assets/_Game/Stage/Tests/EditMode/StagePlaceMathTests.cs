@@ -68,5 +68,56 @@ namespace MS2026.Stage.Tests.EditMode
             Assert.AreEqual(2f, StagePlaceMath.DistanceToPolygon(square, new Vector2(3f, 0.5f), out var closest), 1e-5f);
             Assert.AreEqual(new Vector2(1f, 0.5f), closest);
         }
+
+        [Test]
+        public void TiltUp_ZeroIsStraightUpAndAxesLeanAsDocumented()
+        {
+            AssertVector(Vector3.back, StagePlaceMath.TiltUp(Vector2.zero), "傾き0なら床から上（−Z）");
+
+            var x = StagePlaceMath.TiltUp(new Vector2(30f, 0f));
+            Assert.Greater(x.y, 0.4f, "X+ は +Y 側へ倒れる");
+            Assert.AreEqual(0f, x.x, 1e-5f);
+
+            var y = StagePlaceMath.TiltUp(new Vector2(0f, 30f));
+            Assert.Less(y.x, -0.4f, "Y+ は −X 側へ倒れる");
+            Assert.AreEqual(0f, y.y, 1e-5f);
+        }
+
+        [Test]
+        public void TiltFromUp_InvertsTiltUp()
+        {
+            foreach (var tilt in new[] { new Vector2(10f, -20f), new Vector2(-45f, 60f), new Vector2(80f, 0f), new Vector2(0f, -170f) })
+            {
+                var back = StagePlaceMath.TiltFromUp(StagePlaceMath.TiltUp(tilt));
+                Assert.AreEqual(tilt.x, back.x, 1e-3f, $"{tilt}");
+                Assert.AreEqual(tilt.y, back.y, 1e-3f, $"{tilt}");
+            }
+        }
+
+        [Test]
+        public void TiltFromLean_LeansTowardOffset()
+        {
+            Assert.AreEqual(Vector2.zero, StagePlaceMath.TiltFromLean(Vector2.zero, 1f), "ずらさなければまっすぐ");
+
+            // 高さ1mのてっぺんを +X へ 1m ずらすと、+X 側へ45°倒れる。
+            var up = StagePlaceMath.TiltUp(StagePlaceMath.TiltFromLean(new Vector2(1f, 0f), 1f));
+            AssertVector(new Vector3(0.7071f, 0f, -0.7071f), up, "+X へ45°");
+
+            var limited = StagePlaceMath.TiltUp(StagePlaceMath.TiltFromLean(new Vector2(0f, 100f), 1f, 60f));
+            Assert.AreEqual(60f, Vector3.Angle(Vector3.back, limited), 0.01f, "倒れる角度は上限まで");
+        }
+
+        [Test]
+        public void WrapTilt_KeepsAnglesWithinHalfTurn()
+        {
+            var wrapped = StagePlaceMath.WrapTilt(new Vector2(350f, -190f));
+            Assert.AreEqual(-10f, wrapped.x, 1e-3f);
+            Assert.AreEqual(170f, wrapped.y, 1e-3f);
+        }
+
+        private static void AssertVector(Vector3 expected, Vector3 actual, string message)
+        {
+            Assert.Less(Vector3.Distance(expected, actual), 1e-3f, $"{message}: {actual} (期待 {expected})");
+        }
     }
 }

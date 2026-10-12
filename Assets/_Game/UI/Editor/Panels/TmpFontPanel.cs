@@ -64,6 +64,13 @@ namespace MS2026.UI.EditorTools
 
         private void Convert()
         {
+            if (Application.isPlaying)
+            {
+                // 部品を作り替える操作なので、Play 中にやると止めたときに消える（Play中の変更としても残せない）。
+                EditorUtility.DisplayDialog("Play 中は使えません", "文字の置き換えは部品を作り替えるので、Play を止めてから行ってください。", "OK");
+                return;
+            }
+
             var screen = _screen();
             if (screen == null || !(_font.value is TMP_FontAsset font))
             {

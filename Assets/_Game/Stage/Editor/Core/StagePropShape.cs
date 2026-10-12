@@ -15,6 +15,7 @@ namespace MS2026.Stage.EditorTools
         private const int MaxVerticesPerMesh = 600;
 
         private static readonly Dictionary<Mesh, Vector3[]> SampledVertices = new Dictionary<Mesh, Vector3[]>();
+        private static readonly Dictionary<Mesh, Vector3[]> FullVertices = new Dictionary<Mesh, Vector3[]>();
         private static readonly List<Vector3> Scratch = new List<Vector3>(4096);
         private static MethodInfo _intersectRayMesh;
 
@@ -113,6 +114,51 @@ namespace MS2026.Stage.EditorTools
         }
 
         /// <summary>
+        /// 見た目のいちばん下（床に近い側。上は −Z なので z がいちばん大きい所）のワールド z。間引かずに全部の頂点から測る
+        /// （傾けた物は見た目の箱が実際より下にはみ出すので、箱ではなく頂点で測る）。描く物が無ければ false。
+        /// </summary>
+        public static bool TryLowestZ(StageProp prop, out float z)
+        {
+            z = float.MinValue;
+            var any = false;
+            var root = StagePropTransformOps.Model(prop);
+            foreach (var filter in root.GetComponentsInChildren<MeshFilter>(false))
+            {
+                if (filter.sharedMesh == null || !filter.TryGetComponent<MeshRenderer>(out var renderer) || !renderer.enabled)
+                {
+                    continue;
+                }
+
+                var matrix = filter.transform.localToWorldMatrix;
+                foreach (var v in AllVertices(filter.sharedMesh))
+                {
+                    z = Mathf.Max(z, matrix.MultiplyPoint3x4(v).z);
+                    any = true;
+                }
+            }
+
+            foreach (var skinned in root.GetComponentsInChildren<SkinnedMeshRenderer>(false))
+            {
+                z = Mathf.Max(z, skinned.bounds.max.z);
+                any = true;
+            }
+
+            return any;
+        }
+
+        /// <summary>from から向き dir（長さ1）へ、見た目がどこまで伸びているか（m。頂点を間引いて測る）。</summary>
+        public static float ExtentAlong(StageProp prop, Vector3 from, Vector3 dir)
+        {
+            var best = 0f;
+            foreach (var v in WorldVertices(prop))
+            {
+                best = Mathf.Max(best, Vector3.Dot(v - from, dir));
+            }
+
+            return best;
+        }
+
+        /// <summary>
         /// 床の上の広がりの点（通れない範囲があればその輪郭、無ければ見た目の箱の床の四角）。吸着と距離に使う。
         /// </summary>
         public static IEnumerable<Vector2> FloorPoints(StageProp prop)
@@ -174,6 +220,20 @@ namespace MS2026.Stage.EditorTools
             }
 
             return shapes;
+        }
+
+        private static Vector3[] AllVertices(Mesh mesh)
+        {
+            if (FullVertices.TryGetValue(mesh, out var cached) && cached != null && cached.Length == mesh.vertexCount)
+            {
+                return cached;
+            }
+
+            Scratch.Clear();
+            mesh.GetVertices(Scratch);
+            var result = Scratch.ToArray();
+            FullVertices[mesh] = result;
+            return result;
         }
 
         private static Vector3[] Sample(Mesh mesh)

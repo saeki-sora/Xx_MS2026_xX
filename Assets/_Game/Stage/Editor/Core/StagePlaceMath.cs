@@ -171,6 +171,49 @@ namespace MS2026.Stage.EditorTools
             return any ? Rect.MinMaxRect(min.x, min.y, max.x, max.y) : default;
         }
 
+        /// <summary>
+        /// 傾き（度。x = 根元のX軸まわり、y = 根元のY軸まわり）を回転にする。Unity の Euler と同じ順（X で倒してから Y で倒す）。
+        /// </summary>
+        public static Quaternion TiltRotation(Vector2 tilt) => Quaternion.Euler(tilt.x, tilt.y, 0f);
+
+        /// <summary>傾けたときの「上」の向き（根元から見た向き。傾き0なら床から上の −Z）。X+ で +Y 側へ、Y+ で −X 側へ倒れる。</summary>
+        public static Vector3 TiltUp(Vector2 tilt) => TiltRotation(tilt) * Vector3.back;
+
+        /// <summary>「上」の向き（根元から見た向き）から傾きを求める（<see cref="TiltUp"/> の逆。X は −90〜90°、Y は −180〜180°）。</summary>
+        public static Vector2 TiltFromUp(Vector3 up)
+        {
+            if (up.sqrMagnitude < 1e-12f)
+            {
+                return Vector2.zero;
+            }
+
+            up.Normalize();
+            var x = Mathf.Asin(Mathf.Clamp(up.y, -1f, 1f)) * Mathf.Rad2Deg;
+            var y = Mathf.Abs(up.x) < 1e-6f && Mathf.Abs(up.z) < 1e-6f ? 0f : Mathf.Atan2(-up.x, -up.z) * Mathf.Rad2Deg;
+            return new Vector2(x, y);
+        }
+
+        /// <summary>
+        /// てっぺんを床の上で offset（根元から見た向き・メートル）だけずらしたときの傾き。height は傾ける前の高さ（m）。
+        /// 倒れる角度は maxDegrees までにする。
+        /// </summary>
+        public static Vector2 TiltFromLean(Vector2 offset, float height, float maxDegrees = 85f)
+        {
+            height = Mathf.Max(0.01f, height);
+            var angle = Mathf.Min(Mathf.Atan2(offset.magnitude, height) * Mathf.Rad2Deg, maxDegrees);
+            if (angle < 1e-4f)
+            {
+                return Vector2.zero;
+            }
+
+            var dir = offset.normalized;
+            var rad = angle * Mathf.Deg2Rad;
+            return TiltFromUp(new Vector3(dir.x * Mathf.Sin(rad), dir.y * Mathf.Sin(rad), -Mathf.Cos(rad)));
+        }
+
+        /// <summary>角度を −180〜180° にそろえる。</summary>
+        public static Vector2 WrapTilt(Vector2 tilt) => new Vector2(Mathf.DeltaAngle(0f, tilt.x), Mathf.DeltaAngle(0f, tilt.y));
+
         private static float Cross(Vector2 o, Vector2 a, Vector2 b) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
     }
 }

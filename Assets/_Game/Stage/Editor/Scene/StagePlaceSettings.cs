@@ -100,6 +100,13 @@ namespace MS2026.Stage.EditorTools
             set => EditorPrefs.SetBool(Prefix + "PreviewOutlines", value);
         }
 
+        /// <summary>選んでいる背景のてっぺんに「傾ける丸」を出す（配置ページのゲーム画面とシーンビュー）。</summary>
+        public static bool TiltKnob
+        {
+            get => EditorPrefs.GetBool(Prefix + "TiltKnob", true);
+            set => EditorPrefs.SetBool(Prefix + "TiltKnob", value);
+        }
+
         /// <summary>今の操作で吸着するか（設定と Ctrl キーの組み合わせ）。</summary>
         public static bool SnapActive(Event e) => Snap != (e != null && (e.control || e.command));
     }

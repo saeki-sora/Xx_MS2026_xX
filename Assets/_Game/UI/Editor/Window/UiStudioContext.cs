@@ -56,8 +56,26 @@ namespace MS2026.UI.EditorTools
                     return selected;
                 }
 
-                return SelectedScreen != null && !EditorUtility.IsPersistent(SelectedScreen) ? SelectedScreen : null;
+                if (SelectedScreen != null && !EditorUtility.IsPersistent(SelectedScreen))
+                {
+                    return SelectedScreen;
+                }
+
+                // Play 中は、選んだ Prefab の画面が動いていれば、その動いている画面を触る（止めたときに残すかたずねる）。
+                return LiveInstanceOf(SelectedScreen);
             }
+        }
+
+        /// <summary>Play 中に、一覧の Prefab の画面から作られて動いている画面（まだ一度も開いていなければ null）。</summary>
+        public static UiScreen LiveInstanceOf(UiScreen prefab)
+        {
+            if (!Application.isPlaying || prefab == null || !EditorUtility.IsPersistent(prefab) || UiRoot.Active == null)
+            {
+                return null;
+            }
+
+            var live = UiRoot.Active.GetIfCreated(prefab.screenId);
+            return live != null && live.SourcePrefab == prefab ? live : null;
         }
 
         /// <summary>選んでいる部品（編集中の画面の中の物）。</summary>
@@ -120,6 +138,20 @@ namespace MS2026.UI.EditorTools
             Changed?.Invoke();
         }
 
+        /// <summary>名前（screenId）で画面を選ぶ（Play の前後で、シーンの画面が作り直されたときに使う）。</summary>
+        public void SelectScreenById(string screenId)
+        {
+            ScanScreens();
+            foreach (var screen in _screens)
+            {
+                if (screen != null && screen.screenId == screenId)
+                {
+                    SelectScreen(screen);
+                    return;
+                }
+            }
+        }
+
         public void MarkScreensDirty()
         {
             _nextScan = 0;
@@ -140,7 +172,13 @@ namespace MS2026.UI.EditorTools
                 return;
             }
 
-            if (EditorUtility.IsPersistent(screen))
+            // Play 中で、その画面がもう動いていれば、動いている方を選ぶ（変えた値は止めたときに残すかたずねる）。
+            var live = LiveInstanceOf(screen);
+            if (live != null)
+            {
+                screen = live;
+            }
+            else if (EditorUtility.IsPersistent(screen))
             {
                 AssetDatabase.OpenAsset(screen.gameObject);
                 return;
@@ -193,7 +231,8 @@ namespace MS2026.UI.EditorTools
 
             foreach (var screen in UnityEngine.Object.FindObjectsByType<UiScreen>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
-                if (!EditorUtility.IsPersistent(screen) && PrefabUtility.GetCorrespondingObjectFromSource(screen) == null)
+                // Play 中に一覧の Prefab から作られた画面（SourcePrefab あり）は、元の Prefab の行で扱う（二重に並べない）。
+                if (!EditorUtility.IsPersistent(screen) && PrefabUtility.GetCorrespondingObjectFromSource(screen) == null && screen.SourcePrefab == null)
                 {
                     _screens.Add(screen);
                 }
