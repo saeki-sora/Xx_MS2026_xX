@@ -110,6 +110,14 @@ namespace MS2026.Stage.EditorTools
             _underNote = Hint("床から高いので、敵は下をくぐれます。");
             _body.Add(_underNote);
 
+            _body.Add(Group("4人ぶん同じ形に置く", "4人はコアを囲んで遊ぶので、片側に置いた背景を、コアを中心に回した位置にも置くと、どの席からも同じ条件になります。"));
+            _body.Add(StudioUi.Row(
+                Small("向かい側にも置く", "選んでいる背景のコピーを、コアを中心に 180° 回した所（向かい側）に置きます。",
+                    () => UnityEditor.EditorApplication.delayCall += () => StageSymmetryOps.PlaceRotatedCopies(_context.SelectedProps, 2)),
+                Small("4方向に置く", "選んでいる背景のコピーを、コアを中心に 90°・180°・270° 回した所に置きます（全部で4つ）。",
+                    () => UnityEditor.EditorApplication.delayCall += () => StageSymmetryOps.PlaceRotatedCopies(_context.SelectedProps, 4))));
+            _body.Add(Hint("コアが無いときは原点が中心です。向きも一緒に回るので、どの席から見ても同じ形になります。Ctrl+Z で全部戻せます。"));
+
             _body.Add(Group("見た目のずれ", "遠近のあるカメラでは、背の高い物ほど床に置いた位置より外側にずれて映ります。てっぺんが床の位置から何mずれて見えるか。"));
             _shifts = new VisualElement();
             _body.Add(_shifts);
