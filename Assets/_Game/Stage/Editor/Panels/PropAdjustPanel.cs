@@ -34,6 +34,8 @@ namespace MS2026.Stage.EditorTools
         private readonly VisualElement _shifts;
         private readonly VisualElement _distances;
         private string _infoKey;
+        private VisualElement _arrange;
+        private VisualElement _distribute;
 
         public PropAdjustPanel(StageStudioContext context, Action openDetails)
         {
@@ -60,6 +62,23 @@ namespace MS2026.Stage.EditorTools
             _x = Field("横 X", "床の上の横の位置（m）。名前を左右にドラッグで動かせます。", (o, n) => StageSelectionAdjust.Nudge(_context.SelectedProps, new Vector2(n - o, 0f)));
             _y = Field("縦 Y", "床の上の縦の位置（m）。名前を左右にドラッグで動かせます。", (o, n) => StageSelectionAdjust.Nudge(_context.SelectedProps, new Vector2(0f, n - o)));
             _body.Add(StudioUi.Row(_x, _y));
+
+            // 2つ以上選んだときだけ出す: 端や真ん中をそろえる・すき間を同じにする（見た目の床の上の範囲で測る）。
+            _arrange = new VisualElement();
+            _arrange.Add(Group("並べる（2つ以上選んだとき）", "選んでいる背景の、見た目の床の上の範囲の端や真ん中をそろえます。左右上下は「全体」の視点で見たときの向き（X・Y の小さい／大きい側）です。"));
+            _arrange.Add(StudioUi.Row(
+                Small("左をそろえる", "左端（X の小さい側）を、いちばん左の物にそろえます。", () => StageAlignOps.Align(_context.SelectedProps, 0, StageAlignEdge.Min)),
+                Small("横の真ん中", "横（X）の真ん中を、全体の真ん中にそろえます（縦一列に並ぶ）。", () => StageAlignOps.Align(_context.SelectedProps, 0, StageAlignEdge.Center)),
+                Small("右をそろえる", "右端（X の大きい側）を、いちばん右の物にそろえます。", () => StageAlignOps.Align(_context.SelectedProps, 0, StageAlignEdge.Max))));
+            _arrange.Add(StudioUi.Row(
+                Small("下をそろえる", "下端（Y の小さい側）を、いちばん下の物にそろえます。", () => StageAlignOps.Align(_context.SelectedProps, 1, StageAlignEdge.Min)),
+                Small("縦の真ん中", "縦（Y）の真ん中を、全体の真ん中にそろえます（横一列に並ぶ）。", () => StageAlignOps.Align(_context.SelectedProps, 1, StageAlignEdge.Center)),
+                Small("上をそろえる", "上端（Y の大きい側）を、いちばん上の物にそろえます。", () => StageAlignOps.Align(_context.SelectedProps, 1, StageAlignEdge.Max))));
+            _distribute = StudioUi.Row(
+                Small("横に等間隔", "左右の端の2つはそのままで、間の物のすき間（X）を全部同じにします（3つ以上）。", () => StageAlignOps.Distribute(_context.SelectedProps, 0)),
+                Small("縦に等間隔", "上下の端の2つはそのままで、間の物のすき間（Y）を全部同じにします（3つ以上）。", () => StageAlignOps.Distribute(_context.SelectedProps, 1)));
+            _arrange.Add(_distribute);
+            _body.Add(_arrange);
 
             _body.Add(Group("向き（°）", "床の上での向き。ゲーム画面ではホイール、Q / E キーでも回せます。"));
             _yaw = Field("向き", "向き（度）。名前を左右にドラッグで回せます。", (o, n) => StageSelectionAdjust.Rotate(_context.SelectedProps, Mathf.DeltaAngle(o, n)));
@@ -169,6 +188,8 @@ namespace MS2026.Stage.EditorTools
             Show(_lift, lift);
             _underNote.style.display = prop.footprint != null && lift > prop.footprint.settings.blockHeight ? DisplayStyle.Flex : DisplayStyle.None;
 
+            _arrange.style.display = count >= 2 ? DisplayStyle.Flex : DisplayStyle.None;
+            _distribute.SetEnabled(count >= 3);
             RefreshInfo(prop);
         }
 
