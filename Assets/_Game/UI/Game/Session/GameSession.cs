@@ -21,7 +21,7 @@ namespace MS2026.UI.Game
         /// <summary>部屋にいる（ホスト、または参加できた）。</summary>
         Room,
 
-        /// <summary>ゲームのシーンで遊んでいる。</summary>
+        /// <summary>ゲームのシーンで遊んでいる（その前のキャラクター選択のシーンにいる間も含む）。</summary>
         InGame,
 
         /// <summary>部屋を出る・タイトルへ戻る途中。</summary>

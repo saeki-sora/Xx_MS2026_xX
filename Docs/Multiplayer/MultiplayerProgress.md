@@ -1,7 +1,7 @@
 # マルチプレイ化 進捗と宿題（4人対戦・LAN）
 
 > 別のチャット（Claude Code のセッション）で作業を再開するときは、まずこのファイルを読んでください。
-> 最終更新: 2026-10-08（ロビーのシーンを追加。5b章）。コードの詳細は `Docs/Tools/FortressDesigner_AI_Reference.md` の「Net」「Hud」「Swarm」節にあります。
+> 最終更新: 2026-10-08（ロビーのシーンを追加。5b章／ロビーとゲームの間にキャラクター選択を追加。5c章）。コードの詳細は `Docs/Tools/FortressDesigner_AI_Reference.md` の「Net」「Hud」「Swarm」節にあります。
 > 最初の計画書（承認済み）: `C:\Users\soret\.claude\plans\snoopy-forging-castle.md`。
 
 ## 1. 目標と方針（ユーザー承認済み）
@@ -263,6 +263,17 @@
 - 確認済み（1台のエディタ、ホストのみ）: 部屋を作る・部屋さがしの返事・準備OK・3・2・1・ゲームを重ねて読み込む（2回）・番人が重複を外す（NetworkManager/D-Drive/UI/EventSystem/センサーが各1つ）・全員でロビーに戻る・接続の時間切れのお知らせ・タイトルへ戻る→もう一度ロビー。
 - **宿題（未確認）**: 2台以上での参加側の流れ（一覧から参加・途中参加・準備OKの同期・カウントダウン・全員でゲームへ／ロビーへ・ホストが抜けたときのお知らせ・外す）。ビルドして 2台で確かめる。1台で試すときは、ロビーで「部屋を作る」と「このアドレスに参加（127.0.0.1）」を別々の起動で行う（タイトルからの通常の起動。bat は使わない）。
 
+## 5c. キャラクター選択（2026-10-08）
+
+ユーザー決定: 流れは タイトル → ロビー → **キャラクター選択** → ゲーム。ロビーの「ゲーム開始！」の 3・2・1 はやめて、すぐキャラクター選択へ。短く握る（仮: A キー）＝次のキャラ、長く握る＝決定。決定済みのキャラは他の人は選べない（切り替えで同じキャラも可）。詳しくは `Docs/Tools/CharacterSelect_AI_Reference.md`、人間向けは `CharacterSelect_ガイド.html`。
+
+- 仕組み: ゲームのシーンと同じく、ホストが NGO のシーン管理で `Character_Select` をロビーの上に**重ねて**読み込む（`LobbyPhase.CharacterSelect` = 5）。全員が決めたらホストの選択画面が `GameSession.ProceedToGame()` を呼び、選択のシーンを外してからゲームのシーンを読み込む（NGO のシーンの出来事は1つずつなので、外し終わるのを待つ）。入るときも出るとき（GO! → ゲーム）も、各PCが自分で歯磨き粉の幕を出す（`GameSession.CharacterSelectCurtain` / `GameStartCurtain`。参加側は部屋の段階が Loading に変わったのを合図にする。2026-10-12）。
+- 同期: **ホスト権威**。参加側は自分の操作（次へ／決定／取り消し）だけを名前つきメッセージ `MS2026.CharaSelect.Input` でホストへ送り、ホストが4人分の状態を `MS2026.CharaSelect.State` で全員に配る（変わったときだけ・約30バイト）。NetworkObject は増やしていない。参加側の選択画面は動き出したときに状態を要求する（ホストのほうが先に読み込むので、最初の配信を取りこぼすため）。音・演出は通信せず各PCが状態の変化を見て鳴らす。
+- 各PCのセンサー・キーはそのPCでは常に1人目として読む（ゲームと同じ）。途中で抜けた人のキャラは空き、途中から入った人（NGO が選択のシーンも読み込む）は未決定で加わる。
+- 選んだ結果は全PCが `CharacterSelectionResult`（`MS2026.CharacterSelect.Data`）に入れる。**ゲーム本編はまだ使っていない**（宿題）。
+- 選択中も Esc の一時メニュー（全員でロビーに戻る／試合から抜ける／タイトルへ）が使える。
+- **宿題（未確認）**: Unity でまだ一度も動かしていない（コードは Unity の外でコンパイル・テスト済み）。シーンの中身は `Tools/キャラ選択/シーンを組み立てる` を実行して作る。1台での確認 → 2台以上での確認（参加側の操作がホストに届くか・同じ画面になるか・途中参加・抜けたとき）。
+
 ## 6. 主なファイル
 
 | 何 | 場所 |
@@ -273,6 +284,7 @@
 | 解説（人間向け） | `Docs/Multiplayer/群衆同期_写真方式_解説.html`（方式の全体像・工夫・ネットワークの基礎知識） |
 | 計測 | `Runtime/Net/Bench/NetBenchmarkRunner.cs`, `NetBenchmarkArgs.cs`, `NetTrafficStats.cs` |
 | シーンへの配置 | メニュー `Tools/要塞/ネットワーク/同期オブジェクトをシーンに配置`（`Editor/Net/FortressNetSceneSetup.cs`） |
+| キャラクター選択 | `Assets/CharacterSelect/`（`CharacterSelectController`・`CharacterSelectBoard`・`CharacterSelectMessages`）、`Assets/_Game/UI/Game/Session/GameSession.CharacterSelect.cs`、`Assets/Scenes/Character_Select.unity` |
 | ロビー（タイトル→ロビー→ゲーム） | `Assets/_Game/UI/Game/Session/`（`GameSession`・`LobbyRoster`・`LobbyMessages`・`LanDiscovery`・`GameSceneSessionGuard`・画面の部品）、`Assets/Scenes/Lobby.unity`、組み立て `Assets/_Game/UI/Editor/Session/SessionFlowBuilder.cs` |
 | 起動用bat | `Tools/NetTest/`（`launch_2p/4p`, `launch_ui_2p`, `launch_duplicate_test`, `bench_2p`, `bench_4p`, `bench_4p_latejoin`, `bench_offline`, `run_instance`） |
 | 画面のUI配置 | `Runtime/Hud/DebugOverlayLayout.cs`（左上の縦積み）、`LocalTurretGaugeHud.cs` |

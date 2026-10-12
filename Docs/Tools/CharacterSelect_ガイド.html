@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>キャラクター選択 ガイド</title>
+<meta name="description" content="4人がそれぞれ握ってキャラを選ぶキャラクター選択画面の使い方・差し替え・文章の入れ方">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/guide.css">
+<style>
+:root{--acc:#ff7ac8;--acc-ink:#2a0019;--acc2:#7ad7ff;--acc3:#ffd36a}
+:root[data-theme="light"]{--acc:#a8216e;--acc-ink:#ffffff;--acc2:#0a6c94;--acc3:#8a6100}
+.screen{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;margin-top:18px;background:linear-gradient(#cdd2ff,#e5dcff,#ffdcef);border:1px solid rgba(127,127,127,.25);font-size:clamp(7px,1.15vw,12px);color:#fff}
+.screen .q{position:absolute;width:50%;height:38.4%;padding:1.2%;box-sizing:border-box}
+.screen .q .lbl{position:absolute;left:2%;top:4%;padding:.2em .8em;border-radius:99px;background:var(--pc);font-weight:900}
+.screen .q .fig{position:absolute;left:7%;bottom:22%;width:18%;aspect-ratio:1;border-radius:6px;border:2px solid #222;transform:rotate(45deg) skew(-8deg,-8deg)}
+.screen .q .tag{position:absolute;left:37%;top:8%;width:35%;padding:.3em 0;text-align:center;font-weight:900;background:var(--pc);clip-path:polygon(9% 0,100% 0,91% 100%,0 100%)}
+.screen .q .info{position:absolute;left:36%;top:19%;width:61%;height:77%;border-radius:8px;background:color-mix(in srgb,var(--pc) 55%,transparent)}
+.screen .q .bar{height:5%;margin:4% 6% 0;border-radius:4px;background:linear-gradient(90deg,#1f5c80 var(--v),rgba(0,0,0,.25) var(--v))}
+.screen .q .skill{margin:5% 4% 0;padding:3%;border-radius:6px;background:rgba(61,41,31,.8);height:30%}
+.screen .bottom{position:absolute;left:0;right:0;bottom:0;height:10%;background:rgba(140,212,242,.92)}
+.screen .icons{position:absolute;left:50%;bottom:12.5%;transform:translate(-50%,50%);display:flex;gap:3.2%;width:44%;justify-content:center}
+.screen .icon{position:relative;width:6.3vw;max-width:62px;aspect-ratio:1;border-radius:50%;background:#fff;border:4px solid #1a4d73}
+.screen .mk{position:absolute;padding:0 .6em;border-radius:99px;font-weight:900;background:var(--pc)}
+.screen .help{position:absolute;left:1.2%;bottom:1.5%;color:#292b54;font-weight:900}
+.screen .div{position:absolute;background:rgba(255,255,255,.5)}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<div class="orbs" aria-hidden="true"><div class="orb a"></div><div class="orb b"></div></div>
+
+<div class="shell">
+<nav class="side" aria-label="目次">
+  <a class="back" href="index.html">← ツール一覧</a>
+  <a class="brand" href="#top"><span class="mark">CS</span><span class="t">キャラクター選択</span></a>
+  <ol id="toc"></ol>
+  <div class="foot">
+    <button class="themebtn" id="themeBtn" type="button"><span aria-hidden="true">◐</span><span data-label>ライト表示</span></button>
+    <div class="meta mono">Assets/CharacterSelect<br>作業中 · 2026-10-12 時点</div>
+  </div>
+</nav>
+
+<main id="top">
+<header class="hero">
+  <div class="tags">
+    <span class="pill hot">作業中</span>
+    <span class="pill">4人対戦（LAN）</span>
+    <span class="pill">キャラ・文章・絵は差し替え自由</span>
+    <span class="pill">仮の操作：A キー</span>
+  </div>
+  <h1 class="mega" aria-label="CHARACTER SELECT"><span class="o">CHARA</span><span class="f">SELECT</span></h1>
+  <p class="subname">キャラクター選択 — <b>短く握って選び、長く握って決める</b></p>
+  <div class="hero-row">
+    <div>
+      <p class="oneword">ロビーでホストが「ゲーム開始！」を押すと、全員が<span class="hl">キャラ選択の画面</span>へ。<br>画面は<span class="hl">4つに分かれていて</span>、左上 1P・左下 2P・右上 3P・右下 4P。<br><span class="hl">短く握る</span>とカーソル移動、<span class="hl">長く握る</span>と決定。</p>
+      <p class="analogy">ゲームセンターの対戦台のキャラ選びのようなものです。自分の区画には、今カーソルがあるキャラの立ち絵・名前・能力の棒グラフ・スキルの説明が出ます。画面の下には 1P〜4P の丸が並び、上の区画と同じく、それぞれが今選んでいるキャラ（今は仮のキューブ。キャラごとに色が違う）を映します。決めると区画に「READY!」のはんこが押され、丸の縁がその人の色になります。<br>ルールは「早い者勝ち」（誰かが決めたキャラは他の人は選べない）が基本で、スイッチひとつで「同じキャラを何人でも選べる」にもできます。</p>
+    </div>
+    <div class="facts"><dl>
+      <dt>誰が使う</dt><dd>デザイナー（立ち絵・アイコン・背景の差し替え）／プランナー（キャラ名・能力・スキルの文章、ルール）</dd>
+      <dt>開き方</dt><dd><code>Assets/Scenes/Character_Select.unity</code>。最初の 1 回（と作り替えたとき）は <span class="mp">Tools<i>›</i>キャラ選択<i>›</i>シーンを組み立てる</span></dd>
+      <dt>必要なもの</dt><dd>無くても動く（仮のキャラは赤・青・緑・黄のキューブで、名前は全部「キャラ名（仮）」。仮の文章も入っている）。差し替えるときは立ち絵・顔のアイコン・背景（会社のオフィス）の PNG</dd>
+      <dt>今の状況</dt><dd>絵・文章はすべて仮（キャラはキューブの色で見分ける）。操作は仮の A キー（握力センサーでも動く）。選んだキャラはまだゲーム本編では使っていない。この画面構成は Unity での確認がこれから</dd>
+    </dl></div>
+  </div>
+  <div class="marquee" aria-hidden="true"><div class="track" id="mq" data-words="ゲーム開始！|キャラ選択へ|左上 1P・左下 2P|右上 3P・右下 4P|短く握る→カーソル移動|長く握る→READY|早い者勝ち|GO!|ゲームへ"></div></div>
+</header>
+
+<section id="what" data-nav="何ができる？">
+  <div class="rv">
+    <div class="eyebrow">01 — What you can do</div>
+    <h2>4つの区画で、<br><em>全員そろったら出発</em>。</h2>
+    <p class="lead">タイトル → ロビー → <b>キャラクター選択</b> → ゲーム の順に進みます。ロビーの「ゲーム開始！」の後にあった 3・2・1 のカウントダウンは無くなり、すぐこの画面に来ます。</p>
+  </div>
+  <div class="screen rv" aria-label="画面の見取り図">
+    <div class="div" style="left:50%;top:0;width:2px;height:76.8%"></div>
+    <div class="div" style="left:0;top:38.4%;width:100%;height:2px"></div>
+    <div class="q" style="left:0;top:0;--pc:#e5484d;background:rgba(229,72,77,.15)"><span class="lbl">1P</span><div class="fig" style="background:#ff8cc7"></div><div class="tag">キャラ名</div><div class="info"><div class="bar" style="--v:80%;margin-top:14%"></div><div class="bar" style="--v:45%"></div><div class="bar" style="--v:60%"></div><div class="skill">スキル内容</div></div></div>
+    <div class="q" style="left:0;top:38.4%;--pc:#348cf2;background:rgba(52,140,242,.15)"><span class="lbl">2P</span><div class="fig" style="background:#59d1ff"></div><div class="tag">キャラ名</div><div class="info"><div class="bar" style="--v:50%;margin-top:14%"></div><div class="bar" style="--v:85%"></div><div class="bar" style="--v:40%"></div><div class="skill">スキル内容</div></div></div>
+    <div class="q" style="left:50%;top:0;--pc:#40b373;background:rgba(64,179,115,.15)"><span class="lbl">3P</span><div class="fig" style="background:#ad94ff"></div><div class="tag">キャラ名</div><div class="info"><div class="bar" style="--v:65%;margin-top:14%"></div><div class="bar" style="--v:60%"></div><div class="bar" style="--v:75%"></div><div class="skill">スキル内容</div></div></div>
+    <div class="q" style="left:50%;top:38.4%;--pc:#d9b215;background:rgba(242,204,39,.15)"><span class="lbl">4P</span><div class="fig" style="background:#ffb34d"></div><div class="tag">キャラ名</div><div class="info"><div class="bar" style="--v:90%;margin-top:14%"></div><div class="bar" style="--v:30%"></div><div class="bar" style="--v:50%"></div><div class="skill">スキル内容</div></div></div>
+    <div class="bottom"></div>
+    <div class="icons">
+      <div class="icon" style="background:radial-gradient(#ff8cc7 35%,#fff 37%)"><span class="mk" style="--pc:#e5484d;left:18%;top:-42%">1P</span></div>
+      <div class="icon" style="background:radial-gradient(#59d1ff 35%,#fff 37%);border-color:#348cf2"><span class="mk" style="--pc:#348cf2;left:10%;top:-42%">2P✓</span></div>
+      <div class="icon" style="background:radial-gradient(#ad94ff 35%,#fff 37%)"><span class="mk" style="--pc:#40b373;left:18%;bottom:-42%">3P</span></div>
+      <div class="icon" style="background:radial-gradient(#ffb34d 35%,#fff 37%)"><span class="mk" style="--pc:#d9b215;left:18%;bottom:-42%">4P</span></div>
+    </div>
+    <div class="help">短く握る→カーソル移動　長く握る→READY</div>
+  </div>
+  <p class="small rv" style="color:var(--ink2)">見取り図（実際の画面は 1920×1080。区画は 960×415、下の帯の部分は 250）。仮のキャラはキューブで、名前は全部「キャラ名（仮）」、色は赤・青・緑・黄です。背景は会社のオフィスの絵に差し替える予定で、今は仮のパステルの絵です。</p>
+  <div class="flow rv">
+    <div class="flow-title">LOBBY → SELECT → GAME</div>
+    <div class="pipe">
+      <div class="node"><div class="k">① ロビー</div><div class="v">ゲーム開始！</div><div class="s">ホストが押すと、タイトルのオープニングと同じように、全員の画面が上から歯磨き粉でどろーっと覆われ、流れ落ちるとキャラ選択の画面になる（3・2・1 は無し）。</div></div>
+      <div class="arrow"></div>
+      <div class="node hl"><div class="k">② えらぶ</div><div class="v">ぎゅっ・ぎゅっ</div><div class="s">短く握るたびに次のキャラへ（最後の次は最初）。自分の区画の立ち絵・名前・能力・スキルと、下の自分の丸のキャラが一緒に切り替わる。</div></div>
+      <div class="arrow"></div>
+      <div class="node"><div class="k">③ 決める</div><div class="v">ぎゅーーっ</div><div class="s">握り続けると区画のゲージと下の丸の縁のゲージが伸び、いっぱいになると決定。「READY!」のはんこが押され、下の丸の縁が自分の色になる。</div></div>
+      <div class="arrow"></div>
+      <div class="node"><div class="k">④ GO!</div><div class="v">→ ゲームへ</div><div class="s">参加している全員が決まると「GO!」が出て、1.5 秒後に歯磨き粉の幕が上から垂れてきて覆い、ゲームのシーンへ。</div></div>
+    </div>
+  </div>
+  <div class="cards">
+    <div class="card feat rv"><div class="ic">🪟</div><h3>4つの区画</h3><p>左上 1P・左下 2P・右上 3P・右下 4P。区画にはその人の色がうっすらかかり、キャラ名の札と説明の板もその人の色。左に立ち絵（今は仮のキューブ。ふわふわ動く。キャラを変えると横からすべり込む）。参加していない人の区画は薄くなる。</p></div>
+    <div class="card feat rv"><div class="ic">📝</div><h3>名前・能力・スキル</h3><p>キャラ名、能力の棒グラフ（いくつでも）、スキル名、スキルの説明は、キャラのファイルに文章を打ち込むだけ。今は仮の文章が入っている。</p><p class="ex">棒グラフはキャラを変えるとするっと伸び縮みする</p></div>
+    <div class="card feat rv"><div class="ic">⭕</div><h3>下の丸（1P〜4P）</h3><p>左から 1P・2P・3P・4P。上の区画と同じく、その人が今選んでいるキャラ（仮はキャラの色のキューブ）を映す。長く握っている間は縁に沿ってゲージが伸び、決まると縁がその人の色になって「1P」の札にチェックが付く。参加していない人の丸は薄くなる。</p><p class="ex">「1P」の札は 1P・2P が丸の上、3P・4P が丸の下</p></div>
+    <div class="card feat rv"><div class="ic">👆</div><h3>短く握る／長く握る</h3><p>0.6 秒より前に離すと「カーソル移動」、0.6 秒握り続けると（離さなくても）「決定」。決めた後にもう一度長く握ると取り消せる。</p><p class="ex">今は仮で A キー。握力センサー（キーボードの握力の代わりの Q なども）でも同じように動く</p></div>
+    <div class="card feat rv"><div class="ic">🔒</div><h3>早い者勝ち（切り替えできる）</h3><p>誰かが決めたキャラは、ほかの人は選べない。そのキャラにいた人は自動で次の空いているキャラへ動く。選べないキャラで決めようとすると、区画がぶるっと揺れる。</p><p class="ex">「同じキャラを選べる」をONにすると、何人でも同じキャラにできる</p></div>
+    <div class="card feat rv"><div class="ic">🪥</div><h3>歯磨き粉の幕で切り替わる</h3><p>ロビーからキャラ選択に入るときと、「GO!」のあとゲームへ進むときは、タイトルのオープニングと同じ歯磨き粉の幕が上から画面を覆い、次の画面が読み込めたら下へ流れ落ちる。キャラ選択では、流れ落ち始めると区画が滑り込んでくる。</p><p class="ex">このシーンだけで再生したときも、最初に幕が流れ落ちるところから始まる（見た目を試せる）</p></div>
+    <div class="card feat rv"><div class="ic">🪥</div><h3>歯磨き粉で塗り替えて切り替え</h3><p>キャラを変えると、しま模様の歯磨き粉の線が、左の真ん中から書き始めて「／」の向きに傾いたジグザグで右へ進み、最後は右上へ抜けるように、キャラの上から外まで引く（区画の外には出ない）。引き終わったところで新しいキャラに替わり、歯磨き粉は泡になってはじけて消え、最後にキラーンと光る。</p><p class="ex">READY! のはんこと GO! には歯が付き、決めた瞬間には泡・キラキラと一緒に歯も弾ける</p></div>
+    <div class="card feat rv"><div class="ic">🫧</div><h3>電脳世界と歯磨き粉の演出</h3><p>背景は電脳オフィス（仮）。区画にはプレイヤーの色のドット柄と流れる斜めのしま。画面には歯磨き粉の泡が昇り、2進数（0と1）がうっすら降り、キラキラがまたたく。</p><p class="ex">キャラを変えるとキャラ名に「ザザッ」と色ずれ、決めると「READY!」のはんこが叩きつけられ、白く光って泡とキラキラが弾ける。全員決まると画面が光って「GO!」</p></div>
+    <div class="card feat rv"><div class="ic">🌐</div><h3>4人対戦（LAN）・1台で試す</h3><p>4台の PC それぞれで、自分のキャラだけを操作する。ホストの PC が判定して全員に配るので、全員の画面は同じになる。このシーンだけで ▶ 再生すると、1台で 1P〜4P を <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> <kbd>F</kbd> で試せる。</p></div>
+  </div>
+</section>
+
+<section id="start" data-nav="はじめての 5 分">
+  <div class="rv">
+    <div class="eyebrow">02 — First 5 minutes</div>
+    <h2>組み立てて、<br><em>文章を打ち込む</em>。</h2>
+  </div>
+  <div class="steps">
+    <div class="step rv"><div class="n">1</div><div>
+      <h3>シーンを組み立てる（最初の 1 回・作り替えたとき）</h3>
+      <p><span class="mp">Tools<i>›</i>キャラ選択<i>›</i>シーンを組み立てる</span>。もう画面があるときは <b>作り直す</b> を選びます。仮のキャラ 4 体・絵・画面が作られて保存されます。Hierarchy に <b>[CharacterSelect]</b>・<b>[CharacterSelect UI]</b> ができていれば OK。ビルドの設定にもこのシーンが足されます。</p>
+    </div></div>
+    <div class="step rv"><div class="n">2</div><div>
+      <h3>このシーンだけで再生する</h3>
+      <p>▶ Play。Game ビューをクリックしてから、1P は <kbd>A</kbd>、2P は <kbd>S</kbd>、3P は <kbd>D</kbd>、4P は <kbd>F</kbd>。ちょんと押すとカーソル移動、押し続けると決定。4 人とも決めると「GO!」→ ゲームのシーンへ進みます。</p>
+    </div></div>
+    <div class="step rv"><div class="n">3</div><div class="step-body">
+      <div><h3>キャラ名・能力・スキルを打ち込む</h3>
+        <p><span class="mp">Tools<i>›</i>キャラ選択<i>›</i>キャラの一覧を選ぶ</span> で一覧を開き、中のキャラのファイル（例：<code>Chara_Alpha</code>）を選びます。Inspector で <b>Display Name</b>（キャラ名）、<b>Stats</b>（能力。<b>Label</b> = 名前、<b>Value</b> = 長さ 0〜1）、<b>Skill Name</b>、<b>Skill Description</b> を書き換えます。</p>
+        <p class="done">再生すると、そのキャラを選んだ人の区画に打ち込んだ文章が出ます</p>
+      </div>
+      <div><div class="mock">
+        <div class="mock-title">Inspector — Chara_Alpha</div>
+        <div class="mock-body">
+          <h5>名前</h5>
+          <div class="mrow"><span>Display Name</span><div class="mf">仮</div></div>
+          <h5>説明（仮の文章でよい）</h5>
+          <div class="mrow"><span>Stats</span><div class="mf">3（パワー 0.8 …）</div></div>
+          <div class="mrow"><span>Skill Name</span><div class="mf">スキル名（仮）</div></div>
+          <div class="mrow"><span>Skill Description</span><div class="mf">ここにスキルの説明…</div></div>
+          <h5>見た目</h5>
+          <div class="mrow"><span>Sprite</span><div class="mf obj">CS_CharaCube</div></div>
+          <div class="mrow"><span>Sprite Tint</span><div class="mf">■ 赤（仮のキューブの色）</div></div>
+          <div class="mrow"><span>Icon</span><div class="mf obj">None (Sprite)</div></div>
+        </div>
+      </div></div>
+    </div></div>
+    <div class="step rv"><div class="n">4</div><div>
+      <h3>絵を差し替える</h3>
+      <p>立ち絵はキャラのファイルの <b>Sprite</b> に PNG（Texture Type を <b>Sprite (2D and UI)</b> にした物）をドラッグし、<b>Sprite Tint</b> を白に戻します（仮のキューブの色が残るため）。下の丸に顔だけの絵を出したいときは <b>Icon</b> に。背景は <code>Assets/CharacterSelect/Art/CS_Background.png</code> を会社のオフィスの絵で上書きします。</p>
+    </div></div>
+    <div class="step rv"><div class="n">5</div><div>
+      <h3>ロビーから通して試す</h3>
+      <p>Title のシーンから ▶ Play → ロビーで「部屋を作る」→「ゲーム開始！」。3・2・1 は出ずにキャラ選択の画面になります。ネット対戦では各 PC は自分の分だけを <kbd>A</kbd>（または握力センサー）で操作します。1 人だけなら、自分が決めた時点で全員決定です。</p>
+    </div></div>
+  </div>
+</section>
+
+<section id="recipes" data-nav="やりたいこと逆引き">
+  <div class="rv"><div class="eyebrow">03 — Recipes</div><h2>「〜したい」から<br><em>探す</em>。</h2></div>
+  <label class="search rv"><span aria-hidden="true">🔍</span><span class="sr">やりたいことを検索</span><input id="recipeSearch" type="search" placeholder="例：スキル、立ち絵、背景、同じキャラ"></label>
+  <div class="chips rv" id="recipeChips" role="group" aria-label="カテゴリ">
+    <button class="chip" aria-pressed="true" data-f="all">すべて</button>
+    <button class="chip" aria-pressed="false" data-f="text">文章</button>
+    <button class="chip" aria-pressed="false" data-f="art">絵</button>
+    <button class="chip" aria-pressed="false" data-f="rule">ルール・操作</button>
+    <button class="chip" aria-pressed="false" data-f="look">配置・動き</button>
+  </div>
+  <div class="recipes">
+    <details class="recipe" id="rc-tuning" data-tags="text art look"><summary><span class="q">絵の差し替えや数値の調整を1か所でしたい</span><span class="who">見た目と数値の調整</span></summary><div class="a"><p><span class="mp">Tools<i>›</i>キャラ選択<i>›</i>見た目と数値の調整</span> を開きます。</p><ul><li><b>キャラ</b>：キャラごとに名前・色・立ち絵・下の丸の顔・スキル名・スキルの説明・能力を書き換える。<b>＋ キャラを増やす</b> で複製して増やせる。</li><li><b>画像の差し替え</b>：背景・仮のキャラ・ドット柄・札・板・歯・泡などが絵つきで並ぶ。<b>画像を選んで差し替える</b> で PNG / JPG を選ぶと、その絵に替わる（使っている所は全部）。<b>仮の絵に戻す</b> で元に戻せる。</li><li><b>数値</b>：ルール・キャラの切り替え（塗り方）・READY!・下の丸・登場・漂う泡・ロビーからの幕の数値。4つの区画や4つの丸の分は、まとめて同じ値になる（キャラ選択のシーンを開いておく）。変えたら <b>シーンを保存</b>。</li></ul><p class="small">シーンを組み立て直すときは <b>数値を引き継いで作り直す</b> を選ぶと、ここで変えた数値が残ります。</p></div></details>
+    <details class="recipe" id="rc-text" data-tags="text"><summary><span class="q">キャラ名・スキル内容を書き換えたい</span><span class="who">キャラのファイル</span></summary><div class="a"><p>キャラのファイル（<code>Assets/CharacterSelect/Data/Characters/</code>）の <b>Display Name</b>（区画の札・アイコンの名前）、<b>Skill Name</b>（スキル名。空なら出さない）、<b>Skill Description</b>（スキルの説明。改行もできる）。説明は 3 行くらいまでが枠に収まります。</p></div></details>
+    <details class="recipe" id="rc-stats" data-tags="text"><summary><span class="q">能力の棒グラフを変えたい・増やしたい</span><span class="who">Stats</span></summary><div class="a"><p>キャラのファイルの <b>Stats</b>。<b>＋</b> で増やし、<b>Label</b>（名前。空なら棒だけ）と <b>Value</b>（長さ 0〜1）を入れます。上から順に並びます。3〜4 本が板に収まる目安です。キャラごとに本数が違ってもかまいません。</p></div></details>
+    <details class="recipe" id="rc-model" data-tags="art"><summary><span class="q">仮のキューブを本物の立ち絵にしたい</span><span class="who">Sprite</span></summary><div class="a"><ol><li>絵（PNG）を Project に入れ、<b>Texture Type</b> を <b>Sprite (2D and UI)</b> にする。</li><li>キャラのファイルの <b>Sprite</b> にドラッグ。</li><li><b>Sprite Tint</b> を白に戻す（仮のキューブはここで色を付けているため）。</li></ol><p>区画の左の枠（300×340）に縦横の比率を保って入り、下の丸の中にも同じ絵が出ます。大きさは <b>Sprite Scale</b>（足元を中心に拡大）、位置は <b>Sprite Offset</b>（ピクセル）で調整。</p></div></details>
+    <details class="recipe" id="rc-cube" data-tags="art"><summary><span class="q">仮のキューブの色を変えたい</span><span class="who">Sprite Tint</span></summary><div class="a"><p>キャラのファイルの <b>Sprite Tint</b>（立ち絵にかける色）を変えます。区画の立ち絵と下の丸の両方のキューブの色が変わります。キャラを増やしたときも、複製して <b>Sprite Tint</b> を別の色にすれば見分けられます。</p></div></details>
+    <details class="recipe" id="rc-icon" data-tags="art"><summary><span class="q">下の丸に顔だけの絵を出したい</span><span class="who">Icon</span></summary><div class="a"><p>キャラのファイルの <b>Icon</b> に顔の絵を入れます（色はかけず絵のまま出ます）。空のときは立ち絵（<b>Sprite</b>、<b>Sprite Tint</b> の色つき）が丸の中に出ます。それも無いときは、キャラの色（<b>Theme Color</b>）の丸に名前の 1 文字目。</p></div></details>
+    <details class="recipe" id="rc-bg" data-tags="art"><summary><span class="q">背景を会社のオフィスの絵にしたい</span><span class="who">CS_Background_Cyber</span></summary><div class="a"><p><code>Assets/CharacterSelect/Art/CS_Background_Cyber.png</code>（今は仮の電脳オフィスの絵）を同じ名前の絵（1920×1080 がおすすめ）で上書きします。または <b>[CharacterSelect UI]</b> › <b>Background</b> の Image に別の絵を入れます。区画にはプレイヤーの色がうっすらかかります（濃さは各区画の <b>Player Panel</b> › <b>Area Tint Alpha</b>）。</p></div></details>
+    <details class="recipe" id="rc-add" data-tags="text art"><summary><span class="q">キャラを増やしたい・減らしたい・並びを変えたい</span><span class="who">キャラの一覧</span></summary><div class="a"><ol><li>Project で既存のキャラのファイルを選んで <kbd>Ctrl</kbd>+<kbd>D</kbd>（複製）し、名前・<b>Id</b>・文章・絵を変える（新しく作るなら右クリック <span class="mp">Create<i>›</i>MS2026<i>›</i>キャラ選択<i>›</i>キャラクター</span>）。</li><li><span class="mp">Tools<i>›</i>キャラ選択<i>›</i>キャラの一覧を選ぶ</span> の <b>Characters</b> に足す。上から順が、短く握ったときに切り替わる順番です。空の欄は作らないでください。</li></ol><p>仮のキューブのまま増やすときは、<b>Sprite Tint</b> を別の色にして見分けられるようにします。早い者勝ちのルールでは、キャラは 4 体以上にしておくと全員が別のキャラを選べます。</p></div></details>
+    <details class="recipe" id="rc-parts" data-tags="art"><summary><span class="q">札・板・丸の絵を替えたい</span><span class="who">Art</span></summary><div class="a"><p><code>Assets/CharacterSelect/Art/</code> の同じ名前の PNG を上書きすると替わります：<code>CS_NameTag</code>（キャラ名の斜めの札。高さ 64 のまま）、<code>CS_Panel</code>（説明の板・スキルの枠）、<code>CS_Bar</code>（棒グラフ・ゲージ）、<code>CS_Pill</code>（「1P」の札・はんこ）、<code>CS_Ring</code> / <code>CS_Circle</code>（下の丸の縁と中）、<code>CS_Check</code>（決定の印）、<code>CS_CharaCube</code>（仮のキャラ）、<code>CS_Tooth</code>（歯）、<code>CS_Halftone</code>（区画のドット柄）、<code>CS_Stripes</code>（流れるしま）、<code>CS_Frame</code>（区画の白い枠）、<code>CS_Bubble</code> / <code>CS_Sparkle</code>（泡・キラキラ）。白で描いてあり、画面の側でプレイヤーの色・キャラの色を付けています。</p></div></details>
+    <details class="recipe" id="rc-same" data-tags="rule"><summary><span class="q">同じキャラを何人でも選べるようにしたい</span><span class="who">Allow Same Character</span></summary><div class="a"><p><b>[CharacterSelect]</b> › <b>Character Select Controller</b> › <b>Allow Same Character</b> を ON。右下の文字が「同じキャラ：えらべる」に変わります。再生中に OFF に戻すと、同じキャラを決めていた人は番号の小さい人だけ残り、ほかの人は「えらび中」に戻ります。</p></div></details>
+    <details class="recipe" data-tags="rule"><summary><span class="q">長押しの長さを変えたい</span><span class="who">Long Press Seconds</span></summary><div class="a"><p><b>Long Press Seconds</b>（既定 0.6 秒）。これより前に離すと「カーソル移動」、ここまで握ると「決定」。長くすると誤って決めにくくなり、短くすると素早く決められます。</p></div></details>
+    <details class="recipe" data-tags="rule"><summary><span class="q">決めた後は取り消せないようにしたい</span><span class="who">Long Press Cancels</span></summary><div class="a"><p><b>Long Press Cancels</b> を OFF にします（既定 ON = 決めた後にもう一度長く握ると取り消し）。</p></div></details>
+    <details class="recipe" id="rc-timer" data-tags="rule"><summary><span class="q">制限時間を付けたい</span><span class="who">Time Limit Seconds</span></summary><div class="a"><p><b>Time Limit Seconds</b> に秒数（0 = 制限なし）。画面の上の真ん中に「のこり ○」が出て、0 になると、まだ決めていない人は今のキャラ（使われていれば空いているキャラ）に自動で決まります。</p></div></details>
+    <details class="recipe" data-tags="rule"><summary><span class="q">「GO!」からゲームへ進むまでを長く／短くしたい</span><span class="who">Finished Hold Seconds</span></summary><div class="a"><p><b>Finished Hold Seconds</b>（既定 1.5 秒）。</p></div></details>
+    <details class="recipe" data-tags="rule"><summary><span class="q">仮のキーを変えたい</span><span class="who">Key</span></summary><div class="a"><p>ネット対戦（ロビーから来たとき）は <b>Key</b>（既定 A）。このシーンだけで試すときの 1P〜4P は <b>Offline Keys</b>（A・S・D・F）と <b>Offline Players</b>（参加する人数、既定 4）。握力センサーを使わないなら <b>Use Grip Sensor</b> を OFF。画面左下の操作の説明は、再生するとキーに合わせて自動で書き換わります。</p></div></details>
+    <details class="recipe" id="rc-layout" data-tags="look"><summary><span class="q">区画・文字・アイコンの配置や大きさを変えたい</span><span class="who">[CharacterSelect UI]</span></summary><div class="a"><p>シーンの <b>[CharacterSelect UI]</b> の中を直接動かします。区画は <b>Panels</b> › <b>Panel 1P〜4P</b>（中に立ち絵 <b>Portrait</b>、説明の板 <b>InfoPanel</b>、キャラ名の札 <b>NameTag</b> など）。区画の場所を入れ替えてもかまいません（どの区画が何 P かは <b>Character Select View</b> › <b>Panels</b> の順番）。棒グラフ 1 本の見た目は <b>InfoPanel</b> › <b>Stats</b> › <b>StatTemplate</b>（非表示の見本）を直すと全部に反映されます。下の丸は <b>Circles</b> › <b>Circle 1P〜4P</b>（どれが何 P かは <b>Character Select View</b> › <b>Circles</b> の順番）。</p><div class="callout warn"><span class="ci">!</span><div><b>注意：</b>「シーンを組み立てる」をもう一度実行すると、シーンの中で直した配置・文字は作り直されて消えます。キャラのファイル（文章・絵）・PNG の上書きは消えません。</div></div></div></details>
+    <details class="recipe" data-tags="look"><summary><span class="q">立ち絵のふわふわ・すべり込みを変えたい</span><span class="who">Player Panel</span></summary><div class="a"><p>各区画の <b>Player Panel</b> の <b>Bob Pixels</b>（上下の幅、8）、<b>Bob Speed</b>（速さ、0.5）、<b>Slide In Pixels</b>（キャラを変えたときに横からすべり込む距離、60）。参加していない区画の薄さは <b>Inactive Alpha</b>。</p></div></details>
+    <details class="recipe" id="rc-swap-fx" data-tags="look"><summary><span class="q">キャラを変えるときの歯磨き粉の塗り方・速さ・消え方を変えたい</span><span class="who">Character Swap Fx</span></summary><div class="a"><p>各区画の <b>Portrait</b> の <b>Character Swap Fx</b>：<b>Clip To Character</b>（オンでキャラの形の中にだけ塗る。ふつうはオフ＝道すじのとおりに外まで引く）、<b>Fill Gaps</b>（オンで線を自動で太くして、すき間なく塗りつぶす。前のキャラが完全に隠れる。<b>Legs</b> 9 くらいと合わせる）、<b>Lean</b>（ジグザグの傾き、35 度。大きいほど「／」に寝る。0 で縦に往復、マイナスで「＼」）、<b>Legs</b>（線の本数、11。多いほど細かいジグザグ。最後が右上へ抜けるよう、偶数なら1本増える）、<b>Size</b>（ジグザグ全体の大きさ、0.55。1 で立ち絵の枠くらい、小さいほどキャラのまわりにまとまる）、<b>Paint Seconds</b>（塗り終わるまで、0.45）、<b>Hold Seconds</b>（塗ったまま、0.06）、<b>Reveal Style</b>（<b>泡になって消える</b>／<b>同じ道をたどって拭き取る</b>）、<b>Reveal Seconds</b>（消えるまで、0.3）、<b>Jitter</b>（毎回少し形を変える量）、<b>Overshoot</b>（枠の外まで塗る量）、<b>Foam Interval</b>（泡）、<b>Shine Seconds</b> / <b>Shine Size</b>（キラーン）。線の太さとしまの見え方は <b>Body</b> › <b>PasteLayer</b> › <b>PasteFrame</b> › <b>Paste</b> › <b>Stroke</b> の <b>Paste Stroke</b>（<b>Width</b> 38。<b>Fill Gaps</b> がオンのときは、すき間が残らない太さより細くはならない。<b>Texture</b> は最初はタイトルと同じ歯磨き粉の絵、<b>Texture U</b> が狭いほどしまが太い）。歯の絵は <code>Art/CS_Tooth.png</code> を上書きすると替わります。止めたいときは <b>Player Panel</b> › <b>Swap</b> を空にすると、すぐ切り替わります。</p></div></details>
+    <details class="recipe" id="rc-curtain" data-tags="look"><summary><span class="q">キャラ選択に入るとき・GO! のあとの歯磨き粉の幕を変えたい</span><span class="who">歯磨き粉の幕の設定</span></summary><div class="a"><p><span class="mp">Tools<i>›</i>キャラ選択<i>›</i>歯磨き粉の幕の設定を選ぶ</span>（<code>Assets/CharacterSelect/Resources/CharacterSelectCurtain</code>）。<b>Texture</b>（幕の絵。最初はタイトルのオープニングと同じ <code>Title_PasteCurtain</code>）、<b>Columns</b>（縦の列の数）、<b>Unevenness</b>（垂れる先端のでこぼこ）、<b>Drop Seconds</b>（覆いきるまで）、<b>Hold Seconds</b>（覆ったままの最短時間）、<b>Reveal Seconds</b>（流れ落ちるまで）、<b>On Cover</b> / <b>On Reveal</b>（効果音）。このシーンだけで再生したときに幕を出したくなければ <b>Play On Standalone</b> を OFF。「GO!」のあとはロビーのいつもの幕にしたいときは <b>Use For Game Start</b> を OFF。</p><p class="small">設定は再生を始めたときに読み込むので、変えたら再生し直してください。</p></div></details>
+    <details class="recipe" id="rc-fx" data-tags="look"><summary><span class="q">演出（泡・2進数・色ずれ・光・はんこ）を強く／弱く／止めたい</span><span class="who">演出の部品</span></summary><div class="a"><ul><li><b>漂う泡・2進数・キラキラ</b>：<b>[CharacterSelect UI]</b> › <b>Ambient</b> の <b>Bubble Count</b>・<b>Digit Count</b>・<b>Sparkle Count</b>（0 で出さない）、大きさ・速さ・色。止めるなら <b>Ambient</b> を非表示。</li><li><b>キャラ名の色ずれ</b>：各区画の <b>NameTag</b> › <b>Name</b> の <b>Character Select Glitch</b> › <b>Amplitude</b>（ずれの幅）・<b>Duration</b>（長さ）。<b>Idle Interval</b> に秒数を入れると、ときどき勝手にザザッとなる。</li><li><b>決定のはんこ</b>：各区画の <b>Player Panel</b> › <b>Stamp Slam Seconds</b>・<b>Stamp Slam Scale</b>。</li><li><b>弾ける泡とキラキラ</b>：各区画・各丸の <b>Burst</b>、真ん中の <b>CenterBurst</b> の <b>Size</b>・<b>Speed</b>・<b>Gravity</b>（マイナスで上へ浮く）・<b>Life</b>。</li><li><b>流れるしま</b>：各区画の <b>Stripes</b> の <b>Speed</b>（0 で止まる）と色の濃さ。<b>ドット柄</b>の濃さは <b>Player Panel</b> › <b>Pattern Alpha</b>。</li><li><b>登場の動き</b>：<b>Character Select View</b> › <b>Entrance Seconds</b>・<b>Entrance Stagger</b>・<b>Entrance Distance</b>（0 で動かない）。</li></ul></div></details>
+    <details class="recipe" data-tags="look"><summary><span class="q">選ぶ・決める・全員決定で効果音を出したい</span><span class="who">音・演出</span></summary><div class="a"><p><b>Character Select Controller</b> の <b>On Move</b>（カーソル移動）、<b>On Confirm</b>（決定）、<b>On Cancel</b>、<b>On Rejected</b>（選べないキャラで決めようとした）、<b>On All Decided</b> に D-Drive の SE を選びます。ネット対戦では各 PC が自分で鳴らします。この画面は UI なので、VFX（エフェクト）は場所が合いません（効果音向け）。</p><div class="callout warn"><span class="ci">!</span><div>D-Drive の起動役はロビーのシーンにあるので、このシーンだけで再生したときは鳴りません（エラーも出ません）。ロビーから通すと鳴ります。</div></div></div></details>
+    <p class="noresult">見つかりませんでした。別の言葉で探してください。</p>
+  </div>
+</section>
+
+<section id="screen" data-nav="画面の見かた">
+  <div class="rv"><div class="eyebrow">04 — Hierarchy</div><h2>シーンの<br><em>中身</em>。</h2></div>
+  <div class="tabguide rv">
+    <div class="tg-panel"><h4>[CharacterSelect]</h4><p class="when">進行役（Character Select Controller：ルール・操作・音）と見た目の係（Character Select View：区画とアイコンを動かす）。</p></div>
+    <div class="tg-panel"><h4>[CharacterSelect UI] › Panels › Panel 1P〜4P</h4><p class="when">プレイヤーの区画（左上 1P・左下 2P・右上 3P・右下 4P）。部品は Player Panel。</p>
+      <ul class="points"><li><b>AreaTint</b> — 区画にうっすらかかるプレイヤーの色。</li><li><b>Body</b> › <b>Portrait</b> — 立ち絵（<b>Image</b>）。立ち絵が無いキャラは <b>Fallback</b>（色の丸）と <b>Letter</b>（頭文字）。</li><li><b>Body</b> › <b>InfoPanel</b> — 説明の板。<b>Stats</b>（棒グラフ。<b>StatTemplate</b> が見本）、<b>SkillBox</b>（<b>SkillName</b>・<b>SkillText</b>）、<b>HoldGauge</b>（長く握る間に伸びる）、<b>State</b>（えらび中／READY!など）。</li><li><b>Body</b> › <b>NameTag</b> — キャラ名の斜めの札。<b>PlayerLabelBack</b> — 「1P」の札。<b>PlayerName</b> — ネット対戦のときのプレイヤーの名前。<b>LocalMark</b> — 「あなた」（ネット対戦のときだけ）。<b>DecidedStamp</b> — 「READY!」のはんこ。</li></ul></div>
+    <div class="tg-panel"><h4>[CharacterSelect UI] › Circles › Circle 1P〜4P</h4><p class="when">下の丸（左から 1P・2P・3P・4P）。上の区画と同じく、その人が選んでいるキャラを映す。部品は Player Circle。</p>
+      <ul class="points"><li><b>HoldGauge</b>（長く握る間に縁に沿って伸びる）・<b>Ring</b>（縁。えらび中は紺、決定するとその人の色）・<b>Back</b>・<b>Face</b>（キャラ。仮は色つきのキューブ）・<b>Letter</b>。</li><li><b>Label 1P〜4P</b> — 「1P」の札（1P・2P は丸の上、3P・4P は下）。決定するとチェック（<b>Decided</b>）が付く。</li></ul></div>
+    <div class="tg-panel"><h4>演出の部品</h4><p class="when">どれも消しても画面は動きます（演出が無くなるだけ）。</p>
+      <ul class="points"><li><b>Ambient</b> — 画面全体を漂う泡・2進数・キラキラ（Character Select Ambient）。</li><li>各区画の <b>Pattern</b>（ドット柄）・<b>Stripes</b>（流れるしま）・<b>Frame</b>（白い枠）・<b>Flash</b>（決定で白く光る）・<b>Burst</b>（決定で弾ける泡とキラキラ）。キャラ名の <b>Character Select Glitch</b>（色ずれ）。</li><li><b>ScreenFlash</b>・<b>CenterBurst</b> — 全員決定のときの光と弾け。<b>FadeOut</b> — 1台で試すとき、ゲームへ進む前に覆う板。</li></ul></div>
+    <div class="tg-panel"><h4>その他</h4><p class="when"><b>Background</b>（背景）、<b>Dividers</b>（区画の仕切りの線）、<b>Bottom</b>（下の部分。中に <b>BottomBar</b>・<b>Circles</b>・<b>Help</b>・<b>Rule</b>。登場のときにせり上がる）、<b>Timer</b>（制限時間）、<b>DecidedBanner</b>（GO!）。<b>Main Camera</b> は画面を塗るだけ。</p></div>
+  </div>
+</section>
+
+<section id="params" data-nav="数値の意味">
+  <div class="rv"><div class="eyebrow">05 — Numbers</div><h2>調整できる<br><em>数値</em>。</h2></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">Character Select Controller（ルール）</div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると／ON</th><th>下げると／OFF</th><th>初期値</th></tr>
+    <tr><td>Allow Same Character</td><td>同じキャラを何人も選べるか</td><td>何人でも同じキャラ</td><td>早い者勝ち</td><td class="def">OFF</td></tr>
+    <tr><td>Long Press Seconds</td><td>「決定」になるまで握る秒数</td><td>誤って決めにくい</td><td>素早く決まる</td><td class="def">0.6</td></tr>
+    <tr><td>Long Press Cancels</td><td>決めた後の長押しで取り消せるか</td><td>取り消せる</td><td>取り消せない</td><td class="def">ON</td></tr>
+    <tr><td>Time Limit Seconds</td><td>制限時間（0 = 無し）</td><td>ゆっくり選べる</td><td>急かされる</td><td class="def">0</td></tr>
+    <tr><td>Finished Hold Seconds</td><td>全員決定からゲームへ進むまで</td><td>「GO!」を長く見せる</td><td>すぐ進む</td><td class="def">1.5</td></tr>
+  </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">Character Select Controller（入力・1 台で試すとき）</div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th colspan="2">説明</th><th>初期値</th></tr>
+    <tr><td>Key</td><td>ネット対戦で自分が使うキー</td><td colspan="2">握力センサーの代わりの仮のキー</td><td class="def">A</td></tr>
+    <tr><td>Use Grip Sensor</td><td>握力センサーでも操作するか</td><td colspan="2">ネット対戦では各 PC のセンサーを自分の分として読む</td><td class="def">ON</td></tr>
+    <tr><td>Ignore Keyboard Grip</td><td>握力センサーのキーボードでの代わり（Q・W・O・P）を無視するか</td><td colspan="2">ON なら Q などでは READY できない（本物のセンサーと仮のキー A だけ）</td><td class="def">ON</td></tr>
+    <tr><td>Grip On / Off Threshold</td><td>握力センサーの「握った」「離した」の強さ（0〜1）</td><td colspan="2">強く握らないと反応しなくなる／反応しやすくなる</td><td class="def">0.35 / 0.2</td></tr>
+    <tr><td>Grip Release Dip</td><td>いちばん強いところからこれだけゆるんだら「離した」と数える</td><td colspan="2">小さいほど、すばやい握り直し（連打）を1回ずつ数えやすい</td><td class="def">0.25</td></tr>
+    <tr><td>Offline Players</td><td>このシーンだけのときの人数</td><td colspan="2">P1 から順に参加</td><td class="def">4</td></tr>
+    <tr><td>Offline Keys</td><td>このシーンだけのときの 1P〜4P のキー</td><td colspan="2"></td><td class="def">A S D F</td></tr>
+    <tr><td>Offline Next Scene</td><td>このシーンだけのとき、全員決定後に進むシーン</td><td colspan="2">空なら進まない。ロビーから来たときは使わない</td><td class="def">Game</td></tr>
+  </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">キャラのファイル（Character Definition）</div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th colspan="2">説明</th><th>初期値</th></tr>
+    <tr><td>Display Name</td><td>キャラ名</td><td colspan="2">区画の札・アイコン</td><td class="def">キャラ名</td></tr>
+    <tr><td>Stats</td><td>能力の棒グラフ</td><td colspan="2">Label（空なら棒だけ）と Value（0〜1）。いくつでも</td><td class="def">なし</td></tr>
+    <tr><td>Skill Name / Skill Description</td><td>スキル名・説明</td><td colspan="2">スキル名が空なら出さない。説明は 3 行くらいまで</td><td class="def">スキル名 / スキル内容</td></tr>
+    <tr><td>Sprite / Sprite Scale / Sprite Offset</td><td>立ち絵・大きさ・位置</td><td colspan="2">枠（300×340）に入る。オフセットはピクセル</td><td class="def">なし / 1 / 0,0</td></tr>
+    <tr><td>Sprite Tint</td><td>立ち絵（と下の丸の絵）にかける色</td><td colspan="2">仮のキューブはここでキャラの色。本番の絵は白</td><td class="def">白</td></tr>
+    <tr><td>Icon</td><td>下の丸に出す顔の絵</td><td colspan="2">空なら立ち絵（色つき）を使う</td><td class="def">なし</td></tr>
+    <tr><td>Theme Color</td><td>絵が無いときの丸の色</td><td colspan="2"></td><td class="def">白</td></tr>
+  </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">見た目（Character Select View・Player Panel）</div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>Area Tint Alpha</td><td>区画にかけるプレイヤーの色の濃さ</td><td>色が濃い</td><td>背景がよく見える</td><td class="def">0.3</td></tr>
+    <tr><td>Pattern Alpha</td><td>区画のドット柄の濃さ</td><td>はっきり</td><td>0 で消える</td><td class="def">0.45</td></tr>
+    <tr><td>Stamp Slam Seconds / Scale</td><td>「READY!」のはんこを叩きつける時間・最初の大きさ</td><td>ゆっくり・大きく</td><td>すばやく・小さく</td><td class="def">0.3 / 2.6</td></tr>
+    <tr><td>Entrance Seconds / Stagger / Distance</td><td>登場で区画が滑り込む時間・ずれ・距離（View）</td><td>ゆっくり・遠くから</td><td>すばやく（距離 0 で動かない）</td><td class="def">0.5 / 0.08 / 1000</td></tr>
+    <tr><td>Fade Out Seconds</td><td>1台で試すとき、ゲームへ進む前に白く覆う時間（View）</td><td>ゆっくり</td><td>すばやく</td><td class="def">0.4</td></tr>
+    <tr><td>Info Panel Alpha</td><td>説明の板の濃さ</td><td>色が濃い</td><td>透ける</td><td class="def">0.55</td></tr>
+    <tr><td>Bob Pixels / Bob Speed</td><td>立ち絵のふわふわの幅／速さ</td><td>大きく・速く</td><td>0 で止まる</td><td class="def">8 / 0.5</td></tr>
+    <tr><td>Slide In Pixels</td><td>キャラを変えたときのすべり込みの距離</td><td>大きく動く</td><td>0 で動かない</td><td class="def">60</td></tr>
+    <tr><td>Decided Ring Scale（下の丸）</td><td>決定したときの丸の縁の太さ</td><td>太く目立つ</td><td>1 で変わらない</td><td class="def">1.1</td></tr>
+  </table></div></div>
+</section>
+
+<section id="faq" data-nav="困ったとき">
+  <div class="rv"><div class="eyebrow">06 — Troubleshooting</div><h2>困ったときは<br><em>ここ</em>。</h2></div>
+  <div class="faq rv">
+    <details><summary>前の作り（キャラが台の上に並ぶ画面・下にキャラのアイコンが並ぶ画面）のまま／「Missing Script」が出る</summary><div class="a">画面を作り替えたので、<span class="mp">Tools<i>›</i>キャラ選択<i>›</i>シーンを組み立てる</span> → <b>作り直す</b> を実行してください。前の作りの部品は消えています。</div></details>
+    <details><summary>ロビーで「キャラクター選択に進めませんでした」と出る</summary><div class="a">ビルドの設定にキャラ選択のシーンが入っていません。<span class="mp">Tools<i>›</i>キャラ選択<i>›</i>シーンを組み立てる</span> を実行すると足されます（または <span class="mp">File<i>›</i>Build Profiles</span> の Scene List に <code>Character_Select</code> を足す）。</div></details>
+    <details><summary>再生しても何も出ない／キャラが出ない</summary><div class="a">シーンを組み立てていないか、キャラの一覧が空です。Console に「キャラの一覧（roster）が空です」と出ていたら、<b>Character Select Controller</b> › <b>Roster</b> に一覧のファイルが入っているか確認します。</div></details>
+    <details id="faq-online"><summary>ネット対戦では、どのキーで操作する？</summary><div class="a">全員 <kbd>A</kbd>（と握力センサー）です。各 PC は、ロビーで選んだ自分の番号の区画だけを操作できます（ほかの人の区画は、その人の PC から届いた操作で動く）。キーは <b>Character Select Controller</b> › <b>Key</b> で変えられます。1 台で試すとき（このシーンだけで再生）だけは、1 つのキーボードで 4 人分を動かすため 1P〜4P が <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> <kbd>F</kbd> に分かれます。</div></details>
+    <details><summary>Q キーで READY になってしまう</summary><div class="a">Q（W・O・P）は握力センサーのキーボードでの代わりです。キャラ選択では <b>Character Select Controller</b> › <b>Ignore Keyboard Grip</b>（最初から ON）で無視するので、Q では READY になりません。本物の握力センサーと仮のキー（A）は使えます。<br><span class="small">ロビーの「握り続けて準備OK」は別の仕組みで、Q を押し続けると準備OKが切り替わります（ロビーのシーンの <b>[Lobby] Session</b> › <b>握って準備OK</b> で OFF にできます）。</span></div></details>
+    <details><summary>同じキャラを2人で長押しすると、遅れた人が別のキャラで一瞬で READY になる</summary><div class="a">2026-10-12 に直しました。先に READY になった人がいると、もう1人のカーソルは次の空いているキャラへ自動で動きます。このとき長押しは取り消され（その人の区画と下の丸がぶるっと揺れる）、<b>一度離して握り直すまで</b>数えません。同じキャラを2人で選べる設定（<b>Allow Same Character</b>）のときは、カーソルが動かないので2人とも READY になれます。</div></details>
+    <details><summary>連打すると READY になってしまう</summary><div class="a">2026-10-12 に直しました（キーの「押した・離した」を1回ずつ数えるようにし、握力センサーは握り直しも「離した」と数える）。それでもセンサーで起きるときは、<b>Character Select Controller</b> の <b>Grip Release Dip</b>（握り直しとみなすゆるみ、0.25）を小さく、<b>Long Press Seconds</b> を長くしてください。</div></details>
+    <details><summary>キーを押しても動かない</summary><div class="a"><ol><li>Game ビューをクリックしてから押してください。</li><li>最初から押しっぱなしだったキー・握りは、一度離すまで数えません。</li><li>「GO!」の後と、Esc の一時メニューが開いている間は操作できません。</li><li>ネット対戦では自分の分（ロビーで選んだ番号）だけが動きます。</li></ol></div></details>
+    <details><summary>決めようとすると区画がぶるっと揺れて決まらない</summary><div class="a">そのキャラは他の人が先に決めています（早い者勝ち）。短く握って別のキャラへ。全員で同じキャラを選べるようにするなら <b>Allow Same Character</b> を ON。</div></details>
+    <details><summary>スキルの説明が枠からはみ出す</summary><div class="a">説明は 3 行くらいまでが目安です。文章を短くするか、区画の <b>InfoPanel</b> › <b>SkillBox</b> と <b>SkillText</b> を大きくします。</div></details>
+    <details><summary>立ち絵が小さい・大きい・ずれる</summary><div class="a">キャラのファイルの <b>Sprite Scale</b>（大きさ）と <b>Sprite Offset</b>（ピクセル）で調整します。絵の下や横に透明な余白が多いと小さく見えるので、余白を切った絵にすると合わせやすくなります。</div></details>
+    <details><summary>ロビーに戻りたい</summary><div class="a"><kbd>Esc</kbd> で一時メニュー → ホストは <b>全員でロビーに戻る</b>、参加している人は <b>試合から抜ける</b>。</div></details>
+    <details><summary>選んだキャラがゲームに出てこない</summary><div class="a">今はまだゲーム本編に選んだキャラを使う仕組みがありません（選んだ結果を残すところまで）。プログラマーに相談してください（下の「コードから使う」）。</div></details>
+  </div>
+</section>
+
+<section id="glossary" data-nav="用語集">
+  <div class="rv"><div class="eyebrow">07 — Words</div><h2>分からない言葉は<br><em>ここで引く</em>。</h2></div>
+  <dl class="gloss">
+    <div class="rv"><dt>キャラのファイル</dt><dd>キャラ 1 体分の設定（名前・能力・スキル・立ち絵・顔のアイコン）。1 キャラ = 1 ファイル（Character Definition）。</dd></div>
+    <div class="rv"><dt>キャラの一覧</dt><dd>選べるキャラを並べたファイル（Character Roster）。並び順 = 短く握ったときに切り替わる順。</dd></div>
+    <div class="rv"><dt>区画</dt><dd>画面を 4 つに分けた 1 つ。各プレイヤーの選んでいるキャラが出る（Player Panel）。</dd></div>
+    <div class="rv"><dt>下の丸</dt><dd>画面の下の 1P〜4P の丸（Player Circle）。区画と同じく、各プレイヤーの選んでいるキャラ・決定を映す。</dd></div>
+    <div class="rv"><dt>ホスト</dt><dd>ネット対戦で部屋を作った PC。キャラ選択の判定（決められるか・全員決まったか）もこの PC が行う。</dd></div>
+    <div class="rv"><dt>Sprite（スプライト）</dt><dd>Unity で 2D の絵として使える画像。PNG を入れて Texture Type を Sprite (2D and UI) にする。</dd></div>
+    <div class="rv"><dt>早い者勝ち</dt><dd>誰かが決めたキャラは他の人が選べないルール（Allow Same Character が OFF）。</dd></div>
+  </dl>
+</section>
+
+<div class="devzone"></div>
+<section id="dev" data-nav="コードから使う" data-dev>
+  <div class="rv">
+    <div class="eyebrow">08 — For programmers</div>
+    <h2>選んだキャラを<br><em>ゲームで使う</em>。</h2>
+    <p class="lead">結果は <code>MS2026.CharacterSelect.Data</code> アセンブリ（依存なし）の <code>CharacterSelectionResult</code>。使う側の asmdef に <code>MS2026.CharacterSelect.Data</code> を足します。</p>
+  </div>
+  <div class="codebox rv"><div class="cap"><span>CharacterSelectionResult</span><button class="copy" type="button">copy</button></div><pre>
+using MS2026.CharacterSelect;
+
+// P1〜P4（0〜3）が選んだキャラ。選択画面を通っていない（テスト用 bat など）・参加していないときは null
+CharacterDefinition chara = CharacterSelectionResult.Get(playerIndex);
+if (chara != null)
+{
+    Debug.Log($"{chara.id} / {chara.DisplayName} / {chara.skillName}");
+    // chara.sprite, chara.icon, chara.stats ...
+}</pre></div>
+  <div class="codebox rv"><div class="cap"><span>流れ（ロビー側）</span><button class="copy" type="button">copy</button></div><pre>
+// GameSession（ロビー）: characterSelectSceneName = "Character_Select"（空なら今まで通り 3・2・1 → ゲーム）
+// ゲーム開始 → NGO で Character_Select を重ねて読み込む（LobbyPhase.CharacterSelect）
+// 全員決定 → ホストの CharacterSelectController が GameSession.Active.ProceedToGame() を呼ぶ
+//          → 選択のシーンを外してから Game を読み込む</pre></div>
+  <div class="notes rv"><div class="note"><span class="lbl">詳細</span><code>Docs/Tools/CharacterSelect_AI_Reference.md</code></div><div class="note"><span class="lbl">通信</span>NGO の名前つきメッセージ（<code>MS2026.CharaSelect.Input / State</code>）。NetworkObject は増やさない。ホストが判定して全員へ配る。</div><div class="note"><span class="lbl">シーン</span>手で YAML を書き換えず、組み立てメニュー（<code>CharacterSelectSceneBuilder</code>）を直す。</div></div>
+</section>
+
+<section id="more" data-nav="関連ツール">
+  <div class="rv"><div class="eyebrow">09 — Related</div><h2>一緒に使う<br><em>ツール</em>。</h2></div>
+  <div class="links">
+    <a class="lk rv" href="UIStudio_ガイド.html#rc-ui-flow"><span class="ti">UIスタジオ（ロビー）</span><span class="ds">タイトル → ロビー → キャラ選択 → ゲームの流れ。</span></a>
+    <a class="lk rv" href="TitleScreen_ガイド.html"><span class="ti">タイトル画面</span><span class="ds">最初の画面。</span></a>
+    <a class="lk rv" href="GripInputBridge_ガイド.html"><span class="ti">握力入力ブリッジ</span><span class="ds">握力センサーの読み取り（キーボードで代わりもできる）。</span></a>
+    <a class="lk rv" href="SpriteAnim_ガイド.html"><span class="ti">SpriteAnim</span><span class="ds">立ち絵をコマアニメにするとき（今は未対応。プログラマーに相談）。</span></a>
+    <a class="lk rv" href="D-Drive_ガイド.html"><span class="ti">D-Drive</span><span class="ds">効果音の登録。</span></a>
+    <a class="lk rv" href="index.html"><span class="ti">ツール一覧</span><span class="ds">このプロジェクトの全ツール。</span></a>
+  </div>
+  <footer><span>Character Select Guide · Xx_MS2026_xX</span><span>2026-10-12 時点のコードに基づく</span></footer>
+</section>
+</main>
+</div>
+<script src="assets/guide.js"></script>
+</body>
+</html>

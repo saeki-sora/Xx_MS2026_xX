@@ -1,0 +1,216 @@
+# Character Select (キャラクター選択画面) — AI Agent Reference
+
+> Cold-start brief for Claude Code. Verified against source on **2026-10-12**.
+> Human guide: `Docs/Tools/CharacterSelect_ガイド.html`. Maintenance rule: when you change anything under `Assets/CharacterSelect/`, the character-select hooks in `Assets/_Game/UI/Game/Session/` (`GameSession.CharacterSelect.cs`, `LobbyPhase.CharacterSelect`), or `Assets/Scenes/Character_Select.unity`, update this file + the HTML guide in the same task. Style: `Docs/Tools/DOCS_GUIDE.md`.
+> **Status: work in progress.** The screen is a **2D UI** laid out from the user's mock-up (2026-10-08): four quadrants (top-left 1P, bottom-left 2P, top-right 3P, bottom-right 4P) + four player circles at the bottom (1P–4P, left to right) that mirror the quadrants (user 2026-10-08: the bottom circles are per player and synced, not a character row). Placeholder characters are **colour-coded cubes** (one white isometric cube sprite tinted per character, user 2026-10-08). Non-character art and effects were designed to the game's world (user request 2026-10-08, reference = a fighting-game select screen: player-colour halftone panels, bold outlined names, name bars): cyber-office background, player-colour halftone + scrolling stripes + white frame per quadrant, drifting toothpaste bubbles / binary digits / sparkles, RGB-split glitch on names, stamp slam + flash + bubble/sparkle bursts on confirm, entrance slide-in, all-decided flash/burst/banner slam, standalone fade-out. UI wording (user 2026-10-08): confirm = 「READY!」, all confirmed = 「GO!」. Entering character select uses the **toothpaste curtain** from the title opening (`PasteCurtain`, user 2026-10-08). The UI version has **not been run inside Unity yet**: all assemblies compile outside Unity against `Library/ScriptAssemblies`, the 19 EditMode tests pass in a standalone harness, the placeholder cube art was rendered offline, and the layout numbers were checked with an HTML mock. (An earlier 3D-row version was built once in Unity by the user; rebuilding with the menu replaces it.) All art and texts are placeholders. Input is a temporary `A` key (+ grip sensor). Background is meant to become an office image (user).
+
+## 0. Mental model
+- Flow (user decision 2026-10-08): **Title → Lobby → Character_Select → Game**. The lobby host's `ゲーム開始！` no longer runs the 3·2·1 countdown when `GameSession.characterSelectSceneName` is non-empty; it NGO-loads `Character_Select` **additively** on top of the Lobby scene (same mechanism as Game). When every present player has confirmed, the host's `CharacterSelectController` calls `GameSession.ProceedToGame()` → covers with `gameTransition`, NGO-unloads Character_Select, waits until it is gone, then NGO-loads Game (retrying while `SceneEventInProgress`, 15 s timeout). Empty `characterSelectSceneName` = old behaviour (countdown → Game).
+- Input sampling (fixed 2026-10-12 — user report: mashing the key chained presses into a READY): keys are read through `KeyPressTracker` (an Input System `InputAction` per key; `started`/`canceled` callbacks fire per input event, so a release + re-press inside one frame is still counted); the grip sensor through `GripSqueezeTracker` (pressed at `gripOnThreshold` .35, released below `gripOffThreshold` .2 **or** when the value drops `gripReleaseDip` .25 below the peak of the current squeeze — smoothed sensor values never fall to the off threshold during fast re-grips). The keyboard grip simulator (Q/W/O/P, `GripInputBridge.Simulator`) is ignored while its raw value > 0 when `ignoreKeyboardGrip` (default true; user 2026-10-12: Q must not READY — only the real sensor and the A key count). Both feed `GripPressDetector.Tick(pressed, releasesThisFrame, dt, long)`, which ends the current press on any release in the frame (→ Short) and starts a new one if still pressed. Sampling continues while input is blocked so stale releases are discarded.
+- Controls per player: **short press** (release before `longPressSeconds`) = cursor to the next character (wraps; skips characters others confirmed when duplicates are off); **long press** (held `longPressSeconds`, fires while still held) = confirm; long press while confirmed = cancel (`longPressCancels`). A press already held when the scene starts is ignored until released (`GripPressDetector`). **Hold cancelled when the cursor is moved by someone else** (bug fix 2026-10-12: two players long-pressing the same character, the first one READY moves the other's cursor to the next free character via `Board.Confirm`, and the other's ongoing hold used to carry over and instantly confirm that character): `TickInput` remembers the cursor at the start of each press (`_holdCursor[seat]`); if `detector.IsPressing` and the board cursor differs, it calls `detector.Reset()` (needs a release before counting again), plays `onRejected` and raises `SeatRejected` (panel + circle shake).
+- Exclusivity: `allowSameCharacter` false (default) → a confirmed character is locked for others; when someone confirms, unconfirmed players whose cursor is on that character are moved to the next free one; a confirm attempt on a locked character is refused locally (`onRejected`, panel shake). true → anyone can pick the same character. Switching it off while duplicates are confirmed keeps the lowest seat and unconfirms the rest. On LAN the host's value is used.
+- Network: **host-authoritative, NGO named messages, no NetworkObjects** (like the lobby). Clients send only `CharacterSelectAction` (Next/Confirm/Cancel/RequestState); the host owns `CharacterSelectBoard` and broadcasts the whole state (~30 bytes) once per frame when `Board.Version` changed. A client's controller sends `RequestState` when it starts (the host's broadcasts before the client's scene loaded are lost). Effects/sounds are not sent: every PC diffs the received board and plays them itself (project rule).
+- Who is local (user asked 2026-10-08 that everyone uses the A key online — that is the default): online = `GameSession.LocalSeat` (reads keyboard `key` and grip provider index 0 — every PC's sensor is "P1" on that PC, same as the game). **Standalone** (scene played without the lobby, `GameSession.Active == null`): seats `0..offlinePlayers-1` are all local, seat i uses `offlineKeys[i]` (A/S/D/F) and grip provider index i; when finished it loads `offlineNextScene` ("Game") in Single mode. If a `GameSession` exists but is offline, the controller does nothing (the session unloads the scene).
+- Participants = lobby roster `present` seats (host), re-evaluated every frame: a leaver frees their character, a late joiner (NGO syncs the additive scene) appears unconfirmed. Finish = all present confirmed, or the time limit ran out (`timeLimitSeconds` > 0); `Board.Finish()` auto-confirms the rest on their cursor (moved to a free character when locked) and locks input; after `finishedHoldSeconds` the host proceeds.
+- Result: on finish every PC writes `CharacterSelectionResult.Store(CharacterDefinition[4])` (null = absent). Game code reads `CharacterSelectionResult.Get(playerIndex)`; **nothing in the game reads it yet**.
+- **Entering transition = `PasteCurtain`** (Runtime/Fx): `[RuntimeInitializeOnLoadMethod(AfterAssembliesLoaded)]` sets `GameSession.CharacterSelectCurtain = PasteCurtain.Play`, so the lobby (which cannot reference this assembly) covers with it in `BeginCharacterSelect` (host) and `OnCharacterSelectPhase` (clients) instead of `gameTransition`. It is a DontDestroyOnLoad Overlay canvas `[Paste Curtain]` (sortingOrder from settings, 950 = above the lobby curtain 900) with N RawImage columns of the curtain texture that drop with Perlin lags exactly like `TitleOpening.SetCurtain` (InOutSine, coveredDrop = screenH + .6 × (1.35 screenH − screenH)), call `onCovered` (= NGO load), hold ≥ `holdSeconds` until `isReady()` (= scene loaded / phase Waiting), then continue down (InCubic) off-screen. Settings: `Resources/CharacterSelectCurtain.asset` (`PasteCurtainSettings`). The select-screen entrance waits for `PasteCurtain.IsCovering == false`. Standalone play calls `PasteCurtain.RevealForStandalone()` (starts covered, flows down) when `playOnStandalone`. **Leaving (GO! → Game) uses the same curtain** (user 2026-10-12 「GO! のときも上から歯磨き粉垂れてきて遷移」): it also sets `GameSession.GameStartCurtain = PasteCurtain.TryPlayGameStart` (returns false when `PasteCurtainSettings.useForGameStart` is off → lobby `gameTransition`). Host: `ProceedToGame` → `PlayGameStartCover(swap coroutine, Game loaded)`. Clients: `OnPhaseReceived` Loading with `before == CharacterSelect` → `PlayGameStartCover(null, Game loaded)` (other Loading paths keep `gameTransition`). Standalone: `TickFinish` → `PasteCurtain.Play(SceneManager.LoadScene(next), active scene == next)` (the curtain is DDOL so it survives the single-mode load); the view's `fadeOut` stays at 0 then.
+- Effects are plain uGUI code in `Runtime/Fx/` (no D-Drive, no prefabs; pools are built in Awake, nothing allocated per frame): `CharacterSelectGlitch`, `CharacterSelectBurst`, `CharacterSelectAmbient`, `CharacterSelectScroll`. The `FortressEffect` slots on the controller remain for D-Drive SE.
+- Visuals (all uGUI, one Overlay canvas): `CharacterSelectView` drives, per seat, a `PlayerPanel` (quadrant: portrait = `CharacterDefinition.sprite` × `spriteTint`, slanted name tag in the player colour, stat bars, skill name + text, hold gauge, state text, 「READY!」 stamp) **and** a `PlayerCircle` (bottom row, same data: face = `icon`, else `sprite` × `spriteTint`; radial hold gauge; navy ring while selecting → player-colour ring + check on the 「1P」 label when confirmed; dim when absent). Both are fed from the same board every frame, so they are always in sync.
+
+## 1. Paths / asmdefs
+```
+Assets/CharacterSelect/
+  Scripts/Data/     MS2026.CharacterSelect.Data (ns MS2026.CharacterSelect; no references — game code can reference it cheaply)
+                    CharacterDefinition.cs, CharacterRoster.cs, CharacterSelectBoard.cs (pure rules), CharacterSelectionResult.cs (static)
+  Scripts/Runtime/  MS2026.CharacterSelect.Runtime (refs Data, MS2026.UI.Game, MS2026.UI.Runtime, MS2026.Fortress.Runtime, MS2026.GripInputBridge.Runtime,
+                    DDrive.Runtime, DDrive.Foundation, Unity.Netcode.Runtime, Unity.Collections, Unity.InputSystem, UnityEngine.UI)
+                    CharacterSelectController.cs, CharacterSelectView.cs, PlayerPanel.cs, PlayerCircle.cs, StatBar.cs, PlayerTag.cs,
+                    Fx/CharacterSelectGlitch.cs, Fx/CharacterSelectBurst.cs, Fx/CharacterSelectAmbient.cs, Fx/CharacterSelectScroll.cs, Fx/PasteCurtain.cs, Fx/PasteCurtainSettings.cs, Fx/CharacterSwapFx.cs, Fx/PasteStroke.cs,
+                    GripPressDetector.cs (pure), GripSqueezeTracker.cs (pure), KeyPressTracker.cs (internal), CharacterSelectMessages.cs (+ enum CharacterSelectAction), CharacterSelectEffects.cs (internal)
+  Scripts/Editor/   MS2026.CharacterSelect.Editor (ns MS2026.CharacterSelect.EditorTools; refs Runtime, Data, MS2026.Fortress.Runtime, MS2026.StudioKit.Editor, UnityEngine.UI)
+                    CharacterSelectSceneBuilder.cs, CharacterSelectArt.cs (`Entries` table: path/label/usage/size/painter; `RestorePlaceholder`, `ReplaceWithFile`), CharacterSelectTuningWindow.cs, CharacterSelectValueSnapshot.cs
+  Scripts/Tests/EditMode/ MS2026.CharacterSelect.Tests.EditMode — CharacterSelectTests.cs (board rules, press detector)
+  -- created by the builder only if missing (never overwritten; overwrite the PNG to reskin): --
+  Art/   CS_Background_Cyber.png (1920×1080 cyber-office placeholder: lavender→cyan, window wall with mullions + light streaks, faint 5×7-dot binary digits,
+         perspective floor grid, glitch bands, scanlines → replace with the office image), CS_Circle (256), CS_Ring (256), CS_Pill (128×72, 9-slice 30),
+         CS_Check (128), CS_NameTag (256×64 parallelogram, 9-slice L/R 30 — keep height 64),
+         CS_Halftone (512×256 dots, 18 px cells, radius grows to the right/top), CS_Stripes (128×128 diagonal stripes, **Wrap Repeat**, used by a RawImage),
+         CS_Bubble (64, rim + highlight), CS_Sparkle (64, 4-point star), CS_Frame (64, rounded 6 px outline, 9-slice 18),
+         CS_Tooth (96, white tooth, dark outline, cyan shine — no face (user 2026-10-12)),
+         CS_Panel (96×96 rounded, 9-slice 24), CS_Bar (128×16 rounded; Filled bars),
+         CS_CharaCube (300×300 isometric cube: white top / .78 left / .58 right, dark 3 px edges — tinted per character via spriteTint)
+  Data/  CharacterRoster.asset, Characters/Chara_Alpha|Beta|Gamma|Delta.asset
+  Resources/CharacterSelectCurtain.asset   (PasteCurtainSettings; texture defaults to Assets/Title/Sprites/Title_PasteCurtain.png — shared with the title opening)
+Assets/_Game/UI/Game/Session/GameSession.CharacterSelect.cs   (partial of GameSession — must live in MS2026.UI.Game, so it is outside Assets/CharacterSelect)
+Assets/Scenes/Character_Select.unity                          (content generated by the builder)
+```
+Removed during the redesigns (2026-10-08): `CS_Background.png` (pastel) and `CS_Arrow.png` (files deleted; a scene built before still references the old background until rebuilt), `PlayerBadge`, `CharacterSlotLabel`, `CharacterIcon` (per-character bottom row), the 3D pedestal prefab/materials, `CS_CharaPlaceholder.png`; the white-figure placeholders `CS_CharaPortrait.png` / `CS_CharaFace.png` are no longer generated (if present they are only used to detect old placeholder files). A scene built with an older version has missing scripts until it is rebuilt with the menu.
+Dependency direction: CharacterSelect.Runtime → UI.Game (GameSession). GameSession knows only the scene name and exposes `ProceedToGame()`.
+
+## 2. Runtime API (ns `MS2026.CharacterSelect`)
+```csharp
+// CharacterDefinition : ScriptableObject  [CreateAssetMenu "MS2026/キャラ選択/キャラクター"]  — one file per character; texts are typed in the Inspector
+// [名前]
+string id = "chara";                // stable id for game code (don't rename later)
+string displayName = "キャラ名";     string DisplayName (empty → asset name)
+// [説明（仮の文章でよい）]
+Stat[] stats = {};                  // struct Stat { string label (empty → bar only); float value [0..1] } — any count, top to bottom
+string skillName = "スキル名";       // empty → hidden
+string skillDescription = "スキル内容";  [TextArea(2,5)]
+// [見た目]
+Color themeColor = white;           // fallback circle colour when there is no art (placeholder cube colour comes from spriteTint)
+Sprite sprite;                      // portrait shown big on the left of the player's quadrant (preserveAspect, bottom-anchored); null → themeColor circle + first letter
+Color spriteTint = white;           // multiplies the portrait, and the bottom-circle face when `icon` is empty. Placeholders: character colour on the white cube. Real art: white
+float spriteScale = 1 [Min .1] (scale around the bottom centre); Vector2 spriteOffset (px at 1920×1080)
+Sprite icon;                        // face in the bottom circle (drawn untinted); null → sprite (tinted); both null → first letter. Placeholders leave it empty
+Sprite IconOrSprite;
+
+// CharacterRoster : ScriptableObject  [CreateAssetMenu "MS2026/キャラ選択/キャラの一覧"]
+CharacterDefinition[] characters;   // order = cursor order (short press goes to the next one, wraps); don't leave null slots
+int Count; CharacterDefinition Get(int i); int IndexOf(string id);
+
+// CharacterSelectBoard (pure; SeatCount = 4)
+struct Seat { bool active; int cursor; bool confirmed; }   Seat[] seats;
+int CharacterCount; bool AllowDuplicates; bool HasTimeLimit; float remaining; bool Finished; int Version;
+void Reset(int characterCount, bool allowDuplicates, float timeLimitSeconds);
+bool SetActive(int seat, bool active);        // join: cursor = seat % count (or next free); leave: unconfirm (frees the character)
+void SetAllowDuplicates(bool allow);          // turning off unconfirms duplicates except the lowest seat
+bool MoveNext(int seat);                      // not when confirmed/finished; skips locked characters
+bool Confirm(int seat);                       // false if locked; exclusive mode moves others' unconfirmed cursors off it
+bool Cancel(int seat); void Tick(float dt); bool TimeUp; int ActiveCount, ConfirmedCount; bool AllConfirmed (≥1 active and all active confirmed)
+void Finish();                                // auto-confirm the rest (free character if locked), Finished = true
+int ConfirmedOwner(int character, int exceptSeat = -1); bool IsLockedFor(int character, int seat); int[] GetChosen() (-1 = none)
+void Apply(int count, bool allowDup, bool hasLimit, float remaining, bool finished, Seat[] seats);   // client: replace from a message
+// Version increments on every logical change (not on Tick).
+
+// CharacterSelectionResult (static; reset on SubsystemRegistration and in CharacterSelectController.Awake)
+bool HasResult; CharacterDefinition Get(int playerIndex); void Store(CharacterDefinition[] chosen); void Clear();
+
+// GripPressDetector (pure)
+enum Result { None, Short, Long }  Result Tick(bool pressed, float dt, float longSeconds);  float Progress (0..1); float HeldSeconds; bool IsPressing (down and Long not fired yet); void Reset(bool requireRelease = true);
+// Tick(bool pressed, int releasesThisFrame, float dt, float longSeconds) — a release in the frame ends the press (Short unless Long already fired) and, if still pressed, starts a new one.
+// starts in "wait for release". Short = released before longSeconds. Long = fires once when held ≥ longSeconds; the following release yields None.
+// GripSqueezeTracker (pure): int Tick(float value, float on, float off, float dip) → releases this frame (0/1); bool IsPressed; Reset(). A grip already held at start is ignored until it eases off.
+
+// CharacterSelectController [DisallowMultipleComponent, DefaultExecutionOrder(-50), AddComponentMenu "キャラ選択/キャラクター選択の進行 (CharacterSelectController)"]
+CharacterRoster roster;
+bool allowSameCharacter = false; float longPressSeconds = 0.6f [0.2..2]; bool longPressCancels = true; float timeLimitSeconds = 0 (off); float finishedHoldSeconds = 1.5f;
+Key key = Key.A; bool useGripSensor = true (provider.GetGripValue(index) → GripSqueezeTracker); bool ignoreKeyboardGrip true; float gripOnThreshold .35, gripOffThreshold .2, gripReleaseDip .25;
+int offlinePlayers = 4 [1..4]; Key[] offlineKeys = { A, S, D, F }; string offlineNextScene = "Game";
+FortressEffect onMove, onConfirm, onCancel, onRejected (local only), onAllDecided;   // played only if Vfx/Audio.IsBound; VFX position = view.CharacterPosition = Vector3.zero (UI screen) → use SE
+CharacterSelectView view;
+CharacterSelectBoard Board; bool IsStandalone, IsOnline, IsAuthority, HasState; int CharacterCount; CharacterDefinition GetCharacter(int);
+float SecondsUntilProceed;         // authority only: -1 until all decided, then seconds left (0 after proceeding) — drives the standalone fade-out
+bool IsLocalSeat(int seat); float HoldProgress(int seat) (local seats only; 0 when confirmed and !longPressCancels);
+string PlayerName(int seat) (online: lobby name or "P1"; standalone: "" so only the 「1P」 label shows);
+string DescribeControls();          // two lines: 「短く握る→カーソル移動　長く握る→READY」 + 「仮のキー：A」 (standalone: 「仮のキー：1P A・2P S・3P D・4P F」)
+event Action<int> SeatMoved, SeatConfirmed, SeatCanceled, SeatRejected; event Action AllDecided;
+// Update: EnsureMessaging → authority: SetActive per seat (standalone: seat < offlinePlayers; online: Roster.seats[s].present), SetAllowDuplicates, Tick, Finish if AllConfirmed||TimeUp
+//         client: Board.Tick (display only) → TickInput (blocked until state / when Finished / while the lobby Pause or Message screen is open → detectors reset)
+//         → DetectChanges (diff vs last seen: confirm / cancel / move → effect + event; Finished → StoreResult, onAllDecided, AllDecided, host schedules proceed)
+//         → host broadcasts when Version changed. Proceed: standalone → (if in build) PasteCurtain.Play → on covered SceneManager.LoadScene(offlineNextScene), or a plain LoadScene when useForGameStart is off; online host → GameSession.ProceedToGame().
+
+// CharacterSelectMessages — "MS2026.CharaSelect.Input" (C→H: byte action, byte character = the cursor the client saw; the host ignores a Confirm whose character ≠ its current cursor for that seat — the cursor was moved by someone else's READY while the client was holding, 2026-10-12), "MS2026.CharaSelect.State" (H→all: byte count, bool allowDup, bool hasLimit, float remaining, bool finished, 4×(bool active, byte cursor, bool confirmed)); ReliableSequenced, FastBufferWriter Temp.
+
+// CharacterSelectView [DisallowMultipleComponent, AddComponentMenu "キャラ選択/キャラクター選択の見た目 (CharacterSelectView)"]
+CharacterSelectController controller;
+PlayerPanel[] panels (index = seat; builder: TL 1P, BL 2P, TR 3P, BR 4P);
+PlayerCircle[] circles (index = seat; builder: bottom row 1P..4P left→right);
+Text helpText (= controller.DescribeControls() at Start), ruleText, timerText (only with a time limit); CanvasGroup decidedBanner (alpha → 1 and slams from ×2.4 with BackOut over .35 s when finished);
+CharacterSelectGlitch bannerGlitch;
+// [登場の動き] RectTransform bottomArea (slides up 300 px); float entranceDelay .1, entranceSeconds .5, entranceStagger .08, entranceDistance 1000 px
+//   Awake parks panels off-screen (1P/2P left, 3P/4P right) and bottomArea down; the entrance starts when the lobby's UiRoot overlay is not playing and the board state is known.
+// [全員決定・フェード] Graphic screenFlash (alpha .8 → 0); CharacterSelectBurst centerBurst (12 per player colour); CanvasGroup fadeOut + float fadeOutSeconds .4
+//   (standalone with a non-empty offlineNextScene only: alpha = 1 − SecondsUntilProceed/fadeOutSeconds; online the lobby curtain covers instead).
+Vector3 CharacterPosition(int character) => Vector3.zero;
+// LateUpdate per seat: panels[seat].Show(seat, active, isLocal (online only), PlayerName, GetCharacter(cursor), confirmed, IsLockedFor, HoldProgress);
+//                     circles[seat].Show(seat, active, GetCharacter(cursor), confirmed, IsLockedFor, HoldProgress)  — same inputs → always in sync.
+// Events: moved/canceled → panel.SlideIn + circle.Punch; confirmed → panel.Pop + circle.Pop; rejected → panel.Shake + circle.Shake.
+
+// PlayerPanel [AddComponentMenu "キャラ選択/プレイヤーの区画 (PlayerPanel)"] — fields (all optional):
+//   group (CanvasGroup), areaTint (player colour × areaTintAlpha .18), body (pop/shake target),
+//   playerLabel/playerLabelBackground ("1P", player colour), playerNameText, localMark,
+//   portraitRoot (bob + slide-in; its start anchoredPosition is the base), portrait (Image; sprite/tint/scale/offset from the definition), portraitFallback + portraitLetter,
+//   nameTagBackground (player colour) + nameText (builder: Wrap + best fit 20..38 so long names fit the 340×64 tag), infoPanel (player colour × infoPanelAlpha .55), statTemplate (inactive StatBar, cloned per stat into its parent),
+//   skillNameText, skillText, holdGauge (Filled; player colour, white when confirmed), stateText, decidedStamp + decidedStampText (player colour);
+//   pattern (halftone, lerp(player colour, white, .45) × patternAlpha .45), playerNameBar (hidden when the name is empty), areaTintAlpha .3;
+//   [演出] flash (white, .75 on Pop / .25 on SlideIn, decays), burst (Pop: 28 particles), nameGlitch (SlideIn .6 / Pop 1), swap (CharacterSwapFx: ShowCharacter keeps the old sprite/colour/scale/offset and calls swap.Play when the character changes between two shown characters with sprites), stampSlamSeconds .3, stampSlamScale 2.6 (stamp slams in with BackOut when it appears);
+//   bobPixels 8, bobSpeed 0.5 Hz, slideInPixels 60, inactiveAlpha .35. API: Show(...), SlideIn(), Pop(int seat), Shake().
+//   Character-dependent parts are refreshed only when the shown character / active flag changes. Blocked (locked for this seat) → portrait alpha ×.5.
+//   States: 参加していません / えらび中 / そのまま握ると決定… (hold > .15) / ほかの人が決定済み（短く握って次へ） / READY! / そのまま握ると取り消し…
+// PlayerCircle [AddComponentMenu "キャラ選択/下の丸 (PlayerCircle)"]: group, body, ring (ringColor navy (.1,.3,.45) while selecting / player colour when confirmed, pulses / ×decidedRingScale 1.1),
+//   holdGauge (Filled Radial360, player colour; white when confirmed), background (white, or themeColor when no art), icon (face; tint = spriteTint when it falls back to sprite), letter,
+//   label (PlayerTag 「1P」: check + scale when confirmed, alpha when blocked), inactiveAlpha .35, burst (Pop: 14 particles; Punch(seat): 5); Show(...) per frame (face refreshed only when the character changes); Punch / Pop(int seat) / Shake.
+// CharacterSelectGlitch [Fx, "キャラ選択/演出/色ずれノイズ"]: Shadow magenta, cyan (on the same Graphic), amplitude 8 px, duration .3, idleInterval 0 (off), idleStrength .4; Play(strength) — jitters both shadows ± each frame, alpha 0 when idle.
+// CharacterSelectBurst [Fx, "キャラ選択/演出/弾ける泡とキラキラ"]: sprites[] (cycled), poolSize 64, size (18,46) px, speed (250,750) px/s, gravity 500, life (.5,1) s, spin 360; Play(color, count, offset) — every 3rd particle white.
+// CharacterSelectAmbient [Fx, "キャラ選択/演出/漂う泡と2進数"]: bubble sprite, bubbleCount 26, size (14,46), speed (30,90), colour white .55 (rise + wobble, wrap);
+//   font (LegacyRuntime) + digitCount 40, size (18,34), speed (20,60), colour (.25,.75,1,.22) (fall, flip 0/1 every .3–2 s); sparkle sprite, sparkleCount 12, size (16,40) (twinkle + relocate).
+// CharacterSelectScroll [Fx, RequireComponent RawImage]: speed (.15,.15) tiles/s, tiles (0 → rect size / 128); scrolls uvRect.
+// CharacterSwapFx [Fx, "キャラ選択/演出/歯磨き粉で塗り替えて切り替え"] (user 2026-10-12: toothpaste repaint painted in a **zigzag** per the user's arrow sketch, path shape = the user's second sketch 2026-10-12; then 「キャラの上だけじゃなくて、これどおりに引いてほしい」 → by default the paste is **drawn along the whole path as separate zigzag lines, outside the character too**, not clipped and not filled), on PlayerPanel.portraitRoot:
+//   Image current (hidden via canvasRenderer alpha until the painting ends), previous (old portrait, shown until then; with thin lines it stays visible between the strokes); PasteStroke stroke (inside pasteMask);
+//   bool clipToCharacter = false: false → FitMask disables the Mask and the pasteMask Image and resets its scale/position (stroke rect = portrait frame); true → old behaviour (Image + Mask, stencil-clipped to the character's silhouette; FitMask copies the old portrait's sprite/scale/offset at Play and the new one at the swap; foam clamped to the frame);
+//   bool fillGaps = false: true → stroke.width is raised at Play to ≥ 1.4 × leg spacing so the finished paint fully hides the old character (with legs 9); false → width stays as set (builder 38 px).
+//   Builder puts `Paste` (and `Foam`) under `Body/PasteLayer` (stretched over the quadrant, RectMask2D — the lines never leave the player's quadrant) → `PasteFrame` (same rect as `Portrait`), placed after NameTag/PlayerName/LocalMark and before DecidedStamp, so the lines draw over the info panel and name tag but under READY!.
+//   path (BuildPath): starts at the **left, mid height**, goes up-right to the top, then alternates top/bottom while advancing right, and ends going up-right to the **right, mid height** (like the sketch's final arrow). The zigzag is **sheared, not rotated**: a point at height v is shifted right by v·tan(lean), so tops sit right of bottoms and strokes lean like 「／」 (up-legs ≈ 50°, down-legs ≈ 60° from horizontal at the defaults).
+//   lean 35° [-60..60] (0 = vertical zigzag; negative = 「＼」; replaced the old `tilt` rotation 2026-10-12 — scenes built earlier keep a dead `tilt` value, ignored), legs 11 [3..21] (number of strokes incl. the two half strokes at the ends; an even value is rounded up to odd so the last stroke goes up-right), float size 0.55 [0.3..1.5] (whole zigzag scaled about the frame centre; user 2026-10-12 「密度を上げて少し小さく」 → legs 7→11, size 1→0.75, width 40→30; then 「線を太くして少し小さく」 → size 0.65, width 38; then 「もうちょっと小さく」 → size 0.55), overshoot (20,40) px, jitter 8 px (random per play);
+//   x range = ±(w/2 + h/2·|tan lean|) + overshoot.x, so the sheared band covers the frame's corners; with fillGaps the width is raised to ≥ 1.4 × (x range / strokes × size) (offline check, 300×340 frame: lean 35 / legs 9 / width 85 → 100 %, with jitter ≥ 99.4 %; legs 7 needs width ≈ 100+). Default look (legs 11, size .55, width 38, unclipped; first chosen as legs 7 / width 40, then made denser and smaller) was chosen from rendered variants as closest to the sketch; a narrower x range (no shear term) packed the lines too densely;
+//   paintSeconds .45 (head 0→1 with SmoothStep) → swap (previous hidden, current shown) → holdSeconds .06 → reveal: RevealStyle FoamAway (default 「泡になって消える」: stroke alpha → 0, a burst of foam
+//   at 6 random path points then 2 per foamInterval .025) or WipeAlongPath (「同じ道をたどって拭き取る」: tail 0→1 with SmoothStep, foam follows the tail); revealSeconds .3; then shines (staggered .18, shineSize 70, shineSeconds .5).
+//   Play(...) while painting keeps painting (current hidden); while holding the new portrait is already visible; while revealing it restarts with the current portrait as "previous".
+// PasteStroke : MaskableGraphic [Fx, "キャラ選択/演出/歯磨き粉の線"]: Texture texture (builder: curtain texture = Title_PasteCurtain), width 85 px, textureU (.1,.36) across the stroke (vertical stripes → stripes along the stroke),
+//   textureV (.25,.7) along it; SetPath(controls, samplesPerSegment 12) (Catmull-Rom), SetRange(from, to) (fractions of the length; rebuilds the mesh only when changed), PointAt(t), TotalLength; round caps (8 segments).
+// PasteCurtainSettings : ScriptableObject [CreateAssetMenu "MS2026/キャラ選択/歯磨き粉の幕の設定"], ResourcePath "CharacterSelectCurtain":
+//   Texture texture (null → plain colour columns); Color color white; int columns 28 [1..64]; float unevenness .45 [0..0.9];
+//   dropSeconds 1.1, holdSeconds .2 (minimum), revealSeconds .9; bool useForGameStart true (GO! → Game also uses this curtain); bool playOnStandalone true; int sortingOrder 950; FortressEffect onCover, onReveal.
+// PasteCurtain (static API; component hidden from Add Component): Play(Action onCovered, Func<bool> isReady); bool TryPlayGameStart(onCovered, isReady) (false when useForGameStart off); bool UseForGameStart; RevealForStandalone(); bool IsPlaying, IsCovering.
+//   A second Play while covering adds its onCovered; while holding, its onCovered runs immediately. Settings are read once (first use) — restart Play mode after editing them.
+// StatBar [AddComponentMenu "キャラ選択/能力の棒グラフ (StatBar)"]: Text label (hidden when empty), Image fill (Filled Horizontal), speed 3/s; Set(label, value).
+// PlayerTag [AddComponentMenu "キャラ選択/プレイヤーの札 (PlayerTag)"]: background, pointer, label ("1P"), decidedMark, decidedScale 1.2, blockedAlpha .45 — the label pill of a PlayerCircle.
+```
+
+## 3. Lobby integration (`MS2026.UI.Game.GameSession`, partial file `GameSession.CharacterSelect.cs`)
+- Field (header `キャラクター選択`): `string characterSelectSceneName = "Character_Select"`. Static hook `public delegate void CoverPlayer(Action onCovered, Func<bool> isReady)` + `public static CoverPlayer CharacterSelectCurtain` (null → `gameTransition`), used by private `PlayCharacterSelectCover`. Leaving hook: `public delegate bool CoverTry(Action onCovered, Func<bool> isReady)` + `public static CoverTry GameStartCurtain` (null or returns false → `gameTransition`), used by private `PlayGameStartCover` (host `ProceedToGame`, clients on Loading after CharacterSelect in `GameSession.Match.cs` `OnPhaseReceived`). Props `UsesCharacterSelect`, `IsCharacterSelectLoaded`; private `IsMatchSceneLoaded` (= Game or Character_Select loaded).
+- New `LobbyPhase.CharacterSelect = 5` (label `キャラクター選択中`; LAN browser row `キャラクター選択中（途中から参加）`).
+- `StartMatch` → `BeginCharacterSelect()` (host: phase CharacterSelect, cover via `PlayCharacterSelectCover` (paste curtain), NGO `LoadScene(Character_Select, Additive)`; failure → phase Waiting + message `キャラクター選択に進めませんでした`). Clients cover on the phase until the scene is loaded.
+- `HandleSceneLoaded(Character_Select)` → `SetActiveScene`, hide lobby look (camera/background), close Menu layer + Countdown, `State = InGame` (so Esc opens Pause: `全員でロビーに戻る` (host) / `試合から抜ける` / `タイトルへ` work during character select).
+- `ProceedToGame()` (host, phase CharacterSelect) → phase Loading (clients cover with `PlayGameStartCover` until Game loaded, `onMatchStart` plays) → cover (`PlayGameStartCover`, = paste curtain) → coroutine `SwapCharacterSelectForGame` (unload with retry → wait → load Game with retry). Failures → `FailToRoom` (phase Waiting, unload or `ShowRoomAgain`, message `ゲームを始められませんでした`).
+- `HandleSceneUnloaded(Character_Select)` is ignored while phase is Loading or Game is loaded (moving on); otherwise it runs the normal "back to the room" path. `ReturnEveryoneToLobby` / `LeaveMatch` / `ReturnAfterProblem` / `UnloadGameLocally` also handle Character_Select (`UnloadMatchSceneForEveryone`, `UnloadCharacterSelectLocally`). Clients that get phase Waiting while `InGame` with no match scene loaded → `ShowRoomAgain()`.
+- The `countdownSeconds` field is unused while character select is enabled.
+
+## 4. Editor UI
+- `Tools/キャラ選択/シーンを組み立てる` (refuses in Play; asks to save modified scenes; opens/creates `Assets/Scenes/Character_Select.unity`). If `[CharacterSelect]`/`[CharacterSelect UI]` exist: dialog `数値を引き継いで作り直す` / `やめる` / `初期値で作り直す`. "Keep" = `CharacterSelectValueSnapshot`: before deleting, EditorJsonUtility.ToJson of every Controller/View/PlayerPanel/PlayerCircle/PlayerTag/StatBar/CharacterSwapFx/PasteStroke/Ambient/Burst/Glitch/Scroll keyed by hierarchy path + type; after the rebuild FromJsonOverwrite onto the same path/type, then restore the new scene-object references (asset references come from the snapshot). New fields keep their new defaults. Layout/text changes made in the scene are not kept. Steps:
+  - `CharacterSelectArt.EnsureAll()` (missing PNGs only; configures only the ones it created).
+  - `EnsureCharacters()`: creates missing `Chara_Alpha|Beta|Gamma|Delta` — all named **「キャラ名（仮）」** (user 2026-10-12; was 「仮」, which is migrated like the older names; the 4 files in the repo were updated directly), coloured **red (.93,.27,.3) / blue (.22,.52,.96) / green (.25,.74,.42) / yellow (.98,.84,.2)** (user 2026-10-12), skill `スキル名（仮）` / `ここにスキルの説明が入ります（仮）。` (no 「例：…」 line) — and the roster if missing. Existing files: values still equal to the previous placeholders (old names アルファ（仮）…, old pastel colours in themeColor/spriteTint, old skill texts with 「例：…」) are replaced by the new ones; anything edited by hand is untouched. For those 4 files (new or existing): `sprite` null **or the old CS_CharaPortrait** → CS_CharaCube + `spriteTint` = that colour; `icon` == old CS_CharaFace → null; `stats` empty → 3 sample stats (パワー/スピード/ため) + the placeholder skill texts. Other filled fields are never touched.
+  - Deletes `[CharacterSelect]`, `[CharacterSelect UI]`, old `[CharacterSelect Background]`. Camera (first root Camera, else new "Main Camera"): MainCamera tag, orthographic, solid colour (.08,.09,.14) (only clears the screen).
+  - `[CharacterSelect]` = Controller + View. `[CharacterSelect UI]` = Overlay canvas order **50** (below lobby Toast 400 / Transition 900), scaler 1920×1080 match .5, no raycaster/EventSystem. Children (1920×1080 px; quadrants 960×415, bottom area 250):
+    `Background` (stretch, CS_Background_Cyber) · `Ambient` (stretch, CharacterSelectAmbient) · `Dividers` (vertical 4 px + horizontal 4 px, white .5) · `Panels/Panel 1P..4P` (corner-anchored; inside `AreaTint` (.3), `Pattern` (CS_Halftone), `Stripes` (RawImage CS_Stripes, white .12, CharacterSelectScroll (.1,.1)), `Frame` (CS_Frame, inset 6, white .75), `Body` → `Portrait` (bottom-left, centre x 180, y 10, 300×340, + CharacterSwapFx: `Fallback`, `Letter`, `Previous`, `Image`, `Shine 1..3`; panel.slideInPixels = 0), `InfoPanel` (345,−80, 585×325: `Stats` (VerticalLayoutGroup, `StatTemplate` 540×30: `Label` 130 + `BarBack` 380×18 + `Fill`), `SkillBox` (24,−166, 537×118: `SkillName`, `SkillText` wrap), `HoldGaugeBack`/`HoldGauge` 300×14, `State`), `NameTag` (355,−34, 340×64 + `Name` 38 px: Outline ink 3 + drop Shadow (3,−4) + 2 glitch Shadows + CharacterSelectGlitch 9 px), `PlayerLabelBack`/`PlayerLabel` (20,−16, 100×50), `PlayerNameBar` (128,−20, 210×42 dark navy pill) → `PlayerName`, `LocalMark` 「あなた」, `PasteLayer` (stretch, RectMask2D) → `PasteFrame` (= Portrait rect) → `Paste` (Image CS_CharaCube + Mask, both disabled unless clipToCharacter) → `Stroke` (PasteStroke, width 38) and `Foam` (burst: bubbles only, gravity −260), `DecidedStamp` (340×110, rotated 12°, `Tooth` 92 px on the left (no face) + 「READY!」 62 px)), `Flash` (white, alpha 0), `Burst` (bottom-left (180,200)) · `Bottom` (stretch; slides in) → `BottomBar` (height 110, light blue .92) · `Circles` (bottom-centre y 135) → `Circle 1P..4P` (x = (seat−1.5)×170, 120×120, CanvasGroup: `HoldGauge` 144 radial, `Ring` 124, `Back` 106, `Face` 76 (CS_CharaCube), `Letter`, `Label 1P..4P` 78×36 at (0, +74) for 1P/2P and (0, −74) for 3P/4P with `Back`+`Label`+`Decided` check, `Burst` at the centre) · `Help` (bottom-left, 600×80, 2 lines, 24 px) · `Rule` (bottom-right) — Help/Rule/BottomBar/Circles are children of `Bottom` · `Timer` (top-centre, disabled) · `ScreenFlash` · `CenterBurst` (centre +125, size (24,64), speed (450,1200), pool 112) · `DecidedBanner` 「GO!」 (560×210, 150 px, + CharacterSelectGlitch 14 px, `ToothLeft`/`ToothRight` 150 px at ±330) · `FadeOut` (CanvasGroup 0, colour (.96,.95,1)).
+  - Text = legacy `Text` with `LegacyRuntime.ttf` (same as the lobby; Japanese via OS fallback).
+  - Saves the scene; adds it to Build Settings after Lobby if missing (required for NGO loading).
+- **`Tools/キャラ選択/見た目と数値の調整`** (`CharacterSelectTuningWindow`, title `キャラ選択の調整`, user request 2026-10-12: swap images and tune parameters in one place). Tabs:
+  - `キャラ`: per roster entry a box with thumbnail (sprite × spriteTint) and SerializedObject fields 名前 / 色 (spriteTint) / 立ち絵 / 下の丸の顔 / スキル名 / スキルの説明 / 能力の棒グラフ / 立ち絵の大きさ / 位置のずれ; buttons `ファイルを選ぶ`, `＋ キャラを増やす（最後のキャラを複製）` (CopyAsset to `Chara_New*.asset`, id = file name, appended to the roster), `キャラの一覧を選ぶ`.
+  - `画像の差し替え`: one row per `CharacterSelectArt.Entries` item (label, usage, path, size) with `画像を選んで差し替える` (OpenFilePanel png/jpg → `ReplaceWithFile`: decode + EncodeToPNG over the same file, import settings/GUID kept), `仮の絵に戻す` (`RestorePlaceholder`: repaint the placeholder into the same file), `場所を見る`. Note that the paste texture is the title's and should be changed via the 数値 tab.
+  - `数値`: multi-object SerializedObject sections over all instances in the open scene (so the 4 panels/circles change together): ルール (controller), キャラの切り替え (CharacterSwapFx: clipToCharacter, fillGaps, lean, legs, size, paintSeconds, holdSeconds, revealStyle, revealSeconds, jitter, shineSeconds), 歯磨き粉の線 (PasteStroke: width, texture, textureU), 区画 (PlayerPanel: stampSlam*, areaTintAlpha, patternAlpha, infoPanelAlpha, bob*), 下の丸 (PlayerCircle), 登場・GO! (View), 漂う泡・2進数・キラキラ (Ambient), plus the curtain settings asset; `シーンを保存`. Without the scene open it offers `キャラ選択のシーンを開く`.
+- `Tools/キャラ選択/キャラの一覧を選ぶ` (selects + pings the roster), `Tools/キャラ選択/キャラ選択のシーンを開く`, `Tools/キャラ選択/歯磨き粉の幕の設定を選ぶ` (creates the settings if missing).
+- The scene builder also runs `EnsureCurtainSettings()`: creates `Resources/CharacterSelectCurtain.asset` if missing and fills an empty texture with `Title_PasteCurtain.png` (warning if the title image is missing).
+
+## 5. Integration
+- D-Drive: effects play only when `Vfx.IsBound` / `Audio.IsBound` (bootstrap lives in the Lobby scene → silent when the scene is played alone). VFX positions are not meaningful on this UI screen.
+- Grip: `GripInputBridge.Provider.IsGripping(i)` (edge detector with hysteresis), so the keyboard grip simulator keys (Q/W/O/P) also work.
+- Fortress: `FortressColors.PlayerColor(seat)` for every player colour (P1 red, P2 blue, P3 green, P4 yellow) — matches the mock-up.
+- SpriteAnim: not wired. An animated portrait could be done by adding a `SpriteAnimator` to a panel's `Portrait/Image` (it supports UI `Image` targets), but the panel sets `portrait.sprite` only when the character changes.
+- Game side: not wired. To use the choice, reference `MS2026.CharacterSelect.Data` and call `CharacterSelectionResult.Get(playerIndex)` (null when the game was started without character select, e.g. NetTest bats).
+
+## 6. Gotchas
+1. The UI version has not run in Unity yet (see header). First run: rebuild the scene with the menu (`作り直す`), play `Character_Select` alone (A/S/D/F), then Title → Lobby → `ゲーム開始！`.
+2. The scene must be in Build Settings or the lobby shows `キャラクター選択に進めませんでした` (the builder adds it).
+3. Rebuilding the scene discards hand edits to the scene objects (layout, texts). Reskin through the assets (PNG overwrite, character files) or stop using the builder after customising.
+4. NGO processes one scene event at a time; the swap retries on `SceneEventInProgress` (e.g. a late joiner still synchronising). If the unload can never start, `FailToRoom` logs a warning and the host can use Pause › `全員でロビーに戻る`.
+5. Duplicates toggle is read from the host's scene instance; change it in `Character_Select.unity` (`[CharacterSelect]` › `Allow Same Character`) — clients follow the host.
+6. Hold gauges are local-only (other players' charging is not synced).
+7. Characters are only visible through the cursors (there is no list of all characters on screen); the roster order is the cursor order. With many characters a player may need many short presses.
+8. Long skill texts wrap inside `SkillText` (505×70 px, overflow visible) — beyond ~3 lines they spill out of the box.
+9. `offlineNextScene` loads in Single mode; it is never used when a `GameSession` exists.
+10. Board messages carry `cursor` as a byte → max 255 characters.
+
+## 7. Related
+`UIStudio_AI_Reference.md` §7 (lobby/session), `Docs/Multiplayer/MultiplayerProgress.md` §5c, `GripInputBridge_AI_Reference.md`, `FortressDesigner_AI_Reference.md` §Effects (`FortressEffect`), `SpriteAnim_AI_Reference.md`, `TitleScreen_AI_Reference.md`.

@@ -18,7 +18,10 @@ namespace MS2026.UI.Game
         InGame = 3,
 
         /// <summary>全員でロビーに戻っている途中。</summary>
-        Returning = 4
+        Returning = 4,
+
+        /// <summary>キャラクター選択のシーンにいる（「ゲーム開始」の後、ゲームのシーンの前）。</summary>
+        CharacterSelect = 5
     }
 
     /// <summary>
