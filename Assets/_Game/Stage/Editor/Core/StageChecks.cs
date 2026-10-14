@@ -82,6 +82,14 @@ namespace MS2026.Stage.EditorTools
                     continue;
                 }
 
+                if (StagePropComposer.IsModelOutside(prop))
+                {
+                    issues.Add(new StudioIssue(StudioIssueSeverity.Error, $"{name}: モデルが入れ物の外にあります",
+                            "見た目のモデルが、この背景オブジェクトの「Visual」の下にありません。このままだと、動かす・回す・揺れる・透ける・焦げるが見た目に効かず、ステージに保存してもモデルが入りません。" +
+                            "直すと、見た目の位置はそのままで Visual の下へ入れます（モデルが別のファイルの一部なら、同じ見た目の複製を入れて元の部品は消します）。", prop)
+                        .WithFix("中に入れる", () => StagePropComposer.BringModelInside(prop)));
+                }
+
                 var euler = prop.transform.eulerAngles;
                 if (Mathf.Abs(Mathf.DeltaAngle(euler.x, 0f)) > 0.01f || Mathf.Abs(Mathf.DeltaAngle(euler.y, 0f)) > 0.01f)
                 {

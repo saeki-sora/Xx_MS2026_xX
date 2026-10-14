@@ -209,7 +209,7 @@ namespace MS2026.Stage.EditorTools
 
             if (node == source.transform)
             {
-                return (GameObject)PrefabUtility.InstantiatePrefab(source);
+                return InstantiateWhole(source);
             }
 
             var copy = Object.Instantiate(node.gameObject);
@@ -217,10 +217,33 @@ namespace MS2026.Stage.EditorTools
             return copy;
         }
 
+        /// <summary>
+        /// モデル全体の実体を作る。ファイルそのもの（Prefab の根元）ならつながりを保つ。
+        /// FBX の中の1つの部品（Project で ▶ を開いて出てくる子）を選んだときは、その部品だけを複製する
+        /// （InstantiatePrefab はファイル全体をシーンの直下に出して、その中の部品を返すため、Visual の下へ移せなかった。2026-10-14）。
+        /// </summary>
+        private static GameObject InstantiateWhole(GameObject source)
+        {
+            if (IsAssetRoot(source))
+            {
+                return (GameObject)PrefabUtility.InstantiatePrefab(source);
+            }
+
+            var copy = Object.Instantiate(source);
+            copy.name = source.name;
+            return copy;
+        }
+
+        /// <summary>Prefab・モデルのファイルそのもの（中の部品ではない）か。</summary>
+        public static bool IsAssetRoot(GameObject source)
+        {
+            return source != null && source.transform.parent == null && PrefabUtility.IsPartOfPrefabAsset(source);
+        }
+
         private static GameObject Instantiate(GameObject source, StageImportNode node, Transform sourceRoot)
         {
             var instance = node.Source == sourceRoot
-                ? (GameObject)PrefabUtility.InstantiatePrefab(source)
+                ? InstantiateWhole(source)
                 : Object.Instantiate(node.Source.gameObject);
             instance.name = node.Name;
             Undo.RegisterCreatedObjectUndo(instance, "モデルを取り込む");

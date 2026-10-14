@@ -501,9 +501,11 @@ namespace MS2026.Fortress
         private JobHandle BuildJobChain(int count, float dt)
         {
             var maxRadius = 0.1f;
+            var maxHitRadius = 0.1f;
             for (var t = 0; t < _types.Count; t++)
             {
                 maxRadius = Mathf.Max(maxRadius, _typeParams[t].radius);
+                maxHitRadius = Mathf.Max(maxHitRadius, Mathf.Max(_typeParams[t].radius, _typeParams[t].hitRadius));
             }
 
             var densityRadius = _settings.densityRadius;
@@ -571,7 +573,7 @@ namespace MS2026.Fortress
                     hashInvCell = hashInvCell,
                     hashW = Grid.Width,
                     hashH = Grid.Height,
-                    maxRadius = maxRadius,
+                    maxRadius = maxHitRadius,
                     dt = dt,
                     hitT = _hitT,
                     hitIdx = _hitIdx,
@@ -852,6 +854,7 @@ namespace MS2026.Fortress
                 _typeParams[t] = new SwarmTypeParams
                 {
                     radius = swarm.radius,
+                    hitRadius = Mathf.Max(swarm.radius, swarm.hitRadius),
                     mass = swarm.mass,
                     maxSpeed = definition.moveSpeed,
                     acceleration = swarm.acceleration,

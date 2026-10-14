@@ -30,6 +30,22 @@ namespace MS2026.UI.Game
         public const string KillsComboTime01 = "kills.comboTime01";
         public const string KillsMilestone = "kills.milestone";
         public const string KillsMilestoneShowing = "kills.milestoneShowing";
+        public const string KillsGoal = "kills.goal";
+
+        public const string MatchOutcome = "match.outcome";
+
+        public const string ResultStep = "result.step";
+        public const string ResultClear = "result.clear";
+        public const string ResultDurability01 = "result.durability01";
+        public const string ResultBrightness01 = "result.brightness01";
+        public const string ResultCoreColorBefore = "result.coreColorBefore";
+        public const string ResultCoreColorAfter = "result.coreColorAfter";
+        public const string ResultTotalKills = "result.totalKills";
+        public const string ResultRank = "result.rank";
+        public const string ResultRankColor = "result.rankColor";
+        public const string ResultRankComment = "result.rankComment";
+        public const string ResultNextHold01 = "result.nextHold01";
+        public const string ResultAutoSeconds = "result.autoSeconds";
         public const string WaveTime = "wave.time";
         public const string WavePlaying = "wave.playing";
 
@@ -75,6 +91,10 @@ namespace MS2026.UI.Game
         public static string PlayerPing(int player) => $"player.{player + 1}.ping";
         public static string PlayerTaken(int player) => $"player.{player + 1}.taken";
         public static string PlayerKills(int player) => $"player.{player + 1}.kills";
+        public static string PlayerResultKills(int player) => $"player.{player + 1}.resultKills";
+        public static string PlayerMaxCombo(int player) => $"player.{player + 1}.maxCombo";
+        public static string PlayerIsMvp(int player) => $"player.{player + 1}.isMvp";
+        public static string PlayerInResult(int player) => $"player.{player + 1}.inResult";
 
         /// <summary>UIスタジオの値の一覧に登録する内容（キー、表示名、説明、種類、分類、範囲、サンプル値）。</summary>
         public static (string key, string label, string description, UiValueKind kind, string category, Vector2 range, float sample)[] Describe()
@@ -100,6 +120,20 @@ namespace MS2026.UI.Game
                 (KillsComboTime01, "コンボの残り時間（割合）", "1=倒した直後、0=コンボが途切れた。", UiValueKind.Number, "撃破", Vector2.up, 0.6f),
                 (KillsMilestone, "お祝いの撃破数", "全員の撃破数が届いた区切りの数（100, 250, 500, 1000, 2000…）。", UiValueKind.Number, "撃破", new Vector2(0, 5000), 1000),
                 (KillsMilestoneShowing, "お祝い中", "区切りの数に届いてから少しの間だけON。", UiValueKind.Bool, "撃破", Vector2.up, 1),
+                (KillsGoal, "クリアに必要な撃破数", "全員でこの数を倒したらクリア（既定 1000。ゲームのシーンの「試合の決まり」で変えられる）。", UiValueKind.Number, "撃破", new Vector2(0, 5000), 1000),
+                (MatchOutcome, "試合の状態", "0=試合中、1=クリア、2=ゲームオーバー。", UiValueKind.Number, "試合", new Vector2(0, 2), 0),
+                (ResultStep, "リザルトの段階", "リザルト画面の出てくる順番（0=出ていない、1=「討伐完了！」、2=パネル、3=耐久、4=輝き、5=撃破数、6=最大コンボとMVP、7=ランク、8=「握り続けてタイトルへ」）。", UiValueKind.Number, "リザルト", new Vector2(0, 8), 8),
+                (ResultClear, "クリアした", "クリアならON、ゲームオーバーならOFF。", UiValueKind.Bool, "リザルト", Vector2.up, 1),
+                (ResultDurability01, "コアの耐久（割合）", "試合が終わったときのコアの残りHP（1=無傷）。", UiValueKind.Number, "リザルト", Vector2.up, 0.72f),
+                (ResultBrightness01, "コアの輝き（割合）", "コアの汚れの少なさ（1=ピカピカ、0=いちばん汚れた色）。", UiValueKind.Number, "リザルト", Vector2.up, 0.64f),
+                (ResultCoreColorBefore, "試合前のコアの色", "汚れる前のコアの色。", UiValueKind.Color, "リザルト", Vector2.up, 0),
+                (ResultCoreColorAfter, "試合後のコアの色", "試合が終わったときのコアの色（削れたほど汚れた色）。", UiValueKind.Color, "リザルト", Vector2.up, 0),
+                (ResultTotalKills, "全員の撃破数（リザルト）", "試合が終わったときの全員の撃破数。", UiValueKind.Number, "リザルト", new Vector2(0, 5000), 1000),
+                (ResultRank, "評価のランク", "S・A・B・C（コアの耐久で決まる）。", UiValueKind.Text, "リザルト", Vector2.up, 0),
+                (ResultRankColor, "ランクの色", "ランクごとの色。", UiValueKind.Color, "リザルト", Vector2.up, 0),
+                (ResultRankComment, "ランクのひとこと", "ランクに合わせた短い言葉。", UiValueKind.Text, "リザルト", Vector2.up, 0),
+                (ResultNextHold01, "「次へ」の溜まり", "握り続けると0→1。1でタイトルへ。", UiValueKind.Number, "リザルト", Vector2.up, 0.4f),
+                (ResultAutoSeconds, "自動で戻るまでの秒数", "この秒数がたつと、だれも握らなくてもタイトルへ戻る。", UiValueKind.Number, "リザルト", new Vector2(0, 60), 45),
                 (WaveTime, "ウェーブの経過秒", "ウェーブが始まってからの秒数。", UiValueKind.Number, "敵", new Vector2(0, 300), 42),
                 (WavePlaying, "ウェーブ中", "敵が湧いている間ON。", UiValueKind.Bool, "敵", Vector2.up, 1),
                 (NetMode, "通信の状態", "オフライン / ホスト / 参加中。", UiValueKind.Text, "通信", Vector2.up, 0),
@@ -145,6 +179,10 @@ namespace MS2026.UI.Game
                 list.Add((PlayerIsLocal(p), $"{name}が自分", "このPCのプレイヤーのときON。", UiValueKind.Bool, "プレイヤー", Vector2.up, p == 0 ? 1 : 0));
                 list.Add((PlayerPing(p), $"{name}の通信の遅れ", "ホストとの往復の時間（ミリ秒）。", UiValueKind.Number, "プレイヤー", new Vector2(0, 300), 12));
                 list.Add((PlayerKills(p), $"{name}の撃破数", "その人が倒した数（全員の画面で同じ）。", UiValueKind.Number, "プレイヤー", new Vector2(0, 2000), 100 + 50 * p));
+                list.Add((PlayerResultKills(p), $"{name}の撃破数（リザルト）", "リザルトで数え上げる、試合が終わったときの撃破数。", UiValueKind.Number, "リザルト", new Vector2(0, 2000), 320 - 60 * p));
+                list.Add((PlayerMaxCombo(p), $"{name}の最大コンボ", "その試合でいちばん長く続いたコンボ。", UiValueKind.Number, "リザルト", new Vector2(0, 300), 40 - 8 * p));
+                list.Add((PlayerIsMvp(p), $"{name}がMVP", "いちばん多く倒した人のときON。", UiValueKind.Bool, "リザルト", Vector2.up, p == 0 ? 1 : 0));
+                list.Add((PlayerInResult(p), $"{name}をリザルトに出す", "参加していた・1体でも倒した人のときON。", UiValueKind.Bool, "リザルト", Vector2.up, 1));
                 list.Add((PlayerTaken(p), $"{name}がもう使われている", "参加する部屋で、その番号がほかの人に使われているときON。", UiValueKind.Bool, "プレイヤー", Vector2.up, p == 1 ? 1 : 0));
             }
 

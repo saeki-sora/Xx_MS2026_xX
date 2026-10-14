@@ -29,6 +29,8 @@ namespace MS2026.Fortress
     public struct SwarmTypeParams
     {
         public float radius;
+        /// <summary>レーザーが当たる半径（0 なら radius）。</summary>
+        public float hitRadius;
         public float mass;
         public float maxSpeed;
         public float acceleration;

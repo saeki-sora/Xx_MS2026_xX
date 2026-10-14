@@ -75,7 +75,8 @@ namespace MS2026.Fortress
                         var j = cellItems[k];
                         var p = pos[j];
                         var t = lengthSq > 1e-8f ? math.clamp(math.dot(p - a, ab) / lengthSq, 0f, 1f) : 0f;
-                        var reach = beam.halfWidth + types[typeIdx[j]].radius;
+                        var tp = types[typeIdx[j]];
+                        var reach = beam.halfWidth + math.max(tp.radius, tp.hitRadius);
                         if (math.distancesq(p, a + ab * t) > reach * reach)
                         {
                             continue;

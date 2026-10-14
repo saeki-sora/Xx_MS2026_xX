@@ -160,6 +160,54 @@ namespace MS2026.Stage.EditorTools
             RebuildFootprint(prop);
         }
 
+        /// <summary>見た目のモデルが Visual の外にあるか（動かす・揺れ・透け・焦げが見た目に効かない状態）。</summary>
+        public static bool IsModelOutside(StageProp prop)
+        {
+            return prop != null && prop.modelRoot != null && prop.visualRoot != null && !prop.modelRoot.IsChildOf(prop.visualRoot);
+        }
+
+        /// <summary>
+        /// Visual の外にあるモデルを、見た目の位置・向き・大きさを変えずに Visual の下へ入れる。
+        /// モデルが別の Prefab（FBX など）の実体の一部で動かせないときは、同じ見た目の複製（入れたマテリアルもそのまま）を入れ、元の部品は消す。
+        /// </summary>
+        public static void BringModelInside(StageProp prop)
+        {
+            if (!IsModelOutside(prop))
+            {
+                return;
+            }
+
+            const string label = "モデルを中に入れる";
+            var old = prop.modelRoot;
+            Undo.RecordObject(prop, label);
+            if (!PrefabUtility.IsPartOfPrefabInstance(old.gameObject) || PrefabUtility.IsOutermostPrefabInstanceRoot(old.gameObject))
+            {
+                // そのまま移せる（ワールドの位置・向きは保たれる）。
+                Undo.SetTransformParent(old, prop.visualRoot, label);
+            }
+            else
+            {
+                var copy = UnityEngine.Object.Instantiate(old.gameObject);
+                copy.name = old.name;
+                Undo.RegisterCreatedObjectUndo(copy, label);
+                copy.transform.SetParent(prop.visualRoot, false);
+                var local = prop.visualRoot.worldToLocalMatrix * old.localToWorldMatrix;
+                copy.transform.localPosition = local.GetColumn(3);
+                copy.transform.localRotation = local.rotation;
+                copy.transform.localScale = local.lossyScale;
+                prop.modelRoot = copy.transform;
+                Undo.DestroyObjectImmediate(old.gameObject);
+            }
+
+            EditorUtility.SetDirty(prop);
+            if (prop.TryGetComponent<StagePropRenderer>(out var propRenderer))
+            {
+                propRenderer.CollectRenderers();
+            }
+
+            RebuildFootprint(prop);
+        }
+
         /// <summary>根元（揺れの支点・回転の中心）を、見た目の真下の床へ移す。子の見た目の位置は変わらない。</summary>
         public static void RecenterPivot(StageProp prop)
         {

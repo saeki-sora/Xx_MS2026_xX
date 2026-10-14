@@ -907,3 +907,274 @@ MonoBehaviour:
     sampleText: 
     sampleColor: {r: 1, g: 1, b: 1, a: 1}
     category: "\u30D7\u30EC\u30A4\u30E4\u30FC"
+  - key: kills.goal
+    label: "\u30AF\u30EA\u30A2\u306B\u5FC5\u8981\u306A\u6483\u7834\u6570"
+    description: "\u5168\u54E1\u3067\u3053\u306E\u6570\u3092\u5012\u3057\u305F\u3089\u30AF\u30EA\u30A2\uFF08\u65E2\u5B9A
+      1000\u3002\u30B2\u30FC\u30E0\u306E\u30B7\u30FC\u30F3\u306E\u300C\u8A66\u5408\u306E\u6C7A\u307E\u308A\u300D\u3067\u5909\u3048\u3089\u308C\u308B\uFF09\u3002"
+    kind: 1
+    range: {x: 0, y: 5000}
+    sampleNumber: 1000
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6483\u7834"
+  - key: match.outcome
+    label: "\u8A66\u5408\u306E\u72B6\u614B"
+    description: "0=\u8A66\u5408\u4E2D\u30011=\u30AF\u30EA\u30A2\u30012=\u30B2\u30FC\u30E0\u30AA\u30FC\u30D0\u30FC\u3002"
+    kind: 1
+    range: {x: 0, y: 2}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u8A66\u5408"
+  - key: result.step
+    label: "\u30EA\u30B6\u30EB\u30C8\u306E\u6BB5\u968E"
+    description: "\u30EA\u30B6\u30EB\u30C8\u753B\u9762\u306E\u51FA\u3066\u304F\u308B\u9806\u756A\uFF080=\u51FA\u3066\u3044\u306A\u3044\u30011=\u300C\u8A0E\u4F10\u5B8C\u4E86\uFF01\u300D\u30012=\u30D1\u30CD\u30EB\u30013=\u8010\u4E45\u30014=\u8F1D\u304D\u30015=\u6483\u7834\u6570\u30016=\u6700\u5927\u30B3\u30F3\u30DC\u3068MVP\u30017=\u30E9\u30F3\u30AF\u30018=\u300C\u63E1\u308A\u7D9A\u3051\u3066\u30BF\u30A4\u30C8\u30EB\u3078\u300D\uFF09\u3002"
+    kind: 1
+    range: {x: 0, y: 8}
+    sampleNumber: 8
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: result.clear
+    label: "\u30AF\u30EA\u30A2\u3057\u305F"
+    description: "\u30AF\u30EA\u30A2\u306A\u3089ON\u3001\u30B2\u30FC\u30E0\u30AA\u30FC\u30D0\u30FC\u306A\u3089OFF\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 1
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: result.durability01
+    label: "\u30B3\u30A2\u306E\u8010\u4E45\uFF08\u5272\u5408\uFF09"
+    description: "\u8A66\u5408\u304C\u7D42\u308F\u3063\u305F\u3068\u304D\u306E\u30B3\u30A2\u306E\u6B8B\u308AHP\uFF081=\u7121\u50B7\uFF09\u3002"
+    kind: 1
+    range: {x: 0, y: 1}
+    sampleNumber: 0.72
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: result.brightness01
+    label: "\u30B3\u30A2\u306E\u8F1D\u304D\uFF08\u5272\u5408\uFF09"
+    description: "\u30B3\u30A2\u306E\u6C5A\u308C\u306E\u5C11\u306A\u3055\uFF081=\u30D4\u30AB\u30D4\u30AB\u30010=\u3044\u3061\u3070\u3093\u6C5A\u308C\u305F\u8272\uFF09\u3002"
+    kind: 1
+    range: {x: 0, y: 1}
+    sampleNumber: 0.64
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: result.coreColorBefore
+    label: "\u8A66\u5408\u524D\u306E\u30B3\u30A2\u306E\u8272"
+    description: "\u6C5A\u308C\u308B\u524D\u306E\u30B3\u30A2\u306E\u8272\u3002"
+    kind: 4
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: result.coreColorAfter
+    label: "\u8A66\u5408\u5F8C\u306E\u30B3\u30A2\u306E\u8272"
+    description: "\u8A66\u5408\u304C\u7D42\u308F\u3063\u305F\u3068\u304D\u306E\u30B3\u30A2\u306E\u8272\uFF08\u524A\u308C\u305F\u307B\u3069\u6C5A\u308C\u305F\u8272\uFF09\u3002"
+    kind: 4
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: result.totalKills
+    label: "\u5168\u54E1\u306E\u6483\u7834\u6570\uFF08\u30EA\u30B6\u30EB\u30C8\uFF09"
+    description: "\u8A66\u5408\u304C\u7D42\u308F\u3063\u305F\u3068\u304D\u306E\u5168\u54E1\u306E\u6483\u7834\u6570\u3002"
+    kind: 1
+    range: {x: 0, y: 5000}
+    sampleNumber: 1000
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: result.rank
+    label: "\u8A55\u4FA1\u306E\u30E9\u30F3\u30AF"
+    description: "S\u30FBA\u30FBB\u30FBC\uFF08\u30B3\u30A2\u306E\u8010\u4E45\u3067\u6C7A\u307E\u308B\uFF09\u3002"
+    kind: 3
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: "\u30B5\u30F3\u30D7\u30EB"
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: result.rankColor
+    label: "\u30E9\u30F3\u30AF\u306E\u8272"
+    description: "\u30E9\u30F3\u30AF\u3054\u3068\u306E\u8272\u3002"
+    kind: 4
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: result.rankComment
+    label: "\u30E9\u30F3\u30AF\u306E\u3072\u3068\u3053\u3068"
+    description: "\u30E9\u30F3\u30AF\u306B\u5408\u308F\u305B\u305F\u77ED\u3044\u8A00\u8449\u3002"
+    kind: 3
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: "\u30B5\u30F3\u30D7\u30EB"
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: result.nextHold01
+    label: "\u300C\u6B21\u3078\u300D\u306E\u6E9C\u307E\u308A"
+    description: "\u63E1\u308A\u7D9A\u3051\u308B\u30680\u21921\u30021\u3067\u30BF\u30A4\u30C8\u30EB\u3078\u3002"
+    kind: 1
+    range: {x: 0, y: 1}
+    sampleNumber: 0.4
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: result.autoSeconds
+    label: "\u81EA\u52D5\u3067\u623B\u308B\u307E\u3067\u306E\u79D2\u6570"
+    description: "\u3053\u306E\u79D2\u6570\u304C\u305F\u3064\u3068\u3001\u3060\u308C\u3082\u63E1\u3089\u306A\u304F\u3066\u3082\u30BF\u30A4\u30C8\u30EB\u3078\u623B\u308B\u3002"
+    kind: 1
+    range: {x: 0, y: 60}
+    sampleNumber: 45
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: player.1.resultKills
+    label: "P1\u306E\u6483\u7834\u6570\uFF08\u30EA\u30B6\u30EB\u30C8\uFF09"
+    description: "\u30EA\u30B6\u30EB\u30C8\u3067\u6570\u3048\u4E0A\u3052\u308B\u3001\u8A66\u5408\u304C\u7D42\u308F\u3063\u305F\u3068\u304D\u306E\u6483\u7834\u6570\u3002"
+    kind: 1
+    range: {x: 0, y: 2000}
+    sampleNumber: 320
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: player.1.maxCombo
+    label: "P1\u306E\u6700\u5927\u30B3\u30F3\u30DC"
+    description: "\u305D\u306E\u8A66\u5408\u3067\u3044\u3061\u3070\u3093\u9577\u304F\u7D9A\u3044\u305F\u30B3\u30F3\u30DC\u3002"
+    kind: 1
+    range: {x: 0, y: 300}
+    sampleNumber: 40
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: player.1.isMvp
+    label: "P1\u304CMVP"
+    description: "\u3044\u3061\u3070\u3093\u591A\u304F\u5012\u3057\u305F\u4EBA\u306E\u3068\u304DON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 1
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: player.1.inResult
+    label: "P1\u3092\u30EA\u30B6\u30EB\u30C8\u306B\u51FA\u3059"
+    description: "\u53C2\u52A0\u3057\u3066\u3044\u305F\u30FB1\u4F53\u3067\u3082\u5012\u3057\u305F\u4EBA\u306E\u3068\u304DON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 1
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: player.2.resultKills
+    label: "P2\u306E\u6483\u7834\u6570\uFF08\u30EA\u30B6\u30EB\u30C8\uFF09"
+    description: "\u30EA\u30B6\u30EB\u30C8\u3067\u6570\u3048\u4E0A\u3052\u308B\u3001\u8A66\u5408\u304C\u7D42\u308F\u3063\u305F\u3068\u304D\u306E\u6483\u7834\u6570\u3002"
+    kind: 1
+    range: {x: 0, y: 2000}
+    sampleNumber: 260
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: player.2.maxCombo
+    label: "P2\u306E\u6700\u5927\u30B3\u30F3\u30DC"
+    description: "\u305D\u306E\u8A66\u5408\u3067\u3044\u3061\u3070\u3093\u9577\u304F\u7D9A\u3044\u305F\u30B3\u30F3\u30DC\u3002"
+    kind: 1
+    range: {x: 0, y: 300}
+    sampleNumber: 32
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: player.2.isMvp
+    label: "P2\u304CMVP"
+    description: "\u3044\u3061\u3070\u3093\u591A\u304F\u5012\u3057\u305F\u4EBA\u306E\u3068\u304DON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: player.2.inResult
+    label: "P2\u3092\u30EA\u30B6\u30EB\u30C8\u306B\u51FA\u3059"
+    description: "\u53C2\u52A0\u3057\u3066\u3044\u305F\u30FB1\u4F53\u3067\u3082\u5012\u3057\u305F\u4EBA\u306E\u3068\u304DON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 1
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: player.3.resultKills
+    label: "P3\u306E\u6483\u7834\u6570\uFF08\u30EA\u30B6\u30EB\u30C8\uFF09"
+    description: "\u30EA\u30B6\u30EB\u30C8\u3067\u6570\u3048\u4E0A\u3052\u308B\u3001\u8A66\u5408\u304C\u7D42\u308F\u3063\u305F\u3068\u304D\u306E\u6483\u7834\u6570\u3002"
+    kind: 1
+    range: {x: 0, y: 2000}
+    sampleNumber: 200
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: player.3.maxCombo
+    label: "P3\u306E\u6700\u5927\u30B3\u30F3\u30DC"
+    description: "\u305D\u306E\u8A66\u5408\u3067\u3044\u3061\u3070\u3093\u9577\u304F\u7D9A\u3044\u305F\u30B3\u30F3\u30DC\u3002"
+    kind: 1
+    range: {x: 0, y: 300}
+    sampleNumber: 24
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: player.3.isMvp
+    label: "P3\u304CMVP"
+    description: "\u3044\u3061\u3070\u3093\u591A\u304F\u5012\u3057\u305F\u4EBA\u306E\u3068\u304DON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: player.3.inResult
+    label: "P3\u3092\u30EA\u30B6\u30EB\u30C8\u306B\u51FA\u3059"
+    description: "\u53C2\u52A0\u3057\u3066\u3044\u305F\u30FB1\u4F53\u3067\u3082\u5012\u3057\u305F\u4EBA\u306E\u3068\u304DON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 1
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: player.4.resultKills
+    label: "P4\u306E\u6483\u7834\u6570\uFF08\u30EA\u30B6\u30EB\u30C8\uFF09"
+    description: "\u30EA\u30B6\u30EB\u30C8\u3067\u6570\u3048\u4E0A\u3052\u308B\u3001\u8A66\u5408\u304C\u7D42\u308F\u3063\u305F\u3068\u304D\u306E\u6483\u7834\u6570\u3002"
+    kind: 1
+    range: {x: 0, y: 2000}
+    sampleNumber: 140
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: player.4.maxCombo
+    label: "P4\u306E\u6700\u5927\u30B3\u30F3\u30DC"
+    description: "\u305D\u306E\u8A66\u5408\u3067\u3044\u3061\u3070\u3093\u9577\u304F\u7D9A\u3044\u305F\u30B3\u30F3\u30DC\u3002"
+    kind: 1
+    range: {x: 0, y: 300}
+    sampleNumber: 16
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: player.4.isMvp
+    label: "P4\u304CMVP"
+    description: "\u3044\u3061\u3070\u3093\u591A\u304F\u5012\u3057\u305F\u4EBA\u306E\u3068\u304DON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: player.4.inResult
+    label: "P4\u3092\u30EA\u30B6\u30EB\u30C8\u306B\u51FA\u3059"
+    description: "\u53C2\u52A0\u3057\u3066\u3044\u305F\u30FB1\u4F53\u3067\u3082\u5012\u3057\u305F\u4EBA\u306E\u3068\u304DON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 1
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"

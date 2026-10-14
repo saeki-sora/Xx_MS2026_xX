@@ -31,14 +31,14 @@ namespace MS2026.UI.EditorTools
         private const string OldCoreName = "CoreHp";
         private const string HeatName = "LocalHeat";
         private const string OverheatName = "Overheat";
-        private const string SparklePath = "Assets/CharacterSelect/Art/CS_Sparkle.png";
+        internal const string SparklePath = "Assets/CharacterSelect/Art/CS_Sparkle.png";
 
-        private static readonly Color Cyan = new Color(0.43f, 0.93f, 1f);
-        private static readonly Color Pink = new Color(1f, 0.5f, 0.84f);
-        private static readonly Color Navy = new Color(0.06f, 0.08f, 0.2f);
+        internal static readonly Color Cyan = new Color(0.43f, 0.93f, 1f);
+        internal static readonly Color Pink = new Color(1f, 0.5f, 0.84f);
+        internal static readonly Color Navy = new Color(0.06f, 0.08f, 0.2f);
         private static readonly Color Magenta = new Color(1f, 0.24f, 0.78f, 0.8f);
         private static readonly Color CyanShadow = new Color(0.24f, 0.9f, 1f, 0.8f);
-        private static readonly Color Gold = new Color(1f, 0.86f, 0.5f, 0.9f);
+        internal static readonly Color Gold = new Color(1f, 0.86f, 0.5f, 0.9f);
 
         // 大きさ（1 = 元の大きさ）。
         private const float CounterScale = 0.72f;
@@ -330,7 +330,7 @@ namespace MS2026.UI.EditorTools
         }
 
         // 体力の色: 0 = 赤みのピンク（危ない）、0.35 = 黄色、1 = 水色（元気）。
-        private static Gradient HealthGradient()
+        internal static Gradient HealthGradient()
         {
             var gradient = new Gradient();
             gradient.SetKeys(
@@ -345,7 +345,7 @@ namespace MS2026.UI.EditorTools
             return gradient;
         }
 
-        private static void FillHorizontal(Image image)
+        internal static void FillHorizontal(Image image)
         {
             B.Stretch(image.rectTransform);
             image.type = UnityEngine.UI.Image.Type.Filled;
@@ -354,7 +354,7 @@ namespace MS2026.UI.EditorTools
         }
 
         /// <summary>外枠（出る・消える動きの係）の中に、元の大きさで組んで scale で縮める「Body」を作る。</summary>
-        private static RectTransform Body(RectTransform root, Vector2 designSize, float scale)
+        internal static RectTransform Body(RectTransform root, Vector2 designSize, float scale)
         {
             var body = B.Rect(root, "Body");
             body.anchorMin = body.anchorMax = new Vector2(0.5f, 0.5f);
@@ -367,7 +367,7 @@ namespace MS2026.UI.EditorTools
 
         // ───────── 部品 ─────────
 
-        private static Image Picture(Transform parent, string name, string file, Color color)
+        internal static Image Picture(Transform parent, string name, string file, Color color)
         {
             var image = B.Rect(parent, name).gameObject.AddComponent<Image>();
             image.sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{ArtFolder}/{file}");
@@ -376,7 +376,7 @@ namespace MS2026.UI.EditorTools
             return image;
         }
 
-        private static Text Label(Transform parent, string name, string text, int size, Color color, TextAnchor anchor)
+        internal static Text Label(Transform parent, string name, string text, int size, Color color, TextAnchor anchor)
         {
             var label = B.Text(parent, name, text, size, color, anchor, true);
             label.fontStyle = FontStyle.BoldAndItalic;
@@ -385,7 +385,7 @@ namespace MS2026.UI.EditorTools
         }
 
         /// <summary>太い斜体の数字。縁取り（紺）と、左右にずらした赤紫・水色の影（色ずれ）。</summary>
-        private static Text Number(Transform parent, string name, int size, Color color, TextAnchor anchor, Color outline, float outlineWidth, float split)
+        internal static Text Number(Transform parent, string name, int size, Color color, TextAnchor anchor, Color outline, float outlineWidth, float split)
         {
             var text = Label(parent, name, "0", size, color, anchor);
             if (split > 0f)
@@ -404,7 +404,7 @@ namespace MS2026.UI.EditorTools
             return text;
         }
 
-        private static void Bind(Text text, string key, string format, float countUp)
+        internal static void Bind(Text text, string key, string format, float countUp)
         {
             var bind = text.gameObject.AddComponent<UiBindText>();
             bind.key = key;
@@ -413,7 +413,7 @@ namespace MS2026.UI.EditorTools
         }
 
         /// <summary>親の中央を基準に置く。pivot を左右の端にしたときは、その端の x を edgeX で渡す。</summary>
-        private static void Center(RectTransform rect, Vector2 position, Vector2 size, Vector2? pivot = null, float? edgeX = null)
+        internal static void Center(RectTransform rect, Vector2 position, Vector2 size, Vector2? pivot = null, float? edgeX = null)
         {
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.pivot = pivot ?? new Vector2(0.5f, 0.5f);
@@ -422,10 +422,10 @@ namespace MS2026.UI.EditorTools
         }
 
         // 絵を「UIの絵（Sprite）」として読み込む。バーは角丸を保ったまま伸ばせるように、9スライスの枠を付ける。
-        private static void ConfigureArt()
+        internal static void ConfigureArt()
         {
             foreach (var file in new[] { "Kill_Plate.png", "Kill_YouTag.png", "Kill_GermIcon.png", "Kill_Bar.png", "Kill_Burst.png", "Kill_Ring.png",
-                         "Core_Plate.png", "Core_Bar.png", "Core_Ticks.png", "Core_Icon.png" })
+                         "Core_Plate.png", "Core_Bar.png", "Core_Ticks.png", "Core_Icon.png", "Result_Stamp.png", "Result_Crystal.png" })
             {
                 var path = $"{ArtFolder}/{file}";
                 if (!(AssetImporter.GetAtPath(path) is TextureImporter importer))

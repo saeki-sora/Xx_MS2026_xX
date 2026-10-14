@@ -69,7 +69,8 @@ namespace MS2026.UI.EditorTools
             root.Add(StudioUi.Note("ゲーム中HUD（画面 Hud）の自分の熱ゲージと古いコアのバーを隠し、撃破数（下の中央）とコアの体力バー（上の中央）を作ります（古い物は消さずに隠すだけ）。" +
                                    "何度押しても作り直すだけです。見た目・動き・値のつなぎは、作ったあと「画面」「レイヤー」「動き」ページで自由に直せます。", NoteKind.Info));
             root.Add(StudioUi.Row(
-                StudioUi.Button("撃破数とコアの体力バーを入れる", () => HudKillCounterBuilder.Build(true), "画面 Hud に、コアの体力（上の中央）・撃破数（下の中央）・コンボ（その上）・お祝い（画面の中央）を入れます。", primary: true, small: true)));
+                StudioUi.Button("撃破数とコアの体力バーを入れる", () => HudKillCounterBuilder.Build(true), "画面 Hud に、コアの体力（上の中央）・撃破数（下の中央）・コンボ（その上）・お祝い（画面の中央）を入れます。", primary: true, small: true),
+                StudioUi.Button("リザルト画面を作る", () => ResultScreenBuilder.Build(true), "試合が終わったとき（1000体でクリア／コアが壊れてゲームオーバー）に自動で開くリザルト画面（画面 Result）を作ります。", small: true)));
 
             root.Add(StudioUi.Section("用語"));
             var words = StudioUi.Card();

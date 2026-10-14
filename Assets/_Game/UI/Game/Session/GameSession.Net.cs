@@ -248,6 +248,7 @@ namespace MS2026.UI.Game
             manager.OnClientConnectedCallback += HandleClientConnected;
             manager.OnClientDisconnectCallback += HandleClientDisconnected;
             LobbyMessages.Register(manager, HandleHello, HandleReady, HandleState);
+            RegisterResultMessages(manager);
         }
 
         private void UnsubscribeNetwork()
@@ -260,6 +261,7 @@ namespace MS2026.UI.Game
             _subscribed.OnClientConnectedCallback -= HandleClientConnected;
             _subscribed.OnClientDisconnectCallback -= HandleClientDisconnected;
             LobbyMessages.Unregister(_subscribed);
+            UnregisterResultMessages(_subscribed);
             _subscribed = null;
         }
 
@@ -345,6 +347,13 @@ namespace MS2026.UI.Game
         /// <summary>切断などのあと、最初の画面（つながらなかったときは部屋選び）へ戻ってお知らせを出す。</summary>
         private void ReturnAfterProblem(string title, string body, bool backToBrowsing)
         {
+            if (IsShowingResult)
+            {
+                // リザルトを見ている間に切れた（ホストが先にタイトルへ戻った など）。さがし直さずにタイトルへ。
+                GoToTitle();
+                return;
+            }
+
             if (IsAutoConnect)
             {
                 // 展示用: お知らせは出さず（押せる人がいない）、幕で隠してさがし直す。

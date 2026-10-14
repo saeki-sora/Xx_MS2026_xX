@@ -34,5 +34,10 @@ MonoBehaviour:
     enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
     count: 5
     intervalBetweenSpawns: 0.4
+  - triggerTime: 6
+    spawnPointId: Spawn_0
+    enemyType: {fileID: 11400000, guid: a18afcc80195bc540ba57ee4e79a6d0d, type: 2}
+    count: 1
+    intervalBetweenSpawns: 0
   loop: 1
   loopInterval: 5

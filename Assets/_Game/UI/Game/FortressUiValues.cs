@@ -171,6 +171,8 @@ namespace MS2026.UI.Game
             _killLogic.Update(own, total, now);
 
             UiValues.Set(FortressUiKeys.KillsTotal, total);
+            UiValues.Set(FortressUiKeys.KillsGoal, FortressMatch.ClearKills);
+            UiValues.Set(FortressUiKeys.MatchOutcome, (int)FortressMatch.Outcome);
             UiValues.Set(FortressUiKeys.KillsLocal, own);
             UiValues.Set(FortressUiKeys.KillsCombo, _killLogic.Combo);
             UiValues.Set(FortressUiKeys.KillsComboTime01, _killLogic.ComboRemaining01);

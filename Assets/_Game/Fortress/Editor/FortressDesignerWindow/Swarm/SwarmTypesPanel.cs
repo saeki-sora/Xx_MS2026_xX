@@ -21,7 +21,8 @@ namespace MS2026.Fortress.EditorTools
 
         private static readonly (string path, string label)[] SwarmFields =
         {
-            ("swarm.radius", "体の大きさ（当たり半径）"),
+            ("swarm.radius", "体の大きさ（押し合いの半径）"),
+            ("swarm.hitRadius", "レーザーが当たる半径（0=体の大きさと同じ）"),
             ("swarm.mass", "重さ"),
             ("swarm.acceleration", "加速の速さ"),
             ("swarm.speedVariance", "速度のばらつき"),

@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 391a8783ea5b9ff488434e3202d61524, type: 3}
+  m_Name: Boss_EnemyType
+  m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.EnemyTypeDefinition
+  displayName: "\u30DC\u30B9\u30B9\u30D4\u30AD"
+  simulationMode: 0
+  maxHealth: 150
+  moveSpeed: 1
+  damageToCore: 10
+  navigationProfile: {fileID: 0}
+  turnSharpness: 8
+  swarm:
+    radius: 0.3
+    hitRadius: 0.75
+    mass: 8
+    acceleration: 4
+    speedVariance: 0.05
+    spriteSize: 2.4
+    spriteSheet: {fileID: 2800000, guid: 3b3ee4bd86ba43ffb980223a8f5f72ff, type: 3}
+    frameCount: 7
+    directionCount: 2
+    animationFps: 6
+  visualPrefab: {fileID: 0}
+  placeholderColor: {r: 0.8, g: 0.1, b: 0.2, a: 1}

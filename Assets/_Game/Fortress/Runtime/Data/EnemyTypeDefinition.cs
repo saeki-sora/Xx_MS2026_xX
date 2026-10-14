@@ -21,6 +21,11 @@ namespace MS2026.Fortress
         [Min(0.05f)]
         public float radius = 0.22f;
 
+        [Tooltip("レーザーが当たる半径。0 なら上の「体の大きさ」と同じ。見た目の大きい敵（ボスなど）で、押し合いの大きさは変えずに当たりやすくしたいときに使う" +
+                 "（体の大きさを大きくすると、群衆全体の計算が重くなる）。")]
+        [Min(0f)]
+        public float hitRadius = 0f;
+
         [Tooltip("重さ。重い敵は軽い敵を押しのけて進む。")]
         [Min(0.1f)]
         public float mass = 1f;

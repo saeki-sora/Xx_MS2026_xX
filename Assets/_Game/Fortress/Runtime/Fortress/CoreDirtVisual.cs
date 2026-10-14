@@ -5,7 +5,7 @@ namespace MS2026.Fortress
     /// <summary>
     /// コアクリスタルのHPが減るほど、見た目の色を少しずつ「汚れた色」へ寄せる。
     /// <see cref="CoreCrystalController"/> が起動時に自動で付けるので、シーンに手で置く必要はない。
-    /// 色だけを変える（クリーンな色は起動時のスプライトの色）。HPはHostの値なので、今はHost（と1人用）の画面でだけ変わる。
+    /// 色だけを変える（クリーンな色は起動時のスプライトの色）。HPはHostの値で、2026-10-13 から Client にも届く（CoreCrystalController.ApplyReplicatedHealth）ので全員の画面で変わる。
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CoreCrystalController))]
@@ -41,6 +41,23 @@ namespace MS2026.Fortress
         private void OnDisable()
         {
             _core.OnHealthChanged -= HandleHealthChanged;
+        }
+
+        /// <summary>汚れる前（起動時）の色（いちばん手前の絵の色）。リザルトの「試合前」の色に使う。</summary>
+        public Color CleanColor => _cleanColors != null && _cleanColors.Length > 0 ? _cleanColors[0] : Color.white;
+
+        /// <summary>残りHPの割合（0〜1）のときの汚れの度合い（0 = きれい、1 = いちばん汚れた色）。</summary>
+        public float DirtAt(float health01)
+        {
+            return Mathf.Clamp01(dirtCurve.Evaluate(Mathf.Clamp01(1f - health01)));
+        }
+
+        /// <summary>残りHPの割合（0〜1）のときのコアの色（いちばん手前の絵）。</summary>
+        public Color ColorAt(float health01)
+        {
+            var clean = CleanColor;
+            var dirty = new Color(dirtyColor.r, dirtyColor.g, dirtyColor.b, clean.a);
+            return Color.Lerp(clean, dirty, DirtAt(health01));
         }
 
         private void HandleHealthChanged(float current, float max)
