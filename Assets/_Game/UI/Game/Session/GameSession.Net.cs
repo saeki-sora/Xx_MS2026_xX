@@ -296,6 +296,15 @@ namespace MS2026.UI.Game
                 LobbyMessages.SendHello(manager, DisplayName);
                 _localReady = false;
                 Discovery.StopSearch();
+                // NGO はホストのシーン（キャラ選択・ゲーム）を読み終えてからこの合図を出す。途中から入って、もう重ねるシーンに入っている
+                // （HandleSceneLoaded で InGame になっている）なら部屋の扱いに戻さない。戻すと、展示用の自動接続の幕が
+                // 「入れた」と分からずに覆ったまま止まる（ロビー画面のときは、部屋の画面が試合の上に出てしまう）。
+                if (State == SessionState.InGame && IsMatchSceneLoaded)
+                {
+                    SetStatus("部屋に入りました");
+                    return;
+                }
+
                 EnterRoom();
             }
         }
