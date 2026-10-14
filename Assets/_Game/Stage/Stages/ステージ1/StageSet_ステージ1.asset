@@ -19,9 +19,9 @@ MonoBehaviour:
   cameraPreset: {fileID: 0}
   lookProfile: {fileID: 11400000, guid: d5923a60eb563e5498332b52919dcb8b, type: 2}
   lighting:
-    apply: 1
+    apply: 0
     sunColor: {r: 1, g: 0.96, b: 0.9, a: 1}
-    sunIntensity: 1.2
+    sunIntensity: 0.14
     sunDirection: -35
     sunElevation: 55
     shadowStrength: 0.6
