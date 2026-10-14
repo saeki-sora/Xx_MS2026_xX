@@ -87,7 +87,8 @@ namespace MS2026.UI.Game
             });
             manager.CustomMessagingManager.RegisterNamedMessageHandler(ToTitleRequestMessage, (sender, reader) =>
             {
-                if (IsHost)
+                // リザルトを見ている間の頼みだけ聞く（前の試合の頼みが遅れて届いても、キャラ選択やゲームの途中でタイトルへ戻らない）。
+                if (IsHost && IsShowingResult)
                 {
                     ReturnToTitleFromResult();
                 }
