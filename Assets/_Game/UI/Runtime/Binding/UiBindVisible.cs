@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace MS2026.UI
@@ -38,6 +39,8 @@ namespace MS2026.UI
         /// <summary>編集中に「隠れている」状態を示す薄さ。</summary>
         public const float EditorHiddenAlpha = 0.25f;
 
+        private static readonly List<UiElementMotion> s_motions = new List<UiElementMotion>();
+
         private CanvasGroup _group;
         private UiElementMotion _motion;
         private bool? _visible;
@@ -62,22 +65,61 @@ namespace MS2026.UI
 
             var first = _visible == null;
             _visible = visible;
-            if (_motion != null && Application.isPlaying && !first)
+            if (Application.isPlaying && !first)
             {
                 if (visible)
                 {
                     SetShown(true);
-                    _motion.Play(UiMotionTrigger.OnShow);
-                }
-                else
-                {
-                    _motion.Play(UiMotionTrigger.OnHide, () => SetShown(false));
+                    PlayShowInside();
+                    return;
                 }
 
-                return;
+                if (_motion != null)
+                {
+                    _motion.Play(UiMotionTrigger.OnHide, () => SetShown(false));
+                    return;
+                }
             }
 
             SetShown(visible);
+        }
+
+        /// <summary>
+        /// t（とその親たち。root まで）の中に、値で今隠れている部品があるか。
+        /// 画面を開くときは、隠れている部品の「出るとき」の動きを流さない（流すと透明のはずの部品が先に見えてしまい、
+        /// 出番が来たときにもう一度出直して見えた。2026-10-14）。出番が来たら、この部品が中の動きをまとめて再生する。
+        /// </summary>
+        public static bool IsHiddenByValue(Transform t, Transform root)
+        {
+            for (var p = t; p != null; p = p.parent)
+            {
+                if (p.TryGetComponent<UiBindVisible>(out var bind) && bind.isActiveAndEnabled && !bind.IsVisible)
+                {
+                    return true;
+                }
+
+                if (p == root)
+                {
+                    break;
+                }
+            }
+
+            return false;
+        }
+
+        // 自分と中の部品の「出るとき」の動きを再生する（画面を開いたとき、隠れていた部品の分は飛ばしているため）。
+        private void PlayShowInside()
+        {
+            GetComponentsInChildren(false, s_motions);
+            foreach (var motion in s_motions)
+            {
+                if (motion != null && !IsHiddenByValue(motion.transform, transform))
+                {
+                    motion.Play(UiMotionTrigger.OnShow);
+                }
+            }
+
+            s_motions.Clear();
         }
 
         public bool Evaluate(UiValue value) => condition switch

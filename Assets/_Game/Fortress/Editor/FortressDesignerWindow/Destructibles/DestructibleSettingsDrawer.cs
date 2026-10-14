@@ -62,7 +62,9 @@ namespace MS2026.Fortress.EditorTools
                 {
                     new Field(Vis + "visualPrefab", "通常の見た目Prefab（2D/3D）"),
                     new Field(Vis + "fitMode", "大きさへの合わせ方"),
-                    new Field(Vis + "visualOffset", "見た目の位置ずらし"),
+                    new Field(Vis + "visualOffset", "見た目の位置ずらし（X/Y/Z）"),
+                    new Field(Vis + "visualRotation", "見た目だけ回す角度（X/Y/Z・度）"),
+                    new Field(Vis + "visualScale", "見た目だけの大きさ倍率（X/Y/Z）"),
                     new Field(Vis + "sortingOrderOffset", "描画順の加算"),
                     new Field(Vis + "damageStages", "ダメージ段階の見た目"),
                     new Field(Vis + "darkenWithDamage", "ダメージで暗くする"),

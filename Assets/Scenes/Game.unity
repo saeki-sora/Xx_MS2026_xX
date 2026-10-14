@@ -2016,9 +2016,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 654432854}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.06, y: 9.83, z: 0}
-  m_LocalScale: {x: 2, y: 2, z: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 10.86, z: 0}
+  m_LocalScale: {x: 4, y: 2, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 385221082}
@@ -2048,7 +2048,9 @@ MonoBehaviour:
     visual:
       visualPrefab: {fileID: 0}
       fitMode: 0
-      visualOffset: {x: 0, y: 0}
+      visualOffset: {x: 0, y: 0, z: 0}
+      visualRotation: {x: 0, y: 0, z: 0}
+      visualScale: {x: 0.2, y: 1, z: 1}
       sortingOrderOffset: 0
       damageStages: []
       darkenWithDamage: 1
@@ -2568,9 +2570,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0dcf6c8c3df64ee79179f6957c84e665, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.FortressMatchRules
-  clearKills: 200
+  clearKills: 20
   removeEnemiesOnEnd: 1
-  coreMaxHealth: 100
+  coreMaxHealth: 1000
   coreDamageMultiplier: 1
   onClear:
     vfx:
@@ -3380,7 +3382,9 @@ MonoBehaviour:
     visual:
       visualPrefab: {fileID: 0}
       fitMode: 0
-      visualOffset: {x: 0, y: 0}
+      visualOffset: {x: 0, y: 0, z: 0}
+      visualRotation: {x: 0, y: 0, z: 0}
+      visualScale: {x: 1, y: 1, z: 1}
       sortingOrderOffset: 0
       damageStages: []
       darkenWithDamage: 1

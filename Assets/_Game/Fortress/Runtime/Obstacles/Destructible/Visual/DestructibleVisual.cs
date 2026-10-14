@@ -174,17 +174,25 @@ namespace MS2026.Fortress
                 return null;
             }
 
-            var instance = Instantiate(prefab, _container);
+            var visual = _obstacle.settings.visual;
+
+            // 「見た目だけ回す」ために、大きさ合わせ用の台（pivot）の下に、回したモデルを置く。
+            // 台は回さずに拡縮するので、回した後の形のまま、オブジェクトの大きさに合わせられる。
+            var pivot = new GameObject(prefab.name).transform;
+            pivot.SetParent(_container, false);
+            var instance = Instantiate(prefab, pivot);
             instance.name = prefab.name;
-            foreach (var child in instance.GetComponentsInChildren<Transform>(true))
+            instance.transform.localPosition = Vector3.zero;
+            instance.transform.localRotation = Quaternion.Euler(visual.visualRotation);
+            instance.transform.localScale = Vector3.one;
+            foreach (var child in pivot.GetComponentsInChildren<Transform>(true))
             {
                 child.gameObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
             }
 
-            var visual = _obstacle.settings.visual;
-            DestructibleVisualFitter.Fit(instance.transform, visual.fitMode, visual.visualOffset);
+            DestructibleVisualFitter.Fit(pivot, visual.fitMode, visual.visualOffset, visual.visualScale);
 
-            var node = new DestructibleVisualNode(instance, CollectRenderers(instance));
+            var node = new DestructibleVisualNode(pivot.gameObject, CollectRenderers(instance));
             node.ApplySortingOffset(visual.sortingOrderOffset);
             return node;
         }
@@ -210,7 +218,7 @@ namespace MS2026.Fortress
             {
                 if (node.Transform != null)
                 {
-                    DestructibleVisualFitter.Fit(node.Transform, visual.fitMode, visual.visualOffset);
+                    DestructibleVisualFitter.Fit(node.Transform, visual.fitMode, visual.visualOffset, visual.visualScale);
                 }
             }
 

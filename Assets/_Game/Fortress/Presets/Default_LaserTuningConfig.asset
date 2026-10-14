@@ -40,7 +40,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   minThickness: 0.05
-  maxThickness: 0.6
+  maxThickness: 0.8
   heatGainPerSecond: 1
   heatCoolingPerSecond: 0.6
   overheatThreshold: 10

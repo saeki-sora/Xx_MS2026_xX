@@ -149,6 +149,13 @@ namespace MS2026.UI
             _childrenPending = _children.Count;
             foreach (var child in _children)
             {
+                // 値で隠れている部品（例: 2段階目から出るパネル）は動かさない。出番が来たときに UiBindVisible が出る動きを再生する。
+                if (UiBindVisible.IsHiddenByValue(child.transform, transform))
+                {
+                    _childrenPending--;
+                    continue;
+                }
+
                 child.Play(trigger, () => _childrenPending--);
             }
 

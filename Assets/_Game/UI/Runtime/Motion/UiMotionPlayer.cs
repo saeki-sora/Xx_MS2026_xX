@@ -2,6 +2,7 @@ using DDrive.Foundation.Handle;
 using DDrive.Runtime.Audio;
 using DDrive.Runtime.Ui;
 using UnityEngine;
+using DDriveBootstrap = DDrive.Runtime.Loop.DDriveRuntimeBootstrap;
 
 namespace MS2026.UI
 {
@@ -39,9 +40,18 @@ namespace MS2026.UI
                     Audio.PlaySe(motion.se);
                 }
 
-                return motion.source == UiMotionSource.Preset
+                var handle = motion.source == UiMotionSource.Preset
                     ? UiFx.Play(motion.preset.Preset, target, motion.preset)
                     : UiFx.Play(motion.tween, target);
+
+                // D-Drive は再生を始めたフレームには何も書かず、次のフレームから動きの最初の状態を書く。
+                // そのままだと、開いた瞬間の1フレームだけ「出来上がった画面」が映り、次のフレームで透明に戻ってから出てくる
+                // （リザルト画面で「一瞬出てから出直す」ように見えた。2026-10-14）。経過時間 0 で一度進めて、最初の状態を今すぐ書く。
+                // 0 秒なので、ほかの再生中の動きは同じ値を書き直すだけで進まない。
+                var bootstrap = DDriveBootstrap.Instance;
+                var tweens = bootstrap != null ? bootstrap.UiTweens : null;
+                tweens?.Tick(0f);
+                return handle;
             }
 
             public bool IsPlaying(Handle<UiTweenMarker> handle) => UiFx.IsPlaying(handle);

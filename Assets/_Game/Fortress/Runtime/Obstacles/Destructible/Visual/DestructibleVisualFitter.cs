@@ -10,7 +10,13 @@ namespace MS2026.Fortress
     {
         private const float MinScale = 1e-4f;
 
-        public static void Fit(Transform node, DestructibleFitMode mode, Vector2 offset)
+        public static void Fit(Transform node, DestructibleFitMode mode, Vector3 offset)
+        {
+            Fit(node, mode, offset, Vector3.one);
+        }
+
+        /// <param name="extraScale">合わせた後に掛ける見た目だけの倍率（0 の軸は 1 として扱う）。</param>
+        public static void Fit(Transform node, DestructibleFitMode mode, Vector3 offset, Vector3 extraScale)
         {
             node.localScale = Vector3.one;
             node.localPosition = Vector3.zero;
@@ -21,7 +27,8 @@ namespace MS2026.Fortress
             // 子のスケールを1にした状態での、Prefab本来の大きさ（子のローカル座標）を測る。
             if (!TryMeasureLocalBounds(node, out var bounds))
             {
-                node.localPosition = new Vector3(offset.x, offset.y, 0f);
+                node.localPosition = offset;
+                node.localScale = SafeScale(extraScale);
                 return;
             }
 
@@ -54,6 +61,7 @@ namespace MS2026.Fortress
                     break;
             }
 
+            worldScale = Vector3.Scale(worldScale, SafeScale(extraScale));
             var local = new Vector3(
                 worldScale.x / parentScale.x,
                 worldScale.y / parentScale.y,
@@ -63,7 +71,7 @@ namespace MS2026.Fortress
             node.localPosition = new Vector3(
                 -bounds.center.x * local.x + offset.x,
                 -bounds.center.y * local.y + offset.y,
-                -bounds.center.z * local.z);
+                -bounds.center.z * local.z + offset.z);
         }
 
         private static bool TryMeasureLocalBounds(Transform node, out Bounds result)
@@ -100,6 +108,14 @@ namespace MS2026.Fortress
             }
 
             return found;
+        }
+
+        private static Vector3 SafeScale(Vector3 scale)
+        {
+            return new Vector3(
+                Mathf.Approximately(scale.x, 0f) ? 1f : scale.x,
+                Mathf.Approximately(scale.y, 0f) ? 1f : scale.y,
+                Mathf.Approximately(scale.z, 0f) ? 1f : scale.z);
         }
 
         private static Vector3 AbsScale(Vector3 scale)

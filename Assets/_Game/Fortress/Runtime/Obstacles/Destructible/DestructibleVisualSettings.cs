@@ -68,8 +68,17 @@ namespace MS2026.Fortress
         [Tooltip("見た目をオブジェクトの大きさにどう合わせるか。")]
         public DestructibleFitMode fitMode = DestructibleFitMode.Stretch;
 
-        [Tooltip("見た目の位置のずらし量（オブジェクトの大きさに対する割合。0.5で半分ずれる）。")]
-        public Vector2 visualOffset;
+        [Tooltip("見た目の位置のずらし量（オブジェクトの大きさに対する割合。0.5で半分ずれる）。" +
+                 "X=横、Y=縦、Z=高さ（マイナスで床から浮く＝カメラ側へ、プラスで床に沈む。大きさのZが1なら1で1m）。")]
+        public Vector3 visualOffset;
+
+        [Tooltip("見た目のモデルだけを回す角度（度。X/Y/Z の順）。当たり判定・敵の通れない範囲・耐久ゲージは回らない。" +
+                 "3Dモデルを寝かせる／起こす（例: X を -90）、向きを変える（Z）ときに使う。回した後の形で大きさを合わせ直す。")]
+        public Vector3 visualRotation;
+
+        [Tooltip("見た目のモデルだけの大きさの倍率（X/Y/Z。1 = そのまま）。「大きさへの合わせ方」で合わせた後に掛ける。" +
+                 "当たり判定・敵の通れない範囲は変わらない。0 の軸は 1 として扱う。")]
+        public Vector3 visualScale = Vector3.one;
 
         [Tooltip("見た目の描画順に加える値。地形より手前/奥に見せたいときに調整する。")]
         public int sortingOrderOffset;
