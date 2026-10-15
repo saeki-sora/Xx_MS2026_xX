@@ -14,6 +14,8 @@ namespace MS2026.Fortress.Net
     ///   -fortress-bench-clients K           Hostは、ClientがK人つながるまで待ってから数え始める
     ///   -fortress-bench-quit S              起動からS秒で自動終了する(ログを確定させるため)
     ///   -fortress-bench-no-wave             ウェーブ(敵の自動出現)を止めて、一斉投入の影響だけを測る
+    ///   -fortress-bench-allow-end           計測中も試合を終わらせる(クリア・ゲームオーバー)。付けなければ、計測中は試合が終わらない
+    ///                                       (3万体を投入するとすぐコアが壊れてゲームオーバー → 敵が消えて計測にならないため)
     ///   -fortress-bench-hide-ddrive-overlay D-Driveの通信状態表示(開発ビルドのみ。毎フレーム文字列を作る)を隠して、その分のGCを除いて測る
     ///   -fortress-bench-no-ongui            画面に直接描く部品(OnGUIを持つMonoBehaviour)を全て止めて測る(GCの出どころの切り分け用)
     ///   -fortress-bench-disable A+B+...     指定した型名の部品(MonoBehaviour)を止めて測る(GCや負荷の出どころの二分探索用)。
@@ -34,6 +36,7 @@ namespace MS2026.Fortress.Net
         public int ExpectedClients;
         public float QuitAfterSeconds;
         public bool StopWaves;
+        public bool AllowMatchEnd;
         public bool HideDDriveOverlay;
         public bool NoOnGui;
         public string[] DisableTypes;
@@ -45,6 +48,9 @@ namespace MS2026.Fortress.Net
         public int? SnapshotPrecisionShift;
 
         public bool AnyBenchmark => LogEnabled || BurstCount > 0 || QuitAfterSeconds > 0f || StopWaves;
+
+        /// <summary>試合の終わり(クリア・ゲームオーバー)を止めるか。計測中は、-fortress-bench-allow-end が無ければ止める。</summary>
+        public bool SuspendMatchEnd => AnyBenchmark && !AllowMatchEnd;
 
         public static NetBenchmarkArgs Parse(string[] args)
         {
@@ -78,6 +84,9 @@ namespace MS2026.Fortress.Net
                         break;
                     case "-fortress-bench-no-wave":
                         result.StopWaves = true;
+                        break;
+                    case "-fortress-bench-allow-end":
+                        result.AllowMatchEnd = true;
                         break;
                     case "-fortress-bench-hide-ddrive-overlay":
                         result.HideDDriveOverlay = true;

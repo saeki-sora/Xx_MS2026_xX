@@ -209,6 +209,7 @@
 - `Tools\NetTest\bench_4p_latejoin.bat` … Host+Client2人で3万体投入し、約15秒後にP4が途中参加（3万体分の全員の写真を受け取ってから追従できるか）。ログは `*_latejoin.log`。
 - 改善前の設定で比べる: `bench_2p.bat -fortress-swarm-spawns-per-frame 0 -fortress-net-packet-queue 128`（ログ名を変えたいときは先に `set LOGSUFFIX=_before`）。
 - ネットワーク無しの基準: `bench_offline.bat`（`p0_ui_bench_offline.log`）。
+- **計測中は試合が終わらない（2026-10-15）**: ゲームオーバーができてから、3万体を投入するとすぐコアが壊れてゲームオーバー → 敵が消えて bat がすぐ終わる状態になっていた。`-fortress-bench*` の引数があるときは、クリア・ゲームオーバーの判定をしない（`FortressMatch.EndChecksSuspended`。3万体の投入はそのまま。コアのHPは0まで減るが、そのまま続く）。ログの `START` 行に `matchEnd=off` と出る。終わらせて試したいときは `-fortress-bench-allow-end` を付ける。bat は変更なし（ビルドし直せば効く）。
 - 段階4の比較: 従来方式 `-fortress-swarm-smoothing blend -fortress-swarm-adaptive 0` / 新方式固定 `-fortress-swarm-adaptive 0` / 新方式＋自動調整（引数なし）/ 固定間隔 `-fortress-swarm-adaptive 0 -fortress-swarm-correction-cycle 0.25`（0.15 も）。
 - ⚠ 1台のPCで2つ起動すると、CPU/GPUを取り合うので本番より重く出る。
 

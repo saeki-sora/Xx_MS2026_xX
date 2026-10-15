@@ -52,6 +52,9 @@ namespace MS2026.Fortress.Net
         {
             var args = NetBenchmarkArgs.Parse(Environment.GetCommandLineArgs());
             ApplyOverrides(args);
+
+            // 3万体を投入するとすぐコアが壊れてゲームオーバーになり、敵が消えて計測にならないので、計測中は試合を終わらせない。
+            FortressMatch.EndChecksSuspended = args.SuspendMatchEnd;
             if (!args.AnyBenchmark)
             {
                 return;
@@ -128,7 +131,7 @@ namespace MS2026.Fortress.Net
 
             LogAndDisableComponents();
             StartWindow();
-            Log($"START args={string.Join(" ", Environment.GetCommandLineArgs(), 1, Environment.GetCommandLineArgs().Length - 1)}");
+            Log($"START matchEnd={(_args.SuspendMatchEnd ? "off" : "on")} args={string.Join(" ", Environment.GetCommandLineArgs(), 1, Environment.GetCommandLineArgs().Length - 1)}");
         }
 
         // 動いている部品の種類と数をログに出し(どれを止めて試すかの手がかり)、指定された部品を止める。

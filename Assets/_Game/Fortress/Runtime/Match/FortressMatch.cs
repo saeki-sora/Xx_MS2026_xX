@@ -86,6 +86,12 @@ namespace MS2026.Fortress
         /// <summary>試合中か（ゲームのシーンがあり、まだ終わっていない）。</summary>
         public static bool InMatch { get; internal set; }
 
+        /// <summary>
+        /// true なら試合を終わらせない（クリア・ゲームオーバーの判定をしない）。負荷計測（Tools/NetTest/bench_*.bat）用:
+        /// 3万体を投入するとすぐコアが壊れてゲームオーバー → 敵が消えて計測にならないため（2026-10-15）。
+        /// </summary>
+        public static bool EndChecksSuspended { get; internal set; }
+
         /// <summary>試合が終わったとき（全員のPCで1回）。</summary>
         public static event Action<MatchResult> Ended;
 
@@ -121,6 +127,7 @@ namespace MS2026.Fortress
             Result = default;
             ClearKills = DefaultClearKills;
             InMatch = false;
+            EndChecksSuspended = false;
             Ended = null;
         }
 
@@ -174,7 +181,7 @@ namespace MS2026.Fortress
                 _combos[p].Update(EnemyKillCounter.ByPlayer(p), now);
             }
 
-            if (!FortressMatch.HasEnded)
+            if (!FortressMatch.HasEnded && !FortressMatch.EndChecksSuspended)
             {
                 CheckEnd();
             }

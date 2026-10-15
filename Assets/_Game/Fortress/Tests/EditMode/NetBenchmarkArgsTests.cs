@@ -41,6 +41,15 @@ namespace MS2026.Fortress.Tests.EditMode
         }
 
         [Test]
+        public void Benchmark_SuspendsMatchEndUnlessAllowed()
+        {
+            // 計測中は試合を終わらせない(3万体でコアがすぐ壊れても敵が消えない)。-fortress-bench-allow-end で今までどおり終わる。
+            Assert.IsTrue(NetBenchmarkArgs.Parse(new[] { "-fortress-bench", "-fortress-bench-burst", "30000" }).SuspendMatchEnd);
+            Assert.IsFalse(NetBenchmarkArgs.Parse(new[] { "-fortress-bench", "-fortress-bench-allow-end" }).SuspendMatchEnd);
+            Assert.IsFalse(NetBenchmarkArgs.Parse(new[] { "MS2026.exe", "-fortress-start", "host" }).SuspendMatchEnd);
+        }
+
+        [Test]
         public void OverridesAlone_DoNotStartBenchmark()
         {
             // 改善策の切り替えだけなら、計測(ログ・自動終了)は始めない。
