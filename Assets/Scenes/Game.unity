@@ -2443,7 +2443,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0dcf6c8c3df64ee79179f6957c84e665, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.FortressMatchRules
-  clearKills: 20
+  clearKills: 200
   removeEnemiesOnEnd: 1
   coreMaxHealth: 1000
   coreDamageMultiplier: 1
@@ -5239,6 +5239,8 @@ MonoBehaviour:
   logValues: 1
   logIntervalSeconds: 0.3
   logPlayerCount: 2
+  showRawValues: 0
+  rawValuesToggleKey: 101
 --- !u!4 &2123814597
 Transform:
   m_ObjectHideFlags: 0

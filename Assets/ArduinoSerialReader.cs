@@ -1,6 +1,7 @@
 using MS2026.GripInputBridge.Data;
 using MS2026.GripInputBridge.Transports;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// Arduino(Uno)からのシリアル入力を握力入力ブリッジの入力元にするコンポーネント。
@@ -14,6 +15,7 @@ using UnityEngine;
 /// (シーンごとにポートを開け直すと、Arduino Uno は開くたびに約2秒再起動して値が途切れるため)。
 /// 使っているポートから <see cref="deviceLostSeconds"/> 秒値が届かない・ポートが使えなくなったら(USBが抜けた等)、キーボードに切り替えてさがし直す。
 /// USBを挿し直せば自動で実機に戻る。
+/// <see cref="rawValuesToggleKey"/>（F8）で、コントローラーから届いた生の値（届いた1行そのまま・数値）を画面に出せる（<see cref="GripRawValueOverlay"/>）。
 ///
 /// Arduino側の出力は次のどちらでもよい（どちらも1行1サンプル、Serial.println で送る）:
 /// <list type="bullet">
@@ -82,7 +84,19 @@ public sealed class ArduinoSerialReader : MonoBehaviour
     [Range(1, 4)]
     public int logPlayerCount = 2;
 
+    [Header("画面に生の値を出す（デバッグ）")]
+    [Tooltip("ONなら、始めから画面の左上に、コントローラーから届いた生の値（届いた1行そのまま・数値・届く頻度）を出す。" +
+             "ビルドしたゲームでは、起動オプション -debug-ui を付けたときだけ始めから出す（会場で見せないため）。起動オプション -gripdebug なら、ここがOFFでも始めから出す。")]
+    public bool showRawValues;
+
+    [Tooltip("生の値の表示を出す/消すキー（エディタでもビルドでも効く）。F1〜F7 はカメラのデバッグに使っているので避ける。")]
+    public Key rawValuesToggleKey = Key.F8;
+
+    /// <summary>ビルドでも始めから生の値を出す起動オプション。</summary>
+    public const string ShowRawValuesArgument = "-gripdebug";
+
     private float _nextLogTime;
+    private GripRawValueOverlay _overlay;
 
     // シーンをまたいで残っている読み取り（タイトルに置いた物）。あれば、ほかのシーンの同じ部品は何もしない。
     private static ArduinoSerialReader s_persistent;
@@ -125,8 +139,40 @@ public sealed class ArduinoSerialReader : MonoBehaviour
         return true;
     }
 
+    // 生の値の表示を付ける（使う読み取りだけ。ほかのシーンの何もしない読み取りには付けない）。最初は出すかどうかを決めて、隠しておく。
+    private void SetUpRawValueOverlay()
+    {
+        _overlay = gameObject.AddComponent<GripRawValueOverlay>();
+        _overlay.reader = this;
+        _overlay.toggleKey = rawValuesToggleKey;
+        _overlay.enabled = (showRawValues && MS2026.Fortress.Hud.DebugUi.Visible) || HasArgument(ShowRawValuesArgument);
+    }
+
+    private void TickRawValueOverlay()
+    {
+        var keyboard = Keyboard.current;
+        if (_overlay != null && keyboard != null && rawValuesToggleKey != Key.None && keyboard[rawValuesToggleKey].wasPressedThisFrame)
+        {
+            _overlay.enabled = !_overlay.enabled;
+        }
+    }
+
+    private static bool HasArgument(string argument)
+    {
+        foreach (var arg in System.Environment.GetCommandLineArgs())
+        {
+            if (string.Equals(arg, argument, System.StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void Update()
     {
+        TickRawValueOverlay();
         TickDeviceHealth();
         TickPortSearch();
 
@@ -176,6 +222,7 @@ public sealed class ArduinoSerialReader : MonoBehaviour
             return;
         }
 
+        SetUpRawValueOverlay();
         _config = deviceConfig != null ? deviceConfig : CreateInlineConfig();
         if (autoFindPort)
         {
@@ -333,12 +380,61 @@ public sealed class ArduinoSerialReader : MonoBehaviour
         _composite = null;
     }
 
-    private float GetReceivedValue(int playerIndex)
+    /// <summary>マイコンから届いた値(0-1、センサー特性の変換前)。実機を使っていなければ入力元の値。</summary>
+    public float GetReceivedValue(int playerIndex)
     {
         return _transport != null
             ? _transport.GetReceivedValue(playerIndex)
             : MS2026.GripInputBridge.GripInputBridge.Provider.GetRawValue(playerIndex);
     }
+
+    /// <summary>実機からこのプレイヤーの値を一度でも受け取ったか（生の値の表示用）。</summary>
+    public bool HasReceivedDataFor(int playerIndex)
+    {
+        return _transport != null && _transport.HasReceivedDataFor(playerIndex);
+    }
+
+    /// <summary>使っているポートの名前と、届いた行そのものなどの受信の様子（生の値の表示用）。実機を使っていなければ false。</summary>
+    public bool TryGetSerialDiagnostics(out string usedPortName, out GripSerialDiagnostics diagnostics)
+    {
+        if (_transport == null)
+        {
+            usedPortName = null;
+            diagnostics = default;
+            return false;
+        }
+
+        usedPortName = _transport.PortName;
+        diagnostics = _transport.GetDiagnostics();
+        return true;
+    }
+
+    /// <summary>実機の読み取りの今の状態（生の値の表示用の短い文）。</summary>
+    public string DeviceStatusText
+    {
+        get
+        {
+            if (_transport != null)
+            {
+                return _transport.HasReceivedData ? "受信中" : "ポートは開けたが、値はまだ届いていない";
+            }
+
+            if (_search != null)
+            {
+                return $"ポートをさがしています（{_search.DescribePorts()}）";
+            }
+
+            if (_retryAt >= 0f)
+            {
+                return $"値が届くポートが無い。{Mathf.Max(0f, _retryAt - Time.unscaledTime):0.0}秒後にさがし直す";
+            }
+
+            return "ポートを開けていない（キーボードで動いています）";
+        }
+    }
+
+    /// <summary>使っている通信速度(bps)。</summary>
+    public int BaudRateInUse => _config != null ? _config.baudRate : baudRate;
 
     private GripDeviceConfig CreateInlineConfig()
     {
@@ -377,15 +473,32 @@ public sealed class ArduinoSerialReader : MonoBehaviour
             return;
         }
 
+        SetUpRawValueOverlay();
         Debug.LogWarning(
             "[ArduinoSerialReader] 実機通信が無効のため、キーボードシミュレータのままです。\n" +
             "1. Edit > Project Settings > Player > Other Settings > Api Compatibility Level を「.NET Framework」に変更\n" +
             "2. 同じ画面の Scripting Define Symbols に「MS2026_GRIP_SERIAL_ENABLED」を追加");
     }
 
-    private float GetReceivedValue(int playerIndex)
+    public float GetReceivedValue(int playerIndex)
     {
         return MS2026.GripInputBridge.GripInputBridge.Provider.GetRawValue(playerIndex);
     }
+
+    public bool HasReceivedDataFor(int playerIndex)
+    {
+        return false;
+    }
+
+    public bool TryGetSerialDiagnostics(out string usedPortName, out GripSerialDiagnostics diagnostics)
+    {
+        usedPortName = null;
+        diagnostics = default;
+        return false;
+    }
+
+    public string DeviceStatusText => "実機通信が無効（Scripting Define Symbols に MS2026_GRIP_SERIAL_ENABLED が無い）";
+
+    public int BaudRateInUse => baudRate;
 #endif
 }

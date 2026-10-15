@@ -52,6 +52,13 @@ namespace MS2026.GripInputBridge.Transports
         // USBが抜けた等でポートが使えなくなった（受信スレッドは止まっている）。
         private volatile bool _portLost;
 
+        // デバッグ表示用の「生の」受信の様子（書くのは受信スレッドだけ。GetDiagnostics で読む）。
+        private string _lastLine;
+        private string _lastRejectedLine;
+        private long _linesReceived;
+        private long _linesRejected;
+        private long _lastLineAtMs = long.MinValue;
+
         // 受信スレッド専用。続けて起きた受信エラーの数（正しく1行読めたら 0 に戻す）。
         private int _consecutiveErrors;
 
@@ -152,6 +159,24 @@ namespace MS2026.GripInputBridge.Transports
                 Debug.LogWarning($"[GripInputBridge] COMポートの一覧を取れませんでした: {ex.Message}");
                 return Array.Empty<string>();
             }
+        }
+
+        /// <summary>このプレイヤーの値を一度でも受け取ったか。</summary>
+        public bool HasReceivedDataFor(int playerIndex)
+        {
+            return IsValidIndex(playerIndex) && Volatile.Read(ref _lastReceivedAtMs[playerIndex]) != long.MinValue;
+        }
+
+        /// <summary>届いた行そのもの・行の数・読めなかった行など、デバッグ表示用の受信の様子。</summary>
+        public GripSerialDiagnostics GetDiagnostics()
+        {
+            var lastLineAt = Interlocked.Read(ref _lastLineAtMs);
+            return new GripSerialDiagnostics(
+                Volatile.Read(ref _lastLine),
+                Volatile.Read(ref _lastRejectedLine),
+                Interlocked.Read(ref _linesReceived),
+                Interlocked.Read(ref _linesRejected),
+                lastLineAt == long.MinValue ? double.PositiveInfinity : (_clock.ElapsedMilliseconds - lastLineAt) / 1000.0);
         }
 
         public bool IsConnected(int playerIndex)
@@ -275,8 +300,13 @@ namespace MS2026.GripInputBridge.Transports
                 }
 
                 _consecutiveErrors = 0;
+                Volatile.Write(ref _lastLine, line);
+                Interlocked.Increment(ref _linesReceived);
+                Interlocked.Exchange(ref _lastLineAtMs, _clock.ElapsedMilliseconds);
                 if (!GripSerialProtocol.TryParseSamples(line, _parsedSamples))
                 {
+                    Volatile.Write(ref _lastRejectedLine, line);
+                    Interlocked.Increment(ref _linesRejected);
                     continue; // 化けた1行はスキップする(設計書6.3)。
                 }
 
