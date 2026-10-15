@@ -17,9 +17,9 @@ MonoBehaviour:
   overview:
     center: {x: 0, y: 0}
     rollDegrees: 0
-    projection: 0
+    projection: 1
     orthographicSize: 14
-    fieldOfView: 60
+    fieldOfView: 108.924644
     distance: 10
     tiltDegrees: 0
   players:
@@ -32,23 +32,23 @@ MonoBehaviour:
     tiltDegrees: 0
   - center: {x: 0, y: 0}
     rollDegrees: 0
-    projection: 0
+    projection: 1
     orthographicSize: 14
-    fieldOfView: 60
+    fieldOfView: 108.924644
     distance: 10
     tiltDegrees: 0
   - center: {x: 0, y: 0}
     rollDegrees: 0
-    projection: 0
+    projection: 1
     orthographicSize: 14
-    fieldOfView: 60
+    fieldOfView: 108.924644
     distance: 10
     tiltDegrees: 0
   - center: {x: 0, y: 0}
     rollDegrees: 0
-    projection: 0
+    projection: 1
     orthographicSize: 14
-    fieldOfView: 60
+    fieldOfView: 108.924644
     distance: 10
     tiltDegrees: 0
   billboard:
