@@ -58,6 +58,9 @@ namespace MS2026.Stage.EditorTools
             card.Add(Field(so, "lighting.skyColor", "上から"));
             card.Add(Field(so, "lighting.equatorColor", "横から"));
             card.Add(Field(so, "lighting.groundColor", "下から（照り返し）"));
+            card.Add(StudioUi.Section("つや（光の集まり方）", "つやのある床や物に映る太陽の光（白く光る所）の大きさ。"));
+            card.Add(Field(so, "lighting.highlightFocus", "光の集中度"));
+            card.Add(StudioUi.Note("光の集中度: 1=材質のまま。小さくすると白く光る所が広くやわらかく、大きくすると小さく鋭くなります。背景（専用シェーダーの物）全部にまとめて効き、材質は書き換えません。", NoteKind.Info));
             card.Add(StudioUi.Section("霧"));
             card.Add(Field(so, "lighting.fog", "霧を出す"));
             card.Add(Field(so, "lighting.fogColor", "霧の色"));

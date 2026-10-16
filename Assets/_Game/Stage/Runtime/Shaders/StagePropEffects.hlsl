@@ -13,6 +13,7 @@ float _StageHoleSoftness;
 half4 _StageHeatGlowColor;
 half4 _StageHeatHotColor;
 half4 _StageScorchColor;
+float _StageGlossShift; // 光の集中度（StageLightingSettings）。0=材質のまま、負=広くやわらか、正=小さく鋭く
 
 // ── オブジェクトごと（StagePropRenderer が MaterialPropertyBlock で設定）──
 float _StageFade;
@@ -158,6 +159,12 @@ void StageModifySurface(float3 positionWS, inout half3 albedo, inout half3 emiss
         float edge = 1.0 - saturate((n - _StageDissolve) / 0.08);
         emission += _StageDissolveColor.rgb * edge;
     }
+
+    // 光の集中度: つやを下げると照り返しが広くやわらかく、上げると小さく鋭くなる（上限0.95で鏡にはしない）。
+    half shift = (half)clamp(_StageGlossShift, -1.0, 1.0);
+    smoothness = shift < 0.0h
+        ? smoothness * (1.0h + shift)
+        : lerp(smoothness, max(smoothness, 0.95h), shift);
 }
 
 #endif

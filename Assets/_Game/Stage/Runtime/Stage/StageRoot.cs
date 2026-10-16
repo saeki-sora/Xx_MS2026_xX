@@ -42,6 +42,8 @@ namespace MS2026.Stage
         {
             Active = this;
             StageLookProfile.Current.ApplyGlobals();
+            // 光の集中度はシェーダーの全体の値なので、開いた直後（編集中も）からステージの設定にしておく。
+            current?.lighting.ApplyShaderGlobals();
         }
 
         private void OnDisable()
@@ -51,6 +53,7 @@ namespace MS2026.Stage
                 Active = null;
                 // 背景が無くなったら群衆の影の2回目の描画も止める（描画の負荷を元に戻す）。
                 Shader.SetGlobalFloat(StageShaderIds.SilhouetteEnabled, 0f);
+                Shader.SetGlobalFloat(StageShaderIds.GlossShift, 0f);
             }
         }
 
@@ -76,6 +79,7 @@ namespace MS2026.Stage
                 return;
             }
 
+            current.lighting.ApplyShaderGlobals();
             if (current.lighting.apply)
             {
                 current.lighting.ApplyTo(EnsureSun());

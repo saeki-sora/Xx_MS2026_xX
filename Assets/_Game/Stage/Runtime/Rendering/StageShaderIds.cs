@@ -33,6 +33,9 @@ namespace MS2026.Stage
         public static readonly int HeatGlowColor = Shader.PropertyToID("_StageHeatGlowColor");
         public static readonly int HeatHotColor = Shader.PropertyToID("_StageHeatHotColor");
         public static readonly int ScorchColor = Shader.PropertyToID("_StageScorchColor");
+
+        /// <summary>光の集中度（StageLightingSettings）。-1〜1、0=材質のつやのまま。</summary>
+        public static readonly int GlossShift = Shader.PropertyToID("_StageGlossShift");
         public static readonly int SilhouetteColor = Shader.PropertyToID("_FortressSilhouetteColor");
         public static readonly int SilhouetteEnabled = Shader.PropertyToID("_FortressSilhouetteEnabled");
 

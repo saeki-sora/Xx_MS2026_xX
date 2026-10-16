@@ -27,6 +27,9 @@ namespace MS2026.Stage
         [Tooltip("影の濃さ（0=影なし）。")]
         [Range(0f, 1f)] public float shadowStrength = 0.6f;
 
+        [Tooltip("照り返し（つやのある所に映る太陽の光）がどれだけ一点に集まるか。1=材質のまま。小さいほど広くやわらかく、大きいほど小さく鋭くなる。背景（専用シェーダーの物）だけに効き、材質は書き換えない。")]
+        [Range(0f, 2f)] public float highlightFocus = 1f;
+
         // ── まわりの明るさ ──（見出しはステージ背景スタジオの「光」ページが出す）
         [Tooltip("上からの環境光の色。")]
         public Color skyColor = new Color(0.62f, 0.68f, 0.78f);
@@ -53,6 +56,7 @@ namespace MS2026.Stage
         /// <summary>シーンの環境光・霧と、渡された太陽（Directional Light）に反映する。</summary>
         public void ApplyTo(Light sun)
         {
+            ApplyShaderGlobals();
             if (!apply)
             {
                 return;
@@ -80,6 +84,15 @@ namespace MS2026.Stage
             sun.shadowStrength = shadowStrength;
             sun.transform.rotation = SunRotation(sunDirection, sunElevation);
         }
+
+        /// <summary>背景用シェーダーが読む全体の値（光の集中度）だけを送る。光を当てないときは材質のまま（0）にする。</summary>
+        public void ApplyShaderGlobals()
+        {
+            Shader.SetGlobalFloat(StageShaderIds.GlossShift, apply ? GlossShift(highlightFocus) : 0f);
+        }
+
+        /// <summary>光の集中度（0〜2、1=材質のまま）を、シェーダーに渡す値（-1〜1、0=材質のまま）にする。</summary>
+        public static float GlossShift(float focus) => Mathf.Clamp(focus, 0f, 2f) - 1f;
 
         /// <summary>床（XY平面、上が-Z）に対する太陽の向き。elevation=90で真上（+Z向き）から照らす。</summary>
         public static Quaternion SunRotation(float directionDegrees, float elevationDegrees)
