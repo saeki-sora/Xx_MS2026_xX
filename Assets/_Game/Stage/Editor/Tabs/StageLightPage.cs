@@ -46,6 +46,7 @@ namespace MS2026.Stage.EditorTools
             }
 
             var so = new SerializedObject(_bound);
+            _host.Add(LightPresetPanel.Build(_bound, so, Apply));
             var card = StudioUi.Card();
             card.Add(Field(so, "lighting.apply", "光を当てる"));
             card.Add(StudioUi.Section("太陽（メインの光）"));
