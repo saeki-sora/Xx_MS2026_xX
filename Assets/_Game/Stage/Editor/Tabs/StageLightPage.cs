@@ -54,6 +54,7 @@ namespace MS2026.Stage.EditorTools
             card.Add(Field(so, "lighting.sunIntensity", "明るさ"));
             card.Add(Field(so, "lighting.sunDirection", "照らす向き（度）"));
             card.Add(Field(so, "lighting.sunElevation", "高さ（度）"));
+            card.Add(SunDirectionPad.Create(so));
             card.Add(Field(so, "lighting.shadowStrength", "影の濃さ"));
             card.Add(StudioUi.Section("まわりの明るさ"));
             card.Add(Field(so, "lighting.skyColor", "上から"));
