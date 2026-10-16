@@ -22,6 +22,12 @@ namespace MS2026.Fortress
         [ReadOnly] public NativeArray<float> yRange;
         public int ySort;
 
+        // 爆弾の敵の点滅（SwarmBombMath）。コアまでの距離で点滅が速くなる。
+        [ReadOnly] public NativeArray<int> netId;
+        [ReadOnly] public NativeArray<float2> goals;
+        public int goalCount;
+        public float time;
+
         /// <summary>ネット対戦のClientで、計算上の位置に足して描く「見た目だけのずらし」(SwarmSnapshotFollowJob参照。新しい写真が届いた瞬間の先読みの外れを、数フレームかけて目立たずに消す)。</summary>
         [ReadOnly] public NativeArray<float2> renderOffset;
         public int applyRenderOffset;
@@ -64,11 +70,25 @@ namespace MS2026.Fortress
                 : (int)math.floor(angle / (math.PI * 2f / directions) + 0.5f) % directions;
 
             var draw = applyRenderOffset != 0 ? p + renderOffset[i] : p;
+            var blink = tp.explodes != 0 ? Blink(p, tp, netId[i]) : 0f;
             tmpInstances[i] = new SwarmInstance
             {
-                a = new float4(draw.x, draw.y, tp.spriteSize, math.saturate(flash[i])),
-                b = new float4(frame, dir, 1f, 0f)
+                a = new float4(draw.x, draw.y, tp.spriteSize * (1f + tp.blinkSwell * blink), math.saturate(flash[i])),
+                b = new float4(frame, dir, 1f, blink * tp.blinkStrength)
             };
+        }
+
+        private float Blink(float2 p, SwarmTypeParams tp, int id)
+        {
+            var distance = float.MaxValue;
+            for (var g = 0; g < goalCount; g++)
+            {
+                distance = math.min(distance, math.distance(p, goals[g]));
+            }
+
+            var phase = SwarmBombMath.BlinkPhase(time, SwarmBombMath.Seed(id), distance, tp.blinkPerSecond, tp.blinkSpeedUp,
+                tp.blinkSpeedUpDistance);
+            return SwarmBombMath.BlinkPulse(phase);
         }
     }
 

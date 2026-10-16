@@ -1,0 +1,18 @@
+{
+  "name": "com.ms2026.playrecorder",
+  "version": "1.0.0",
+  "displayName": "録画しながらプレイ (Play Recorder)",
+  "description": "Unity エディタ上部のツールバー（再生ボタンの横）に「録画プレイ」ボタンを追加します。押すとプレイが始まり、ゲーム画面と音を MP4 に録画します。録画の長さに合わせて解像度・fps・ビットレートを自動で選び、何分録っても途中で切らずに上限サイズ（初期値 20MB ＝ Discord 無料プランの上限）に収まるので、そのまま Discord に貼れます。Unity Recorder などほかのパッケージは不要。このフォルダを別プロジェクトの Packages フォルダへコピーするだけで導入できます。",
+  "unity": "2021.3",
+  "keywords": [
+    "recorder",
+    "video",
+    "capture",
+    "toolbar",
+    "mp4"
+  ],
+  "author": {
+    "name": "MS2026"
+  },
+  "dependencies": {}
+}

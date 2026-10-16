@@ -10,7 +10,7 @@
 struct SwarmInstance
 {
     float4 a; // x, y, size, flash
-    float4 b; // frame, direction, unused, unused
+    float4 b; // frame, direction, unused, blink (爆弾の敵の点滅 0〜1。点滅の色は _BlinkColor)
 };
 
 StructuredBuffer<SwarmInstance> _Instances;
@@ -28,6 +28,7 @@ CBUFFER_START(UnityPerMaterial)
     float _Cols;
     float _Rows;
     float _InstanceOffset;
+    float4 _BlinkColor;
 CBUFFER_END
 
 struct Attributes
@@ -42,6 +43,7 @@ struct Varyings
     float4 positionCS : SV_POSITION;
     float2 uv : TEXCOORD0;
     float flash : TEXCOORD1;
+    float blink : TEXCOORD2;
 };
 
 Varyings vert(Attributes input)
@@ -60,6 +62,7 @@ Varyings vert(Attributes input)
     float row = (_Rows - 1.0) - inst.b.y;
     output.uv = float2((input.uv.x + frame) / _Cols, (input.uv.y + row) / _Rows);
     output.flash = inst.a.w;
+    output.blink = inst.b.w;
     return output;
 }
 

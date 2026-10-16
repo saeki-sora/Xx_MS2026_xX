@@ -190,6 +190,7 @@ namespace MS2026.Fortress
             _hitT = new NativeArray<float>(SwarmLimits.MaxPierceBuffer, Allocator.Persistent);
             _hitIdx = new NativeArray<int>(SwarmLimits.MaxPierceBuffer, Allocator.Persistent);
             InitializeHitReports();
+            InitializeBombs();
 
             InitializeNet(capacity);
 
@@ -371,6 +372,7 @@ namespace MS2026.Fortress
             ScheduleSimulation();
 
             _beamCount = 0;
+            _blastCount = 0;
             _stats.alive = Storage.Count;
             _lastAlive = _stats.alive;
             RecordHistory();
@@ -384,6 +386,7 @@ namespace MS2026.Fortress
                 _clearRequested = false;
                 HandleStorageCleared();
                 Storage.Clear();
+                ClearBombs();
                 _renderTotal = 0;
             }
 
@@ -429,7 +432,10 @@ namespace MS2026.Fortress
             var count = Storage.Count;
             if (count <= 0)
             {
+                // 群衆の敵がいなくても、爆発はActorの敵・破壊可能物・コアには届ける。
+                PrepareBlasts();
                 DiscardNetJobInputs();
+                DiscardBombJobInputs();
                 return;
             }
 
@@ -439,6 +445,8 @@ namespace MS2026.Fortress
             }
 
             PrepareNetJobInputs();
+            PrepareBombJobInputs();
+            PrepareBlasts();
 
             for (var b = 0; b < _beamCount; b++)
             {
@@ -474,6 +482,7 @@ namespace MS2026.Fortress
             Storage.Swap();
             _renderTotal = Storage.Count;
             CollectRemovals();
+            CollectExplosions();
 
             ApplyCoreDamage(_flightDt);
             CollectBeamHits();
@@ -555,7 +564,7 @@ namespace MS2026.Fortress
             }.Schedule(handle);
             Mark(ref handle, 0);
 
-            if (_beamCount > 0)
+            if (_beamCount > 0 || _blastCount > 0)
             {
                 handle = new SwarmLaserJob
                 {
@@ -567,6 +576,8 @@ namespace MS2026.Fortress
                     types = _typeParams,
                     beams = _beamsJob,
                     beamCount = _beamCount,
+                    blasts = _blastsJob,
+                    blastCount = _blastCount,
                     cellStart = Grid.CellStart,
                     cellItems = Grid.CellItems,
                     hashOrigin = Grid.Origin,
@@ -723,6 +734,8 @@ namespace MS2026.Fortress
                 netId = Storage.netId,
                 lastHit = Storage.lastHit,
                 removeIds = _removeIds,
+                explodeIds = _explodeIds,
+                explosions = _explosions,
                 count = count,
                 arrivalMode = (int)_settings.arrivalMode,
                 replicaMode = IsReplica ? 1 : 0,
@@ -782,6 +795,10 @@ namespace MS2026.Fortress
                 counters = _counters,
                 yRange = _yRange,
                 ySort = _settings.ySort ? 1 : 0,
+                netId = Storage.netIdB,
+                goals = _goals,
+                goalCount = _goalCount,
+                time = Time.time,
                 renderOffset = Storage.correctionB,
                 applyRenderOffset = IsReplica ? 1 : 0,
                 tmpInstances = _tmpInstances,
@@ -850,6 +867,8 @@ namespace MS2026.Fortress
                 var swarm = definition.swarm;
                 var profileIndex = IndexOfProfile(definition.navigationProfile);
                 _typeProfileIndex[t] = profileIndex;
+                var bomb = definition.bomb;
+                var explodes = bomb != null && bomb.explodeOnDeath;
 
                 _typeParams[t] = new SwarmTypeParams
                 {
@@ -864,7 +883,14 @@ namespace MS2026.Fortress
                     damageToCore = definition.damageToCore,
                     profileIndex = profileIndex,
                     frameCount = Mathf.Max(1, swarm.frameCount),
-                    directionCount = Mathf.Max(1, swarm.directionCount)
+                    directionCount = Mathf.Max(1, swarm.directionCount),
+                    explodes = explodes ? 1 : 0,
+                    explodeAtCore = explodes && bomb.explodeAtCore ? 1 : 0,
+                    blinkStrength = explodes ? bomb.blinkStrength : 0f,
+                    blinkPerSecond = explodes ? bomb.blinkPerSecond : 0f,
+                    blinkSpeedUp = explodes ? bomb.blinkSpeedUpNearCore : 0f,
+                    blinkSpeedUpDistance = explodes ? bomb.blinkSpeedUpDistance : 1f,
+                    blinkSwell = explodes ? bomb.blinkSwell : 0f
                 };
             }
 
@@ -1064,6 +1090,7 @@ namespace MS2026.Fortress
             DisposeArray(ref _hitT);
             DisposeArray(ref _hitIdx);
             DisposeHitReports();
+            DisposeBombs();
             DisposeNet();
         }
 

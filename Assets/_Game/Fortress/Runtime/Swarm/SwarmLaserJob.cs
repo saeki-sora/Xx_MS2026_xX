@@ -10,6 +10,7 @@ namespace MS2026.Fortress
     /// ビームの周囲のセルだけを調べる。maxHitsが正のときは、ビームの始点に近い順にその数だけ当てる。
     /// あわせて、被弾フラッシュが消えていた敵に当たった「瞬間」を newHits に記録する（maxNewHits 件まで。演出用）。
     /// 記録の枠を特定のレーザーが使い切らないよう、調べるビームの順番を beamOffset でフレームごとにずらす。
+    /// 爆弾の敵の爆発（blasts。円の中にいる敵に一度だけダメージ）もここで与える。爆発は「当たった瞬間」の記録には載せない。
     /// </summary>
     [BurstCompile]
     public struct SwarmLaserJob : IJob
@@ -22,6 +23,9 @@ namespace MS2026.Fortress
         [ReadOnly] public NativeArray<SwarmTypeParams> types;
         [ReadOnly] public NativeArray<SwarmBeam> beams;
         public int beamCount;
+
+        [ReadOnly] public NativeArray<SwarmBlast> blasts;
+        public int blastCount;
 
         [ReadOnly] public NativeArray<int> cellStart;
         [ReadOnly] public NativeArray<int> cellItems;
@@ -47,6 +51,44 @@ namespace MS2026.Fortress
             for (var n = 0; n < beamCount; n++)
             {
                 ApplyBeam(beams[(n + beamOffset) % beamCount]);
+            }
+
+            for (var n = 0; n < blastCount; n++)
+            {
+                ApplyBlast(blasts[n]);
+            }
+        }
+
+        private void ApplyBlast(SwarmBlast blast)
+        {
+            var margin = blast.radius + maxRadius;
+            var minCell = SwarmMath.HashCell(blast.center - margin, hashOrigin, hashInvCell, hashW, hashH);
+            var maxCell = SwarmMath.HashCell(blast.center + margin, hashOrigin, hashInvCell, hashW, hashH);
+
+            for (var y = minCell.y; y <= maxCell.y; y++)
+            {
+                for (var x = minCell.x; x <= maxCell.x; x++)
+                {
+                    var c = y * hashW + x;
+                    var end = cellStart[c + 1];
+                    for (var k = cellStart[c]; k < end; k++)
+                    {
+                        var j = cellItems[k];
+                        var tp = types[typeIdx[j]];
+                        var reach = blast.radius + math.max(tp.radius, tp.hitRadius);
+                        if (math.distancesq(pos[j], blast.center) > reach * reach || hp[j] <= 0f)
+                        {
+                            continue;
+                        }
+
+                        hp[j] = hp[j] - blast.damage;
+                        flash[j] = 1f;
+                        if (blast.owner >= 0 && blast.damage > 0f)
+                        {
+                            lastHit[j] = blast.owner;
+                        }
+                    }
+                }
             }
         }
 

@@ -184,6 +184,7 @@ namespace MS2026.Fortress
             }
 
             _pendingRemovals.Add(id);
+            RememberReplicaExplosion(id, reason);
             if (reason == EnemyRemovalReason.Died)
             {
                 _stats.totalKilled++;

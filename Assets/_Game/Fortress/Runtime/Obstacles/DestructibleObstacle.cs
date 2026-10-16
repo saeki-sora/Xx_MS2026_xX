@@ -13,7 +13,10 @@ namespace MS2026.Fortress
         Linked,
 
         /// <summary>近くの破壊可能物の連鎖で受けた。</summary>
-        Chain
+        Chain,
+
+        /// <summary>爆弾の敵の爆発に巻き込まれた（EnemyBombSettings）。通信では番号で送るので、値は末尾に足していく。</summary>
+        Explosion
     }
 
     /// <summary>

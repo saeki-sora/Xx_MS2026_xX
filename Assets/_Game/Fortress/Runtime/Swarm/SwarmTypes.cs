@@ -13,6 +13,9 @@ namespace MS2026.Fortress
 
         /// <summary>「当たった瞬間」を1フレームに記録できる最大数（上限を決めていないときもこれ以上は出さない）。</summary>
         public const int MaxHitReportsPerFrame = 256;
+
+        /// <summary>1フレームに群衆へ届けられる爆発ダメージの最大数。超えた分は次のフレームに回す。</summary>
+        public const int MaxBlastsPerFrame = 256;
     }
 
     /// <summary>コア（目的地）に着いた敵をどう扱うか。差し替え式なので、後から挙動を変えるときはここに値を足す。</summary>
@@ -41,9 +44,51 @@ namespace MS2026.Fortress
         public int profileIndex;
         public int frameCount;
         public int directionCount;
+
+        // 爆弾の敵（EnemyBombSettings）。explodes=0 の種類では下の値は使わない。
+        /// <summary>1 なら倒されたときに爆発する。</summary>
+        public int explodes;
+        /// <summary>1 ならコアに着いたときも自爆する（張り付くモードでも張り付かない）。</summary>
+        public int explodeAtCore;
+        public float blinkStrength;
+        public float blinkPerSecond;
+        public float blinkSpeedUp;
+        public float blinkSpeedUpDistance;
+        public float blinkSwell;
     }
 
-    /// <summary>GPUに渡す1体分の描画データ（32バイト）。a=(x, y, 大きさ, 被弾フラッシュ) / b=(フレーム, 向き, 予備, 予備)。</summary>
+    /// <summary>爆弾の敵が爆発した理由。</summary>
+    public enum SwarmExplosionCause : byte
+    {
+        /// <summary>倒された（レーザー・ほかの爆発）。</summary>
+        Killed = 0,
+
+        /// <summary>コアにたどり着いて自爆した。</summary>
+        ReachedCore = 1
+    }
+
+    /// <summary>爆弾の敵が爆発した記録1件分（詰め直しのジョブが書く）。演出と、Hostではまわりへのダメージの元になる。</summary>
+    public struct SwarmExplosion
+    {
+        public float2 position;
+        /// <summary>このシステム内の種類番号（どの EnemyTypeDefinition の爆弾か）。</summary>
+        public int type;
+        /// <summary>爆弾を倒した人（最後にダメージを与えたプレイヤー 0〜3）。不明・Clientでは -1。</summary>
+        public int owner;
+        public SwarmExplosionCause cause;
+    }
+
+    /// <summary>そのフレームに群衆の敵へ届く爆発のダメージ1件分（レーザー判定のジョブがまとめて与える）。</summary>
+    public struct SwarmBlast
+    {
+        public float2 center;
+        public float radius;
+        public float damage;
+        /// <summary>巻き込んで倒した敵を、だれの撃破にするか（爆弾を倒した人）。不明なら -1。</summary>
+        public int owner;
+    }
+
+    /// <summary>GPUに渡す1体分の描画データ（32バイト）。a=(x, y, 大きさ, 被弾フラッシュ) / b=(フレーム, 向き, 予備, 爆弾の点滅)。</summary>
     public struct SwarmInstance
     {
         public float4 a;

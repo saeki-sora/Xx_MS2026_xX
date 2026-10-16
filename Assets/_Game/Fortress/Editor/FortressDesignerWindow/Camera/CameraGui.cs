@@ -36,6 +36,11 @@ namespace MS2026.Fortress.EditorTools
 
         public static bool ColoredButton(string label, Color color, float strength, GUIStyle style, params GUILayoutOption[] options)
         {
+            return ColoredButton(new GUIContent(label), color, strength, style, options);
+        }
+
+        public static bool ColoredButton(GUIContent label, Color color, float strength, GUIStyle style, params GUILayoutOption[] options)
+        {
             var previous = GUI.backgroundColor;
             GUI.backgroundColor = Color.Lerp(Color.white, color, strength);
             var pressed = GUILayout.Button(label, style, options);

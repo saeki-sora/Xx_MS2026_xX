@@ -93,6 +93,9 @@ namespace MS2026.Fortress
         [Header("群衆（Swarmモード）の設定")]
         public SwarmEnemySettings swarm = new SwarmEnemySettings();
 
+        [Header("爆弾（倒すと爆発する敵。今は群衆モードのみ）")]
+        public EnemyBombSettings bomb = new EnemyBombSettings();
+
         [Header("見た目（Actorモード・共通）")]
         [Tooltip("（Actorのみ）スポーン時に生成する見た目のプレファブ。未設定の場合はプレースホルダーの円形を使う。")]
         public GameObject visualPrefab;

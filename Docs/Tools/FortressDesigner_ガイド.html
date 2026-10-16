@@ -316,6 +316,20 @@
       <p class="small muted">見た目を大きくしたいときは <b>画面上の大きさ</b> を上げ、レーザーを当たりやすくしたいときは <b>レーザーが当たる半径</b> を上げます。<b>体の大きさ（押し合いの半径）</b> は 0.3 より大きくすると群衆全体の計算が重くなるので、なるべく 0.3 以下にしてください。見本として、スピキと同じ絵の大きいボス <b>ボススピキ</b>（<code>Presets/Boss_EnemyType.asset</code>：体力 150・ゆっくり・コアに 10 ダメージ・3倍の大きさ）があり、サンプルウェーブで 1周に 1体（約11秒ごと）出ます。倒すと撃破数は 1 増えます。</p>
       <p class="small muted">大きい敵が細い隙間を通れないようにするには、敵の種類の <b>経路プロファイル</b> に Navigation Profile アセット（Create › Fortress › Navigation Profile）を割り当てます。</p>
     </div></details>
+    <details class="recipe" id="rc-bomb" data-tags="enemy"><summary><span class="q">倒すと爆発して、まわりの敵を巻き込む「爆弾の敵」を作りたい・調整したい</span><span class="who">群衆</span></summary><div class="a">
+      <div class="where"><span class="mp">群衆<i>›</i>敵の種類<i>›</i>（種類を開く）<i>›</i>爆弾（倒すと爆発する）</span></div>
+      <p>見本として <b>爆弾スピキ</b>（<code>Presets/Bomb_EnemyType.asset</code>）があり、サンプルウェーブで 1 周に 6 体（1 秒目に北の群れに 4 体、4.5 秒目に 2 体）出ます。絵はスピキのままで、<b>赤く点滅しながら</b>近づいてきます。コアに近づくほど点滅が速くなり、点滅の瞬間に少しふくらみます。</p>
+      <ol>
+        <li><b>倒すと爆発する</b> を ON にすると、その種類が爆弾の敵になります（OFF の種類は今まで通り）。体力を低め（見本は 3）にすると、短く握ってビームを当てるだけで爆発します。</li>
+        <li>倒された場所で爆発し、<b>爆発の半径</b> の中にいる敵に <b>敵へのダメージ</b> を与えます。巻き込まれて倒れた爆弾もまた爆発するので、<b>群れの中で連鎖</b>します。</li>
+        <li><b>連鎖の間隔（秒）</b>：爆発してから、まわりにダメージが届くまでの時間。0.1 前後だと「ポン、ポン、ポン」と順に広がって見えます。0 なら一瞬で全部。</li>
+        <li><b>破壊可能物へのダメージ</b>：爆発の中にある木箱・岩・スマッシュボールにも入ります（0 なら壊さない）。<b>コアへのダメージ</b>：コアの近くで倒すと、味方のコアも傷つきます（0 なら巻き込まない）。</li>
+        <li><b>コアに着いたら自爆する</b>：ON なら、コアに着いたその場で自爆します。コアには敵の <b>コアに与えるダメージ</b>（見本は 5）が入り、まわりの敵・物も巻き込みます。</li>
+        <li><b>爆発の演出</b>：エフェクトと効果音（いまは仮に「破壊可能物が壊れる」ときの素材）。<b>爆発の範囲を輪で見せる</b> を ON にすると、爆発が届く範囲がオレンジの輪で広がって見えます（本番のエフェクトができたら OFF にしてよい）。</li>
+        <li><b>点滅の色・強さ・速さ</b>：<b>点滅の速さ</b> は止まっているとき・遠いとき、<b>コアに近いほど速くなる強さ</b> と <b>速くなり始める距離</b> で、迫ってくる感じを調整します。</li>
+      </ol>
+      <p class="small muted">巻き込んで倒した敵・壊した物は、<b>爆弾を倒した人</b>の撃破・手柄になります（スマッシュボールもその人が割ったことになる）。ネット対戦では Host がダメージを計算し、各 PC は爆弾が消えた場所で自分で爆発の演出を出します（通信は増えません）。今は群衆（Swarm）モードの敵だけが爆発します。</p>
+    </div></details>
     <details class="recipe" id="rc-enemy-sprite" data-tags="enemy"><summary><span class="q">敵の絵（スプライト）を差し替えたい</span><span class="who">群衆</span></summary><div class="a">
       <p>敵の種類の <b>スプライトシート（空=仮絵）</b> に 1 枚の画像を入れ、<b>アニメのコマ数（横）</b>・<b>向きの数（縦: 1/2/4/8）</b> を合わせます。画像は次の格子で作ってください：</p>
       <ul><li><b>横</b>＝アニメのコマ（左→右）。例：10 コマなら横 10 分割</li><li><b>縦</b>＝向き。上から <b>右・右上・上・左上・左・左下・下・右下</b>（8 方向）</li></ul>
@@ -360,7 +374,8 @@
       <ol><li>「カメラ」タブの <b>演出（揺れ・寄り）</b> を開く（無ければ <b>足りない部品を追加</b>）。</li><li>出来事（スマッシュボール破壊・コア被弾・オーバーヒート）ごとに、<b>鳴らす画面</b>（全員／関係者だけ／関係者以外）、<b>揺れ</b>、<b>寄り</b> を設定。</li><li>Play 中は <b>試し撃ち</b> で確認。視点を P1〜P4 に切り替えながら撃つと、画面ごとの出し分けが分かります。</li></ol>
       <p class="small muted">揺れは「簡易揺れ（アセット不要）」か「D-Drive の揺れアセット」を選べます。D-Drive の揺れの作り方は <a href="D-Drive_ガイド.html">D-Drive ガイド</a> へ。</p>
     </div></details>
-    <details class="recipe" id="rc-camera-other" data-tags="camera test"><summary><span class="q">Play 中に他のプレイヤーの画面で見たい</span><span class="who">キーボード</span></summary><div class="a"><p>Play 中に <kbd>F1</kbd>〜<kbd>F4</kbd> で P1〜P4 の視点、<kbd>F5</kbd> で全体、<kbd>F6</kbd> で自動に戻す、<kbd>F7</kbd> で構図ガイドの表示切替（エディタと開発ビルドのみ）。カメラタブの <b>他の人の視点で見る</b> でも同じことができます。</p></div></details>
+    <details class="recipe" id="rc-camera-play-as" data-tags="camera test"><summary><span class="q">P1〜P4 の視点を調整したので、その人の画面でプレイして確かめたい</span><span class="who">カメラ</span></summary><div class="a"><ol><li>「カメラ」タブの <b>この視点でプレイ（テスト用）</b> を開く（Play していないときだけ出ます）。</li><li><b>▶ P1でプレイ</b>〜<b>▶ P4でプレイ</b> のどれかを押すと、その人の画面で Play が始まります（いま <b>編集する視点</b> で選んでいる人のボタンが太字）。</li><li>何度も同じ人で試すなら <b>通常のPlay（▶ボタン・Ctrl+P）でもこの視点で始める</b> にチェックを入れ、右で視点を選びます。チェック中は Unity 上部の ▶ でもその視点で始まります。</li></ol><p class="small muted">このPCの画面だけの一時的な切り替えで、保存されるデータは変わりません（チェックは Unity を閉じると外れます）。通信で決まる視点より優先され、Play 中の <b>Play中のカメラ</b> で別の人に切り替えたり <b>自動に戻す</b> で元に戻せます。変わるのはカメラと自分のゲージ表示だけで、砲台はいつもどおり <kbd>Q</kbd><kbd>W</kbd><kbd>O</kbd><kbd>P</kbd>（または握力センサー）で 4 人分動かせます。</p></div></details>
+    <details class="recipe" id="rc-camera-other" data-tags="camera test"><summary><span class="q">Play 中に他のプレイヤーの画面で見たい</span><span class="who">キーボード</span></summary><div class="a"><p>Play 中に <kbd>F1</kbd>〜<kbd>F4</kbd> で P1〜P4 の視点、<kbd>F5</kbd> で全体、<kbd>F6</kbd> で自動に戻す、<kbd>F7</kbd> で構図ガイドの表示切替（エディタと開発ビルドのみ）。カメラタブの <b>他の人の視点で見る</b> でも同じことができます。最初からその人の画面で始めたいときは <a href="#rc-camera-play-as">この視点でプレイ</a> を使います。</p></div></details>
     <details class="recipe" data-tags="test enemy"><summary><span class="q">敵を何体まで出しても重くならないか測りたい</span><span class="who">群衆</span></summary><div class="a"><p>Play 中に <span class="mp">群衆<i>›</i>ストレステスト</span> で <b>一斉投入の数</b> を決めて <b>範囲の中心に一斉投入</b>、または <b>連続投入 (体/秒)</b>。<b>ライブ計測</b> にフレーム時間（16.6ms 以下なら 60FPS）が出ます。<b>ゲーム画面にHUD…を表示</b> を ON にするとビルドでも確認できます。</p></div></details>
     <details class="recipe" data-tags="test"><summary><span class="q">センサー無しで 4 人分テストしたい</span><span class="who">テスト</span></summary><div class="a"><p>キーボードの <kbd>Q</kbd><kbd>W</kbd><kbd>O</kbd><kbd>P</kbd> がそれぞれ P1〜P4 の握力です。「そっと／しっかり／渾身」を自動で握らせたいときは、<a href="GripInputBridge_ガイド.html">握力入力ブリッジ</a> の <b>波形プリセット</b> を使います（テストタブの <b>握力入力ブリッジ（シミュレータ）を開く</b> から開けます）。</p></div></details>
     <p class="noresult">見つかりませんでした。別の言葉で探すか、下の「画面の見かた」を見てください。</p>
@@ -403,9 +418,9 @@
         <p class="small muted">耐久や見た目は「破壊可能物」側の設定です。ここではスマッシュボール固有の項目だけを扱います。</p></div>
       <div class="tg-panel" id="tg-swarm" role="tabpanel"><h3>群衆</h3><div class="when">⏱ 大量の敵の動き方・重さを調整したいとき</div>
         <p>数千体の敵をまとめて計算・描画して 60FPS で動かす仕組み（SwarmSystem）の調整画面です。</p>
-        <ul class="points"><li><b>容量</b>・<b>到達した敵の扱い</b>（コアに着いたら消える／張り付く）・<b>手前の敵を上に描く</b>。</li><li><b>群衆の設定（流体らしさ）</b>：標準／どろどろ／さらさら／ぎゅうぎゅう ＋ 細かい数値。</li><li><b>敵の種類</b>：表示名・体の大きさ・重さ・スプライトシート。<b>＋ 新しい敵の種類を作成</b>。</li><li><b>ライブ計測</b>：敵の数・フレーム時間・処理時間のグラフ（Play 中）。<b>詳細計測</b> で原因の内訳も。</li><li><b>ストレステスト</b>：大量投入・連続投入・全削除。</li><li><b>密度ヒートマップ</b>：敵が集まっている所ほど赤く表示。</li></ul></div>
+        <ul class="points"><li><b>容量</b>・<b>到達した敵の扱い</b>（コアに着いたら消える／張り付く）・<b>手前の敵を上に描く</b>。</li><li><b>群衆の設定（流体らしさ）</b>：標準／どろどろ／さらさら／ぎゅうぎゅう ＋ 細かい数値。</li><li><b>敵の種類</b>：表示名・体の大きさ・重さ・スプライトシート、<b>爆弾（倒すと爆発する）</b>（<a href="#rc-bomb">逆引き</a>）。<b>＋ 新しい敵の種類を作成</b>。</li><li><b>ライブ計測</b>：敵の数・フレーム時間・処理時間のグラフ（Play 中）。<b>詳細計測</b> で原因の内訳も。</li><li><b>ストレステスト</b>：大量投入・連続投入・全削除。</li><li><b>密度ヒートマップ</b>：敵が集まっている所ほど赤く表示。</li></ul></div>
       <div class="tg-panel" id="tg-cam" role="tabpanel"><h3>カメラ</h3><div class="when">⏱ 4 人の画面の見え方・演出を決めたいとき</div>
-        <ul class="points"><li><b>セットアップ</b>：<b>カメラリグをセットアップ</b>（シーンにリグが無いときだけ出る。今の <code>Game.unity</code> は最初に 1 回押す必要あり）/ <b>足りない部品を追加</b>（既にある物には触らない）。</li><li><b>視点プリセット</b>：4 人分の視点セット。<b>複製して編集</b> で案を比較、<b>なめらかに切替</b> で Play 中の切り替え確認。</li><li><b>編集する視点</b>：見る場所・回転・正投影/透視投影・映す広さ/視野角・距離・見下ろしの傾き。<b>コピー</b>／<b>貼り付け</b>。</li><li><b>4人分をまとめて作る</b>：全員の砲台を下に回転・回転対称で4人分を作る・ズームだけ全員にそろえる・<b>全員フィット</b>。</li><li><b>4人の画面プレビュー</b>：本番解像度・安全域・中心の十字・三分割線のガイド付き。</li><li><b>映り込みチェック</b>：コア・自分の砲台が映っていない／端で欠ける、を警告。</li><li><b>絵を立たせる（ビルボード）</b>、<b>演出（揺れ・寄り）</b>、<b>Play中のカメラ</b>（他の人の視点で見る）。</li></ul></div>
+        <ul class="points"><li><b>セットアップ</b>：<b>カメラリグをセットアップ</b>（シーンにリグが無いときだけ出る。今の <code>Game.unity</code> は最初に 1 回押す必要あり）/ <b>足りない部品を追加</b>（既にある物には触らない）。</li><li><b>視点プリセット</b>：4 人分の視点セット。<b>複製して編集</b> で案を比較、<b>なめらかに切替</b> で Play 中の切り替え確認。</li><li><b>編集する視点</b>：見る場所・回転・正投影/透視投影・映す広さ/視野角・距離・見下ろしの傾き。<b>コピー</b>／<b>貼り付け</b>。</li><li><b>4人分をまとめて作る</b>：全員の砲台を下に回転・回転対称で4人分を作る・ズームだけ全員にそろえる・<b>全員フィット</b>。</li><li><b>4人の画面プレビュー</b>：本番解像度・安全域・中心の十字・三分割線のガイド付き。</li><li><b>映り込みチェック</b>：コア・自分の砲台が映っていない／端で欠ける、を警告。</li><li><b>絵を立たせる（ビルボード）</b>、<b>演出（揺れ・寄り）</b>、<b>この視点でプレイ</b>（P1〜P4 の画面で Play を始める・通常の Play でもその視点にする）、<b>Play中のカメラ</b>（他の人の視点で見る）。</li></ul></div>
       <div class="tg-panel" id="tg-test" role="tabpanel"><h3>テスト</h3><div class="when">⏱ Play 中に、全体がちゃんと動いているか見たいとき</div>
         <ul class="points"><li><b>砲台の状態</b>：4 人分の握力・熱のバー、チャージ中／チャージ完了の表示。</li><li><b>敵ウェーブ再生</b>：対象ウェーブ、状態（再生中○秒経過／停止中）、<b>ウェーブ開始</b>／<b>停止</b>。</li><li><b>コアクリスタル HP</b>。</li><li><b>握力入力ブリッジ（シミュレータ）を開く</b>：キーボード以外の握り方（波形）を試すとき。</li></ul></div>
     </div>
@@ -564,7 +579,7 @@
 ├─ <span class="d">Editor/SceneBootstrap/</span>          <span class="c"># Tools/要塞/フェーズ1テストシーンを生成</span>
 ├─ <span class="d">Presets/</span>                         <span class="c"># 設定アセット（ツールが作成・編集）</span>
 │  ├─ Default_LaserTuningConfig / Default_EnemyWaveConfig
-│  ├─ Default_EnemyType / Default_SwarmSettings
+│  ├─ Default_EnemyType / Boss_EnemyType / Bomb_EnemyType / Default_SwarmSettings
 │  ├─ <span class="d">Camera/</span>  CameraViewPreset_* / CameraFeedbackConfig*
 │  └─ <span class="d">Destructibles/</span>  DestructiblePreset（木箱・岩・ガラス…）
 └─ <span class="d">Runtime/</span>  Laser · Spawning · Swarm · Navigation · Obstacles · Camera · Billboard · Net</div>
@@ -619,6 +634,7 @@ core.OnCoreDestroyed += () => { /* ゲームオーバー */ };</pre></div>
 swarm.Spawn(enemyType, position);                       // 1 体
 swarm.SpawnBurst(enemyType, center, radius, count);     // まとめて
 swarm.ClearAll();
+swarm.BombsExploded += list => { /* 爆弾が爆発した位置（揺れなどの演出用） */ };
 
 spawnDirector.StartWave();   // autoStartOnPlay=false のとき手動で
 spawnDirector.StopWave();

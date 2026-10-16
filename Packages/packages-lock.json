@@ -47,6 +47,12 @@
       },
       "hash": "e0734e6c9db374ef4fdc6e31f044a11d0a17ef82"
     },
+    "com.ms2026.playrecorder": {
+      "version": "file:com.ms2026.playrecorder",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "com.ms2026.shaderfx": {
       "version": "file:com.ms2026.shaderfx",
       "depth": 0,

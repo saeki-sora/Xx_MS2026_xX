@@ -6,7 +6,7 @@ namespace MS2026.Fortress.EditorTools
 {
     /// <summary>
     /// 「カメラ」タブ。4人それぞれの視点(見る場所・回転・ズーム・投影)の調整、4人分の画面プレビュー、映り込みチェック、
-    /// 絵を立たせる(ビルボード)設定、演出(揺れ・寄り)の調整、Play中の視点切り替えをまとめる。各パネルは独立していて、このクラスは並べるだけ(他のタブと同じ作り)。
+    /// 絵を立たせる(ビルボード)設定、演出(揺れ・寄り)の調整、指定した視点でのPlay開始、Play中の視点切り替えをまとめる。各パネルは独立していて、このクラスは並べるだけ(他のタブと同じ作り)。
     /// </summary>
     public sealed class CameraTabView : VisualElement
     {
@@ -20,6 +20,7 @@ namespace MS2026.Fortress.EditorTools
         private readonly CameraPresetPanel _presets = new CameraPresetPanel();
         private readonly CameraFeedbackPanel _feedback = new CameraFeedbackPanel();
         private readonly CameraLivePanel _live = new CameraLivePanel();
+        private readonly CameraPlayAsPanel _playAs = new CameraPlayAsPanel();
 
         public CameraTabView()
         {
@@ -73,6 +74,10 @@ namespace MS2026.Fortress.EditorTools
             if (Application.isPlaying)
             {
                 _live.Draw(context);
+            }
+            else
+            {
+                _playAs.Draw(context);
             }
 
             _preview.Draw(context, issues);

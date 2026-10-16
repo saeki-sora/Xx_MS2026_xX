@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 391a8783ea5b9ff488434e3202d61524, type: 3}
+  m_Name: Bomb_EnemyType
+  m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.EnemyTypeDefinition
+  displayName: "\u7206\u5F3E\u30B9\u30D4\u30AD"
+  simulationMode: 0
+  maxHealth: 3
+  moveSpeed: 1.8
+  damageToCore: 5
+  navigationProfile: {fileID: 0}
+  turnSharpness: 8
+  swarm:
+    radius: 0.22
+    hitRadius: 0
+    mass: 1
+    acceleration: 8
+    speedVariance: 0.1
+    spriteSize: 0.8
+    spriteSheet: {fileID: 2800000, guid: 3b3ee4bd86ba43ffb980223a8f5f72ff, type: 3}
+    frameCount: 7
+    directionCount: 2
+    animationFps: 8
+  bomb:
+    explodeOnDeath: 1
+    explosionRadius: 1.6
+    enemyDamage: 30
+    obstacleDamage: 10
+    coreDamage: 2
+    chainDelaySeconds: 0.12
+    explodeAtCore: 1
+    onExplode:
+      vfx:
+        value: 14956730833521469517
+        type: 3
+      se:
+        value: 10195324224963385858
+        type: 1
+      tintWithPlayerColor: 0
+      colorParam: Color
+    showBlastRing: 1
+    blastRingColor: {r: 1, g: 0.55, b: 0.15, a: 0.9}
+    blinkColor: {r: 1, g: 0.15, b: 0.1, a: 1}
+    blinkStrength: 0.85
+    blinkPerSecond: 1.5
+    blinkSpeedUpNearCore: 4
+    blinkSpeedUpDistance: 14
+    blinkSwell: 0.15
+  visualPrefab: {fileID: 0}
+  placeholderColor: {r: 1, g: 0.5, b: 0.1, a: 1}

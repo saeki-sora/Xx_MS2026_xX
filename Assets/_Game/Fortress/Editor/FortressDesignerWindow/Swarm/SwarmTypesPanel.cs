@@ -33,6 +33,25 @@ namespace MS2026.Fortress.EditorTools
             ("swarm.animationFps", "アニメ速度(コマ/秒)")
         };
 
+        private static readonly (string path, string label)[] BombFields =
+        {
+            ("bomb.explosionRadius", "爆発の半径"),
+            ("bomb.enemyDamage", "敵へのダメージ（巻き込まれた爆弾も爆発）"),
+            ("bomb.obstacleDamage", "破壊可能物へのダメージ（0=壊さない）"),
+            ("bomb.coreDamage", "コアへのダメージ（近くで倒したとき・0=なし）"),
+            ("bomb.chainDelaySeconds", "連鎖の間隔（秒）"),
+            ("bomb.explodeAtCore", "コアに着いたら自爆する"),
+            ("bomb.onExplode", "爆発の演出"),
+            ("bomb.showBlastRing", "爆発の範囲を輪で見せる（仮の見た目）"),
+            ("bomb.blastRingColor", "輪の色"),
+            ("bomb.blinkColor", "点滅の色"),
+            ("bomb.blinkStrength", "点滅の強さ"),
+            ("bomb.blinkPerSecond", "点滅の速さ（回/秒・遠いとき）"),
+            ("bomb.blinkSpeedUpNearCore", "コアに近いほど速くなる強さ"),
+            ("bomb.blinkSpeedUpDistance", "速くなり始める距離"),
+            ("bomb.blinkSwell", "点滅でふくらむ割合")
+        };
+
         private readonly Dictionary<EnemyTypeDefinition, SerializedObject> _serialized =
             new Dictionary<EnemyTypeDefinition, SerializedObject>();
 
@@ -100,6 +119,7 @@ namespace MS2026.Fortress.EditorTools
                     EditorGUILayout.Space(4);
                     EditorGUILayout.LabelField("群衆の設定", EditorStyles.miniBoldLabel);
                     DrawFields(serialized, SwarmFields);
+                    DrawBomb(serialized);
                 }
                 else
                 {
@@ -108,6 +128,32 @@ namespace MS2026.Fortress.EditorTools
             }
 
             serialized.ApplyModifiedProperties();
+        }
+
+        private static void DrawBomb(SerializedObject serialized)
+        {
+            EditorGUILayout.Space(4);
+            EditorGUILayout.LabelField("爆弾（倒すと爆発する）", EditorStyles.miniBoldLabel);
+            var toggle = serialized.FindProperty("bomb.explodeOnDeath");
+            if (toggle == null)
+            {
+                return;
+            }
+
+            EditorGUILayout.PropertyField(toggle, new GUIContent("倒すと爆発する", toggle.tooltip));
+            if (!toggle.boolValue)
+            {
+                return;
+            }
+
+            EditorGUILayout.HelpBox(
+                "点滅しながら近づき、倒された場所で爆発して近くの敵・破壊可能物・コアを巻き込みます。巻き込まれた爆弾も爆発するので、群れの中で連鎖します。" +
+                "巻き込んで倒した敵は、爆弾を倒した人の撃破になります。",
+                MessageType.None);
+            using (new EditorGUI.IndentLevelScope())
+            {
+                DrawFields(serialized, BombFields);
+            }
         }
 
         private static void DrawFields(SerializedObject serialized, (string path, string label)[] fields)

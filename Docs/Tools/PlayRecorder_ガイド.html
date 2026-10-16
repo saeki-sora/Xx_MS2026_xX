@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>録画しながらプレイ ガイド</title>
+<meta name="description" content="Unity のツールバーに「録画プレイ」ボタンを足し、ワンボタンでプレイを 20MB 以内の MP4 に録画するツールの使い方と、ほかのプロジェクト・PC への入れ方">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/guide.css">
+<style>
+:root{--acc:#5aa9ff;--acc-ink:#04121f;--acc2:#ff5470;--acc3:#c6ff3d}
+:root[data-theme="light"]{--acc:#1f5fae;--acc-ink:#ffffff;--acc2:#c41d3c;--acc3:#5f8a00}
+.tbar{display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;background:#191a1f;border-radius:8px;flex-wrap:wrap}
+.tbar .b{min-width:30px;height:24px;border-radius:4px;background:#3a3b40;display:grid;place-items:center;color:#c9c9c9;font-size:12px;padding:0 8px}
+.tbar .rec{background:#3a3b40;color:#ffd3d9;font-weight:700;border:1px solid #ff5470}
+.tbar .rec.on{background:#5a1f2a;color:#fff}
+.ladder{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:22px}
+.ladder .card{padding:14px}
+.ladder .t{font-family:var(--mono);font-size:13px;color:var(--acc);margin-bottom:4px}
+.ladder .q{font-weight:700}
+.ladder .s{font-size:12px;color:var(--ink2)}
+.discord{margin-top:28px;padding:22px;border-radius:16px;border:1px solid color-mix(in srgb,#5865f2 55%,transparent);background:linear-gradient(135deg,color-mix(in srgb,#5865f2 16%,transparent),transparent 70%)}
+.discord .dc-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.discord .dc-badge{display:inline-block;padding:4px 12px;border-radius:999px;background:#5865f2;color:#fff;font-weight:800;font-size:13px;letter-spacing:.04em}
+.discord h3{margin:0}
+.dc-bars{display:grid;gap:10px;margin:16px 0}
+.dc-bar{display:grid;grid-template-columns:minmax(0,9.5em) minmax(0,1fr);gap:10px;align-items:center;font-size:13px}
+.dc-bar .track{height:22px;border-radius:6px;background:color-mix(in srgb,var(--ink2) 18%,transparent);overflow:hidden}
+.dc-bar .fill{height:100%;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;white-space:nowrap}
+.dc-bar .fill.limit{width:100%;background:#5865f2}
+.dc-bar .fill.ours{width:92%;background:var(--acc);color:var(--acc-ink)}
+.discord .small{font-size:12px;color:var(--ink2);margin-top:10px}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<div class="orbs" aria-hidden="true"><div class="orb a"></div><div class="orb b"></div></div>
+
+<div class="shell">
+<nav class="side" aria-label="目次">
+  <a class="back" href="index.html">← ツール一覧</a>
+  <a class="brand" href="#top"><span class="mark">REC</span><span class="t">録画しながらプレイ</span></a>
+  <ol id="toc"></ol>
+  <div class="foot">
+    <button class="themebtn" id="themeBtn" type="button"><span aria-hidden="true">◐</span><span data-label>ライト表示</span></button>
+    <div class="meta mono">Packages/com.ms2026.playrecorder<br>v1.0.0 · 2026-10-16 時点</div>
+  </div>
+</nav>
+
+<main id="top">
+<header class="hero">
+  <div class="tags">
+    <span class="pill hot">ワンボタン録画</span>
+    <span class="pill">Discord にそのまま貼れる</span>
+    <span class="pill">必ず 20MB 以内</span>
+    <span class="pill">途中で切らない</span>
+    <span class="pill">ほかのプロジェクトにもすぐ入る</span>
+  </div>
+  <h1 class="mega" aria-label="Play Recorder"><span class="o">PLAY</span><span class="f">REC</span></h1>
+  <p class="subname">録画しながらプレイ — <b>押すだけでプレイが始まり、止めると MP4 ができている</b></p>
+  <div class="hero-row">
+    <div>
+      <p class="oneword">再生ボタンの横の <span class="hl">● 録画プレイ</span> を押すだけ。<br>何分遊んでも <span class="hl">20MB 以内</span>に自動でおさまるから、<br><span class="hl">Discord にそのまま貼れる</span>。</p>
+      <p class="analogy">旅行の写真を決まった容量のメモリーカードに収めるようなものです。短い旅ならきれいな画質で、長い旅なら少し画質を落として枚数を確保する。このツールは「録り終わってから長さを見て画質を決める」ので、途中で録画が切れることがありません。</p>
+    </div>
+    <div class="facts"><dl>
+      <dt>誰が使う</dt><dd>全員（プレイの様子を共有したい人、バグ報告に動画を付けたい人）</dd>
+      <dt>開き方</dt><dd>Unity 上部のツールバー、再生ボタンの横の <b>● 録画プレイ</b>。または <span class="mp">Tools<i>›</i>録画しながらプレイ</span></dd>
+      <dt>必要なもの</dt><dd>何もいりません（Unity Recorder などのインストール不要）</dd>
+      <dt>今の状況</dt><dd>2026-10-16 追加。コンパイル確認済み、Unity 上での録画の確認はこれから（下の「はじめての 5 分」の最後を参照）</dd>
+    </dl></div>
+  </div>
+  <div class="marquee" aria-hidden="true"><div class="track" id="mq" data-words="ワンボタン|Discord にそのまま|20MB 以内|画質は自動|音も録る|裏で書き出し|落ちても救出|ほかのプロジェクトへ|配布用 zip"></div></div>
+</header>
+
+<section id="what" data-nav="何ができる？">
+  <div class="rv">
+    <div class="eyebrow">01 — What you can do</div>
+    <h2>押す・遊ぶ・止める。<br><em>それだけで動画</em>。</h2>
+  </div>
+  <div class="cards">
+    <div class="card feat rv"><div class="ic">⏺️</div><h3>ワンボタンで録画プレイ</h3><p>押すとプレイが始まり、同時にゲーム画面と音の録画が始まる。プレイを止めると録画も止まる。</p><p class="ex">例：4 人対戦の 1 試合を丸ごと録って、チームのチャットに貼る</p></div>
+    <div class="card feat rv"><div class="ic">📦</div><h3>必ず上限サイズ以内</h3><p>長さに合わせて解像度・なめらかさを自動で選ぶ。書き出した後に大きさを確かめ、超えていたら自動で縮め直す。</p><p class="ex">例：30 秒なら 720p のきれいな動画、5 分なら 360p。どちらも Discord の無料プラン（20MB まで）にそのまま貼れる</p></div>
+    <div class="card feat rv"><div class="ic">✂️</div><h3>途中で切らない</h3><p>「20MB になったら録画終了」ではなく、録り終わってから画質を決めるので、最後まで全部入る。</p><p class="ex">例：思ったより試合が長引いても、決着の瞬間まで残る</p></div>
+    <div class="card feat rv"><div class="ic">🎬</div><h3>途中からも録れる</h3><p>普通にプレイしている最中でも、ボタンを押せばそこから録画できる。</p><p class="ex">例：「あ、今のバグ出そう」と思ったら押す</p></div>
+    <div class="card feat rv"><div class="ic">🛟</div><h3>Unity が落ちても救出</h3><p>録画中のデータは少しずつ保存しているので、次に Unity を開いたとき、残っていた分から動画にする。</p></div>
+    <div class="card feat rv"><div class="ic">🚚</div><h3>ほかのプロジェクト・PC へすぐ</h3><p>フォルダを選ぶだけで別のプロジェクトへコピー。別の PC 用には zip を作って渡すだけ。</p></div>
+  </div>
+
+  <div class="discord rv" id="discord">
+    <div class="dc-head"><span class="dc-badge">Discord</span><h3>録ったら、そのまま Discord に貼れる</h3></div>
+    <p>Discord の無料プランで送れるのは <b>1 ファイル 20MB まで</b>（2026 年 8 月に 10MB から引き上げ）。このツールの初期設定はちょうどこの <b>20MB</b> に合わせてあり、しかも少し手前に収めるので、<b>「アップロードしたら大きすぎて弾かれた」が起きません</b>。圧縮サイトで縮め直す手間もいりません。</p>
+    <div class="dc-bars" aria-label="大きさの比較">
+      <div class="dc-bar"><span>Discord 無料の上限</span><div class="track"><div class="fill limit">20MB</div></div></div>
+      <div class="dc-bar"><span>このツールの動画</span><div class="track"><div class="fill ours">約 18MB を目標に</div></div></div>
+    </div>
+    <ul class="points">
+      <li><b>MB の数え方が違っても大丈夫</b>：20MB を「100 万バイト × 20 ＝ 2,000 万バイト」で数えています。1MB を 1,048,576 バイトで数える場合（約 2,097 万バイト）より小さいので、どちらの数え方でも上限を下回ります。</li>
+      <li><b>余裕を持って作り、できたら測る</b>：最初から上限の約 92% を目標に書き出し、できたファイルの大きさを実際に測って、超えていたら自動で縮め直します。</li>
+      <li><b>長くても切れない</b>：10 分録っても 1 時間録っても、画質を自動で下げて 20MB に収めます。決着の瞬間が切れて貼れない、ということがありません。</li>
+      <li><b>Nitro の人は</b>：設定の <b>上限サイズ (MB)</b> を Nitro Basic なら 50、Nitro なら 500 にすると、そのぶん高画質で録れます（<a href="#rc-discord">やり方</a>）。</li>
+    </ul>
+    <p class="small">※ Discord の上限は 2026-10 時点の公開情報にもとづきます。Discord は上限を変えることがあるので、変わったら <b>上限サイズ (MB)</b> を合わせてください。</p>
+  </div>
+</section>
+
+<section id="start" data-nav="はじめての 5 分">
+  <div class="rv">
+    <div class="eyebrow">02 — First 5 minutes</div>
+    <h2>まずは<br><em>30 秒録ってみる</em>。</h2>
+  </div>
+  <div class="steps">
+    <div class="step rv"><div class="n">1</div><div class="step-body">
+      <div><h3>ボタンを見つける</h3>
+        <p>Unity 上部のツールバー、<b>▶ ‖ ▶|</b>（再生・一時停止・コマ送り）の並びに <b>● 録画プレイ</b> があります。</p>
+        <p style="margin-top:8px">見当たらないときは <span class="mp">Tools<i>›</i>録画しながらプレイ<i>›</i>ツールバーにボタンを表示する</span> を選んでください（Unity 6.3 以降は、新しく入れたツールバーのボタンが最初は隠れている仕組みのため。入れた直後に 1 回だけ自動で表示にしています）。メニューの <span class="mp">Tools<i>›</i>録画しながらプレイ<i>›</i>録画プレイ（開始・停止）</span> や <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd> でも同じことができます。</p>
+      </div>
+      <div><div class="mock">
+        <div class="mock-title">Unity ツールバー</div>
+        <div class="mock-body">
+          <div class="tbar"><span class="b rec">● 録画プレイ</span><span class="b">▶</span><span class="b">‖</span><span class="b">▶|</span></div>
+          <div class="help">並び順は Unity の版や設定で少し変わります</div>
+        </div>
+      </div></div>
+    </div></div>
+    <div class="step rv"><div class="n">2</div><div class="step-body">
+      <div><h3>押して、遊ぶ</h3>
+        <p>押すとプレイが始まり、ボタンが <b>■ 録画停止 0:12</b> のように録画時間の表示に変わります。ボタンにマウスを乗せると「今止めると何 p・何 fps になるか」が出ます。</p>
+      </div>
+      <div><div class="mock">
+        <div class="mock-title">録画中</div>
+        <div class="mock-body">
+          <div class="tbar"><span class="b rec on">■ 録画停止 0:12</span><span class="b">▶</span><span class="b">‖</span><span class="b">▶|</span></div>
+        </div>
+      </div></div>
+    </div></div>
+    <div class="step rv"><div class="n">3</div><div>
+      <h3>いつも通りプレイを止める</h3>
+      <p>Unity の ▶ ボタンでプレイを止めると、録画も止まり、裏で動画への書き出しが始まります。右下に <b>録画を書き出し中</b> の進み具合が出ます。そのまま別の作業をしていて大丈夫です。</p>
+    </div></div>
+    <div class="step rv"><div class="n">4</div><div>
+      <h3>できた動画を見る</h3>
+      <p>書き出しの進み具合は、ボタンを右クリックすると一番上に出ます。書き終わると保存先フォルダ（プロジェクトの中の <code>Recordings</code>）が自動で開きます。Console に大きさ・解像度・長さが出ます。</p>
+      <p class="done">ファイル名は「プロジェクト名_日時.mp4」。そのままチャットに貼れます</p>
+    </div></div>
+    <div class="step rv"><div class="n">5</div><div>
+      <h3>最初の 1 回だけ確認してほしいこと</h3>
+      <p>このツールはまだ Unity 上で録画を試していません。最初の動画で次を見てください。</p>
+      <ul class="points"><li>上下さかさまになっていないか → なっていたら <a href="#rc-flip">設定の「上下反転の補正」</a></li><li>色が暗すぎ・明るすぎになっていないか</li><li>音と映像がずれていないか</li></ul>
+    </div></div>
+  </div>
+</section>
+
+<section id="recipes" data-nav="やりたいこと逆引き">
+  <div class="rv"><div class="eyebrow">03 — Recipes</div><h2>「〜したい」から<br><em>探す</em>。</h2></div>
+  <label class="search rv"><span aria-hidden="true">🔍</span><span class="sr">やりたいことを検索</span><input id="recipeSearch" type="search" placeholder="例：途中から、音、別の PC、10MB"></label>
+  <div class="chips rv" id="recipeChips" role="group" aria-label="カテゴリ">
+    <button class="chip" aria-pressed="true" data-f="all">すべて</button>
+    <button class="chip" aria-pressed="false" data-f="rec">録る</button>
+    <button class="chip" aria-pressed="false" data-f="tune">画質・大きさ</button>
+    <button class="chip" aria-pressed="false" data-f="share">配る・入れる</button>
+  </div>
+  <div class="recipes">
+    <details class="recipe" id="rc-midway" data-tags="rec"><summary><span class="q">プレイの途中から録りたい</span><span class="who">ボタン</span></summary><div class="a"><p>普通にプレイしている間、ボタンは <b>● ここから録画</b> になっています。押した瞬間から録画が始まります。</p></div></details>
+    <details class="recipe" id="rc-stop-only" data-tags="rec"><summary><span class="q">プレイは続けたまま、録画だけ止めたい</span><span class="who">ボタン</span></summary><div class="a"><p>録画中のボタン <b>■ 録画停止</b> を押すと、録画だけ止まってプレイは続きます。動画への書き出しはプレイを止めてから始まります（プレイ中は書き出しを休んで、ゲームを重くしないため）。</p></div></details>
+    <details class="recipe" id="rc-pause" data-tags="rec"><summary><span class="q">一時停止した時間は動画に入る？</span><span class="who">一時停止</span></summary><div class="a"><p>入りません。Unity の ‖（一時停止）中は録画の時計も止まり、ボタンは <b>‖ 録画一時停止</b> になります。</p></div></details>
+    <details class="recipe" id="rc-last" data-tags="rec"><summary><span class="q">さっき録った動画をすぐ見たい</span><span class="who">右クリック</span></summary><div class="a"><p>ボタンを右クリック → <b>最後の録画を再生</b>。フォルダを開くなら <b>録画フォルダを開く</b>。</p></div></details>
+    <details class="recipe" id="rc-progress" data-tags="rec"><summary><span class="q">書き出しがあとどのくらいで終わるか知りたい</span><span class="who">右クリック</span></summary><div class="a"><p>ボタンを右クリックすると、一番上に <b>書き出し中 45%・残り約 0:20（720p 30fps）</b> のように今の進み具合が出ます。待っている録画があれば <b>書き出し待ち ○ 本</b> も出ます。<b>進み具合の画面を開く</b> で Unity の進み具合の画面（バックグラウンドタスク）も開けます。残り時間はしばらく書き出してから出ます。サイズを超えて縮め直しているときは「（縮め直し 1 回目）」と出て、% は 0 からやり直しになります。</p></div></details>
+    <details class="recipe" id="rc-discard" data-tags="rec"><summary><span class="q">失敗した録画を捨てたい</span><span class="who">書き出し中</span></summary><div class="a"><p>右下の <b>録画を書き出し中</b> の × を押す → <b>捨てる</b>。<b>書き出しを続ける</b> を選べば続きから書き出します。書き出し済みの動画は保存先フォルダからふつうに消してください。</p></div></details>
+    <details class="recipe" id="rc-discord" data-tags="share"><summary><span class="q">Discord に貼りたい</span><span class="who">そのままで OK</span></summary><div class="a"><p>初期設定（<b>上限サイズ (MB)</b> 20）のままで、Discord の無料プランの上限（1 ファイル 20MB）に収まります。<code>Recordings</code> フォルダの mp4 を Discord のチャットにドラッグするだけ。右クリック → <b>録画フォルダを開く</b> で場所がすぐ開きます。</p><p>Nitro Basic（50MB）や Nitro（500MB）の人は <span class="mp">Edit<i>›</i>Preferences<i>›</i>録画しながらプレイ</span> の <b>上限サイズ (MB)</b> をその数字にすると、長い録画でも高画質のまま送れます。ただし、受け取る側ではなく<b>送る人</b>のプランで決まるので、チームの誰が送っても大丈夫にしたいなら 20 のままがおすすめです。</p></div></details>
+    <details class="recipe" id="rc-limit" data-tags="tune"><summary><span class="q">10MB 以内にしたい（送り先の上限が小さい）</span><span class="who">設定</span></summary><div class="a"><p><span class="mp">Edit<i>›</i>Preferences<i>›</i>録画しながらプレイ</span> の <b>上限サイズ (MB)</b> を 10 に。設定画面の下に「録画の長さと画質の目安」の表が出るので、何分ならどのくらいの画質か確かめられます。</p></div></details>
+    <details class="recipe" id="rc-quality" data-tags="tune"><summary><span class="q">短い録画をもっときれいに／なめらかにしたい</span><span class="who">設定</span></summary><div class="a"><p><b>最大の解像度</b> を 1080、<b>最大の fps</b> を 60 に。ただし、そのぶん「長い録画で画質が下がり始めるまでの時間」が短くなります（同じ 20MB を細かい絵に使うため）。</p></div></details>
+    <details class="recipe" id="rc-long" data-tags="tune"><summary><span class="q">長く録っても画質を落としたくない</span><span class="who">考え方</span></summary><div class="a"><p>20MB という箱の大きさは変わらないので、長いほど 1 秒あたりに使える量は減ります。方法は 2 つ：<b>上限サイズ (MB)</b> を上げる、または見せたい場面だけ <a href="#rc-midway">途中から録る</a>／<a href="#rc-stop-only">録画だけ止める</a> で短く切る。</p></div></details>
+    <details class="recipe" id="rc-noaudio" data-tags="tune"><summary><span class="q">音はいらない</span><span class="who">設定</span></summary><div class="a"><p><b>音も録る</b> を OFF。そのぶん映像に容量を回せます。なお ON のままでも、長い録画で音が容量を圧迫するときは自動でモノラル → 音なしに切り替わります（Console に「音あり(モノラル)」「音なし」と出ます）。</p></div></details>
+    <details class="recipe" id="rc-flip" data-tags="tune"><summary><span class="q">動画が上下さかさま</span><span class="who">設定</span></summary><div class="a"><p><b>上下反転の補正</b> を <b>自動</b> から <b>反転する</b>／<b>反転しない</b> のうち、今と逆になる方に変えてもう一度録ってください。</p></div></details>
+    <details class="recipe" id="rc-folder" data-tags="tune"><summary><span class="q">保存先を変えたい</span><span class="who">設定</span></summary><div class="a"><p><b>保存先フォルダ</b> の <b>選ぶ…</b>。初期値の <code>Recordings</code> は Git に入らない場所なので、動画がリポジトリに混ざりません。ほかの場所にするときは Git に入らないか気をつけてください。</p></div></details>
+    <details class="recipe" id="rc-install" data-tags="share"><summary><span class="q">自分の別のプロジェクトにも入れたい</span><span class="who">右クリック</span></summary><div class="a"><ol><li>ボタンを右クリック → <b>ほかのプロジェクトに入れる…</b>。</li><li>入れたいプロジェクトのフォルダ（<code>Assets</code> がある場所）を選ぶ。</li><li>そのプロジェクトを Unity で開くと、ボタンが出ます。</li></ol><p>もう入っているときは「上書きしますか？」と聞かれるので、最新版に入れ替えられます。</p></div></details>
+    <details class="recipe" id="rc-zip" data-tags="share"><summary><span class="q">ほかの PC・ほかの人に渡したい</span><span class="who">右クリック</span></summary><div class="a"><ol><li>右クリック → <b>配布用 zip を作る…</b>（初期の保存先はデスクトップ）。</li><li>zip を渡す。受け取った人は展開して、中の <code>com.ms2026.playrecorder</code> フォルダを自分のプロジェクトの <code>Packages</code> フォルダへドラッグするだけ。zip に <code>入れ方.txt</code> も入っています。</li></ol><p>Unity 2021.3 以降なら動きます。Unity Recorder などのインストールは不要です。</p></div></details>
+    <details class="recipe" id="rc-remove" data-tags="share"><summary><span class="q">外したい</span><span class="who">フォルダを消す</span></summary><div class="a"><p>プロジェクトの <code>Packages/com.ms2026.playrecorder</code> フォルダを消すだけです。ゲーム本体には何も残りません。</p></div></details>
+    <p class="noresult">見つかりませんでした。別の言葉で探してください。</p>
+  </div>
+</section>
+
+<section id="screen" data-nav="画面の見かた">
+  <div class="rv"><div class="eyebrow">04 — Screens</div><h2>ボタンの文字で<br><em>今の状態が分かる</em>。</h2></div>
+  <div class="tabguide">
+    <div class="tg-panel rv"><h3>ツールバーのボタン</h3><p class="when">いつも表示。文字が状態に合わせて変わります。</p><ul class="points">
+      <li><b>● 録画プレイ</b>：止まっているとき。押すとプレイ＋録画が始まる。</li>
+      <li><b>● 録画プレイ（書き出し 45%）</b>：前の録画を裏で書き出し中。押せば次の録画も始められる（書き出しはプレイ中は休み、後で再開）。</li>
+      <li><b>● 録画準備中…</b>：押した直後、プレイが始まるまで。</li>
+      <li><b>● ここから録画</b>：録画せずにプレイ中。押すと今から録画。</li>
+      <li><b>■ 録画停止 1:23</b>：録画中。押すと録画だけ止まる。</li>
+      <li><b>‖ 録画一時停止 1:23</b>：Unity の一時停止中（録画の時計も止まっている）。</li>
+      <li>右クリック：一番上に <b>今の状態</b>（押せない行。例「書き出し中 45%・残り約 0:20（720p 30fps）」「書き出し待ち 1 本」「録画中 1:23（今止めると 720p 30fps）」「書き出し中の録画はありません」）、その下に <b>進み具合の画面を開く</b> ／ <b>録画フォルダを開く</b> ／ <b>最後の録画を再生</b> ／ <b>設定…</b> ／ <b>ほかのプロジェクトに入れる…</b> ／ <b>配布用 zip を作る…</b></li>
+    </ul></div>
+    <div class="tg-panel rv"><h3>設定画面</h3><p class="when"><span class="mp">Edit<i>›</i>Preferences<i>›</i>録画しながらプレイ</span>（右クリック → <b>設定…</b> でも開く）。この PC の Unity 全体で共通の設定です。</p><ul class="points">
+      <li>上：上限サイズ・画質の上限・音・保存先・上下反転。</li>
+      <li>中：<b>録画の長さと画質の目安</b>（0:30〜20:00 で何 p・何 fps になるか）。設定を変えるとすぐ変わる。</li>
+      <li>下：<b>ほかのプロジェクトに入れる…</b>、<b>配布用 zip を作る…</b>、<b>既定値に戻す</b>。</li>
+    </ul></div>
+  </div>
+</section>
+
+<section id="params" data-nav="数値の意味">
+  <div class="rv"><div class="eyebrow">05 — Numbers</div><h2>長さで決まる<br><em>画質の段</em>。</h2>
+  <p class="lead">上限 20MB・最大 720p 30fps（初期設定）、横長 16:9 の画面のときの目安です。音の大きさは PC によって少し違います。</p></div>
+  <div class="ladder">
+    <div class="card rv"><div class="t">〜1 分</div><div class="q">1280×720 30fps</div><div class="s">いちばんきれい。10 秒なら約 7MB と小さめ</div></div>
+    <div class="card rv"><div class="t">1 分半</div><div class="q">960×540 30fps</div><div class="s">ほぼ気にならない</div></div>
+    <div class="card rv"><div class="t">2 分</div><div class="q">854×480 30fps</div><div class="s">スマホで見るなら十分</div></div>
+    <div class="card rv"><div class="t">3 分</div><div class="q">640×360 30fps</div><div class="s">文字は読みにくくなる</div></div>
+    <div class="card rv"><div class="t">5 分</div><div class="q">640×360 24fps</div><div class="s">音はモノラルに</div></div>
+    <div class="card rv"><div class="t">10 分</div><div class="q">428×240 15fps</div><div class="s">流れが分かる程度</div></div>
+    <div class="card rv"><div class="t">20 分</div><div class="q">428×240 15fps</div><div class="s">音なし</div></div>
+    <div class="card rv"><div class="t">1 時間</div><div class="q">256×144 10fps</div><div class="s">記録用。それでも切れない</div></div>
+  </div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">設定（Edit › Preferences › 録画しながらプレイ）</div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>上限サイズ (MB)</td><td>動画の大きさの上限（1MB = 100 万バイト）。初期値 20 は Discord 無料プランの上限に合わせたもの</td><td>長い録画でも画質が保てる</td><td>送りやすいが早く画質が下がる</td><td class="def">20</td></tr>
+    <tr><td>最大の解像度</td><td>短い録画の細かさの上限</td><td>短い録画がくっきり</td><td>長い録画で画質が落ちにくい</td><td class="def">720p</td></tr>
+    <tr><td>最大の fps</td><td>短い録画のなめらかさの上限</td><td>60 で動きがなめらか</td><td>—</td><td class="def">30</td></tr>
+    <tr><td>音も録る</td><td>スピーカーの音を一緒に録る</td><td colspan="2">OFF にすると映像に容量を回せる</td><td class="def">ON</td></tr>
+    <tr><td>保存先フォルダ</td><td>動画の置き場所</td><td colspan="2">プロジェクトからの相対パスかフルパス</td><td class="def">Recordings</td></tr>
+    <tr><td>書き出したらフォルダを開く</td><td>終わったときにフォルダを開くか</td><td colspan="2"></td><td class="def">ON</td></tr>
+    <tr><td>上下反転の補正</td><td>録画の上下の向き</td><td colspan="2">さかさまになったときだけ変える</td><td class="def">自動</td></tr>
+  </table></div></div>
+  <div class="callout info rv"><span class="ci">i</span><div><b>どうやって 20MB に収めている？</b> 録画中はいったん高画質のまま一時保存し、止めてから「上限 ÷ 長さ」で 1 秒あたりに使える量を出して、それに見合う解像度・fps を選んで書き出します。書き出した後に実際の大きさを測り、超えていれば自動で縮め直します（最大 5 回）。</div></div>
+</section>
+
+<section id="faq" data-nav="困ったとき">
+  <div class="rv"><div class="eyebrow">06 — Troubleshooting</div><h2>困ったときは<br><em>ここ</em>。</h2></div>
+  <div class="faq rv">
+    <details><summary>ボタンが見当たらない</summary><div class="a"><ol><li><span class="mp">Tools<i>›</i>録画しながらプレイ<i>›</i>ツールバーにボタンを表示する</span> を選ぶ（Unity 6.3 以降は、新しいツールバーのボタンが最初は隠れているため）。</li><li>それでも無ければ <span class="mp">Tools<i>›</i>録画しながらプレイ<i>›</i>録画プレイ（開始・停止）</span> か <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd>。</li><li>Console に赤いエラーが出ていてスクリプトがコンパイルできていないと、ボタンもメニューも出ません。</li></ol></div></details>
+    <details><summary>動画が真っ黒・止まった絵のまま</summary><div class="a">録画は <b>Game ビュー</b>に映っている絵を取ります。プレイ中に Scene ビューのタブを前に出していると Game ビューが描かれず、絵が止まることがあります。Game ビューを表示したままプレイしてください。</div></details>
+    <details><summary>書き出しが終わらない／進まない</summary><div class="a">書き出しはプレイ中は休みます。エディタに戻ると続きから進みます。スクリプトを書き換えてコンパイルが走ると、その録画の書き出しは最初からやり直しになります（録画データは消えません）。</div></details>
+    <details><summary>Console に「上限を少し超えました」と出た</summary><div class="a">5 回縮め直しても届かなかったときの表示です（動画は保存されています）。設定の <b>最大の解像度</b> を下げるか <b>音も録る</b> を OFF にすると収まりやすくなります。</div></details>
+    <details><summary>Discord で「ファイルが大きすぎます」と出た</summary><div class="a"><ol><li>設定の <b>上限サイズ (MB)</b> が 20 以下になっているか（Nitro 用に大きくしていないか）。</li><li>Console の「保存しました」の行に出ている大きさが上限以下か。「上限を少し超えました」と出ていたら、<b>最大の解像度</b> を下げるか <b>音も録る</b> を OFF にしてもう一度。</li><li>Discord が上限を変えた可能性もあります。そのときは <b>上限サイズ (MB)</b> を新しい上限に合わせてください（10 にすれば旧上限の 10MB にも収まります）。</li></ol></div></details>
+    <details><summary>Unity が録画中に落ちた</summary><div class="a">次に同じプロジェクトを開くと、残っていた分から自動で動画にします。Console に「前回 Unity が録画中に終了したため、残っていた分から復元しました」と出ます。</div></details>
+    <details><summary>一時ファイルはどこ？ 容量は？</summary><div class="a">プロジェクトの <code>Library/PlayRecorder/Sessions/</code> に、録画 1 回ごとのフォルダができます。書き出しに成功すると自動で消えます。720p の間は 1 秒あたり数 MB 使いますが、長くなるほど取り込みの細かさも自動で下げるので増え方はゆるやかになります。失敗したもの（<code>failed.txt</code> 入り）は残るので、いらなければ手で消してください。</div></details>
+  </div>
+</section>
+
+<section id="glossary" data-nav="用語集">
+  <div class="rv"><div class="eyebrow">07 — Words</div><h2>分からない言葉は<br><em>ここで引く</em>。</h2></div>
+  <dl class="gloss">
+    <div class="rv"><dt>解像度（720p など）</dt><dd>動画の縦の細かさ。720p は縦 720 点。数字が大きいほどくっきりして、ファイルも大きくなる。</dd></div>
+    <div class="rv"><dt>fps</dt><dd>1 秒あたりのコマ数。30fps なら 1 秒に 30 枚。多いほど動きがなめらか。</dd></div>
+    <div class="rv"><dt>ビットレート</dt><dd>動画 1 秒あたりに使うデータ量。上限サイズ ÷ 長さ で決まる。</dd></div>
+    <div class="rv"><dt>書き出し（エンコード）</dt><dd>一時保存した絵と音を、MP4 という 1 本の動画ファイルにまとめる作業。</dd></div>
+    <div class="rv"><dt>MP4</dt><dd>いちばん一般的な動画の形式。チャットやスマホでそのまま再生できる。</dd></div>
+    <div class="rv"><dt>Packages フォルダ</dt><dd>Unity プロジェクトの、Assets と同じ場所にあるフォルダ。ここにツールのフォルダを入れると Unity が読み込む。</dd></div>
+  </dl>
+</section>
+
+<div class="devzone"></div>
+<section id="dev" data-nav="しくみ（開発者向け）" data-dev>
+  <div class="rv">
+    <div class="eyebrow">08 — For programmers</div>
+    <h2>Unity 内蔵の<br><em>MediaEncoder だけ</em>。</h2>
+    <p class="lead">エディタ専用の自己完結パッケージ（名前空間 <code>MS2026.PlayRecorder.Editor</code>、すべて internal、依存なし、<code>"unity": "2021.3"</code>）。ゲームのビルドには入りません。GameObject に付ける 2 つの部品（画面と音の取り込み係）だけは、エディタ専用アセンブリだと付けられないため <code>Hooks/</code>（<code>defineConstraints: UNITY_EDITOR</code> でエディタのときだけコンパイル）に分けています。</p>
+  </div>
+  <div class="tabs rv" role="tablist" aria-label="しくみ">
+    <button class="tab" role="tab" aria-selected="true" aria-controls="cp-rec">録画中</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="cp-enc">書き出し</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="cp-bar">ツールバー</button>
+  </div>
+  <div class="panel" id="cp-rec" role="tabpanel">
+    <div class="codebox" data-plain><div class="cap"><span>capture pipeline</span><button class="copy" type="button">copy</button></div><pre>
+WaitForEndOfFrame
+  → ScreenCapture.CaptureScreenshotIntoRenderTexture(full)
+  → GpuScale.Blit(full → small, 半分ずつ縮小 + 上下反転)   // small = RecordingPlan.CaptureRung(経過秒)
+  → AsyncGPUReadback.Request(small, RGBA32)
+  → FrameStoreWriter（別スレッド）: ImageConversion.EncodeArrayToJPG(q88)
+       → Library/PlayRecorder/Sessions/&lt;日時&gt;/frames.bin + frames.idx
+AudioListener の GameObject に PlayRecorderAudioTap（OnAudioFilterRead、読むだけ）
+  → audio.raw（float、無音ですき間埋め）</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">時計</span>エディタ一時停止の時間を除いた実時間。</div><div class="note"><span class="lbl">再生開始</span>ドメインリロードをまたぐため SessionState に「次のプレイで録画」印。</div></div>
+  </div>
+  <div class="panel" id="cp-enc" role="tabpanel">
+    <div class="codebox" data-plain><div class="cap"><span>RecordingPlan</span><button class="copy" type="button">copy</button></div><pre>
+videoBps = (limit*0.92 - 64KB - audioBytesPerSec*秒) * 8 / 秒
+段 = 1080p60, 1080p30, 720p30, 540p30, 480p30, 360p30, 360p24, 288p20, 240p15, 180p12, 144p10
+     （設定の最大解像度/fps と元画面で切りそろえ）
+選ぶ段 = bpp(= videoBps / (幅*高さ*fps)) ≥ 0.07 の中で一番上。bps は 0.2 bpp で頭打ち
+音   = ステレオ(予算の25%以下) → モノラル(40%以下) → なし   ※AAC の実サイズは 6 秒試し書きで実測
+書き出し後: サイズ &gt; 上限 → 実測の超過率で bps を縮め、必要なら段も下げて再エンコード（最大 5 回）</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">エンコーダ</span><code>MediaEncoder</code> + <code>H264EncoderAttributes</code>（GOP = fps×2、B フレーム 2、High）。Linux は VP8 .webm。</div><div class="note"><span class="lbl">進め方</span>EditorApplication.update で 1 回 25ms（Unity が裏なら 150ms）。<code>UnityEditor.Progress</code> に表示。</div></div>
+  </div>
+  <div class="panel" id="cp-bar" role="tabpanel">
+    <div class="codebox" data-plain><div class="cap"><span>toolbar</span><button class="copy" type="button">copy</button></div><pre>
+#if UNITY_6000_3_OR_NEWER
+  [MainToolbarElement("録画しながらプレイ", defaultDockPosition = MainToolbarDockPosition.Middle)]
+  → MainToolbarButton + populateContextMenu、状態が変わるたび MainToolbar.Refresh
+#else
+  リフレクションで UnityEditor.Toolbar の m_Root → "ToolbarZonePlayMode" に Button を差し込む
+#endif</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">詳細</span><code>Docs/Tools/PlayRecorder_AI_Reference.md</code> とパッケージの <code>README.md</code>。</div></div>
+  </div>
+</section>
+
+<section id="more" data-nav="関連ツール">
+  <div class="rv"><div class="eyebrow">09 — Related</div><h2>一緒に使う<br><em>ツール</em>。</h2></div>
+  <div class="links">
+    <a class="lk rv" href="FortressDesigner_ガイド.html"><span class="ti">要塞デザイナー</span><span class="ds">調整した結果を録画して、チームに見せる。</span></a>
+    <a class="lk rv" href="index.html"><span class="ti">ツール一覧</span><span class="ds">このプロジェクトの全ツール。</span></a>
+  </div>
+  <footer><span>Play Recorder Guide · Xx_MS2026_xX</span><span>2026-10-16 時点のコードに基づく</span></footer>
+</section>
+</main>
+</div>
+<script src="assets/guide.js"></script>
+</body>
+</html>

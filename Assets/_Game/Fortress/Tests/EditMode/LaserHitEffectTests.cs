@@ -65,6 +65,7 @@ namespace MS2026.Fortress.Tests.EditMode
         private NativeArray<int> _hitIdx;
         private NativeArray<SwarmBeamHit> _newHits;
         private NativeArray<int> _newHitCount;
+        private NativeArray<SwarmBlast> _blasts;
 
         [SetUp]
         public void SetUp()
@@ -88,6 +89,7 @@ namespace MS2026.Fortress.Tests.EditMode
             _hitIdx = new NativeArray<int>(16, Allocator.Persistent);
             _newHits = new NativeArray<SwarmBeamHit>(16, Allocator.Persistent);
             _newHitCount = new NativeArray<int>(1, Allocator.Persistent);
+            _blasts = new NativeArray<SwarmBlast>(4, Allocator.Persistent);
         }
 
         [TearDown]
@@ -106,6 +108,7 @@ namespace MS2026.Fortress.Tests.EditMode
             _hitIdx.Dispose();
             _newHits.Dispose();
             _newHitCount.Dispose();
+            _blasts.Dispose();
         }
 
         /// <summary>全員を1つのセルに入れ、x軸上(0〜10)に並べる。</summary>
@@ -122,7 +125,7 @@ namespace MS2026.Fortress.Tests.EditMode
             _cellStart[1] = xs.Length;
         }
 
-        private void Run(int beamCount, int maxNewHits, int beamOffset = 0)
+        private void Run(int beamCount, int maxNewHits, int beamOffset = 0, int blastCount = 0)
         {
             new SwarmLaserJob
             {
@@ -134,6 +137,8 @@ namespace MS2026.Fortress.Tests.EditMode
                 types = _types,
                 beams = _beams,
                 beamCount = beamCount,
+                blasts = _blasts,
+                blastCount = blastCount,
                 cellStart = _cellStart,
                 cellItems = _cellItems,
                 hashOrigin = new float2(-50f, -50f),
@@ -169,6 +174,25 @@ namespace MS2026.Fortress.Tests.EditMode
             _beams[0] = zero;
             Run(1, 16);
             Assert.AreEqual(2, _lastHit[0], "ダメージ0（参加側の見た目だけのビーム）では書き換えない");
+        }
+
+        [Test]
+        public void BlastDamagesEnemiesInsideTheCircleOnce()
+        {
+            PlaceEnemies(0f, 1f, 3f);
+            _hp[1] = 0f;
+            _lastHit[1] = 3;
+            _blasts[0] = new SwarmBlast { center = new float2(0f, 0f), radius = 1f, damage = 4f, owner = 2 };
+
+            Run(0, 16, blastCount: 1);
+
+            Assert.AreEqual(6f, _hp[0], 1e-4f, "円の中の敵に1回だけダメージ（時間をかけない）");
+            Assert.AreEqual(2, _lastHit[0], "巻き込んで倒した敵は爆弾を倒した人の撃破になる");
+            Assert.AreEqual(1f, _flash[0]);
+            Assert.AreEqual(0f, _hp[1], "もう倒れている敵には入れない");
+            Assert.AreEqual(3, _lastHit[1], "もう倒れている敵の撃破者は書き換えない");
+            Assert.AreEqual(10f, _hp[2], "円の外（半径＋体の大きさより遠い）には届かない");
+            Assert.AreEqual(0, _newHitCount[0], "爆発はレーザーの「当たった瞬間」には数えない");
         }
 
         private static SwarmBeam Beam(int owner, int maxHits = 0)

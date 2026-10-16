@@ -14,6 +14,10 @@ namespace MS2026.Fortress
     ///
     /// ネット対戦のClient(replicaMode=1)では、自分の判断では消さない(体力・コア到達を見ない)。Hostが消した敵の番号
     /// (removeIds)だけを消す。コアに着いた敵は、張り付くモードなら張り付き、消えるモードならHostからの通知を待つ。
+    ///
+    /// 爆弾の敵(types[].explodes)が倒された・コアで自爆したときは explosions に記録する（演出と、Hostではまわりへのダメージ）。
+    /// Clientでは、Hostで「倒された／コアに着いた」と知らされた番号(explodeIds: 番号→消えた理由)の爆弾を記録する（演出だけ）。
+    /// コアで自爆する爆弾(explodeAtCore)は、張り付くモードでも張り付かずに消える。
     /// </summary>
     [BurstCompile]
     public struct SwarmCompactScanJob : IJob
@@ -28,6 +32,7 @@ namespace MS2026.Fortress
         [ReadOnly] public NativeArray<int> netId;
         [ReadOnly] public NativeArray<int> lastHit;
         [ReadOnly] public NativeHashSet<int> removeIds;
+        [ReadOnly] public NativeHashMap<int, byte> explodeIds;
         public int count;
         public int arrivalMode;
         public int replicaMode;
@@ -41,9 +46,11 @@ namespace MS2026.Fortress
         public NativeArray<float> yRange;
         public NativeArray<int> removedIds;
         public NativeArray<byte> removedReasons;
+        public NativeList<SwarmExplosion> explosions;
 
         public void Execute()
         {
+            explosions.Clear();
             counters[1] = 0;
             counters[2] = 0;
             counters[3] = 0;
@@ -78,11 +85,21 @@ namespace MS2026.Fortress
                 {
                     if (removeIds.Contains(id))
                     {
+                        if (types[type].explodes != 0 && explodeIds.TryGetValue(id, out var reason))
+                        {
+                            var atCore = reason == (byte)EnemyRemovalReason.ReachedCore;
+                            if (!atCore || types[type].explodeAtCore != 0)
+                            {
+                                AddExplosion(read, type, -1, atCore ? SwarmExplosionCause.ReachedCore : SwarmExplosionCause.Killed);
+                            }
+                        }
+
                         Record(id, EnemyRemovalReason.Removed);
                         continue;
                     }
 
-                    if (state[read] == 0 && goal >= 0 && arrivalMode == (int)SwarmArrivalMode.LingerAndAttack)
+                    if (state[read] == 0 && goal >= 0 && arrivalMode == (int)SwarmArrivalMode.LingerAndAttack
+                        && types[type].explodeAtCore == 0)
                     {
                         state[read] = 1;
                     }
@@ -99,6 +116,11 @@ namespace MS2026.Fortress
                             killsByPlayer[killer] = killsByPlayer[killer] + 1;
                         }
 
+                        if (types[type].explodes != 0)
+                        {
+                            AddExplosion(read, type, killer, SwarmExplosionCause.Killed);
+                        }
+
                         Record(id, EnemyRemovalReason.Died);
                         continue;
                     }
@@ -106,9 +128,15 @@ namespace MS2026.Fortress
                     if (state[read] == 0 && goal >= 0)
                     {
                         counters[2] = counters[2] + 1;
-                        if (arrivalMode == (int)SwarmArrivalMode.VanishAndDamage)
+                        var selfDestruct = types[type].explodeAtCore != 0;
+                        if (arrivalMode == (int)SwarmArrivalMode.VanishAndDamage || selfDestruct)
                         {
                             goalDamage[goal] = goalDamage[goal] + types[type].damageToCore;
+                            if (selfDestruct)
+                            {
+                                AddExplosion(read, type, -1, SwarmExplosionCause.ReachedCore);
+                            }
+
                             Record(id, EnemyRemovalReason.ReachedCore);
                             continue;
                         }
@@ -132,6 +160,11 @@ namespace MS2026.Fortress
             counters[0] = write;
             yRange[0] = write > 0 ? minY : 0f;
             yRange[1] = write > 0 ? maxY : 0f;
+        }
+
+        private void AddExplosion(int index, int type, int owner, SwarmExplosionCause cause)
+        {
+            explosions.Add(new SwarmExplosion { position = pos[index], type = type, owner = owner, cause = cause });
         }
 
         private void Record(int id, EnemyRemovalReason reason)

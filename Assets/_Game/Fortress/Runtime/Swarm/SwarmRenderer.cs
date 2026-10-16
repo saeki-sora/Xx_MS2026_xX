@@ -24,6 +24,7 @@ namespace MS2026.Fortress
         private static readonly int ColsId = Shader.PropertyToID("_Cols");
         private static readonly int RowsId = Shader.PropertyToID("_Rows");
         private static readonly int TintId = Shader.PropertyToID("_Tint");
+        private static readonly int BlinkColorId = Shader.PropertyToID("_BlinkColor");
         private static readonly int ZWriteId = Shader.PropertyToID("_SwarmZWrite");
         private static readonly int SilhouetteEnabledId = Shader.PropertyToID("_FortressSilhouetteEnabled");
 
@@ -155,6 +156,7 @@ namespace MS2026.Fortress
             material.SetFloat(ColsId, frames);
             material.SetFloat(RowsId, directions);
             material.SetColor(TintId, Color.white);
+            material.SetColor(BlinkColorId, definition.bomb != null ? definition.bomb.blinkColor : Color.red);
 
             // 絵を立たせているときだけ深度を書く(寝ているときは従来通り書かない)。
             var standing = Shader.GetGlobalFloat(Billboards.BillboardShaderGlobals.SwarmStandId) > 0f;
