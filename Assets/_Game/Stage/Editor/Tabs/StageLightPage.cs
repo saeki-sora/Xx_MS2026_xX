@@ -74,6 +74,7 @@ namespace MS2026.Stage.EditorTools
             card.TrackSerializedObjectValue(so, _ => Apply());
             LightOffNotice.Attach(card, so);
             _host.Add(card);
+            _host.Add(MaterialGlossPanel.Build(() => Context.Root));
             _host.Add(StudioUi.Note("太陽は「[Stage] Sun」という名前でステージの置き場所の下に自動で作られます。シーンに別の Directional Light があると明るすぎることがあるので、そちらは消すかOFFにしてください。", NoteKind.Info));
         }
 
