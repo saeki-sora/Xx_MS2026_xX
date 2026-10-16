@@ -85,6 +85,8 @@ namespace MS2026.Stage
                 current.lighting.ApplyTo(EnsureSun());
             }
 
+            StageLookVolume.Apply(this, current.lighting);
+
             StageLookProfile.Current.ApplyGlobals();
 
             var rig = FortressCameraRig.Active != null ? FortressCameraRig.Active : FindFirstObjectByType<FortressCameraRig>();

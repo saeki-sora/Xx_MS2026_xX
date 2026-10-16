@@ -6,7 +6,9 @@
         "MS2026.Stage.Editor",
         "MS2026.Fortress.Runtime",
         "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner"
+        "UnityEditor.TestRunner",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime"
     ],
     "includePlatforms": [
         "Editor"

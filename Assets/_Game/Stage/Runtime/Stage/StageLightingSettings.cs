@@ -53,6 +53,13 @@ namespace MS2026.Stage
         [Tooltip("カメラからこの距離で完全に霧の色になる（ワールド単位）。")]
         [Min(0f)] public float fogEnd = 60f;
 
+        // ── まぶしさ（画面全体） ──（見出しはステージ背景スタジオの「光」ページが出す。効かせるのは StageLookVolume）
+        [Tooltip("明るい所が真っ白・真緑に張り付く（白飛び）のを、色の階調を残したまま抑える。ONにするとカメラの後処理も使うので少し重くなる。")]
+        public StageToneMapping toneMapping = StageToneMapping.Off;
+
+        [Tooltip("画面全体の明るさ（露出）。0=そのまま、-1で半分、+1で2倍の明るさ。光の当たり方は変えずに全体を明るく・暗くする。")]
+        [Range(-2f, 2f)] public float exposure = 0f;
+
         /// <summary>シーンの環境光・霧と、渡された太陽（Directional Light）に反映する。</summary>
         public void ApplyTo(Light sun)
         {

@@ -7,7 +7,9 @@
         "DDrive.Generated",
         "DDrive.Foundation",
         "Unity.Mathematics",
-        "Unity.Collections"
+        "Unity.Collections",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

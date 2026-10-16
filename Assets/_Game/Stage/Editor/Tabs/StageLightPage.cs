@@ -70,6 +70,10 @@ namespace MS2026.Stage.EditorTools
             card.Add(Field(so, "lighting.fogEnd", "霧の色に染まりきる距離"));
             card.Add(StudioUi.Section("BGM"));
             card.Add(Field(so, "bgm", "このステージのBGM"));
+            card.Add(StudioUi.Section("まぶしさ（画面全体）", "明るい所が真っ白・真緑に張り付く（白飛び）のを抑えたり、画面全体の明るさを変えたりします。"));
+            card.Add(Field(so, "lighting.toneMapping", "まぶしさを抑える"));
+            card.Add(Field(so, "lighting.exposure", "全体の明るさ（露出）"));
+            card.Add(StudioUi.Note("まぶしさを抑える: 「自然」は色をあまり変えずに白飛びだけ抑えます。「映画風」はコントラストが強くなり色も少し落ち着きます。どちらか（または明るさ≠0）にすると、カメラの後処理が ON になるので少し重くなります。", NoteKind.Info));
             card.Bind(so);
             card.TrackSerializedObjectValue(so, _ => Apply());
             LightOffNotice.Attach(card, so);

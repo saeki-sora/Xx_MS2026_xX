@@ -15,7 +15,7 @@
 ## 1. Paths / assemblies
 ```
 Assets/_Game/Stage/
-  Runtime/  (asmdef MS2026.Stage.Runtime, ns MS2026.Stage; refs MS2026.Fortress.Runtime, DDrive.Runtime/.Generated/.Foundation, Unity.Mathematics, Unity.Collections)
+  Runtime/  (asmdef MS2026.Stage.Runtime, ns MS2026.Stage; refs MS2026.Fortress.Runtime, DDrive.Runtime/.Generated/.Foundation, Unity.Mathematics, Unity.Collections, Unity.RenderPipelines.Core.Runtime/.Universal.Runtime (for StageLookVolume))
     Footprint/  FootprintSettings, FootprintGrid, FootprintContour, FootprintBuilder, FootprintGeometry (pure)  FootprintMeshSampler, StagePropFootprint
     Props/      StageProp, StagePropRole (+extensions DisplayName/NeedsFootprint), StagePropLookSettings (+StageOcclusionMode)
     Rendering/  StageShaderIds, StagePropLook, StagePropRenderer, StageFocusPoints
@@ -113,6 +113,7 @@ Rebuilt 2026-10-07 at the user's request: the Scene-view overlays (`ステージ
 ## 5. Integration
 - Uses Fortress: `NavigationObstacle`, `NavigationField`, `DestructibleObstacle` family, `LaserBeamVisual`, `LaserTurret`, `CoreCrystalController`, `EnemySpawnPoint`, `SwarmSystem` (grid + `StorageReadable`), `FortressCameraRig`/`CameraViewPreset`/`CameraViewMath`, `FortressNetworkBootstrap`. Fortress does **not** reference Stage.
 - D-Drive: only `StageSet.bgm` (`Audio.PlayBgm`). Destructible prop effects use the existing `FortressEffect` slots of `DestructibleObstacle.settings.feedback` (project rule).
+- Tone mapping / exposure (2026-10-16, runtime `Stage/StageLookVolume.cs`): `StageLightingSettings.toneMapping` (`StageToneMapping` Off/Natural/Cinematic, InspectorNames 使わない/自然（色をあまり変えない）/映画風（コントラスト強め）) and `exposure` (−2…2 EV) — light page section `まぶしさ（画面全体）` after the BGM field, labels `まぶしさを抑える` / `全体の明るさ（露出）`. `StageRoot.ApplyEnvironment` always calls `StageLookVolume.Apply(root, lighting)`: when `apply && NeedsPostProcess` it creates/updates a child `[Stage] Look Volume` (HideFlags DontSave|NotEditable, global, priority 10, runtime `VolumeProfile` with `Tonemapping` (Neutral/ACES) + `ColorAdjustments.postExposure`) and sets `renderPostProcessing = true` on every camera in the root's scene (never switched back off — if the scene is saved while on, the camera keeps it); otherwise it disables the volume. Not saved anywhere, so in edit mode it appears after the first light-page change (Play: from `Start`). Asmdefs `MS2026.Stage.Runtime` and the EditMode tests now reference `Unity.RenderPipelines.Core.Runtime` + `Unity.RenderPipelines.Universal.Runtime`. Tests `StageLookVolumeTests`.
 - Multiplayer: nothing new is sent. Stage must be placed in the scene before connecting (it's part of the scene). Destructible props replicate through `DestructibleNetworkHub` like any destructible.
 
 ## 6. Gotchas
