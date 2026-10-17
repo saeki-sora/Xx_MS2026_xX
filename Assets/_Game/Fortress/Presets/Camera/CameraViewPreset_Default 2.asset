@@ -23,28 +23,28 @@ MonoBehaviour:
     distance: 10
     tiltDegrees: 0
   players:
-  - center: {x: 0, y: 3.63}
+  - center: {x: 0, y: 4}
     rollDegrees: 0
     projection: 1
     orthographicSize: 14
     fieldOfView: 108.924644
     distance: 10
     tiltDegrees: 0
-  - center: {x: 0, y: 0}
+  - center: {x: 4, y: 0}
     rollDegrees: 0
     projection: 1
     orthographicSize: 14
     fieldOfView: 108.924644
     distance: 10
     tiltDegrees: 0
-  - center: {x: 0, y: 0}
+  - center: {x: 0, y: -4}
     rollDegrees: 0
     projection: 1
     orthographicSize: 14
     fieldOfView: 108.924644
     distance: 10
     tiltDegrees: 0
-  - center: {x: 0, y: 0}
+  - center: {x: -4, y: 0}
     rollDegrees: 0
     projection: 1
     orthographicSize: 14
