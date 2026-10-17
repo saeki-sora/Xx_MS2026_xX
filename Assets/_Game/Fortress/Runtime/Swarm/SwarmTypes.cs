@@ -88,7 +88,7 @@ namespace MS2026.Fortress
         public int owner;
     }
 
-    /// <summary>GPUに渡す1体分の描画データ（32バイト）。a=(x, y, 大きさ, 被弾フラッシュ) / b=(フレーム, 向き, 予備, 爆弾の点滅)。</summary>
+    /// <summary>GPUに渡す1体分の描画データ（32バイト）。a=(x, y, 大きさ, 被弾フラッシュ) / b=(フレーム, 向いている角度(ラジアン, ワールド), 予備, 爆弾の点滅)。シートの行はシェーダーが画面の向きに合わせて決める。</summary>
     public struct SwarmInstance
     {
         public float4 a;

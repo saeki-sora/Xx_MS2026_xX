@@ -6,8 +6,9 @@ using Unity.Mathematics;
 namespace MS2026.Fortress
 {
     /// <summary>
-    /// 【描画データ作成の前半・並列】詰め直し後の敵ごとに、アニメーションのコマ番号・向き・並べ替えキーを計算する。
-    /// キー = 敵の種類 × 256 + Y座標のバケット（Yが大きい＝奥ほど先に描く）。
+    /// 【描画データ作成の前半・並列】詰め直し後の敵ごとに、アニメーションのコマ番号・向いている角度・並べ替えキーを計算する。
+    /// 向き(スプライトシートの行)は、画面の回転に合わせられるよう描画中のカメラごとにシェーダー(SwarmSpriteCommon.hlsl)で決める。
+    /// キー = 敵の種類 × 256 + 画面の上方向(sortAxis)の位置のバケット（画面の上＝奥ほど先に描く。sortAxis=(0,1)ならY座標）。
     /// </summary>
     [BurstCompile]
     public struct SwarmPrepInstanceJob : IJobParallelFor
@@ -21,6 +22,7 @@ namespace MS2026.Fortress
         [ReadOnly] public NativeArray<int> counters;
         [ReadOnly] public NativeArray<float> yRange;
         public int ySort;
+        public float2 sortAxis;
 
         // 爆弾の敵の点滅（SwarmBombMath）。コアまでの距離で点滅が速くなる。
         [ReadOnly] public NativeArray<int> netId;
@@ -49,7 +51,7 @@ namespace MS2026.Fortress
             if (ySort != 0)
             {
                 var range = math.max(yRange[1] - yRange[0], 1e-4f);
-                var t = (p.y - yRange[0]) / range;
+                var t = (math.dot(p, sortAxis) - yRange[0]) / range;
                 bucket = math.clamp((int)((1f - t) * (SwarmLimits.SortBuckets - 1)), 0, SwarmLimits.SortBuckets - 1);
             }
 
@@ -57,24 +59,16 @@ namespace MS2026.Fortress
 
             var frame = (int)math.floor(animTime[i]) % math.max(1, tp.frameCount);
 
+            // ワールドでの向き(ラジアン, 0=+X 反時計回り)。シートのどの行を使うかはシェーダーが画面の向きと合わせて決める。
             var f = facing[i];
             var angle = math.atan2(f.y, f.x);
-            if (angle < 0f)
-            {
-                angle += math.PI * 2f;
-            }
-
-            var directions = math.max(1, tp.directionCount);
-            var dir = directions == 1
-                ? 0
-                : (int)math.floor(angle / (math.PI * 2f / directions) + 0.5f) % directions;
 
             var draw = applyRenderOffset != 0 ? p + renderOffset[i] : p;
             var blink = tp.explodes != 0 ? Blink(p, tp, netId[i]) : 0f;
             tmpInstances[i] = new SwarmInstance
             {
                 a = new float4(draw.x, draw.y, tp.spriteSize * (1f + tp.blinkSwell * blink), math.saturate(flash[i])),
-                b = new float4(frame, dir, 1f, blink * tp.blinkStrength)
+                b = new float4(frame, angle, 1f, blink * tp.blinkStrength)
             };
         }
 

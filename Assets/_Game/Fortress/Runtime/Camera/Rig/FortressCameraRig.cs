@@ -1,4 +1,5 @@
 using System;
+using MS2026.Fortress.Billboards;
 using UnityEngine;
 
 namespace MS2026.Fortress.Cameras
@@ -81,6 +82,7 @@ namespace MS2026.Fortress.Cameras
             if (Active == this)
             {
                 Active = null;
+                EnemyScreenAlign.Reset();
             }
         }
 
@@ -166,6 +168,7 @@ namespace MS2026.Fortress.Cameras
             BaseView = _blend.Evaluate(preset.GetView(viewer), deltaTime);
             CurrentView = _modifiers.Apply(BaseView, deltaTime);
             ApplyToCamera(CurrentView);
+            EnemyScreenAlign.Apply(preset.enemiesFaceScreen, targetCamera);
         }
 
         private void ApplyToCamera(in CameraViewSettings view)

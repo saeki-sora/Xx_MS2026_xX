@@ -722,6 +722,10 @@ namespace MS2026.Fortress
         // 消す敵を除いて詰め直し(〜Bの配列へ)、描画データを作る。
         private JobHandle ScheduleCompactionAndRender(JobHandle handle, int count)
         {
+            // 奥→手前の並べ替えは、このPCの画面の上方向で行う(画面を回した視点でも正しく重なる。見た目だけでゲームの判定には使わない)。
+            var screenUp = Billboards.EnemyScreenAlign.ScreenUp;
+            var sortAxis = new float2(screenUp.x, screenUp.y);
+
             handle = new SwarmCompactScanJob
             {
                 order = Grid.CellItems,
@@ -747,7 +751,8 @@ namespace MS2026.Fortress
                 attached = _attached,
                 killsByType = _killsByType,
                 killsByPlayer = _killsByPlayer,
-                yRange = _yRange
+                yRange = _yRange,
+                sortAxis = sortAxis
             }.Schedule(handle);
 
             handle = new SwarmCompactCopyJob
@@ -795,6 +800,7 @@ namespace MS2026.Fortress
                 counters = _counters,
                 yRange = _yRange,
                 ySort = _settings.ySort ? 1 : 0,
+                sortAxis = sortAxis,
                 netId = Storage.netIdB,
                 goals = _goals,
                 goalCount = _goalCount,

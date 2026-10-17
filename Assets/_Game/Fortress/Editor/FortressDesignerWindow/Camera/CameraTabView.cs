@@ -16,6 +16,7 @@ namespace MS2026.Fortress.EditorTools
         private readonly CameraVisibilityPanel _visibility = new CameraVisibilityPanel();
         private readonly CameraViewEditPanel _edit = new CameraViewEditPanel();
         private readonly CameraBillboardPanel _billboard = new CameraBillboardPanel();
+        private readonly CameraEnemyFacingPanel _enemyFacing = new CameraEnemyFacingPanel();
         private readonly CameraViewGeneratorPanel _generator = new CameraViewGeneratorPanel();
         private readonly CameraPresetPanel _presets = new CameraPresetPanel();
         private readonly CameraFeedbackPanel _feedback = new CameraFeedbackPanel();
@@ -82,6 +83,7 @@ namespace MS2026.Fortress.EditorTools
 
             _preview.Draw(context, issues);
             _edit.Draw(context);
+            _enemyFacing.Draw(context);
             _billboard.Draw(context);
             _visibility.Draw(context, issues);
             _generator.Draw(context);

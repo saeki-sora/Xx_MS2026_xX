@@ -28,6 +28,11 @@ namespace MS2026.Fortress.Cameras
         [Tooltip("斜め見下ろしの視点で、地面に寝ている平らな絵をカメラに向けて立たせる。OFFなら今まで通りの平らな絵。")]
         public BillboardSettings billboard = new BillboardSettings();
 
+        [Header("敵の絵の向き")]
+        [Tooltip("ONなら、画面を回した視点(画面の回転が0°以外)でも、敵(群衆)の絵の上が画面の上を向き、左右の向きも画面の左右で決まる。" +
+                 "OFFならワールドの+Yが絵の上(以前の描き方)。回転0°の視点ではどちらでも同じ見た目。各PCが自分の画面で計算するので通信は関係しない。")]
+        public bool enemiesFaceScreen = true;
+
         [Header("共通")]
         [Tooltip("これより近いものは映らない。")]
         [Min(0.01f)]

@@ -9,7 +9,7 @@ namespace MS2026.Fortress
     /// 【詰め直しの前半】倒された敵・コア到達で消える敵を判定し、生き残る敵の番号を「空間ハッシュのセル順」で
     /// keepListに並べる。これにより、次フレーム以降は近くの敵がメモリ上でも近くに並び、近傍探索が速くなる。
     /// コア到達時の扱いは arrivalMode（消える／張り付く）で切り替わる。
-    /// counters: [0]=生存数 [1]=撃破数 [2]=到達数 [3]=消えた敵の数(removedIds/removedReasonsに記録) / yRange: [0]=最小Y [1]=最大Y（描画のYソート用）
+    /// counters: [0]=生存数 [1]=撃破数 [2]=到達数 [3]=消えた敵の数(removedIds/removedReasonsに記録) / yRange: [0]=最小 [1]=最大（描画の奥→手前の並べ替え用。sortAxis 方向の位置。sortAxis=(0,1) ならY座標）
     /// killsByPlayer: このフレームに各プレイヤー(0〜3)が倒した数（最後にダメージを与えた人。だれか不明な撃破は数えない）。
     ///
     /// ネット対戦のClient(replicaMode=1)では、自分の判断では消さない(体力・コア到達を見ない)。Hostが消した敵の番号
@@ -44,6 +44,9 @@ namespace MS2026.Fortress
         public NativeArray<int> killsByType;
         public NativeArray<int> killsByPlayer;
         public NativeArray<float> yRange;
+
+        /// <summary>並べ替えに使う「画面の上」方向(地面上の単位ベクトル)。画面を回した視点でも奥から描けるよう、描画中のカメラから決める(EnemyScreenAlign)。見た目だけに使う。</summary>
+        public float2 sortAxis;
         public NativeArray<int> removedIds;
         public NativeArray<byte> removedReasons;
         public NativeList<SwarmExplosion> explosions;
@@ -150,7 +153,7 @@ namespace MS2026.Fortress
                     attached[goal] = attached[goal] + 1;
                 }
 
-                var y = pos[read].y;
+                var y = math.dot(pos[read], sortAxis);
                 minY = math.min(minY, y);
                 maxY = math.max(maxY, y);
                 keepList[write] = read;
