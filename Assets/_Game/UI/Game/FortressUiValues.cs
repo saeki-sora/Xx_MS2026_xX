@@ -43,6 +43,10 @@ namespace MS2026.UI.Game
 
         private readonly List<LaserTurret> _turrets = new List<LaserTurret>();
         private readonly string[] _labels = { "P1", "P2", "P3", "P4" };
+        private readonly string[] _otherLabels = { "1P", "2P", "3P", "4P" };
+        private readonly float[] _heat = new float[4];
+        private readonly bool[] _overheated = new bool[4];
+        private readonly bool[] _connected = new bool[4];
         private CoreCrystalController _core;
         private EnemySpawnDirector _director;
         private FortressNetworkBootstrap _bootstrap;
@@ -67,6 +71,7 @@ namespace MS2026.UI.Game
             PublishEnemies();
             PublishKills(local);
             PublishNet(local);
+            PublishOthers(local);
         }
 
         private void FindSources()
@@ -105,6 +110,12 @@ namespace MS2026.UI.Game
 
                 var p = turret.playerIndex;
                 var overheated = turret.State == TurretState.Overheated;
+                if (p >= 0 && p < 4)
+                {
+                    _heat[p] = turret.HeatRatio01;
+                    _overheated[p] = overheated;
+                }
+
                 var grip = provider != null ? provider.GetGripValue(p) : 0f;
                 UiValues.Set(FortressUiKeys.PlayerHeat(p), turret.HeatRatio01);
                 UiValues.Set(FortressUiKeys.PlayerOverheated(p), overheated);
@@ -196,12 +207,28 @@ namespace MS2026.UI.Game
 
             for (var p = 0; p < 4; p++)
             {
-                UiValues.Set(FortressUiKeys.PlayerConnected(p), IsConnected(p, local, listening, manager));
+                _connected[p] = IsConnected(p, local, listening, manager);
+                UiValues.Set(FortressUiKeys.PlayerConnected(p), _connected[p]);
             }
 
             var session = GameSession.Active;
             UiValues.Set(FortressUiKeys.NetPlayers, session != null && listening ? session.Roster.PresentCount
                 : listening && manager.IsHost && _bootstrap != null ? _bootstrap.ClientIdToPlayerIndex.Count : listening ? 1 : 0);
+        }
+
+        // 自分以外の3人を番号の小さい順に（HUD の左の3段。どのPCでも同じ位置に「ほかの人」が並ぶ）。
+        private void PublishOthers(int local)
+        {
+            for (var s = 0; s < FortressUiKeys.OtherCount; s++)
+            {
+                var p = FortressUiKeys.OtherPlayerIndex(local, s);
+                UiValues.Set(FortressUiKeys.OtherPlayer(s), p);
+                UiValues.Set(FortressUiKeys.OtherLabel(s), _otherLabels[p]);
+                UiValues.Set(FortressUiKeys.OtherColor(s), FortressColors.PlayerColor(p));
+                UiValues.Set(FortressUiKeys.OtherHeat(s), _heat[p]);
+                UiValues.Set(FortressUiKeys.OtherOverheated(s), _overheated[p]);
+                UiValues.Set(FortressUiKeys.OtherConnected(s), _connected[p]);
+            }
         }
 
         private bool IsConnected(int player, int local, bool listening, NetworkManager manager)

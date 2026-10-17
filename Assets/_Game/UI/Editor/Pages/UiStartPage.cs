@@ -70,6 +70,7 @@ namespace MS2026.UI.EditorTools
                                    "何度押しても作り直すだけです。見た目・動き・値のつなぎは、作ったあと「画面」「レイヤー」「動き」ページで自由に直せます。", NoteKind.Info));
             root.Add(StudioUi.Row(
                 StudioUi.Button("撃破数とコアの体力バーを入れる", () => HudKillCounterBuilder.Build(true), "画面 Hud に、コアの体力（上の中央）・撃破数（下の中央）・コンボ（その上）・お祝い（画面の中央）を入れます。", primary: true, small: true),
+                StudioUi.Button("プレイヤーのパネルとコアのバー（歯）を入れる", () => HudPanelsBuilder.Build(true), "画面 Hud に、チームの絵で、コアの体力（上の中央・歯のアイコン）・自分のパネル（左下・しまのゲージ＝熱）・ほかの3人の丸いアイコン（その上）を入れます。前の水晶のコアの札と左上の4人の熱は隠します。", small: true),
                 StudioUi.Button("リザルト画面を作る", () => ResultScreenBuilder.Build(true), "試合が終わったとき（1000体でクリア／コアが壊れてゲームオーバー）に自動で開くリザルト画面（画面 Result）を作ります。", small: true)));
 
             root.Add(StudioUi.Section("用語"));

@@ -372,7 +372,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 1181155178}
+  - {fileID: 1203983315}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -503,7 +503,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 2.6, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.7, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1341164743}
@@ -719,6 +719,8 @@ MonoBehaviour:
   logValues: 1
   logIntervalSeconds: 0.3
   logPlayerCount: 2
+  showRawValues: 0
+  rawValuesToggleKey: 101
 --- !u!4 &370010039
 Transform:
   m_ObjectHideFlags: 0
@@ -950,7 +952,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.61538464, y: 0.61538464, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 738340849}
@@ -967,7 +969,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53cdae05cdf48e547a5f128bdc7e72b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MS2026.Title.Runtime::MS2026.Title.TitleSpriteFit
-  mode: 1
+  mode: 0
   size: 8
   coverOverscan: 1.12
   targetCamera: {fileID: 0}
@@ -1020,7 +1022,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 15
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: cc0f9bcd87e16e840bd8600731a08ab7, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 92576b4482d6e694d9e3e173fc39057c, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1118,14 +1120,14 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!21 &659936371
+--- !u!21 &714214808
 Material:
   serializedVersion: 8
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: 'Title_CubeLeft [ShaderFX C26F4B95]'
+  m_Name: 'Title_CubeRight [ShaderFX 41C721A7]'
   m_Shader: {fileID: 4800000, guid: 108b8982ac3b39e4ca1c2d74f35a23f4, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -1184,7 +1186,7 @@ Material:
     - _UVScrollSharpness: 0.6
     - _UVScrollSpeed: 1
     m_Colors:
-    - _BaseColor: {r: 1, g: 0.75, b: 0.93, a: 1}
+    - _BaseColor: {r: 0.7, g: 0.93, b: 1, a: 1}
     - _DissolveEdgeColor: {r: 1, g: 0.54999995, b: 0.049999982, a: 1}
     - _FXEmissionColor: {r: 1, g: 1, b: 1, a: 1}
     - _FireColor: {r: 1, g: 0.45, b: 0.049999982, a: 1}
@@ -1223,7 +1225,7 @@ Transform:
   m_GameObject: {fileID: 738340848}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -1.4, z: 0}
+  m_LocalPosition: {x: 0.035, y: 1.015, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1431,7 +1433,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 1181155178}
+  - {fileID: 1203983315}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -6300,86 +6302,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 305972123}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!21 &916114692
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 'Title_CubeRight [ShaderFX BAFED813]'
-  m_Shader: {fileID: 4800000, guid: 108b8982ac3b39e4ca1c2d74f35a23f4, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 1
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _BaseMap:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _DissolveAmount: 0
-    - _DissolveEdgeWidth: 0.08
-    - _DissolveNoiseScale: 12
-    - _FXDissolveToggle: 0
-    - _FXEmissionIntensity: 1
-    - _FXEmissionPulseSpeed: 0
-    - _FXEmissionToggle: 0
-    - _FXFireToggle: 0
-    - _FXFrostToggle: 0
-    - _FXGlitchToggle: 0
-    - _FXHitFlashToggle: 0
-    - _FXHologramToggle: 0
-    - _FXRimToggle: 0
-    - _FXToonToggle: 0
-    - _FXUVScrollToggle: 0
-    - _FireIntensity: 2
-    - _FireNoiseScale: 24
-    - _FireScrollSpeed: 1.5
-    - _FrostAmount: 0.7
-    - _FrostSparkleThreshold: 0.85
-    - _GlitchAmount: 0
-    - _GlitchBlockSize: 10
-    - _GlitchRGBSplit: 0.025
-    - _GlitchSpeed: 16
-    - _HitFlashAmount: 0
-    - _HologramFlickerIntensity: 0.15
-    - _HologramFlickerSpeed: 6
-    - _HologramFresnelPower: 2.5
-    - _HologramScanlineDensity: 60
-    - _HologramScanlineSpeed: 4
-    - _RimIntensity: 1.2
-    - _RimPower: 3
-    - _ToonSteps: 2
-    - _UVScrollPatternScale: 30
-    - _UVScrollSharpness: 0.6
-    - _UVScrollSpeed: 1
-    m_Colors:
-    - _BaseColor: {r: 0.7, g: 0.93, b: 1, a: 1}
-    - _DissolveEdgeColor: {r: 1, g: 0.54999995, b: 0.049999982, a: 1}
-    - _FXEmissionColor: {r: 1, g: 1, b: 1, a: 1}
-    - _FireColor: {r: 1, g: 0.45, b: 0.049999982, a: 1}
-    - _FrostColor: {r: 0.65, g: 0.85, b: 1, a: 1}
-    - _FrostSparkleColor: {r: 0.9, g: 0.97999996, b: 1, a: 1}
-    - _HitFlashColor: {r: 1, g: 1, b: 1, a: 1}
-    - _HologramColor: {r: 0.19999996, g: 0.9, b: 1, a: 1}
-    - _RimColor: {r: 0.35, g: 0.95, b: 1, a: 1}
-    - _ToonShadeColor: {r: 0.54999995, g: 0.54999995, b: 0.65, a: 1}
-    - _UVScrollColor: {r: 1, g: 0.7, b: 0.09999997, a: 1}
-    - _UVScrollDirection: {r: 0, g: 1, b: 0, a: 0}
-  m_BuildTextureStacks: []
-  m_AllowLocking: 1
 --- !u!1 &1088557471
 GameObject:
   m_ObjectHideFlags: 0
@@ -6465,14 +6387,14 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 1000
   m_TargetDisplay: 0
---- !u!21 &1181155178
+--- !u!21 &1203983315
 Material:
   serializedVersion: 8
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: 'Title_SpriteFX [ShaderFX DFAAE21B]'
+  m_Name: 'Title_SpriteFX [ShaderFX 02D39453]'
   m_Shader: {fileID: 4800000, guid: 6b3c5d25235dc2b44bc67ecca4b4d03f, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -6688,6 +6610,7 @@ MonoBehaviour:
   burstParticles: {fileID: 1614068311}
   curtain: {fileID: 143784619}
   cameraMotion: {fileID: 1232967108}
+  tubeSequence: {fileID: 11400000, guid: 558b66de3cb539146a94f8c2e2be30b0, type: 2}
   appearDelay: 0.3
   appearDuration: 0.45
   swellDuration: 2
@@ -6703,6 +6626,7 @@ MonoBehaviour:
   rumble: 0.12
   sliceCount: 48
   ejectDuration: 0.4
+  streamBaseOffset: {x: 0.03, y: -0.08}
   ejectShake: 0.4
   pullBackDuration: 0.5
   deflateDuration: 0.35
@@ -16727,6 +16651,86 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1297605040}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!21 &1756593092
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 'Title_CubeLeft [ShaderFX 728460B6]'
+  m_Shader: {fileID: 4800000, guid: 108b8982ac3b39e4ca1c2d74f35a23f4, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _DissolveAmount: 0
+    - _DissolveEdgeWidth: 0.08
+    - _DissolveNoiseScale: 12
+    - _FXDissolveToggle: 0
+    - _FXEmissionIntensity: 1
+    - _FXEmissionPulseSpeed: 0
+    - _FXEmissionToggle: 0
+    - _FXFireToggle: 0
+    - _FXFrostToggle: 0
+    - _FXGlitchToggle: 0
+    - _FXHitFlashToggle: 0
+    - _FXHologramToggle: 0
+    - _FXRimToggle: 0
+    - _FXToonToggle: 0
+    - _FXUVScrollToggle: 0
+    - _FireIntensity: 2
+    - _FireNoiseScale: 24
+    - _FireScrollSpeed: 1.5
+    - _FrostAmount: 0.7
+    - _FrostSparkleThreshold: 0.85
+    - _GlitchAmount: 0
+    - _GlitchBlockSize: 10
+    - _GlitchRGBSplit: 0.025
+    - _GlitchSpeed: 16
+    - _HitFlashAmount: 0
+    - _HologramFlickerIntensity: 0.15
+    - _HologramFlickerSpeed: 6
+    - _HologramFresnelPower: 2.5
+    - _HologramScanlineDensity: 60
+    - _HologramScanlineSpeed: 4
+    - _RimIntensity: 1.2
+    - _RimPower: 3
+    - _ToonSteps: 2
+    - _UVScrollPatternScale: 30
+    - _UVScrollSharpness: 0.6
+    - _UVScrollSpeed: 1
+    m_Colors:
+    - _BaseColor: {r: 1, g: 0.75, b: 0.93, a: 1}
+    - _DissolveEdgeColor: {r: 1, g: 0.54999995, b: 0.049999982, a: 1}
+    - _FXEmissionColor: {r: 1, g: 1, b: 1, a: 1}
+    - _FireColor: {r: 1, g: 0.45, b: 0.049999982, a: 1}
+    - _FrostColor: {r: 0.65, g: 0.85, b: 1, a: 1}
+    - _FrostSparkleColor: {r: 0.9, g: 0.97999996, b: 1, a: 1}
+    - _HitFlashColor: {r: 1, g: 1, b: 1, a: 1}
+    - _HologramColor: {r: 0.19999996, g: 0.9, b: 1, a: 1}
+    - _RimColor: {r: 0.35, g: 0.95, b: 1, a: 1}
+    - _ToonShadeColor: {r: 0.54999995, g: 0.54999995, b: 0.65, a: 1}
+    - _UVScrollColor: {r: 1, g: 0.7, b: 0.09999997, a: 1}
+    - _UVScrollDirection: {r: 0, g: 1, b: 0, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
 --- !u!1 &1797922364
 GameObject:
   m_ObjectHideFlags: 0
@@ -16742,7 +16746,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1797922365
 Transform:
   m_ObjectHideFlags: 0
@@ -17069,7 +17073,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 659936371}
+  - {fileID: 1756593092}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -17176,7 +17180,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 916114692}
+  - {fileID: 714214808}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

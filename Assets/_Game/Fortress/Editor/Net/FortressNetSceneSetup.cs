@@ -1,5 +1,4 @@
 using System.Text;
-using MS2026.Fortress.Hud;
 using MS2026.Fortress.Net;
 using Unity.Netcode;
 using UnityEditor;
@@ -15,7 +14,6 @@ namespace MS2026.Fortress.EditorTools
     {
         private const string MenuPath = "Tools/要塞/ネットワーク/同期オブジェクトをシーンに配置";
         private const string NetSyncObjectName = "[Fortress] NetSync";
-        private const string HudObjectName = "[Fortress] LocalTurretHud";
 
         [MenuItem(MenuPath)]
         private static void PlaceSyncObjects()
@@ -45,17 +43,7 @@ namespace MS2026.Fortress.EditorTools
             EnsureSyncComponent<EnemyNetworkHub>(netSync, "Actorの敵(ボスなど)の同期", report);
             EnsureSyncComponent<SwarmNetworkHub>(netSync, "群衆の同期", report);
 
-            var hud = Object.FindFirstObjectByType<LocalTurretGaugeHud>();
-            if (hud == null)
-            {
-                var go = new GameObject(HudObjectName, typeof(LocalTurretGaugeHud));
-                Undo.RegisterCreatedObjectUndo(go, "自分のゲージを配置");
-                report.AppendLine($"・「{HudObjectName}」を追加しました(自分の熱・チャージのゲージ)。");
-            }
-            else
-            {
-                report.AppendLine($"・自分のゲージは配置済みです({hud.name})。");
-            }
+            // 自分の熱ゲージ（仮の LocalTurretGaugeHud）は 2026-10-17 に削除した（ユーザー決定。ゲーム中の表示は UIスタジオの画面 Hud）。
 
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
             report.AppendLine();

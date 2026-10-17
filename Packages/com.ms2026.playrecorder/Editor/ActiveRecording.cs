@@ -67,7 +67,9 @@ namespace MS2026.PlayRecorder.Editor
             _audioSink = (data, channels) => writer.EnqueueAudio(data, data.Length, channels);
             if (_recordAudio) _writer.SetAudioChannels(SpeakerChannels(AudioSettings.speakerMode));
 
-            RebuildLadder(Screen.width, Screen.height);
+            // ここでは Screen.width/height を読まない。ツールバーのボタンから呼ばれると、ゲーム画面ではなく
+            // ツールバー自身の大きさ（例 2560×54）が返るため。本当の大きさは最初の取り込み（OnEndOfFrame）で決める。
+            RebuildLadder(0, 0);
             _rung = _ladder[0];
             _startTime = Time.realtimeSinceStartupAsDouble;
 
@@ -93,8 +95,6 @@ namespace MS2026.PlayRecorder.Editor
                 createdAt = createdAt,
                 projectName = System.IO.Path.GetFileName(PlayRecorderSettings.ProjectRoot),
                 sceneName = SceneManager.GetActiveScene().name,
-                sourceWidth = Screen.width,
-                sourceHeight = Screen.height,
                 audioSampleRate = AudioSettings.outputSampleRate,
                 audioChannels = PlayRecorderSettings.RecordAudio ? SpeakerChannels(AudioSettings.speakerMode) : 0,
                 complete = false,
@@ -188,7 +188,15 @@ namespace MS2026.PlayRecorder.Editor
 
             int sw = Screen.width, sh = Screen.height;
             if (sw < 16 || sh < 16) return;
-            if (_full == null) RebuildLadder(sw, sh);
+            if (_full == null)
+            {
+                // 最初の 1 枚：ここ（描画の直後）なら Screen はゲーム画面の大きさ
+                RebuildLadder(sw, sh);
+                _rung = RecordingPlan.CaptureRung(_ladder, _aspect, _limitBytes, t);
+                _meta.sourceWidth = sw;
+                _meta.sourceHeight = sh;
+                SessionFiles.WriteMeta(Dir, _meta);
+            }
 
             _full = GpuScale.Ensure(_full, sw, sh, "PlayRecorder Screen");
             ScreenCapture.CaptureScreenshotIntoRenderTexture(_full);

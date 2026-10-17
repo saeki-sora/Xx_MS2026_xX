@@ -292,7 +292,7 @@
 
 ## 5e. ビルドではデバッグ表示を出さない／撃破数（2026-10-13）
 
-- ユーザー決定: ビルドした .exe ではデバッグ表示（D-Drive の通信状態・群衆の計測・カメラの視点表示・右上の接続画面・エラーの赤い窓）を出さない。Unity の中では今まで通り。ビルドでも起動オプション `-debug-ui` で出せる。**`Tools/NetTest/run_instance.bat` は `-debug-ui` を付ける**ので、bat でのテスト・計測は今まで通り計測表示が見える。仕組みは `Docs/Tools/FortressDesigner_AI_Reference.md` の Hud 節（`DebugUi`）。
+- ユーザー決定: ビルドした .exe ではデバッグ表示（D-Drive の通信状態・群衆の計測・カメラの視点表示・右上の接続画面・エラーの赤い窓）を出さない。Unity の中では今まで通り。ビルドでも起動オプション `-debug-ui` で出せる。**`Tools/NetTest/run_instance.bat` は `-debug-ui` を付ける**ので、bat でのテスト・計測は今まで通り計測表示が見える。仕組みは `Docs/Tools/FortressDesigner_AI_Reference.md` の Hud 節（`DebugUi`）。2026-10-17〜 D-Drive の通信状態表示（左上）・群衆の計測（SwarmHud、左上。FPS など）・右上の接続画面（FortressConnectUI）は Unity の中・`-debug-ui` でも最初は隠し、**F9** で出し入れする（ユーザー決定）。
 - 撃破数: Host が数え（群衆は「最後にダメージを与えたレーザーの持ち主」を敵ごとに覚える）、名前つきメッセージ `MS2026.Fortress.Kills`（約20バイト、変わったときに1秒10回まで＋2秒ごと）で全員に配る。Client は自分では数えない。新しい試合で0。画面は UIスタジオのゲーム中HUD（`UIStudio_AI_Reference.md` 4d章）。Unity の中（1台・オフライン）では数・だれの撃破か・コンボ・お祝いを確認済み（2026-10-13）。**宿題（未確認）**: 2台で、参加側にホストの数が届くか。
 
 ## 5f. 試合の終わりとリザルト（2026-10-13）
@@ -321,4 +321,4 @@
 | キャラクター選択 | `Assets/CharacterSelect/`（`CharacterSelectController`・`CharacterSelectBoard`・`CharacterSelectMessages`）、`Assets/_Game/UI/Game/Session/GameSession.CharacterSelect.cs`、`Assets/Scenes/Character_Select.unity` |
 | ロビー（タイトル→ロビー→ゲーム） | `Assets/_Game/UI/Game/Session/`（`GameSession`・展示用の自動接続 `GameSession.Auto`・`AutoMatchRules`・`LobbyRoster`・`LobbyMessages`・`LanDiscovery`・`GameSceneSessionGuard`・画面の部品）、`Assets/Scenes/Lobby.unity`、組み立て `Assets/_Game/UI/Editor/Session/SessionFlowBuilder.cs` |
 | 起動用bat | `Tools/NetTest/`（`launch_2p/4p`, `launch_ui_2p`, `launch_duplicate_test`, `bench_2p`, `bench_4p`, `bench_4p_latejoin`, `bench_offline`, `run_instance`） |
-| 画面のUI配置 | `Runtime/Hud/DebugOverlayLayout.cs`（左上の縦積み）、`LocalTurretGaugeHud.cs` |
+| 画面のUI配置 | `Runtime/Hud/DebugOverlayLayout.cs`（左上の縦積み）。自分のゲージ（`LocalTurretGaugeHud.cs`）は 2026-10-17 に削除（ゲーム中の表示は UIスタジオの画面 Hud） |

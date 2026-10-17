@@ -1178,3 +1178,168 @@ MonoBehaviour:
     sampleText: 
     sampleColor: {r: 1, g: 1, b: 1, a: 1}
     category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: other.1.player
+    label: "\u307B\u304B\u306E\u4EBA1\u306E\u756A\u53F7"
+    description: "\u81EA\u5206\u4EE5\u5916\u306E3\u4EBA\u3092\u756A\u53F7\u306E\u5C0F\u3055\u3044\u9806\u306B\u4E26\u3079\u305F\u3001\u305D\u306E\u4EBA\u306E\u30D7\u30EC\u30A4\u30E4\u30FC\u756A\u53F7\uFF080\u301C3\uFF09\u3002\u81EA\u5206\u304CP2\u306A\u3089
+      1\u4EBA\u76EE=P1\u30012\u4EBA\u76EE=P3\u30013\u4EBA\u76EE=P4\u3002"
+    kind: 1
+    range: {x: 0, y: 3}
+    sampleNumber: 1
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u307B\u304B\u306E\u4EBA"
+  - key: other.1.label
+    label: "\u307B\u304B\u306E\u4EBA1\u306E\u540D\u524D\uFF082P \u306A\u3069\uFF09"
+    description: "\u4F8B: 2P\u3002"
+    kind: 3
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 2P
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u307B\u304B\u306E\u4EBA"
+  - key: other.1.color
+    label: "\u307B\u304B\u306E\u4EBA1\u306E\u8272"
+    description: "\u305D\u306E\u4EBA\u306E\u30D7\u30EC\u30A4\u30E4\u30FC\u8272\u3002"
+    kind: 4
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 0.203, g: 0.549, b: 0.949, a: 1}
+    category: "\u307B\u304B\u306E\u4EBA"
+  - key: other.1.heat
+    label: "\u307B\u304B\u306E\u4EBA1\u306E\u71B1\uFF08\u5272\u5408\uFF09"
+    description: "0=\u51B7\u3048\u3066\u3044\u308B\u30011=\u30AA\u30FC\u30D0\u30FC\u30D2\u30FC\u30C8\u5BF8\u524D\u3002"
+    kind: 1
+    range: {x: 0, y: 1}
+    sampleNumber: 0.3
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u307B\u304B\u306E\u4EBA"
+  - key: other.1.overheated
+    label: "\u307B\u304B\u306E\u4EBA1\u304C\u30AA\u30FC\u30D0\u30FC\u30D2\u30FC\u30C8\u4E2D"
+    description: "\u6483\u3066\u306A\u3044\u9593\u3060\u3051ON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u307B\u304B\u306E\u4EBA"
+  - key: other.1.connected
+    label: "\u307B\u304B\u306E\u4EBA1\u304C\u3064\u306A\u304C\u3063\u3066\u3044\u308B"
+    description: "\u305D\u306E\u4EBA\u304C\u53C2\u52A0\u3057\u3066\u3044\u308B\u3068\u304DON\uFF08\u30DB\u30B9\u30C8\u3067\u3082\u53C2\u52A0\u5074\u3067\u3082\u3001\u30ED\u30D3\u30FC\u304B\u3089\u6765\u305F\u3068\u304D\u306F\u6B63\u3057\u3044\uFF09\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 1
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u307B\u304B\u306E\u4EBA"
+  - key: other.2.player
+    label: "\u307B\u304B\u306E\u4EBA2\u306E\u756A\u53F7"
+    description: "\u81EA\u5206\u4EE5\u5916\u306E3\u4EBA\u3092\u756A\u53F7\u306E\u5C0F\u3055\u3044\u9806\u306B\u4E26\u3079\u305F\u3001\u305D\u306E\u4EBA\u306E\u30D7\u30EC\u30A4\u30E4\u30FC\u756A\u53F7\uFF080\u301C3\uFF09\u3002\u81EA\u5206\u304CP2\u306A\u3089
+      1\u4EBA\u76EE=P1\u30012\u4EBA\u76EE=P3\u30013\u4EBA\u76EE=P4\u3002"
+    kind: 1
+    range: {x: 0, y: 3}
+    sampleNumber: 2
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u307B\u304B\u306E\u4EBA"
+  - key: other.2.label
+    label: "\u307B\u304B\u306E\u4EBA2\u306E\u540D\u524D\uFF082P \u306A\u3069\uFF09"
+    description: "\u4F8B: 2P\u3002"
+    kind: 3
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 3P
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u307B\u304B\u306E\u4EBA"
+  - key: other.2.color
+    label: "\u307B\u304B\u306E\u4EBA2\u306E\u8272"
+    description: "\u305D\u306E\u4EBA\u306E\u30D7\u30EC\u30A4\u30E4\u30FC\u8272\u3002"
+    kind: 4
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 0.25, g: 0.702, b: 0.45, a: 1}
+    category: "\u307B\u304B\u306E\u4EBA"
+  - key: other.2.heat
+    label: "\u307B\u304B\u306E\u4EBA2\u306E\u71B1\uFF08\u5272\u5408\uFF09"
+    description: "0=\u51B7\u3048\u3066\u3044\u308B\u30011=\u30AA\u30FC\u30D0\u30FC\u30D2\u30FC\u30C8\u5BF8\u524D\u3002"
+    kind: 1
+    range: {x: 0, y: 1}
+    sampleNumber: 0.55
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u307B\u304B\u306E\u4EBA"
+  - key: other.2.overheated
+    label: "\u307B\u304B\u306E\u4EBA2\u304C\u30AA\u30FC\u30D0\u30FC\u30D2\u30FC\u30C8\u4E2D"
+    description: "\u6483\u3066\u306A\u3044\u9593\u3060\u3051ON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u307B\u304B\u306E\u4EBA"
+  - key: other.2.connected
+    label: "\u307B\u304B\u306E\u4EBA2\u304C\u3064\u306A\u304C\u3063\u3066\u3044\u308B"
+    description: "\u305D\u306E\u4EBA\u304C\u53C2\u52A0\u3057\u3066\u3044\u308B\u3068\u304DON\uFF08\u30DB\u30B9\u30C8\u3067\u3082\u53C2\u52A0\u5074\u3067\u3082\u3001\u30ED\u30D3\u30FC\u304B\u3089\u6765\u305F\u3068\u304D\u306F\u6B63\u3057\u3044\uFF09\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 1
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u307B\u304B\u306E\u4EBA"
+  - key: other.3.player
+    label: "\u307B\u304B\u306E\u4EBA3\u306E\u756A\u53F7"
+    description: "\u81EA\u5206\u4EE5\u5916\u306E3\u4EBA\u3092\u756A\u53F7\u306E\u5C0F\u3055\u3044\u9806\u306B\u4E26\u3079\u305F\u3001\u305D\u306E\u4EBA\u306E\u30D7\u30EC\u30A4\u30E4\u30FC\u756A\u53F7\uFF080\u301C3\uFF09\u3002\u81EA\u5206\u304CP2\u306A\u3089
+      1\u4EBA\u76EE=P1\u30012\u4EBA\u76EE=P3\u30013\u4EBA\u76EE=P4\u3002"
+    kind: 1
+    range: {x: 0, y: 3}
+    sampleNumber: 3
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u307B\u304B\u306E\u4EBA"
+  - key: other.3.label
+    label: "\u307B\u304B\u306E\u4EBA3\u306E\u540D\u524D\uFF082P \u306A\u3069\uFF09"
+    description: "\u4F8B: 2P\u3002"
+    kind: 3
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 4P
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u307B\u304B\u306E\u4EBA"
+  - key: other.3.color
+    label: "\u307B\u304B\u306E\u4EBA3\u306E\u8272"
+    description: "\u305D\u306E\u4EBA\u306E\u30D7\u30EC\u30A4\u30E4\u30FC\u8272\u3002"
+    kind: 4
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 0.949, g: 0.8, b: 0.153, a: 1}
+    category: "\u307B\u304B\u306E\u4EBA"
+  - key: other.3.heat
+    label: "\u307B\u304B\u306E\u4EBA3\u306E\u71B1\uFF08\u5272\u5408\uFF09"
+    description: "0=\u51B7\u3048\u3066\u3044\u308B\u30011=\u30AA\u30FC\u30D0\u30FC\u30D2\u30FC\u30C8\u5BF8\u524D\u3002"
+    kind: 1
+    range: {x: 0, y: 1}
+    sampleNumber: 0.8
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u307B\u304B\u306E\u4EBA"
+  - key: other.3.overheated
+    label: "\u307B\u304B\u306E\u4EBA3\u304C\u30AA\u30FC\u30D0\u30FC\u30D2\u30FC\u30C8\u4E2D"
+    description: "\u6483\u3066\u306A\u3044\u9593\u3060\u3051ON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 1
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u307B\u304B\u306E\u4EBA"
+  - key: other.3.connected
+    label: "\u307B\u304B\u306E\u4EBA3\u304C\u3064\u306A\u304C\u3063\u3066\u3044\u308B"
+    description: "\u305D\u306E\u4EBA\u304C\u53C2\u52A0\u3057\u3066\u3044\u308B\u3068\u304DON\uFF08\u30DB\u30B9\u30C8\u3067\u3082\u53C2\u52A0\u5074\u3067\u3082\u3001\u30ED\u30D3\u30FC\u304B\u3089\u6765\u305F\u3068\u304D\u306F\u6B63\u3057\u3044\uFF09\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u307B\u304B\u306E\u4EBA"

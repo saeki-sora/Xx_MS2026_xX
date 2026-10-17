@@ -65,9 +65,10 @@ namespace MS2026.PlayRecorder.Editor
             _frames = frames;
             double lastFrameEnd = frames[frames.Count - 1].Time + 0.05;
             _duration = Math.Max(meta.complete ? meta.duration : 0, lastFrameEnd);
-            int sw = meta.sourceWidth > 0 ? meta.sourceWidth : frames[0].Width;
-            int sh = meta.sourceHeight > 0 ? meta.sourceHeight : frames[0].Height;
-            _aspect = (float)sw / Math.Max(1, sh);
+            // 縦横比は取り込んだ画像から取る（meta の大きさは古い版だとツールバーの大きさが入っていることがある）
+            int sw = frames[0].Width > 0 ? frames[0].Width : meta.sourceWidth;
+            int sh = frames[0].Height > 0 ? frames[0].Height : meta.sourceHeight;
+            _aspect = Mathf.Clamp((float)sw / Math.Max(1, sh), 0.25f, 4f);
             _limit = PlayRecorderSettings.LimitBytes;
             _vp8 = Application.platform == RuntimePlatform.LinuxEditor; // Linux の Unity は H.264 を書けない
             _ext = _vp8 ? ".webm" : ".mp4";

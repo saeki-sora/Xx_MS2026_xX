@@ -1040,8 +1040,8 @@ namespace MS2026.Fortress
 
         private void OnGUI()
         {
-            // ビルドしたゲームでは出さない（起動オプション -debug-ui で出す。Hud/DebugUi.cs）。
-            if (showHud && Hud.DebugUi.Visible)
+            // ビルドしたゲームでは出さない（起動オプション -debug-ui で出す）。出せるときも最初は隠し、F9 で出し入れする（Hud/DebugUi.cs）。
+            if (showHud && Hud.DebugUi.Visible && Hud.DebugUi.OverlaysShown)
             {
                 SwarmHud.Draw(this);
             }

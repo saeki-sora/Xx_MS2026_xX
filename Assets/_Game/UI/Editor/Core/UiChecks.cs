@@ -40,13 +40,6 @@ namespace MS2026.UI.EditorTools
                     .WithFix("部品を付ける", () => Undo.AddComponent<FortressUiValues>(root.gameObject)));
             }
 
-            if (root.GetComponent<FortressLegacyUiSwitch>() == null)
-            {
-                issues.Add(new StudioIssue(StudioIssueSeverity.Info, "仮の熱ゲージとの切り替え部品がありません",
-                        "HUD の画面と、前からある仮の熱ゲージが二重に出ることがあります。", root)
-                    .WithFix("部品を付ける", () => Undo.AddComponent<FortressLegacyUiSwitch>(root.gameObject)));
-            }
-
             if (root.transform.parent != null && root.keepAcrossScenes)
             {
                 issues.Add(new StudioIssue(StudioIssueSeverity.Warning, "UIの置き場所が何かの子になっています",

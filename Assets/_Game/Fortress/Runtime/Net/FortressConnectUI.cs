@@ -108,6 +108,12 @@ namespace MS2026.Fortress.Net
 
         private void OnGUI()
         {
+            // デバッグ表示（D-Drive の通信状態・この接続画面・群衆の計測）は、最初は隠して F9 で出し入れする（Hud/DebugUi.cs、2026-10-17）。
+            if (!Hud.DebugUi.OverlaysShown)
+            {
+                return;
+            }
+
             var scale = Mathf.Max(1f, Screen.height / referenceScreenHeight);
             GUI.matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1f));
 

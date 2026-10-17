@@ -98,6 +98,14 @@ namespace MS2026.Title.EditorTools
                 if (controller.opening != null)
                 {
                     DrawSelectButton(controller.opening);
+                    DrawFields(controller.opening, ("tubeSequence", "連番アニメ（AE）"));
+                    if (controller.opening.tubeSequence != null)
+                    {
+                        // 連番のときは「出てくる」「つまんでふくらむ」「キャップ」の数値は使わない（絵に入っている）。
+                        DrawFields(controller.opening.tubeSequence,
+                            ("frameRate", "連番の1秒の枚数"),
+                            ("ejectFrame", "キャップが飛ぶコマ"));
+                    }
                     DrawFields(controller.opening,
                         ("appearDelay", "出てくるまで（秒）"),
                         ("swellDuration", "つまんでふくらむ（秒）"),
@@ -107,6 +115,7 @@ namespace MS2026.Title.EditorTools
                         ("zoomIn", "カメラが寄る量"),
                         ("rumble", "ブルブルの強さ"),
                         ("ejectDuration", "噴き出して伸びきる（秒）"),
+                        ("streamBaseOffset", "噴き出す根元のずれ"),
                         ("ejectShake", "噴き出した揺れ"),
                         ("capLaunchSpeed", "キャップが飛ぶ速さ"),
                         ("capSpin", "キャップの回転"),

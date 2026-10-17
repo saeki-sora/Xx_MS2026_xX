@@ -26,7 +26,7 @@ Packages/com.ms2026.playrecorder/          package.json ("unity": "2021.3", no d
     SessionFiles.cs             SessionMeta (meta.json), FrameEntry, temp dir Library/PlayRecorder/Sessions/<yyyy-MM-dd_HH-mm-ss>/
     RecordingPlan.cs            pure math: ladder, bitrate budget, rung choice, audio mode choice (Unity-free; testable)
     MovieEncodeJob.cs           time-sliced encoder with size verification + retries; writes final file
-    AudioCalibration.cs         measures real AAC bytes/s by encoding 6 s of noise; cached in EditorPrefs per Unity version/ext/rate/ch
+    AudioCalibration.cs         measures real AAC bytes/s = size(64×64 black 1 fps video + 6 s noise) − size(same video only); Unity cannot write audio-only files ("MediaEncoder::Create no audio encoder factory registered"). Cached in EditorPrefs per Unity version/ext/rate/ch; failure → 24000/12000 B/s estimate
     AudioReader.cs              reads audio.raw, downmixes to stereo/mono (center ×0.707 into L/R for ≥3ch), pads silence
     GpuScale.cs                 Blit with halving steps (anti-alias) + optional Y flip; RT helpers (ARGB32 sRGB)
     PlayRecorderToolbar.cs      #if UNITY_6000_3_OR_NEWER → [MainToolbarElement]; #else → reflection into UnityEditor.Toolbar m_Root "ToolbarZonePlayMode"
@@ -69,7 +69,8 @@ Packages/com.ms2026.playrecorder/          package.json ("unity": "2021.3", no d
 
 ## 6. Gotchas
 1. **Recording not yet verified in-editor** (UnityMCP was down when written; the package does compile and load in this project). Things to check on first run: image orientation (→ `上下反転の補正`), colour/gamma (capture/encode RTs are ARGB32 sRGB; JPEG round-trip is byte-exact), audio sync. The 6.3 auto-show uses internal APIs → may break on future Unity versions (fails soft with a warning; menu still works).
-2. Captures what the **Game view** renders (incl. overlay UI). If the Game view tab is hidden (Scene view in front), frames may be stale. Game view resize mid-recording → later frames are stretched to the start aspect.
+2. Captures what the **Game view** renders (incl. overlay UI). If the Game view tab is hidden (Scene view in front), frames may be stale. Game view resize mid-recording → later frames are stretched to the first frame's aspect.
+2b. **Never read `Screen.width/height` outside the player loop.** When recording is started from the toolbar button mid-play, `Screen.*` returns the *toolbar's* size (seen: 2560×54 → plan width 22756 → "Texture has out of range width" and the encode failed; fixed 2026-10-17). Source size/aspect are now taken from the first `OnEndOfFrame` (meta `sourceWidth/Height` written there), and `MovieEncodeJob` takes the aspect from `frames[0]` (clamped 0.25–4). A failed session can be retried by deleting its `failed.txt`.
 3. Encoding pauses during Play Mode and restarts from scratch after a domain reload (e.g. entering Play with domain reload on while a previous encode is running).
 4. Temp data: ~3–5 MB/s at 720p30 early on, shrinking as the capture rung drops; stored under `Library/` and deleted after success. Failed sessions stay with `failed.txt` (delete manually).
 5. **MonoBehaviours must NOT live in the Editor-only assembly**: `AddComponent` returns null with "Can't add script behaviour … because it is an editor script" (hit on 2026-10-16 → NullReferenceException in `ActiveRecording..ctor`). That is why `Hooks/` exists: a separate asmdef for all platforms with `defineConstraints: UNITY_EDITOR` (so builds skip it). Hooks expose delegates; `ActiveRecording` wires `EndOfFrame`/`Tick`/`Sink` and clears them on stop. They are added at runtime with `HideAndDontSave` (never serialized). If `AddComponent` still returns null, the ctor throws a readable error and disposes the writer.

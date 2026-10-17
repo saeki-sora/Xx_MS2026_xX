@@ -230,12 +230,7 @@ namespace MS2026.UI.EditorTools
             B.Place((RectTransform)coreGauge.transform.parent, new Vector2(0.5f, 0f), new Vector2(0f, 6f), new Vector2(860f, 34f));
             B.AddMotion(coreGauge.transform.parent.gameObject, UiMotionTrigger.OnValueDown, UiPreset.Shake, 0.3f, 0f, FortressUiKeys.CoreHp01);
 
-            // 敵の数（右上）
-            var enemies = B.Text(screen.transform, "Enemies", "敵 0", 34, B.Ink, TextAnchor.MiddleRight, true);
-            B.Place(enemies.rectTransform, new Vector2(1f, 1f), new Vector2(-40f, -40f), new Vector2(360f, 60f));
-            var enemiesText = enemies.gameObject.AddComponent<UiBindText>();
-            enemiesText.key = FortressUiKeys.SwarmAlive;
-            enemiesText.format = "敵 {0:N0}";
+            // 敵の数（右上）は出さない（ユーザー決定 2026-10-17「完全に消していい」）。値 swarm.alive は残っている。
 
             // 4人の熱（左上）
             var team = B.Rect(screen.transform, "Team");

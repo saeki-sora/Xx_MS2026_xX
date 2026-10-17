@@ -306,7 +306,7 @@ namespace MS2026.Title.EditorTools
                 : $"[Title] 握力センサーの読み取り「{reader.name}」の「シーンをまたぐ」をONにしました。");
         }
 
-        private static bool OpenTitleScene()
+        internal static bool OpenTitleScene()
         {
             if (SceneManager.GetActiveScene().path == ScenePath) return true;
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return false;
@@ -474,6 +474,10 @@ namespace MS2026.Title.EditorTools
 
             opening.burstParticles = CreateBurst(go.transform, burstMaterial);
             opening.curtain = CreateCurtain(fader.transform.parent, curtainTexture);
+
+            // AE などの連番を取り込み済みなら、それを使う（書き出したときと同じ位置・大きさ。「数値を引き継ぐ」なら後で調整した位置に戻る）。
+            var sequence = AssetDatabase.LoadAssetAtPath<TitleFrameSequence>(TitleFrameSequenceImporter.SequencePath);
+            if (sequence != null && sequence.IsUsable) TitleFrameSequenceImporter.ApplyToOpening(opening, sequence, placeLikeSource: true, recordUndo: false);
             return opening;
         }
 

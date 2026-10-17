@@ -96,6 +96,22 @@ namespace MS2026.UI.Game
         public static string PlayerIsMvp(int player) => $"player.{player + 1}.isMvp";
         public static string PlayerInResult(int player) => $"player.{player + 1}.inResult";
 
+        /// <summary>自分以外の3人（slot 0〜2 = 番号の小さい順）。HUD の左の3段は、どのPCでもこの順に並ぶ。</summary>
+        public const int OtherCount = 3;
+        public static string OtherPlayer(int slot) => $"other.{slot + 1}.player";
+        public static string OtherLabel(int slot) => $"other.{slot + 1}.label";
+        public static string OtherColor(int slot) => $"other.{slot + 1}.color";
+        public static string OtherHeat(int slot) => $"other.{slot + 1}.heat";
+        public static string OtherOverheated(int slot) => $"other.{slot + 1}.overheated";
+        public static string OtherConnected(int slot) => $"other.{slot + 1}.connected";
+
+        /// <summary>自分以外の slot 番目（0〜2）のプレイヤー番号（0〜3）。自分が決まっていないときは P1 を自分とみなす。</summary>
+        public static int OtherPlayerIndex(int local, int slot)
+        {
+            var self = local >= 0 && local < 4 ? local : 0;
+            return slot < self ? slot : slot + 1;
+        }
+
         /// <summary>UIスタジオの値の一覧に登録する内容（キー、表示名、説明、種類、分類、範囲、サンプル値）。</summary>
         public static (string key, string label, string description, UiValueKind kind, string category, Vector2 range, float sample)[] Describe()
         {
@@ -184,6 +200,17 @@ namespace MS2026.UI.Game
                 list.Add((PlayerIsMvp(p), $"{name}がMVP", "いちばん多く倒した人のときON。", UiValueKind.Bool, "リザルト", Vector2.up, p == 0 ? 1 : 0));
                 list.Add((PlayerInResult(p), $"{name}をリザルトに出す", "参加していた・1体でも倒した人のときON。", UiValueKind.Bool, "リザルト", Vector2.up, 1));
                 list.Add((PlayerTaken(p), $"{name}がもう使われている", "参加する部屋で、その番号がほかの人に使われているときON。", UiValueKind.Bool, "プレイヤー", Vector2.up, p == 1 ? 1 : 0));
+            }
+
+            for (var s = 0; s < OtherCount; s++)
+            {
+                var name = $"ほかの人{s + 1}";
+                list.Add((OtherPlayer(s), $"{name}の番号", "自分以外の3人を番号の小さい順に並べた、その人のプレイヤー番号（0〜3）。自分がP2なら 1人目=P1、2人目=P3、3人目=P4。", UiValueKind.Number, "ほかの人", new Vector2(0, 3), s + 1));
+                list.Add((OtherLabel(s), $"{name}の名前（2P など）", "例: 2P。", UiValueKind.Text, "ほかの人", Vector2.up, 0));
+                list.Add((OtherColor(s), $"{name}の色", "その人のプレイヤー色。", UiValueKind.Color, "ほかの人", Vector2.up, 0));
+                list.Add((OtherHeat(s), $"{name}の熱（割合）", "0=冷えている、1=オーバーヒート寸前。", UiValueKind.Number, "ほかの人", Vector2.up, 0.3f + 0.25f * s));
+                list.Add((OtherOverheated(s), $"{name}がオーバーヒート中", "撃てない間だけON。", UiValueKind.Bool, "ほかの人", Vector2.up, s == 2 ? 1 : 0));
+                list.Add((OtherConnected(s), $"{name}がつながっている", "その人が参加しているときON（ホストでも参加側でも、ロビーから来たときは正しい）。", UiValueKind.Bool, "ほかの人", Vector2.up, s < 2 ? 1 : 0));
             }
 
             return list.ToArray();

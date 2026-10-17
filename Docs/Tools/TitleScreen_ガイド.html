@@ -80,7 +80,7 @@
   </div>
   </div>
   <div class="cards">
-    <div class="card feat rv"><div class="ic">🪥</div><h3>歯磨き粉（オープニング）</h3><p>上向きでポンと出てきて、真ん中がつままれたように細くなる（指などは出さない）。つまんだ所は細く、まわりはふくらんで縦にも少し伸び、震える。力は「ゆっくり → 最後にぐっと」強くなる。噴き出す瞬間にキャップが回転しながら吹き飛び、噴き出した後はしぼむ。</p><p class="ex">絵を差し替えても、ふくらみはそのまま効く（再生中に絵を細かい横じまに切って動かしている）</p></div>
+    <div class="card feat rv"><div class="ic">🪥</div><h3>歯磨き粉（オープニング）</h3><p>上向きでポンと出てきて、真ん中がつままれたように細くなる（指などは出さない）。つまんだ所は細く、まわりはふくらんで縦にも少し伸び、震える。力は「ゆっくり → 最後にぐっと」強くなる。噴き出す瞬間にキャップが回転しながら吹き飛び、噴き出した後はしぼむ。</p><p class="ex">絵を差し替えても、ふくらみはそのまま効く（再生中に絵を細かい横じまに切って動かしている）</p><p class="ex">After Effects などで作った<b>連番の絵</b>を入れると、出てくる〜ふくらむ〜キャップが飛ぶまでをその絵の再生に置き換えます（<a href="#rc-sequence">入れ方</a>）</p></div>
     <div class="card feat rv"><div class="ic">🎥</div><h3>カメラ・幕</h3><p>ふくらむ間はだんだん寄りながらブルブル。噴き出した瞬間に揺れて、少し行き過ぎるくらいの勢いで引いて戻る。そのあと上から画面全体に歯磨き粉がどろーっと垂れてきて覆い、下へ流れ落ちる。垂れる先端はでこぼこ（細い縦の列ごとに少しずつ遅れて落ちる）。</p></div>
     <div class="card feat rv"><div class="ic">🅰️</div><h3>タイトルロゴ</h3><p>上から落ちてきて真ん中上に「ドン」。白く光り、画面が揺れ、むにっとつぶれて戻る。待機中は数秒おきに「キラッ」、ときどき「ザザッ」と電脳ノイズ。</p></div>
     <div class="card feat rv"><div class="ic">🧊</div><h3>キャラ（仮のキューブ）</h3><p>回転しながら左下・右下に順番に落ちてきて「ドン」。着地のたびに画面が揺れ、白く光ってむにっとつぶれる。その後ふわふわ上下。</p><p class="ex">あとでキャラのモデルや絵に差し替える</p></div>
@@ -157,6 +157,7 @@
   </div>
   <div class="recipes">
     <details class="recipe" id="rc-swap" data-tags="art"><summary><span class="q">ロゴ・背景・歯磨き粉・スタート文字の画像を替えたい</span><span class="who">Sprite</span></summary><div class="a"><p>各オブジェクトの子 <b>Sprite</b> の Sprite Renderer › <b>Sprite</b> を差し替えます（歯磨き粉は <b>Opening</b> › <b>Toothpaste</b> › <b>Sprite</b>、キャップは <b>Toothpaste</b> › <b>Cap</b> › <b>Sprite</b>（チューブとキャップは別々の絵）、噴き出す歯磨き粉は <b>PasteStream</b>。塗り替わりの歯磨き粉だけは UI なので <b>FadeCanvas</b> › <b>PasteCurtain</b> の Raw Image › Texture）。または <code>Assets/Title/Sprites</code> の同じ名前の PNG を上書きしても替わります。</p></div></details>
+    <details class="recipe" id="rc-sequence" data-tags="art"><summary><span class="q">After Effects などで作った歯磨き粉の連番（PNG）を入れたい／入れ直したい</span><span class="who">連番アニメ</span></summary><div class="a"><p>書き出しは <b>PNG シーケンス・RGB + アルファ（背景は透明）・ストレート・1920×1080</b> で、全部同じ大きさにしてもらいます。</p><ol><li>受け取った PNG を 1 つのフォルダーに入れておく（ZIP なら展開する）。</li><li><span class="mp">Tools<i>›</i>タイトル<i>›</i>歯磨き粉の連番を取り込む</span> → そのフォルダーを選ぶ。</li><li>自動で、全部のコマの透明な周りを切り落として <code>Assets/Title/Sprites/ToothpasteFrames</code> に入れ、<b>キャップが飛ぶコマ</b>と、コマごとの<b>口の位置</b>（噴き出す歯磨き粉の根元）を求めます。</li><li>最後に聞かれるので選ぶ：<b>書き出したときと同じ位置・大きさ</b>（AE の画面と同じ見え方に置き直す）／<b>今の位置・大きさのまま</b>（シーンで調整した位置を変えない）／<b>シーンには入れない</b>。</li><li>▶ Play で確かめる。</li></ol><p><b>1 秒の枚数</b>（今は 30。AE の設定に合わせる）と<b>キャップが飛ぶコマ</b>（0 から数えて。今は 82）は、<code>Assets/Title/Sprites/ToothpasteFrames.asset</code> か、<b>[Title]</b> の <b>流れの一覧</b> › ① オープニングで変えられます。これはファイルの設定なので、再生中に変えてもそのまま残ります。</p><p>連番のときは、キャップが飛ぶコマから先（口から噴き出す・泡・揺れ・どろーっと塗り替わる）は今までどおり Title Opening の数値で動きます。<b>出てくる</b>・<b>つまんでふくらむ</b>の数値とキャップの飛び方は使いません（絵に入っているため）。カメラの寄り（Zoom In）とブルブル（Rumble）は、キャップが飛ぶコマに向けてだんだん強くなります。</p><div class="callout info"><span class="ci">i</span><div>AE の修正版が届いたら、同じメニューでもう一度取り込めば入れ替わります（1 秒の枚数はそのまま）。PNG を手でフォルダーにコピーすると口の位置がずれるので、必ずメニューから入れてください。前の一枚絵のふくらみに戻すときは、Title Opening の <b>Tube Sequence</b> を空（None）にします。</div></div></div></details>
     <details class="recipe" id="rc-character" data-tags="art"><summary><span class="q">仮のキューブを本物のキャラに替えたい</span><span class="who">Model</span></summary><div class="a"><ol><li><b>[Title]</b> › <b>CharacterLeft</b>（または <b>CharacterRight</b>）の子 <b>Model</b> を消す。</li><li>代わりのモデル（または絵）を同じ場所の子として置き、名前を <b>Model</b> にする。位置は (0, 0, 0) が着地点。</li></ol><p>名前を <b>Model</b> にしておくと、組み立て直しても消えずに引き継がれます。落ち方・揺れは親の <b>Title Element Motion</b> がそのまま効きます。</p></div></details>
     <details class="recipe" id="rc-before" data-tags="art"><summary><span class="q">塗り替わる前（どんよりした背景）の絵を替えたい</span><span class="who">SpriteBefore</span></summary><div class="a"><p><b>[Title]</b> › <b>Background</b> › <b>SpriteBefore</b> の Sprite を差し替えます（塗り替わった後のきれいな背景は、同じ Background の子 <b>Sprite</b>）。歯磨き粉が画面を覆いきった瞬間に、SpriteBefore が消えて後ろのきれいな背景が見える仕組みです。編集中は SpriteBefore が手前に重なっているので、後ろを見たいときは SpriteBefore を一時的に非表示にしてください。</p><p>塗り替わる前／後で出し分けたい物を増やしたいときは、<b>Opening</b> の <b>Title Opening</b> › <b>Before Objects</b>（前だけ）／<b>After Objects</b>（後だけ）に入れます。今は泡（Bubbles）が「後だけ」です。</p></div></details>
     <details class="recipe" data-tags="art"><summary><span class="q">差し替えた画像の大きさを変えたい</span><span class="who">Title Sprite Fit</span></summary><div class="a"><p>子 <b>Sprite</b> の <b>Title Sprite Fit</b> › <b>Size</b>（画面の高さが約 10.8）。横幅で決めたいときは <b>Mode</b> を <b>幅を指定</b>。画像そのままの大きさにしたいときは <b>合わせない（画像の大きさのまま）</b>。</p></div></details>
@@ -187,7 +188,7 @@
   <div class="rv"><div class="eyebrow">04 — Hierarchy</div><h2>シーンの<br><em>中身</em>。</h2></div>
   <div class="tabguide rv">
     <div class="tg-panel"><h4>[Title]（Title Screen Controller）</h4><p class="when">全体の進行役。スタートのキー、行き先のシーン、暗転・フラッシュ・カメラの寄り、効果音。</p>
-      <ul class="points"><li><b>Opening</b> — オープニングの進行（Title Opening）。子に歯磨き粉 <b>Toothpaste</b>（その子にキャップ <b>Cap</b>）、噴き出す歯磨き粉 <b>PasteStream</b>、飛び散る泡 <b>BurstSplash</b>。</li><li><b>Background / Logo / PressStart</b> — それぞれ親が「動き」（Title Element Motion）、子の <b>Sprite</b> が「画像と大きさ」（Sprite Renderer ＋ Title Sprite Fit）。</li><li><b>CharacterLeft / CharacterRight</b> — 親が「動き」、子の <b>Model</b> が見た目（今は仮のキューブ）。</li><li><b>Background</b> › <b>SpriteBefore</b> — 塗り替わる前の、紫でどんよりした背景。<b>Bubbles</b> — 下から湧く泡・キラキラ（塗り替わった後だけ）。<b>Germs</b> — 漂うばいきん。</li><li><b>FadeCanvas</b> › <b>PasteCurtain</b> — 画面にどろーっと垂れて塗りつぶす歯磨き粉（再生中に縦の列に分かれる）。<b>Fade</b> — 暗転・フラッシュ用の板（どちらも編集中は消えています）。</li><li><b>Main Camera</b> — Title Camera Motion（揺れ・ブルブル・寄り）が付いています。</li></ul></div>
+      <ul class="points"><li><b>Opening</b> — オープニングの進行（Title Opening）。子に歯磨き粉 <b>Toothpaste</b>（その子にキャップ <b>Cap</b>。連番のときはキャップも絵に入っているので Cap は隠れています）、噴き出す歯磨き粉 <b>PasteStream</b>、飛び散る泡 <b>BurstSplash</b>。</li><li><b>Background / Logo / PressStart</b> — それぞれ親が「動き」（Title Element Motion）、子の <b>Sprite</b> が「画像と大きさ」（Sprite Renderer ＋ Title Sprite Fit）。</li><li><b>CharacterLeft / CharacterRight</b> — 親が「動き」、子の <b>Model</b> が見た目（今は仮のキューブ）。</li><li><b>Background</b> › <b>SpriteBefore</b> — 塗り替わる前の、紫でどんよりした背景。<b>Bubbles</b> — 下から湧く泡・キラキラ（塗り替わった後だけ）。<b>Germs</b> — 漂うばいきん。</li><li><b>FadeCanvas</b> › <b>PasteCurtain</b> — 画面にどろーっと垂れて塗りつぶす歯磨き粉（再生中に縦の列に分かれる）。<b>Fade</b> — 暗転・フラッシュ用の板（どちらも編集中は消えています）。</li><li><b>Main Camera</b> — Title Camera Motion（揺れ・ブルブル・寄り）が付いています。</li></ul></div>
   </div>
 </section>
 
@@ -229,7 +230,10 @@
   </table></div></div>
   <div class="ptable-wrap rv"><div class="ptable-cap">Title Opening（歯磨き粉のオープニング）</div><div class="ptable-scroll"><table class="params">
     <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
-    <tr><td>Appear Delay / Appear Duration</td><td>歯磨き粉が出てくるまで／ポンと出るのにかける秒数</td><td>ゆっくり</td><td>すぐ</td><td class="def">0.3 / 0.45</td></tr>
+    <tr><td>Tube Sequence</td><td>連番アニメ（AE などの絵）。入っていれば出てくる〜キャップが飛ぶまでをその絵で再生する</td><td colspan="2">空（None）なら一枚絵をふくらませる</td><td class="def">ToothpasteFrames</td></tr>
+    <tr><td>（連番）Frame Rate</td><td>連番を 1 秒に何枚進めるか（ToothpasteFrames.asset）</td><td>速く再生</td><td>ゆっくり再生</td><td class="def">30</td></tr>
+    <tr><td>（連番）Eject Frame</td><td>キャップが飛ぶコマ。ここで口から歯磨き粉が噴き出す（ToothpasteFrames.asset）</td><td colspan="2">取り込むときに自動で求める</td><td class="def">82</td></tr>
+    <tr><td>Appear Delay / Appear Duration</td><td>歯磨き粉が出てくるまで／ポンと出るのにかける秒数（連番のときは Appear Delay だけ使う）</td><td>ゆっくり</td><td>すぐ</td><td class="def">0.3 / 0.45</td></tr>
     <tr><td>Swell Duration</td><td>つまんでふくらんでいく秒数</td><td>じっくり溜める</td><td>すぐ噴き出す</td><td class="def">2</td></tr>
     <tr><td>Swell Amount</td><td>一番ふくらんだときに太くなる割合</td><td>ぱんぱん</td><td>あまりふくらまない</td><td class="def">0.4</td></tr>
     <tr><td>Pinch Amount</td><td>つまんだ所が細くなる割合（0〜0.9）</td><td>きゅっと細い</td><td>あまり細くならない</td><td class="def">0.5</td></tr>
@@ -241,6 +245,7 @@
     <tr><td>Zoom In / Rumble</td><td>ふくらむ間にカメラが寄る量／ブルブルの強さ</td><td>ぐっと寄る・激しい</td><td>0 で無し</td><td class="def">0.15 / 0.12</td></tr>
     <tr><td>Slice Count</td><td>ふくらみを作る横じまの数</td><td>なめらか</td><td>段々が見える</td><td class="def">48</td></tr>
     <tr><td>Cap Launch Speed / Spread / Spin / Gravity</td><td>キャップが飛ぶ速さ／左右のぶれ／回転（度/秒）／重力</td><td>勢いよく飛ぶ</td><td>ふわっと外れる</td><td class="def">16 / 3 / 900 / 20</td></tr>
+    <tr><td>Stream Base Offset</td><td>噴き出す歯磨き粉の根元を、チューブの口（口のふちの一番上）からずらす量（100px = 1）</td><td>y を上げると口から浮く</td><td>y を下げると口の中へ沈む</td><td class="def">(0, -0.04)</td></tr>
     <tr><td>Eject Duration</td><td>噴き出した歯磨き粉が伸びきる秒数</td><td>ゆっくり伸びる</td><td>勢いよく</td><td class="def">0.4</td></tr>
     <tr><td>Eject Shake</td><td>噴き出した瞬間の揺れ（幕が覆いきったときはこの半分）</td><td>大きく揺れる</td><td>0 で無し</td><td class="def">0.4</td></tr>
     <tr><td>Pull Back Duration / Deflate Duration</td><td>カメラが引いて戻る秒数／チューブがしぼむ秒数</td><td>ゆっくり</td><td>すばやく</td><td class="def">0.5 / 0.35</td></tr>
@@ -260,6 +265,7 @@
   <div class="rv"><div class="eyebrow">06 — Troubleshooting</div><h2>困ったときは<br><em>ここ</em>。</h2></div>
   <div class="faq rv">
     <details><summary>再生を止めたら、調整した値が元に戻った</summary><div class="a">Unity では再生中の変更は止めると戻ります。止める前に <b>再生中に変えた値を残す</b> を押してください（逆引き「再生中に調整した値を残したい」）。</div></details>
+    <details><summary>連番の歯磨き粉で、噴き出す歯磨き粉が口からずれる／タイミングが合わない</summary><div class="a">口の位置は取り込むときに求めています。PNG を手で入れ替えた場合は <span class="mp">Tools<i>›</i>タイトル<i>›</i>歯磨き粉の連番を取り込む</span> で入れ直してください。根元が口から少し浮いて見えるときは、Title Opening › <b>噴き出す</b> › <b>Stream Base Offset</b> の y を下げます（例 -0.04 → -0.08。<b>流れの一覧</b> の <b>噴き出す根元のずれ</b> でも同じ）。噴き出すタイミングは <code>ToothpasteFrames.asset</code> の <b>Eject Frame</b>、全体の速さは <b>Frame Rate</b>。噴き出す歯磨き粉が太すぎるときは <b>Opening</b> › <b>PasteStream</b> の大きさを小さくします。</div></details>
     <details><summary>再生してもロゴやキャラが表示されない／歯磨き粉が出ない</summary><div class="a">シーンが古い作りのままです。<span class="mp">Tools<i>›</i>タイトル<i>›</i>タイトルシーンを組み立てる</span> → <b>作り直す</b> を実行してください。Hierarchy の <b>[Title]</b> の下に <b>Opening</b>・<b>CharacterLeft</b>・<b>CharacterRight</b> があれば新しい作りです。</div></details>
     <details><summary>A を押してもロビーに進まない</summary><div class="a"><ol><li>演出の途中なら、1 回目は「演出を飛ばす」です。もう 1 回押してください。</li><li>Console に「シーン「Lobby」を読み込めません」が出ていたら、UIスタジオの <b>はじめに</b> › <b>流れを組み立てる</b> でロビーのシーンを作り、ビルドのシーンの順番をそろえてください（Title Screen Controller の <b>Game Scene Name</b> が進む先のシーンの名前です）。</li><li>Game ビューをクリックしてから押してください（Unity の別の画面が選ばれているとキーが届きません）。</li></ol></div></details>
     <details><summary>キューブが真っ黒・ピンク色になる</summary><div class="a">キューブには光が必要です。シーンの <b>Directional Light</b> を消していないか確認。ピンク色ならマテリアル（<code>Title_CubeLeft</code> / <code>Title_CubeRight</code>）のシェーダーが見つかっていないので、プログラマーに相談してください。</div></details>

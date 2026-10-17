@@ -14,6 +14,8 @@ namespace MS2026.Title
     /// 塗り替わる前（どんよりした背景など）と後（泡など）で見せる物を、覆いきった瞬間に入れ替える（<see cref="beforeObjects"/> / <see cref="afterObjects"/>）。
     /// どろーっとした垂れ方は、幕の絵を細い縦の列に分け、列ごとに少しずつ遅らせて落として作っている（先端がでこぼこに進む）。
     /// 歯磨き粉のふくらみは、再生中に絵を横じまに細かく切り分けて、段ごとに横幅を変えて作っている（絵を差し替えてもそのまま効く）。
+    /// 「連番アニメ」（<see cref="tubeSequence"/>。After Effects などで作った絵）を入れると、出てくる〜ふくらむ〜キャップが飛ぶまでを
+    /// その連番の再生に置き換え、キャップが飛ぶコマから先（噴き出す・どろーっと塗り替わる）は今までどおり動かす。
     /// </summary>
     public sealed class TitleOpening : MonoBehaviour
     {
@@ -37,6 +39,11 @@ namespace MS2026.Title
         [Tooltip("画面を塗りつぶす歯磨き粉（画面の一番手前の UI。画面いっぱいの枠で、絵は同じオブジェクトの Raw Image の Texture）。")]
         public RectTransform curtain;
         public TitleCameraMotion cameraMotion;
+
+        [Header("連番アニメ（After Effects などの絵）")]
+        [Tooltip("歯磨き粉が出てきて、ふくらんで、キャップが飛ぶまでの連番。入れると、下の「出てくる」「つまんでふくらむ」の動きとキャップの飛び方の代わりにこれを再生する（キャップは連番の絵に含まれるので、キャップの配置物は隠す）。" +
+                 "空なら今までどおり一枚絵をふくらませる。メニュー「Tools/タイトル/歯磨き粉の連番を取り込む」で作って入る。1秒の枚数とキャップが飛ぶコマは、このファイルの方で変える。")]
+        public TitleFrameSequence tubeSequence;
 
         [Header("出てくる")]
         [Tooltip("始まってから、歯磨き粉が出てくるまでの秒数（暗転から明ける時間と重ねる）。")]
@@ -73,6 +80,9 @@ namespace MS2026.Title
         [Header("噴き出す")]
         [Tooltip("噴き出した歯磨き粉が伸びきるまでの秒数。")]
         public float ejectDuration = 0.4f;
+        [Tooltip("噴き出す歯磨き粉の根元を、チューブの口（口のふちの一番上）からずらす量（ワールドの単位。100px = 1。y がマイナスで口の中へ沈む）。" +
+                 "根元が口から浮いて見えるときは y を下げる。")]
+        public Vector2 streamBaseOffset = new(0f, -0.04f);
         [Tooltip("噴き出した瞬間のカメラの揺れ。")]
         public float ejectShake = 0.4f;
         [Tooltip("噴き出した後、カメラが引いて元に戻るまでの秒数。")]
@@ -123,11 +133,12 @@ namespace MS2026.Title
         /// <summary>ロゴやキャラの登場を始めてよい合図。</summary>
         public event Action Finished;
 
-        private enum Stage { Idle, Waiting, Appearing, Swelling, Ejecting, Covering, Holding, Revealing, Done }
+        private enum Stage { Idle, Waiting, Appearing, Swelling, Sequence, Ejecting, Covering, Holding, Revealing, Done }
 
         private Stage stage = Stage.Idle;
         private float stageTime;
         private float ejectTime;
+        private float sequenceTime;
         private bool finished;
 
         private Vector3 tubeBasePosition;
@@ -161,7 +172,8 @@ namespace MS2026.Title
                 var tubeSpriteChild = tube.Find("Sprite");
                 tubeRenderer = tubeSpriteChild != null ? tubeSpriteChild.GetComponent<SpriteRenderer>() : tube.GetComponentInChildren<SpriteRenderer>(true);
                 if (tubeRenderer != null) tubeBaseAlpha = tubeRenderer.color.a;
-                BuildSlices();
+                // 連番を流すときは絵をそのまま差し替えるので、横じまには切らない。
+                if (!UseSequence) BuildSlices();
             }
 
             pincherBase = new Vector3[pinchers?.Length ?? 0];
@@ -211,6 +223,12 @@ namespace MS2026.Title
             SetCurtain(0f, 1f);
             SetPainted(false);
             ResetCap();
+            sequenceTime = 0f;
+            if (UseSequence)
+            {
+                ShowFrame(0);
+                if (cap != null) cap.gameObject.SetActive(false); // キャップは連番の絵に描かれている
+            }
             if (burstParticles != null) burstParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
 
@@ -272,12 +290,17 @@ namespace MS2026.Title
             var dt = Time.deltaTime;
             stageTime += dt;
             if (stage >= Stage.Ejecting) ejectTime += dt;
+            if (stage >= Stage.Sequence && stage <= Stage.Covering) sequenceTime += dt;
             UpdateCap(dt);
 
             switch (stage)
             {
                 case Stage.Waiting:
-                    if (stageTime >= appearDelay) Next(Stage.Appearing);
+                    if (stageTime >= appearDelay)
+                    {
+                        if (UseSequence) BeginSequence();
+                        else Next(Stage.Appearing);
+                    }
                     break;
 
                 case Stage.Appearing:
@@ -299,6 +322,19 @@ namespace MS2026.Title
                     SetPinch(grip);
                     if (cameraMotion != null) cameraMotion.SetRumble(rumble * grip);
                     if (t >= 1f) Eject();
+                    break;
+                }
+
+                case Stage.Sequence:
+                {
+                    var frame = tubeSequence.FrameAt(sequenceTime);
+                    ShowFrame(frame);
+                    // カメラのブルブルは、キャップが飛ぶコマに向かって「ゆっくり → 最後にぐっと」強くする。
+                    var ejectAt = tubeSequence.EjectTime;
+                    var t = ejectAt <= 0f ? 1f : Mathf.Clamp01(sequenceTime / ejectAt);
+                    var grip = TitleEase.Evaluate(TitleEaseType.InCubic, t) * 0.65f + t * 0.35f;
+                    if (cameraMotion != null) cameraMotion.SetRumble(rumble * grip);
+                    if (frame >= tubeSequence.ejectFrame || frame >= tubeSequence.Count - 1) Eject();
                     break;
                 }
 
@@ -357,13 +393,24 @@ namespace MS2026.Title
             TitleEffects.Play(onPinch, TubePosition);
         }
 
+        // 連番の再生を始める（出てくる動きも連番の絵に入っているので、大きさはそのまま）。
+        private void BeginSequence()
+        {
+            Next(Stage.Sequence);
+            sequenceTime = 0f;
+            SetTubeTransform(Vector3.zero, 1f, 1f);
+            ShowFrame(0);
+            if (cameraMotion != null) cameraMotion.ZoomTo(zoomIn, tubeSequence.EjectTime, TitleEaseType.InOutSine);
+            TitleEffects.Play(onPinch, TubePosition);
+        }
+
         private void Eject()
         {
             Next(Stage.Ejecting);
             ejectTime = 0f;
-            var mouth = CapPosition;
-            LaunchCap();
-            if (stream != null) stream.position = new Vector3(mouth.x, mouth.y, stream.position.z);
+            var mouth = UseSequence ? SequenceMouth : CapPosition;
+            if (!UseSequence) LaunchCap(); // 連番ではキャップが飛ぶところも絵に描かれている
+            if (stream != null) stream.position = new Vector3(mouth.x + streamBaseOffset.x, mouth.y + streamBaseOffset.y, stream.position.z);
             if (burstParticles != null)
             {
                 burstParticles.transform.position = mouth;
@@ -383,6 +430,18 @@ namespace MS2026.Title
         {
             var e = ejectDuration <= 0f ? 1f : Mathf.Clamp01(ejectTime / ejectDuration);
             SetStream(TitleEase.Evaluate(TitleEaseType.OutCubic, e));
+
+            if (UseSequence)
+            {
+                // 連番は最後のコマまで流して止める。噴き出す歯磨き粉の根元は、コマごとの口の位置についていく。
+                ShowFrame(tubeSequence.FrameAt(sequenceTime));
+                if (stream != null)
+                {
+                    var mouth = SequenceMouth;
+                    stream.position = new Vector3(mouth.x + streamBaseOffset.x, mouth.y + streamBaseOffset.y, stream.position.z);
+                }
+                return;
+            }
 
             var d = deflateDuration <= 0f ? 1f : Mathf.Clamp01(ejectTime / deflateDuration);
             var swell = Mathf.Lerp(swellAmount, -0.1f, TitleEase.Evaluate(TitleEaseType.OutCubic, d));
@@ -404,6 +463,20 @@ namespace MS2026.Title
         }
 
         private Vector3 TubePosition => tube != null ? tube.position : transform.position;
+
+        private bool UseSequence => tubeSequence != null && tubeSequence.IsUsable && tubeRenderer != null;
+
+        private int shownFrame;
+
+        private void ShowFrame(int frame)
+        {
+            shownFrame = frame;
+            var sprite = tubeSequence.frames[frame];
+            if (sprite != null && tubeRenderer.sprite != sprite) tubeRenderer.sprite = sprite;
+        }
+
+        // 今のコマの口の位置（取り込むときに求めた位置。絵の大きさ・位置の変更にもついていく）。
+        private Vector3 SequenceMouth => tubeRenderer.transform.TransformPoint(tubeSequence.MouthAt(shownFrame));
 
         // 歯磨き粉の口（チューブの絵の上端）の位置。絵の大きさから求める。
         private Vector3 CapPosition

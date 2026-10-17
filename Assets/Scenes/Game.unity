@@ -179,8 +179,8 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 60
-  orthographic: 1
+  field of view: 108.924644
+  orthographic: 0
   orthographic size: 14
   m_Depth: -1
   m_CullingMask:
@@ -673,63 +673,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6543578385214086954, guid: a48402b497d10f24794cf107d5552469, type: 3}
   m_PrefabInstance: {fileID: 18908936}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &131760601
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 131760603}
-  - component: {fileID: 131760602}
-  m_Layer: 0
-  m_Name: '[Fortress] LocalTurretHud'
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &131760602
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 131760601}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ff71a3ea53ce7594e98465de56148f29, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.Hud.LocalTurretGaugeHud
-  root: {fileID: 0}
-  heatFill: {fileID: 0}
-  chargeGaugeRoot: {fileID: 0}
-  chargeFill: {fileID: 0}
-  overheatIndicator: {fileID: 0}
-  playerColorTargets: []
-  playerLabel: {fileID: 0}
-  heatColor: {r: 1, g: 0.6, b: 0.15, a: 1}
-  dangerThreshold01: 0.8
-  dangerColor: {r: 1, g: 0.2, b: 0.15, a: 1}
-  chargeColor: {r: 0.4, g: 0.85, b: 1, a: 1}
-  defaultGaugeSize: {x: 520, y: 26}
-  defaultBottomMargin: 48
---- !u!4 &131760603
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 131760601}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &138478496
 GameObject:
   m_ObjectHideFlags: 0
@@ -1393,7 +1336,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9600a9df12c3194fabfb69618b0ee2d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.Cameras.FortressCameraRig
-  preset: {fileID: 11400000, guid: e55fe1ed801458648842e9cbe719b318, type: 2}
+  preset: {fileID: 11400000, guid: 246e5d0de6c604d4bbef6b49919df11d, type: 2}
   targetCamera: {fileID: 11383752}
   fallbackViewer: -1
   viewerSwitchBlendSeconds: 0.35
@@ -1435,7 +1378,7 @@ Transform:
   m_GameObject: {fileID: 441709294}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -10}
+  m_LocalPosition: {x: 0, y: -5, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -5437,7 +5380,6 @@ SceneRoots:
   - {fileID: 1521422018}
   - {fileID: 2123814597}
   - {fileID: 373009649}
-  - {fileID: 131760603}
   - {fileID: 441709300}
   - {fileID: 1508289552}
   - {fileID: 2047610808}

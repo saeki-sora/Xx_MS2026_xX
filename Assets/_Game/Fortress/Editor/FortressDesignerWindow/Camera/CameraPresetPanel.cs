@@ -95,7 +95,10 @@ namespace MS2026.Fortress.EditorTools
                 using (new EditorGUILayout.HorizontalScope())
                 {
                     var isCurrent = preset == current;
-                    EditorGUILayout.LabelField((isCurrent ? "▶ " : "   ") + preset.DisplayName, isCurrent ? EditorStyles.boldLabel : EditorStyles.label);
+                    // 表示名が同じプリセット(複製元の名前のまま等)を見分けられるよう、ファイル名が違えば並べて出す。
+                    var label = (isCurrent ? "▶ " : "   ") + preset.DisplayName + (preset.DisplayName != preset.name ? $"   [{preset.name}]" : string.Empty);
+                    var tooltip = string.IsNullOrWhiteSpace(preset.memo) ? AssetDatabase.GetAssetPath(preset) : preset.memo;
+                    EditorGUILayout.LabelField(new GUIContent(label, tooltip), isCurrent ? EditorStyles.boldLabel : EditorStyles.label);
 
                     using (new EditorGUI.DisabledScope(isCurrent))
                     {

@@ -110,6 +110,13 @@ namespace MS2026.UI.EditorTools
                 BuildCombo(screen);
                 BuildMilestone(screen);
                 BuildCore(screen);
+
+                // 歯のコアのバー（HudPanelsBuilder、2026-10-17）が入っていれば、そちらを使う（水晶の札は作るが隠す）。
+                if (screen.Find(HudPanelsBuilder.CoreName) != null)
+                {
+                    screen.Find(CoreName).gameObject.SetActive(false);
+                }
+
                 PrefabUtility.SaveAsPrefabAsset(root, path);
             }
             finally

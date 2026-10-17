@@ -36,7 +36,6 @@ namespace MS2026.UI.EditorTools
             root.layerSettings = LayerSettings;
             root.catalog = Catalog;
             go.AddComponent<FortressUiValues>();
-            go.AddComponent<FortressLegacyUiSwitch>();
             root.EnsureLayers();
             EnsureEventSystem();
             EnsureDefaultTransitions();
@@ -82,7 +81,9 @@ namespace MS2026.UI.EditorTools
 
                 if (item.kind == UiValueKind.Color && item.key.EndsWith(".color"))
                 {
-                    item.sampleColor = MS2026.Fortress.FortressColors.PlayerColor(item.key.StartsWith("player.") ? item.key[7] - '1' : 0);
+                    // player.N → その人の色、other.K（サンプルでは自分=P1）→ P(K+1) の色。
+                    var player = item.key.StartsWith("player.") ? item.key[7] - '1' : item.key.StartsWith("other.") ? item.key[6] - '0' : 0;
+                    item.sampleColor = MS2026.Fortress.FortressColors.PlayerColor(Mathf.Clamp(player, 0, 3));
                 }
             }
 
@@ -98,6 +99,11 @@ namespace MS2026.UI.EditorTools
             if (key.StartsWith("player.") && key.EndsWith(".name"))
             {
                 return SampleNames[Mathf.Clamp(key[7] - '1', 0, 3)];
+            }
+
+            if (key.StartsWith("other.") && key.EndsWith(".label"))
+            {
+                return $"{key[6] - '0' + 1}P"; // サンプルでは自分=1P、ほかの人=2P〜4P
             }
 
             return key switch

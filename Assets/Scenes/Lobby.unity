@@ -1426,7 +1426,6 @@ GameObject:
   - component: {fileID: 1618506888}
   - component: {fileID: 1618506887}
   - component: {fileID: 1618506886}
-  - component: {fileID: 1618506885}
   m_Layer: 0
   m_Name: '[UI]'
   m_TagString: Untagged
@@ -1434,20 +1433,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1618506885
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1618506884}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2ea5ddaf7705596489e1e34f3a4b67b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: MS2026.UI.Game::MS2026.UI.Game.FortressLegacyUiSwitch
-  hideLegacyHeatGauge: 1
-  hudLayer: HUD
 --- !u!114 &1618506886
 MonoBehaviour:
   m_ObjectHideFlags: 0
