@@ -17,19 +17,21 @@ namespace MS2026.Fortress.EditorTools
         {
             ("beamLight.floorIntensity", "明るさ"),
             ("beamLight.floorRange", "光の届く距離（m）"),
-            ("beamLight.lightSpacing", "光を置く間隔（m）"),
             ("beamLight.lightHeight", "光の高さ（m）"),
-            ("beamLight.impactBoost", "当たっている場所の明るさ（倍）")
+            ("beamLight.impactBoost", "当たっている場所の明るさ（倍）"),
+            ("beamLight.surfaceColorInfluence", "床の色の影響（0で光の色そのまま）")
         };
 
         private static readonly (string path, string label)[] EnemyFields =
         {
             ("beamLight.enemyStrength", "照らす強さ"),
-            ("beamLight.enemyRadius", "照らす距離（m）")
+            ("beamLight.enemyRadius", "照らす距離（m）"),
+            ("beamLight.enemyColorOverlay", "光の色を乗せる量")
         };
 
         private static readonly (string path, string label)[] CommonFields =
         {
+            ("beamLight.colorSaturation", "光の色の鮮やかさ"),
             ("beamLight.weakGripBrightness", "弱く握ったときの明るさ（割合）"),
             ("beamLight.fadeSpeed", "つく／消える速さ")
         };
@@ -42,7 +44,7 @@ namespace MS2026.Fortress.EditorTools
             EditorGUILayout.LabelField("ビームの光（まわりを照らす）", EditorStyles.miniBoldLabel);
             EditorGUILayout.HelpBox(
                 "撃っている間、ビームのまわりの床・背景の物・群衆の敵を、その砲台のプレイヤー色で照らします（見た目だけ）。" +
-                "床・背景の物はビームに沿って置いた光で、敵はシェーダーで照らします。マルチプレイでも通信せず、各PCが自分で描きます。",
+                "床・背景の物はビームの線に沿って途切れなく照らします（ステージ背景の物だけ。絵で描いた砲台・コアは照らしません）。マルチプレイでも通信せず、各PCが自分で描きます。",
                 MessageType.None);
 
             if (_serialized == null || _serialized.targetObject != tuning)

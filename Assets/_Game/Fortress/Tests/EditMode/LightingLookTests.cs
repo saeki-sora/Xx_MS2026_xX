@@ -13,21 +13,18 @@ namespace MS2026.Fortress.Tests.EditMode
         }
 
         [Test]
-        public void LightCountCoversBothEndsAndIsCapped()
+        public void SaturateKeepsGrayAndStrengthensColor()
         {
-            Assert.AreEqual(1, LaserLightMath.LightCount(0f, 2.5f));
-            Assert.AreEqual(2, LaserLightMath.LightCount(2f, 2.5f));
-            Assert.AreEqual(5, LaserLightMath.LightCount(10f, 2.5f));
-            Assert.AreEqual(LaserLightMath.MaxLightsPerBeam, LaserLightMath.LightCount(100f, 2.5f));
-        }
-
-        [Test]
-        public void LightPositionsSpanTheBeam()
-        {
-            Assert.AreEqual(0.5f, LaserLightMath.LightPosition01(0, 1));
-            Assert.AreEqual(0f, LaserLightMath.LightPosition01(0, 5));
-            Assert.AreEqual(1f, LaserLightMath.LightPosition01(4, 5));
-            Assert.AreEqual(0.5f, LaserLightMath.LightPosition01(2, 5), 1e-5f);
+            var red = new UnityEngine.Color(1f, 0.3f, 0.3f);
+            var same = LaserLightMath.Saturate(red, 1f);
+            Assert.AreEqual(red.r, same.r, 1e-5f);
+            Assert.AreEqual(red.g, same.g, 1e-5f);
+            var strong = LaserLightMath.Saturate(red, 1.5f);
+            Assert.Less(strong.g, red.g);
+            Assert.GreaterOrEqual(strong.g, 0f);
+            var gray = LaserLightMath.Saturate(red, 0f);
+            Assert.AreEqual(gray.r, gray.g, 1e-5f);
+            Assert.AreEqual(gray.g, gray.b, 1e-5f);
         }
     }
 

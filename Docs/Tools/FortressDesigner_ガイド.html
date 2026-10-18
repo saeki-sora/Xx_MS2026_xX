@@ -175,7 +175,7 @@
     <p><b>撃ったあとの湯気：</b>ビームを撃ち終わると、砲台から湯気のエフェクトが出て、出始めに「シュー」という音が鳴ります。<b>ビームを撃った時間が長いほど、湯気が出ている時間も長くなります</b>（既定は 1 秒撃つと 1 秒ぶん、上限 10 秒）。要塞デザイナーの「砲台配置」タブの「撃ったあとの湯気」の欄で選びます。時間は <code>Steam Seconds Per Fire Second</code>（撃った 1 秒あたりの湯気の秒数）と <code>Max Steam Seconds</code>（上限）で変えられます。仮素材は、上の手順 1・2（素材を生成→割り当て）で入ります。エフェクトの寿命は「Loop」にしてください。</p>
     <p><b>ビームのグニャグニャ：</b>砲台の <code>Laser Beam Visual</code> の <code>Wobble Amplitude</code>（うねりの大きさ。0 でまっすぐ）、<code>Wobble Wavelength</code>、<code>Wobble Speed</code>、<code>Bulge Amount</code>（太さのふくらみ）で、歯磨き粉のようにうねる見た目に変えられます。当たり判定はまっすぐなままです。さらに <code>Glow Material</code>・<code>Glow Layers</code>・<code>Glow Width Scale</code>・<code>Glow Alpha</code> で、ビームのまわりにぼんやり光る層を重ねられます（<code>Glow Material</code> を空にすると光は出ません）。</p>
     <p><b>歯磨き粉ビームの見た目（2026-10-18〜）：</b>ビームは白・赤・青の縞のまま、<b>縁がふくらんだりくびれたりして先へ流れる「こぶ」・太いつやの帯・ふちの透け・流れるきらめきと泡・押し出しのすじ</b>が付き、強く握るほどつやが増して速く流れます。見た目だけで、当たり判定・ダメージは変わりません。自動で付くので設定は不要。調整は「砲台配置」タブの <b>見た目（歯磨き粉ビーム）</b> で（<a href="#rc-laser-look">やり方</a>）。湯気・発射口のエフェクト・カメラの揺れ・ビームのうねりと光の層は今までどおりそのまま動きます。</p>
-    <p><b>光と影（2026-10-18〜）：</b>撃っている間、ビームのまわりの<b>床・背景の物・群衆の敵がその砲台のプレイヤー色で照らされます</b>。群衆の敵 1 体ずつの<b>足元に丸い影</b>、砲台・コア・絵で描いた壊せる物の<b>下にも影</b>が出て、床から浮いて見えません（背景の物の根元の影（SSAO）も強めました）。<b>コアの HP が減るほど画面全体が赤く熱っぽくなり</b>、残り 25% を切ると画面のふちが鼓動のように脈打ちます。どれも見た目だけで、自動で付きます。調整は <a href="#rc-lighting">やり方</a> を見てください。</p>
+    <p><b>光と影（2026-10-18〜）：</b>撃っている間、ビームのまわりの<b>床・背景の物・群衆の敵がその砲台のプレイヤー色で照らされます</b>（床・背景の物はビームの線に沿って途切れなく光ります）。群衆の敵 1 体ずつの<b>足元に丸い影</b>、砲台・コア・絵で描いた壊せる物の<b>下にも影</b>が出て、床から浮いて見えません（背景の物の根元の影（SSAO）も強めました）。<b>コアの HP が減るほど画面全体が赤く熱っぽくなり</b>、残り 25% を切ると画面のふちが鼓動のように脈打ちます。どれも見た目だけで、自動で付きます。調整は <a href="#rc-lighting">やり方</a> を見てください。</p>
     <p><b>クリスタルの汚れ：</b>コアの HP が減るほど、クリスタルの色が少しずつ汚れた色（茶ぐろい色）に変わります。自動で付くので設定は不要です。色と汚れ方は、コアの <code>Core Dirt Visual</code>（再生中に自動で付く）で変えられます。割れる演出は、いまは「壊れたとき」だけ出ます。</p>
     <p><b>BGM を複数入れて聞き比べる：</b><code>[Fortress] Bgm</code> の <code>FortressBgmPlayer</code> で、<code>Bgm</code> が 1 曲目、<code>Extra Bgms</code> に 2 曲目以降を入れます。<code>Start Index</code> で選んだ 1 曲だけが鳴り、その曲の中でループ再生されます（0 = <code>Bgm</code>、1 = <code>Extra Bgms</code> の 1 つ目…）。試聴で切り替えたいときは <code>Next Key</code> にキーを入れます（通常は None）。</p>
     <div class="callout warn"><span class="ci">!</span><div>エフェクトのプレイヤー色の自動色付けは、この仮素材では効きません。BGM は仮の簡易ループです。エラーや「設定できなかった項目」の警告が Console に出たら、内容を開発担当に伝えてください。</div></div>
@@ -303,7 +303,7 @@
       <p>以前の見た目（つやの無い縞だけ）に戻したいときは、砲台の <code>Laser Beam Visual</code> の <code>Beam Material</code> に <code>Toothpaste_BeamLine_Unlit</code> を入れます。うねりの大きさ・太さのふくらみ・まわりの光の層は、今までどおり砲台の <code>Laser Beam Visual</code>（<code>Wobble Amplitude</code> など）で変えます。</p>
     </div></details>
     <details class="recipe" id="rc-lighting" data-tags="turret enemy"><summary><span class="q">ビームの光・敵の足元の影・コアが危ないときの赤さを調整したい</span><span class="who">砲台配置・群衆・テスト</span></summary><div class="a">
-      <ul><li><b>ビームの光</b>：<span class="mp">砲台配置<i>›</i>ビームの光（まわりを照らす）</span>。床・背景の物は <b>明るさ</b>・<b>光の届く距離（m）</b>、敵は <b>照らす強さ</b>・<b>照らす距離（m）</b>。止めたいときは <b>ビームでまわりを照らす</b> を OFF。光るのは 3D の床・背景の物と群衆の敵で、絵で描いた砲台・コアは照らされません。</li>
+      <ul><li><b>ビームの光</b>：<span class="mp">砲台配置<i>›</i>ビームの光（まわりを照らす）</span>。床・背景の物は <b>明るさ</b>・<b>光の届く距離（m）</b>、敵は <b>照らす強さ</b>・<b>照らす距離（m）</b>。色が薄いと感じたら <b>光の色の鮮やかさ</b> を上げる、<b>床の色の影響（0で光の色そのまま）</b> を下げる、敵は <b>光の色を乗せる量</b> を上げる。止めたいときは <b>ビームでまわりを照らす</b> を OFF。光るのは 3D の床・背景の物と群衆の敵で、絵で描いた砲台・コアは照らされません。</li>
       <li><b>敵の足元の影</b>：<span class="mp">群衆<i>›</i>描画</span> の <b>足元の影を出す</b>・<b>足元の影の大きさ</b>・<b>足元の影の濃さ</b>。</li>
       <li><b>コアが危ないときの画面の色</b>：<span class="mp">テスト<i>›</i>コアが危ないときの画面の色</span>。<b>赤くなり始める HP（割合）</b>（はじめは 0.6 ＝残り 60% から）、色・ふちの暗さ・鼓動。設定はシーンのコアに保存されるので、Play していないときに変えて <kbd>Ctrl</kbd>+<kbd>S</kbd>。Play 中は <b>HP 50%</b>／<b>HP 25%</b>／<b>HP 10%</b> で HP を減らさずに見た目だけ試せます（<b>やめる</b> で戻る）。</li>
       <li><b>砲台・コアの下の影</b>：Play 中に自動で付く <code>Ground Contact Shadow</code>。大きさ・濃さを変えたいときは、砲台やコアに <code>Ground Contact Shadow</code> を手で付けて <code>Size</code>・<code>Darkness</code> を変え、シーンを保存します。</li></ul>
@@ -488,11 +488,13 @@
   <div class="ptable-wrap rv"><div class="ptable-cap">💡 ビームの光 <span class="src">砲台配置タブ › 「ビームの光（まわりを照らす）」</span></div><div class="ptable-scroll"><table class="params">
     <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
     <tr><td>明るさ</td><td>床・背景の物を照らす明るさ（0 で照らさない）</td><td class="up">はっきり色が付く</td><td class="down">ほんのり</td><td class="def">2.5</td></tr>
-    <tr><td>光の届く距離（m）</td><td>光 1 個が届く距離</td><td class="up">太い光の帯</td><td class="down">ビームのすぐそばだけ</td><td class="def">2.8</td></tr>
-    <tr><td>光を置く間隔（m）</td><td>ビームに沿って光を置く間隔（1 本に最大 8 個）</td><td class="up">光が少なく軽い（まだらになる）</td><td class="down">なめらか（少し重い）</td><td class="def">2.5</td></tr>
-    <tr><td>光の高さ（m）</td><td>光を床からどれだけ浮かせるか</td><td class="up">広くぼんやり</td><td class="down">狭くはっきり</td><td class="def">0.8</td></tr>
+    <tr><td>光の届く距離（m）</td><td>ビームの線から光が届く距離</td><td class="up">太い光の帯</td><td class="down">ビームのすぐそばだけ</td><td class="def">2.8</td></tr>
+    <tr><td>光の高さ（m）</td><td>光の線をビームからどれだけ浮かせるか</td><td class="up">広くぼんやり</td><td class="down">狭くはっきり</td><td class="def">0.8</td></tr>
     <tr><td>当たっている場所の明るさ（倍）</td><td>壁などに当たっている所の光</td><td class="up">当たった所が目立つ</td><td class="down">他と同じ</td><td class="def">1.6</td></tr>
+    <tr><td>床の色の影響（0で光の色そのまま）</td><td>照らされた所の色が床・背景の物の色にどれだけ左右されるか</td><td class="up">本物の光らしい（緑の床に赤い光はくすむ）</td><td class="down">プレイヤー色がはっきり出る</td><td class="def">0.4</td></tr>
     <tr><td>照らす強さ／照らす距離（m）</td><td>ビームの近くの群衆の敵が照らされる強さと範囲</td><td class="up">敵がビームの色に光る</td><td class="down">控えめ（強さ 0 で照らさない）</td><td class="def">0.8／1.3</td></tr>
+    <tr><td>光の色を乗せる量</td><td>照らされた敵に光の色をそのまま上から乗せる量</td><td class="up">敵がはっきりプレイヤー色に染まる</td><td class="down">敵の絵の色のまま明るくなるだけ</td><td class="def">0.35</td></tr>
+    <tr><td>光の色の鮮やかさ</td><td>光の色の濃さ（1 でプレイヤー色そのまま。床・敵の両方）</td><td class="up">濃く鮮やか</td><td class="down">白っぽい</td><td class="def">1.3</td></tr>
     <tr><td>弱く握ったときの明るさ（割合）</td><td>一番弱く握ったときの明るさ（強く握ったとき＝1）</td><td colspan="2">—</td><td class="def">0.45</td></tr>
     <tr><td>つく／消える速さ</td><td>撃ち始め・撃ち終わりの光の切り替わり</td><td class="up">パッと切り替わる</td><td class="down">ふわっと</td><td class="def">14</td></tr>
   </table></div></div>

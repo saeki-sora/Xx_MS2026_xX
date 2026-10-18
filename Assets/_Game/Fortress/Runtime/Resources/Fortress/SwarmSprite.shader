@@ -3,7 +3,7 @@
 // スプライトシートは「横=コマ(左→右)、縦=向き(上→下に0,1,2...)」の格子。
 // ビルボード(カメラタブの「絵を立たせる」)がONのときは、グローバル値 _FortressSwarmBillboardStand に従って
 // 地面に寝た四角形をカメラに向けて立たせる。0のときは従来と全く同じ描画になる。
-// 近くを撃っているビームがあれば、その色でほんのり照らす（SwarmSpriteCommon.hlsl の SwarmBeamLight）。
+// 近くを撃っているビームがあれば、その色でほんのり照らす（FortressBeamLight.hlsl の FortressBeamEnemyLight）。
 Shader "MS2026/Fortress/SwarmSprite"
 {
     Properties
@@ -48,8 +48,8 @@ Shader "MS2026/Fortress/SwarmSprite"
                 // 透明なピクセルは書き込まない（重なった大群での無駄なブレンド処理を減らす）。
                 // 立たせているときは、深度を書くので半透明の縁を切り落とす(縁が奥の敵を四角く隠さないように)。
                 clip(color.a - (_FortressSwarmBillboardStand > 0.0 ? _FortressBillboardCutoff : 0.01));
-                // ビームの光（近くのビームの色で照らす）。暗い色の絵でも分かるよう、少しだけ光の色そのものも足す。
-                color.rgb = color.rgb * (1.0 + input.beamLight) + input.beamLight * 0.2;
+                // ビームの光（近くのビームの色で照らす）。暗い色の絵でも分かるよう、光の色そのものも「光の色を乗せる量」だけ足す。
+                color.rgb = color.rgb * (1.0 + input.beamLight) + input.beamLight * _FortressBeamEnemyOverlay;
                 // 爆弾の敵の点滅（SwarmBombMath）。被弾フラッシュ(白)はその上にかける。
                 color.rgb = lerp(color.rgb, _BlinkColor.rgb, saturate(input.blink));
                 color.rgb = lerp(color.rgb, half3(1, 1, 1), saturate(input.flash));

@@ -21,7 +21,7 @@ Assets/_Game/Stage/
     Rendering/  StageShaderIds, StagePropLook, StagePropRenderer, StageFocusPoints
     Reactions/  HeatPointBuffer, DampedSpring2D (pure)  StagePropHeat, StageLaserHeatScanner, StagePropWobble, StageSwarmPressure, StagePropOcclusion, StagePropDestructibleView
     Stage/      StageSet, StageRoot, StageLookProfile, StageLightingSettings
-    Shaders/    StageProp.shader ("MS2026/Stage/Prop"), StagePropEffects.hlsl
+    Shaders/    StageProp.shader ("MS2026/Stage/Prop"), StagePropEffects.hlsl (StageProp.shader also includes Fortress `Runtime/Laser/Light/Shaders/FortressBeamLight.hlsl` and adds `FortressBeamSurfaceLight(positionWS, normalWS, albedo)` after `UniversalFragmentPBR` (the function decides how much of the albedo tints the light: Fortress `beamLight.surfaceColorInfluence`) — the laser beams light props/floor along the beam line in the player colour, 2026-10-18; zero when no beam fires; see FortressDesigner_AI_Reference §Lighting look B1–B4)
   Editor/   (asmdef MS2026.Stage.Editor, ns MS2026.Stage.EditorTools; + MS2026.StudioKit.Editor, Unity.RenderPipelines.Universal.Runtime)
     Window/     StageStudioWindow, StageStudioContext, StageStudioHeader
     Tabs/       StagePageBase, StageStartPage, StageImportPage, StageLayoutPage, StagePropsPage, StageViewPage, StageLightPage, StageCheckPage

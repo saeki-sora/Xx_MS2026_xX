@@ -5,8 +5,9 @@ namespace MS2026.Fortress
     /// <summary>
     /// ビームがまわりをプレイヤー色で照らす（<see cref="LaserTuningConfig.beamLight"/>）。<see cref="LaserTurret"/> が起動時に自動で付けるので、
     /// シーンに手で置く必要はない。
-    /// ・床・背景の物: ビームに沿って本物の点光源を数個置く（URP の Forward+ なので光が増えても描画の仕組みは変わらない）。影は落とさない。
-    /// ・群衆の敵: <see cref="BeamLightGlobals"/> でビームの線分をシェーダーへ渡し、近くの敵を明るくする。
+    /// ビームの線分・色・明るさを <see cref="BeamLightGlobals"/> でシェーダーへ渡すだけで、ライトのオブジェクトは作らない。
+    /// ・床・背景の物（ステージの MS2026/Stage/Prop）: ビームの線分そのものを光源にして、線に沿って途切れなく照らす。
+    /// ・群衆の敵（SwarmSprite）: ビームの近くの敵を明るくする。
     /// 撃っているか・太さはネット対戦のClientにもHostから届いているので、通信を増やさずに全員の画面で同じように見える。
     /// ビームの線・うねり・当たり判定・既存の演出には触れない。
     /// </summary>
@@ -16,7 +17,6 @@ namespace MS2026.Fortress
     {
         private LaserTurret _turret;
         private LaserBeamVisual _beam;
-        private readonly Light[] _lights = new Light[LaserLightMath.MaxLightsPerBeam];
         private float _fade;
         private Vector3 _start;
         private Vector3 _end;
@@ -31,7 +31,6 @@ namespace MS2026.Fortress
         private void OnDisable()
         {
             _fade = 0f;
-            HideLights(0);
             BeamLightGlobals.Clear(_turret.playerIndex);
         }
 
@@ -41,7 +40,6 @@ namespace MS2026.Fortress
             if (settings == null || !settings.enabled)
             {
                 _fade = 0f;
-                HideLights(0);
                 BeamLightGlobals.Clear(_turret.playerIndex);
                 return;
             }
@@ -59,77 +57,26 @@ namespace MS2026.Fortress
             _fade = Mathf.MoveTowards(_fade, firing ? 1f : 0f, settings.fadeSpeed * Time.deltaTime);
             if (_fade <= 0.001f)
             {
-                HideLights(0);
                 BeamLightGlobals.Clear(_turret.playerIndex);
                 return;
             }
 
-            var color = FortressColors.PlayerColor(_turret.playerIndex);
+            var color = LaserLightMath.Saturate(FortressColors.PlayerColor(_turret.playerIndex), settings.colorSaturation);
             var brightness = LaserLightMath.Brightness(_turret.CurrentThickness01, settings.weakGripBrightness) * _fade;
-
-            UpdateFloorLights(settings, color, brightness);
-
-            var enemyColor = color * (settings.enemyStrength * brightness);
-            BeamLightGlobals.Set(_turret.playerIndex, _start, _end, enemyColor, settings.enemyRadius);
-        }
-
-        private void UpdateFloorLights(LaserLightSettings settings, Color color, float brightness)
-        {
-            if (settings.floorIntensity <= 0f)
+            var floor = color * (settings.floorIntensity * brightness);
+            BeamLightGlobals.Set(_turret.playerIndex, new BeamLightGlobals.Beam
             {
-                HideLights(0);
-                return;
-            }
-
-            var length = Vector2.Distance(_start, _end);
-            var count = LaserLightMath.LightCount(length, settings.lightSpacing);
-            for (var i = 0; i < count; i++)
-            {
-                var light = EnsureLight(i);
-                var t = LaserLightMath.LightPosition01(i, count);
-                var position = Vector3.Lerp(_start, _end, t);
-                // カメラは +Z を向いているので、床から「上」は -Z。
-                position.z -= settings.lightHeight;
-                light.transform.position = position;
-                light.color = color;
-                light.range = settings.floorRange;
-                var boost = i == count - 1 && _hasImpact ? settings.impactBoost : 1f;
-                light.intensity = settings.floorIntensity * brightness * boost;
-                light.enabled = true;
-            }
-
-            HideLights(count);
-        }
-
-        private Light EnsureLight(int index)
-        {
-            var light = _lights[index];
-            if (light != null)
-            {
-                return light;
-            }
-
-            // 砲台の子にしておけば、砲台と一緒に消える（Play中のシーンの物なので、Playを止めれば必ず消える）。
-            var go = new GameObject($"[BeamLight] P{_turret.playerIndex + 1}-{index}");
-            go.transform.SetParent(transform, false);
-            light = go.AddComponent<Light>();
-            light.type = LightType.Point;
-            light.shadows = LightShadows.None;
-            light.renderMode = LightRenderMode.ForcePixel;
-            light.enabled = false;
-            _lights[index] = light;
-            return light;
-        }
-
-        private void HideLights(int fromIndex)
-        {
-            for (var i = fromIndex; i < _lights.Length; i++)
-            {
-                if (_lights[i] != null)
-                {
-                    _lights[i].enabled = false;
-                }
-            }
+                start = _start,
+                end = _end,
+                enemyColor = color * (settings.enemyStrength * brightness),
+                enemyRadius = settings.enemyRadius,
+                floorColor = floor,
+                floorRange = settings.floorRange,
+                floorHeight = settings.lightHeight,
+                impactExtra = _hasImpact ? Mathf.Max(0f, settings.impactBoost - 1f) : 0f,
+                surfaceColorInfluence = settings.surfaceColorInfluence,
+                enemyColorOverlay = settings.enemyColorOverlay
+            });
         }
     }
 }

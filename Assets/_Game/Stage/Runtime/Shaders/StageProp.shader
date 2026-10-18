@@ -134,6 +134,7 @@ Shader "MS2026/Stage/Prop"
             #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/Shaders/LitForwardPass.hlsl"
             #include "Assets/_Game/Stage/Runtime/Shaders/StagePropEffects.hlsl"
+            #include "Assets/_Game/Fortress/Runtime/Laser/Light/Shaders/FortressBeamLight.hlsl"
 
             // URP の LitPassFragment と同じ流れに、背景の反応（StageClip / StageModifySurface）を足したもの。
             void StagePropFragment(
@@ -178,6 +179,8 @@ Shader "MS2026/Stage/Prop"
                 InitializeBakedGIData(input, inputData);
 
                 half4 color = UniversalFragmentPBR(inputData, surfaceData);
+                // 撃っているビームが、線に沿ってプレイヤー色で照らす（要塞の LaserBeamLight。ビームが無ければ0）。
+                color.rgb += FortressBeamSurfaceLight(inputData.positionWS, inputData.normalWS, surfaceData.albedo);
                 color.rgb = MixFog(color.rgb, inputData.fogCoord);
                 color.a = 1.0;
 
