@@ -121,3 +121,7 @@ MonoBehaviour:
       colorParam: Color
     steamSecondsPerFireSecond: 1
     maxSteamSeconds: 10
+  look:
+    enabled: 1
+    flowSpeedWeak: 1.5
+    flowSpeedStrong: 7

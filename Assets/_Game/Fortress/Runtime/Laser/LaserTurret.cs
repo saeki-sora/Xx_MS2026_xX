@@ -154,6 +154,12 @@ namespace MS2026.Fortress
             {
                 gameObject.AddComponent<LaserTurretEffects>();
             }
+
+            // 歯磨き粉ビームの見た目（表面の流れ）を動かす係も同じく自動で付ける。
+            if (GetComponent<LaserTurretLook>() == null)
+            {
+                gameObject.AddComponent<LaserTurretLook>();
+            }
         }
 
         private void Update()

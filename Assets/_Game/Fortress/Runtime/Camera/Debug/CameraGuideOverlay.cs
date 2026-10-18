@@ -13,7 +13,7 @@ namespace MS2026.Fortress.Cameras
         [Tooltip("ガイドを表示する。Play中は F7(既定) で切り替えられる。")]
         public bool showGuides;
 
-        [Tooltip("視点の持ち主と情報源を画面左上に表示する(デバッグ上書き中は常に表示)。")]
+        [Tooltip("視点の持ち主と情報源を画面左上に表示する(ガイド表示中と、F1〜F4等で視点を上書きした間。カメラタブの「この視点でプレイ」で始めたときは出さない)。")]
         public bool showViewerLabel = true;
 
         [Tooltip("ガイドの設定元。未設定ならシーンで有効なリグを使う。")]
@@ -47,7 +47,7 @@ namespace MS2026.Fortress.Cameras
                 DrawGuides(currentRig.guides, new Rect(0f, 0f, Screen.width, Screen.height));
             }
 
-            if (showViewerLabel && (showGuides || DebugViewerOverride.IsActive))
+            if (showViewerLabel && (showGuides || (DebugViewerOverride.IsActive && DebugViewerOverride.ShowLabel)))
             {
                 DrawViewerLabel(currentRig);
             }

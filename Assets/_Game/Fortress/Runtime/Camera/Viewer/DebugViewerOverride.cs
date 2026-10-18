@@ -23,9 +23,22 @@ namespace MS2026.Fortress.Cameras
 
         public static int Viewer => _viewer ?? ViewerIndex.Overview;
 
-        public static void Set(int viewer)
+        /// <summary>
+        /// 画面左上に「視点: …（デバッグ上書き）」を出すか(CameraGuideOverlay)。F1〜F4やカメラタブで切り替えたときは出し、
+        /// カメラタブの「▶ Pnでプレイ」で最初から決めたときは出さない(普段のプレイと同じ画面で試せるように)。
+        /// </summary>
+        public static bool ShowLabel { get; private set; }
+
+        /// <param name="showLabel">falseなら画面左上の視点ラベルを出さない(「この視点でプレイ」用)。</param>
+        public static void Set(int viewer, bool showLabel = true)
         {
-            if (!IsAvailable || !ViewerIndex.IsValid(viewer) || _viewer == viewer)
+            if (!IsAvailable || !ViewerIndex.IsValid(viewer))
+            {
+                return;
+            }
+
+            ShowLabel = showLabel;
+            if (_viewer == viewer)
             {
                 return;
             }
@@ -42,6 +55,7 @@ namespace MS2026.Fortress.Cameras
             }
 
             _viewer = null;
+            ShowLabel = false;
             Changed?.Invoke();
         }
 
@@ -50,6 +64,7 @@ namespace MS2026.Fortress.Cameras
         private static void ResetOnLoad()
         {
             _viewer = null;
+            ShowLabel = false;
         }
     }
 

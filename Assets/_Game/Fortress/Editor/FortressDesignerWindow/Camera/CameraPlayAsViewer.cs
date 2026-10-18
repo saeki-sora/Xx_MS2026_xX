@@ -76,7 +76,8 @@ namespace MS2026.Fortress.EditorTools
                 return;
             }
 
-            DebugViewerOverride.Set(viewer);
+            // 普段のプレイと同じ画面で試せるよう、左上の視点ラベルは出さない(F1〜F4で切り替えると出る)。
+            DebugViewerOverride.Set(viewer, showLabel: false);
             var rig = FortressCameraRig.Active;
             if (rig != null)
             {

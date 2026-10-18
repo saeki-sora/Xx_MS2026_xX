@@ -114,6 +114,11 @@ namespace MS2026.Fortress
         [Tooltip("発射口・着弾点・群衆の敵に当たった瞬間の演出。ネット対戦でも各PCがそれぞれ鳴らすので全員の画面に出る。")]
         public LaserEffectSettings effects = new LaserEffectSettings();
 
+        [Header("見た目（歯磨き粉ビームの流れ）")]
+        [Tooltip("ビームの見た目だけの設定。当たり判定・ダメージ・熱の計算には影響しない。" +
+                 "ビームの色・つや・こぶ・泡は、ビームのマテリアル（MS2026/Fortress/ToothpasteBeam）の方で調整する。")]
+        public LaserLookSettings look = new LaserLookSettings();
+
         /// <summary>レーザーの強さ(太さ0-1)に応じた、射出中の回転速度の倍率。</summary>
         public float EvaluateFiringRotationMultiplier(float strength01)
         {

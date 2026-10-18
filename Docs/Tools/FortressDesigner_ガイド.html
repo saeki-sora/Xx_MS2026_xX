@@ -26,7 +26,7 @@
   <ol id="toc"></ol>
   <div class="foot">
     <button class="themebtn" id="themeBtn" type="button"><span aria-hidden="true">◐</span><span data-label>ライト表示</span></button>
-    <div class="meta mono">Assets/_Game/Fortress<br>2026-10-05 時点</div>
+    <div class="meta mono">Assets/_Game/Fortress<br>2026-10-18 時点</div>
   </div>
 </nav>
 
@@ -174,6 +174,7 @@
     <p><b>コアクリスタルが割れる演出：</b>敵がコアに当たってダメージを受けると、ガラスが割れるエフェクトと「パリーン」という効果音が出ます（0.25 秒に 1 回まで）。コアの <code>Core Crystal Controller</code> の <code>Effects</code> に <code>On Damaged</code>（ダメージ時）と <code>On Destroyed</code>（壊れたとき）があり、上の手順 1・2 で <code>On Damaged</code> に仮素材が入ります。いまは Host（1 人用も含む）の画面にだけ出ます。</p>
     <p><b>撃ったあとの湯気：</b>ビームを撃ち終わると、砲台から湯気のエフェクトが出て、出始めに「シュー」という音が鳴ります。<b>ビームを撃った時間が長いほど、湯気が出ている時間も長くなります</b>（既定は 1 秒撃つと 1 秒ぶん、上限 10 秒）。要塞デザイナーの「砲台配置」タブの「撃ったあとの湯気」の欄で選びます。時間は <code>Steam Seconds Per Fire Second</code>（撃った 1 秒あたりの湯気の秒数）と <code>Max Steam Seconds</code>（上限）で変えられます。仮素材は、上の手順 1・2（素材を生成→割り当て）で入ります。エフェクトの寿命は「Loop」にしてください。</p>
     <p><b>ビームのグニャグニャ：</b>砲台の <code>Laser Beam Visual</code> の <code>Wobble Amplitude</code>（うねりの大きさ。0 でまっすぐ）、<code>Wobble Wavelength</code>、<code>Wobble Speed</code>、<code>Bulge Amount</code>（太さのふくらみ）で、歯磨き粉のようにうねる見た目に変えられます。当たり判定はまっすぐなままです。さらに <code>Glow Material</code>・<code>Glow Layers</code>・<code>Glow Width Scale</code>・<code>Glow Alpha</code> で、ビームのまわりにぼんやり光る層を重ねられます（<code>Glow Material</code> を空にすると光は出ません）。</p>
+    <p><b>歯磨き粉ビームの見た目（2026-10-18〜）：</b>ビームは白・赤・青の縞のまま、<b>縁がふくらんだりくびれたりして先へ流れる「こぶ」・太いつやの帯・ふちの透け・流れるきらめきと泡・押し出しのすじ</b>が付き、強く握るほどつやが増して速く流れます。見た目だけで、当たり判定・ダメージは変わりません。自動で付くので設定は不要。調整は「砲台配置」タブの <b>見た目（歯磨き粉ビーム）</b> で（<a href="#rc-laser-look">やり方</a>）。湯気・発射口のエフェクト・カメラの揺れ・ビームのうねりと光の層は今までどおりそのまま動きます。</p>
     <p><b>クリスタルの汚れ：</b>コアの HP が減るほど、クリスタルの色が少しずつ汚れた色（茶ぐろい色）に変わります。自動で付くので設定は不要です。色と汚れ方は、コアの <code>Core Dirt Visual</code>（再生中に自動で付く）で変えられます。割れる演出は、いまは「壊れたとき」だけ出ます。</p>
     <p><b>BGM を複数入れて聞き比べる：</b><code>[Fortress] Bgm</code> の <code>FortressBgmPlayer</code> で、<code>Bgm</code> が 1 曲目、<code>Extra Bgms</code> に 2 曲目以降を入れます。<code>Start Index</code> で選んだ 1 曲だけが鳴り、その曲の中でループ再生されます（0 = <code>Bgm</code>、1 = <code>Extra Bgms</code> の 1 つ目…）。試聴で切り替えたいときは <code>Next Key</code> にキーを入れます（通常は None）。</p>
     <div class="callout warn"><span class="ci">!</span><div>エフェクトのプレイヤー色の自動色付けは、この仮素材では効きません。BGM は仮の簡易ループです。エラーや「設定できなかった項目」の警告が Console に出たら、内容を開発担当に伝えてください。</div></div>
@@ -294,6 +295,12 @@
       <p>早すぎるなら <b>熱上昇係数を下げる</b> か <b>しきい値を上げる</b>。握っていない間は <b>熱冷却速度</b>（1 秒あたり）だけ下がります。</p>
     </div></details>
     <details class="recipe" data-tags="turret"><summary><span class="q">オーバーヒート後の「撃てない時間」を変えたい</span><span class="who">砲台配置</span></summary><div class="a"><p><span class="mp">砲台配置<i>›</i>レーザー・熱チューニング<i>›</i>沈黙時間(秒)</span> を変えます。沈黙中の砲台の回転は <span class="mp">回転（自動で360度）<i>›</i>オーバーヒート中の速度倍率</span>（0 で停止）。</p></div></details>
+    <details class="recipe" id="rc-laser-look" data-tags="turret"><summary><span class="q">歯磨き粉ビームのこぶ・つや・泡・流れる速さを調整したい</span><span class="who">砲台配置</span></summary><div class="a">
+      <ol><li>要塞デザイナーの <b>砲台配置</b> タブを下へスクロールし、<b>見た目（歯磨き粉ビーム）</b> を探す。</li>
+      <li>流れる速さは <b>流れる速さ（弱く握ったとき）</b>／<b>流れる速さ（強く握ったとき）</b> で変える（メートル/秒）。止めたいときは <b>表面を流す</b> を OFF。</li>
+      <li>こぶ・つや・泡・すじの見た目は、<b>ビームのこぶ・つや・泡・すじを調整する（マテリアル）</b> を開いて変える（<b>流れるこぶの大きさ</b> を 0 にするとビームの縁はまっすぐに戻る）。マテリアルを書き換えるので、同じマテリアルの全砲台に反映され、Play 中に変えても残ります。マテリアル <code>Assets/_Game/Fortress/Effects/Toothpaste/Toothpaste_BeamLine.mat</code> を Project で選んで Inspector で変えても同じです。</li></ol>
+      <p>以前の見た目（つやの無い縞だけ）に戻したいときは、砲台の <code>Laser Beam Visual</code> の <code>Beam Material</code> に <code>Toothpaste_BeamLine_Unlit</code> を入れます。うねりの大きさ・太さのふくらみ・まわりの光の層は、今までどおり砲台の <code>Laser Beam Visual</code>（<code>Wobble Amplitude</code> など）で変えます。</p>
+    </div></details>
     <details class="recipe" data-tags="turret"><summary><span class="q">「溜めてから撃つ」方式にしたい</span><span class="who">砲台配置</span></summary><div class="a">
       <ol><li><span class="mp">砲台配置<i>›</i>チャージ発射<i>›</i>チャージ発射を使う</span> を ON。</li><li><b>チャージ時間(秒)</b>：この秒数だけ強く握り続けると発射開始。</li><li><b>チャージ判定しきい値</b>：この割合以上で握っている間だけ溜まる（1.0 = 完全な全力のみ。今は 0.95）。</li></ol>
       <p>OFF に戻すと、握った瞬間から撃てる元の方式になります。</p>
@@ -376,7 +383,7 @@
       <p class="small muted">揺れは「簡易揺れ（アセット不要）」か「D-Drive の揺れアセット」を選べます。D-Drive の揺れの作り方は <a href="D-Drive_ガイド.html">D-Drive ガイド</a> へ。</p>
     </div></details>
     <details class="recipe" id="rc-camera-enemy-facing" data-tags="camera enemy"><summary><span class="q">画面を回した人（2P〜4P）の画面で、敵の絵が横倒しになる</span><span class="who">カメラ</span></summary><div class="a"><p>「カメラ」タブの <b>敵の絵の向き（画面を回した視点用）</b> で <b>敵の絵を画面の向きに合わせる</b> にチェックを入れます（新しく作ったプリセットは最初から入っています）。画面を回した人の画面でも、敵の絵の上が画面の上を向き、左右の向き・重なり順も画面に合わせて決まります。</p><p class="small muted">各PCが自分の画面に合わせて描くだけなので、4台で通信してもそれぞれ正しく見え、当たり判定などゲームの中身は変わりません。回転0°の視点では見た目は変わりません。設定は視点プリセットごとなので、回転をやめるときは <code>CameraViewPreset_Default 2</code> の <b>使う</b> を押すかチェックを外せば元どおりです。今のところ対象は群衆の敵だけです（個別の敵＝Actor は未対応）。</p></div></details>
-    <details class="recipe" id="rc-camera-play-as" data-tags="camera test"><summary><span class="q">P1〜P4 の視点を調整したので、その人の画面でプレイして確かめたい</span><span class="who">カメラ</span></summary><div class="a"><ol><li>「カメラ」タブの <b>この視点でプレイ（テスト用）</b> を開く（Play していないときだけ出ます）。</li><li><b>▶ P1でプレイ</b>〜<b>▶ P4でプレイ</b> のどれかを押すと、その人の画面で Play が始まります（いま <b>編集する視点</b> で選んでいる人のボタンが太字）。</li><li>何度も同じ人で試すなら <b>通常のPlay（▶ボタン・Ctrl+P）でもこの視点で始める</b> にチェックを入れ、右で視点を選びます。チェック中は Unity 上部の ▶ でもその視点で始まります。</li></ol><p class="small muted">このPCの画面だけの一時的な切り替えで、保存されるデータは変わりません（チェックは Unity を閉じると外れます）。通信で決まる視点より優先され、Play 中の <b>Play中のカメラ</b> で別の人に切り替えたり <b>自動に戻す</b> で元に戻せます。変わるのはカメラだけで、砲台はいつもどおり <kbd>Q</kbd><kbd>W</kbd><kbd>O</kbd><kbd>P</kbd>（または握力センサー）で 4 人分動かせます。</p></div></details>
+    <details class="recipe" id="rc-camera-play-as" data-tags="camera test"><summary><span class="q">P1〜P4 の視点を調整したので、その人の画面でプレイして確かめたい</span><span class="who">カメラ</span></summary><div class="a"><ol><li>「カメラ」タブの <b>この視点でプレイ（テスト用）</b> を開く（Play していないときだけ出ます）。</li><li><b>▶ P1でプレイ</b>〜<b>▶ P4でプレイ</b> のどれかを押すと、その人の画面で Play が始まります（いま <b>編集する視点</b> で選んでいる人のボタンが太字）。</li><li>何度も同じ人で試すなら <b>通常のPlay（▶ボタン・Ctrl+P）でもこの視点で始める</b> にチェックを入れ、右で視点を選びます。チェック中は Unity 上部の ▶ でもその視点で始まります。</li></ol><p class="small muted">このPCの画面だけの一時的な切り替えで、保存されるデータは変わりません（チェックは Unity を閉じると外れます）。通信で決まる視点より優先され、Play 中の <b>Play中のカメラ</b> で別の人に切り替えたり <b>自動に戻す</b> で元に戻せます。画面左上に視点の表示（デバッグ用のラベル）は出ず、普段のプレイと同じ画面で試せます（Play 中に <kbd>F1</kbd>〜<kbd>F4</kbd> で切り替えると出ます）。変わるのはカメラだけで、砲台はいつもどおり <kbd>Q</kbd><kbd>W</kbd><kbd>O</kbd><kbd>P</kbd>（または握力センサー）で 4 人分動かせます。</p></div></details>
     <details class="recipe" id="rc-camera-other" data-tags="camera test"><summary><span class="q">Play 中に他のプレイヤーの画面で見たい</span><span class="who">キーボード</span></summary><div class="a"><p>Play 中に <kbd>F1</kbd>〜<kbd>F4</kbd> で P1〜P4 の視点、<kbd>F5</kbd> で全体、<kbd>F6</kbd> で自動に戻す、<kbd>F7</kbd> で構図ガイドの表示切替（エディタと開発ビルドのみ）。カメラタブの <b>他の人の視点で見る</b> でも同じことができます。最初からその人の画面で始めたいときは <a href="#rc-camera-play-as">この視点でプレイ</a> を使います。</p></div></details>
     <details class="recipe" data-tags="test enemy"><summary><span class="q">敵を何体まで出しても重くならないか測りたい</span><span class="who">群衆</span></summary><div class="a"><p>Play 中に <span class="mp">群衆<i>›</i>ストレステスト</span> で <b>一斉投入の数</b> を決めて <b>範囲の中心に一斉投入</b>、または <b>連続投入 (体/秒)</b>。<b>ライブ計測</b> にフレーム時間（16.6ms 以下なら 60FPS）が出ます。<b>ゲーム画面にHUD…を表示</b> を ON にするとビルドでも確認できます。</p></div></details>
     <details class="recipe" data-tags="test"><summary><span class="q">センサー無しで 4 人分テストしたい</span><span class="who">テスト</span></summary><div class="a"><p>キーボードの <kbd>Q</kbd><kbd>W</kbd><kbd>O</kbd><kbd>P</kbd> がそれぞれ P1〜P4 の握力です。「そっと／しっかり／渾身」を自動で握らせたいときは、<a href="GripInputBridge_ガイド.html">握力入力ブリッジ</a> の <b>波形プリセット</b> を使います（テストタブの <b>握力入力ブリッジ（シミュレータ）を開く</b> から開けます）。</p></div></details>
@@ -405,7 +412,7 @@
     <div>
       <div class="tg-panel" id="tg-turret" role="tabpanel"><h3>砲台配置</h3><div class="when">⏱ レーザーの手触り・難しさを決めたいとき</div>
         <p>上が「シーン内の砲台」（1 基ずつの設定）、下が「レーザー・熱チューニング」（4 基共通の設定ファイル）です。</p>
-        <ul class="points"><li><b>シーン内の砲台</b>：各砲台の自動回転 ON/OFF・向き・速度倍率、<b>シーンで選択</b>、仮の見た目（砲身など）の作成。</li><li><b>チャージ発射</b>：溜めてから撃つ方式の ON/OFF と秒数。</li><li><b>太さ・熱</b>：最小/最大の太さ、熱上昇係数、熱冷却速度、オーバーヒートしきい値、沈黙時間。</li><li><b>射程・最大秒間ダメージ・貫通</b>：レーザーの強さ。<b>敵を貫通する</b> を OFF にすると先頭の 1 体だけに当たる。</li><li><b>照準表示</b>：撃っていない間に出る、向きを示す細い線（照準線の長さ・太さ・濃さ）。</li><li><b>通常の回転速度(度/秒)</b>・<b>射出中の速度倍率</b>・<b>チャージ中／オーバーヒート中の速度倍率</b>：自動回転の速さ。</li><li><b>演出（エフェクト・効果音）</b>：発射口・着弾点・群衆の敵に当たった瞬間の 3 欄、<b>群衆ヒットの上限</b>、<b>「▶ 試す」に使う砲台</b>、作り方のコツ。</li><li>一番下の <b>この設定が未割り当ての砲台に適用</b> で、設定ファイルの付け忘れを直せます。</li></ul></div>
+        <ul class="points"><li><b>シーン内の砲台</b>：各砲台の自動回転 ON/OFF・向き・速度倍率、<b>シーンで選択</b>、仮の見た目（砲身など）の作成。</li><li><b>チャージ発射</b>：溜めてから撃つ方式の ON/OFF と秒数。</li><li><b>太さ・熱</b>：最小/最大の太さ、熱上昇係数、熱冷却速度、オーバーヒートしきい値、沈黙時間。</li><li><b>射程・最大秒間ダメージ・貫通</b>：レーザーの強さ。<b>敵を貫通する</b> を OFF にすると先頭の 1 体だけに当たる。</li><li><b>照準表示</b>：撃っていない間に出る、向きを示す細い線（照準線の長さ・太さ・濃さ）。</li><li><b>通常の回転速度(度/秒)</b>・<b>射出中の速度倍率</b>・<b>チャージ中／オーバーヒート中の速度倍率</b>：自動回転の速さ。</li><li><b>演出（エフェクト・効果音）</b>：発射口・着弾点・群衆の敵に当たった瞬間・撃ったあとの湯気の 4 欄、<b>群衆ヒットの上限</b>、<b>「▶ 試す」に使う砲台</b>、作り方のコツ。</li><li><b>見た目（歯磨き粉ビーム）</b>：ビームの表面が流れる速さと、ビームのマテリアル（こぶ・つや・泡・すじ）の調整。</li><li>一番下の <b>この設定が未割り当ての砲台に適用</b> で、設定ファイルの付け忘れを直せます。</li></ul></div>
       <div class="tg-panel" id="tg-wave" role="tabpanel"><h3>敵ウェーブ</h3><div class="when">⏱ 敵の出方（量・テンポ・方角）を決めたいとき</div>
         <ul class="points"><li><b>編集対象のウェーブ</b>：編集するウェーブの設定ファイル。<b>新規ウェーブを作成</b> で増やせます。</li><li><b>湧きエントリ</b>：1 行 = 「○秒後に、どこから、どの敵を、何体、何秒おきに」。</li><li><b>タイムライン</b>（表の上）：湧き位置ごとに 1 段。棒 1 本が表の 1 行で、長さ＝湧き始めから湧き終わりまで、色＝敵の種類、数字＝数。<b>棒をクリックすると表のその行が選ばれます</b>。上に <b>合計の数・行の数・最後に湧く時刻・種類ごとの数</b>。Play 中は今の時刻に赤い線と「ここまでに約○体」。湧き位置がシーンに無い段は赤い字です。</li><li><b>ループ再生</b> / <b>ループ間隔(秒)</b>：最後まで出したら最初から繰り返す。</li><li><b>湧き位置</b>：一覧・追加・複製・削除・グリッドに揃える・<b>リング状に自動配置</b>。</li></ul>
         <p class="small muted">Play 開始時に自動で再生されます。止めたいときは「テスト」タブの <b>停止</b>。</p></div>
@@ -458,7 +465,17 @@
     <tr><td>発射口（撃っている間）</td><td>撃っている間ずっと（音は撃ち始めに 1 回）</td><td colspan="2">出しっぱなし用（Life Mode を Loop に）</td><td class="def">音：和太鼓</td></tr>
     <tr><td>着弾点（壁などに当たっている間）</td><td>壁や箱に当たっている間ずっと（音は当たり始めに 1 回）</td><td colspan="2">出しっぱなし用（Life Mode を Loop に）</td><td class="def">空</td></tr>
     <tr><td>群衆の敵に当たった瞬間</td><td>敵に触れた瞬間に 1 回</td><td colspan="2">1 回だけ用（そのままで OK）</td><td class="def">空</td></tr>
+    <tr><td>撃ったあとの湯気（撃った時間ぶん続く）</td><td>撃ち終わったあと、撃った時間ぶん（音は出始めに 1 回）</td><td colspan="2">出しっぱなし用（Life Mode を Loop に）</td><td class="def">仮素材を割り当てた場合は湯気</td></tr>
     <tr><td>群衆ヒットの上限</td><td>—</td><td class="up">上げる：たくさん出て派手（少し重くなる）</td><td class="down">下げる：控えめで軽い</td><td class="def">1 秒に 60 個</td></tr>
+  </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">🪥 歯磨き粉ビームの見た目 <span class="src">砲台配置タブ › 「見た目（歯磨き粉ビーム）」</span></div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>流れる速さ（弱く／強く握ったとき）</td><td>ビーム表面のこぶ・つや・泡・すじが先へ流れる速さ（m/秒）</td><td class="up">勢いよく噴き出す感じ</td><td class="down">ゆっくり押し出す感じ</td><td class="def">1.5／7</td></tr>
+    <tr><td>流れるこぶの大きさ／こぶの間隔（メートル）</td><td>縁がくびれる深さと、こぶ同士の間隔（マテリアル）</td><td class="up">ボコボコ波打つ</td><td class="down">まっすぐに近い（0 でまっすぐ）</td><td class="def">0.32／1.3</td></tr>
+    <tr><td>つやの強さ／つやの鋭さ</td><td>つやの帯の明るさと細さ（マテリアル）</td><td class="up">強さ：ギラッと光る／鋭さ：帯が細くなる</td><td class="down">しっとり</td><td class="def">1.1／18</td></tr>
+    <tr><td>流れるきらめき／きらめきの細かさ</td><td>表面を流れる光の粒の量と細かさ（マテリアル）</td><td class="up">量：キラキラ／細かさ：粒が小さくなる</td><td class="down">落ち着いた表面</td><td class="def">1.2／3</td></tr>
+    <tr><td>泡の量／泡の大きさ</td><td>ビームの中を流れる泡（マテリアル）</td><td class="up">泡だらけ</td><td class="down">泡なし（0）</td><td class="def">0.3／0.2</td></tr>
+    <tr><td>押し出しのすじ／すじの間隔（メートル）</td><td>押し出したときの横すじ（マテリアル）</td><td colspan="2">—</td><td class="def">0.14／0.6</td></tr>
   </table></div></div>
   <div class="ptable-wrap rv"><div class="ptable-cap">👾 敵ウェーブの 1 行 <span class="src">敵ウェーブタブ ／ Presets/Default_EnemyWaveConfig.asset</span></div><div class="ptable-scroll"><table class="params">
     <tr><th>項目</th><th>意味</th><th colspan="2">メモ</th><th>初期値</th></tr>
@@ -510,6 +527,7 @@
     <h2>困ったときは<br><em>ここ</em>。</h2>
   </div>
   <div class="faq rv">
+    <details><summary>ビームにこぶ・つや・泡が出ない</summary><div class="a"><ol><li>Play 中か確認（流れるのは Play 中だけ。止まっていても、こぶ・つやは見えます）。</li><li><b>表面を流す</b> が ON か確認。</li><li><b>ビームのマテリアル</b> が歯磨き粉ビームのシェーダーか確認（違うときは <b>歯磨き粉ビームのシェーダーに切り替える</b> ボタンが出ます）。</li><li>カメラが遠いと細かい模様は見えません。<b>流れるこぶの大きさ</b>・<b>つやの強さ</b> など大きく変わる項目を上げてください。</li></ol></div></details>
     <details><summary>エフェクトを入れたのに出ない／すぐ消える／音が鳴らない</summary><div class="a">よくある原因と直し方を表にまとめてあります → <a href="#effects">エフェクトを入れる › うまくいかないとき</a>。いちばん多いのは「Play していない」「着弾点なのに何にも当たっていない」「出しっぱなし用なのに Life Mode が Loop になっていない」の 3 つです。</div></details>
     <details><summary>Play を止めたら、置いた物や動かした物が元に戻った</summary><div class="a">Unity の仕様で、<b>Play 中にシーン上の物を変えた内容は Play 終了で元に戻ります</b>。配置・移動・破壊可能物の設定は Play していないときに行い、<kbd>Ctrl</kbd>+<kbd>S</kbd> でシーンを保存してください。一方、設定ファイル（レーザー・熱、ウェーブ、群衆の設定、敵の種類、カメラのプリセット）の数値は Play 中に変えても残ります。</div></details>
     <details><summary>キーを押してもレーザーが出ない</summary><div class="a"><ol><li>Play 中か確認（Play していないと握力は動きません）。</li><li>Game ビューをクリックしてフォーカスを当ててからキーを押す。</li><li>オーバーヒート中（熱が満タン）なら沈黙時間が終わるまで待つ。</li><li>チャージ発射が ON なら、強く握り続けないと出ません。</li><li>「砲台配置」で「砲台(LaserTurret)が1つも見つかりません。」なら、シーンに砲台がありません → 「はじめに」の <b>テストシーンを自動生成</b>。</li></ol></div></details>
@@ -656,7 +674,7 @@ bool playing = spawnDirector.IsPlaying;</pre></div>
     <a class="lk rv" href="ShaderFX_ガイド.html"><span class="ti">ShaderFX</span><span class="ds">被弾フラッシュ・ディゾルブなどの見た目エフェクト。</span></a>
     <a class="lk rv" href="index.html"><span class="ti">ツール一覧</span><span class="ds">このプロジェクトの全ツール。</span></a>
   </div>
-  <footer><span>Fortress Designer Guide · Xx_MS2026_xX</span><span>2026-10-05 時点のコードに基づく</span></footer>
+  <footer><span>Fortress Designer Guide · Xx_MS2026_xX</span><span>2026-10-18 時点のコードに基づく</span></footer>
 </section>
 </main>
 </div>
