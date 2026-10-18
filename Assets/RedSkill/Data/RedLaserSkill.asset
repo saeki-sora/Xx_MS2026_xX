@@ -1,0 +1,437 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4002d07fe6a4f0c9b12c2e3ff135d9d, type: 3}
+  m_Name: RedLaserSkill
+  m_EditorClassIdentifier: MS2026.RedSkill.Runtime::MS2026.Skills.Red.RedLaserSkill
+  skillId: red_laser
+  displayName: "\u6975\u592A\u30EC\u30FC\u30B6\u30FC"
+  description: "\u7832\u53F0\u306E\u5411\u3044\u3066\u3044\u308B\u65B9\u5411\u3078\u3001\u5E83\u304C\u3063\u3066\u3044\u304F\u6975\u592A\u306E\u8D64\u3044\u30EC\u30FC\u30B6\u30FC\u3092\u6483\u3064\u3002\u58C1\u306B\u5F53\u305F\u308B\u3068\u305D\u3053\u3067\u6B62\u307E\u308B\u3002"
+  themeColor: {r: 1, g: 0.15, b: 0.1, a: 1}
+  chargeBySmashBall: 1
+  ignoreChargeWhileActive: 1
+  replacesNormalLaser: 1
+  hideNormalLaserUntilRelease: 1
+  timing:
+    windupSeconds: 0.3
+    fireSeconds: 3
+    openSeconds: 0.35
+    closeSeconds: 0.45
+    openCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 4
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 0.55
+        value: 1.18
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    closeCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 0.25
+        value: 1.08
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    endWhenGripReleased: 0
+    rotationSpeedScale: 0.3
+  shape:
+    range: 28
+    rootWidth: 0.8
+    tipWidth: 12
+    spreadDistance: 14
+    spreadCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 2
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    extendSpeed: 90
+    pulseAmount: 0.067
+    pulseFrequency: 14
+    visualWidthScale: 1.35
+    visualSegments: 40
+  damage:
+    swarmDamagePerSecond: 100
+    obstacleDamagePerSecond: 60
+    useTurretObstacleMultiplier: 1
+    hitWidthScale: 1
+    hitSegments: 3
+    hitColumns: 3
+    laneCount: 20
+    blockerLayers:
+      serializedVersion: 2
+      m_Bits: 4294967295
+    stopAtDestructibles: 1
+  look:
+    stripeGradient:
+      serializedVersion: 2
+      key0: {r: 0.95, g: 0.12, b: 0.16, a: 1}
+      key1: {r: 0.95, g: 0.12, b: 0.16, a: 1}
+      key2: {r: 1, g: 0.84, b: 0.86, a: 0}
+      key3: {r: 1, g: 0.84, b: 0.86, a: 0}
+      key4: {r: 0.58, g: 0.02, b: 0.07, a: 0}
+      key5: {r: 0.58, g: 0.02, b: 0.07, a: 0}
+      key6: {r: 1, g: 0.88, b: 0.89, a: 0}
+      key7: {r: 1, g: 0.88, b: 0.89, a: 0}
+      ctime0: 0
+      ctime1: 11141
+      ctime2: 17694
+      ctime3: 27525
+      ctime4: 34078
+      ctime5: 43908
+      ctime6: 50462
+      ctime7: 60292
+      atime0: 0
+      atime1: 65535
+      atime2: 0
+      atime3: 0
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_ColorSpace: -1
+      m_NumColorKeys: 8
+      m_NumAlphaKeys: 2
+    stripeBlend: 0.65
+    stripeStrength: 1
+    stripePeriod: 3.2
+    stripeAngle: 40
+    stripeScrollSpeed: 7
+    coreShine: 0.25
+    wallGlow: 1.2
+    crossGradient:
+      serializedVersion: 2
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 0.9, b: 0.9, a: 1}
+      key2: {r: 1, g: 0.68, b: 0.66, a: 0.55}
+      key3: {r: 1, g: 0.38, b: 0.34, a: 0}
+      key4: {r: 0.95, g: 0.08, b: 0.1, a: 0}
+      key5: {r: 0.55, g: 0, b: 0.04, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 19661
+      ctime2: 36044
+      ctime3: 47185
+      ctime4: 57671
+      ctime5: 65535
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 39321
+      atime2: 52428
+      atime3: 65535
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_ColorSpace: -1
+      m_NumColorKeys: 6
+      m_NumAlphaKeys: 4
+    lengthGradient:
+      serializedVersion: 2
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 0.88, b: 0.86, a: 1}
+      key2: {r: 1, g: 0.66, b: 0.62, a: 0}
+      key3: {r: 0, g: 0, b: 0, a: 0}
+      key4: {r: 0, g: 0, b: 0, a: 0}
+      key5: {r: 0, g: 0, b: 0, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 29491
+      ctime2: 65535
+      ctime3: 0
+      ctime4: 0
+      ctime5: 0
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 65535
+      atime2: 0
+      atime3: 0
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_ColorSpace: -1
+      m_NumColorKeys: 3
+      m_NumAlphaKeys: 2
+    intensity: 1.15
+    bodyOpacity: 0.85
+    particleBrightness: 2.5
+    streakStrength: 0.2
+    streakDensity: 10
+    streakSpeed: 16
+    edgeJag: 0.2
+    edgeJagFrequency: 1.4
+    edgeJagSpeed: 10
+    flicker: 0.12
+    tipFadeLength: 4
+    sortingOrder: 150
+    gradientResolution: 128
+  charge:
+    glowColor: {r: 1.6, g: 0.18, b: 0.14, a: 1}
+    pulseFrequency: 1.6
+    pulseAmount: 0.35
+    muzzleGlowSize: 1.8
+    emberRate: 40
+    emberColor: {r: 1, g: 0.3, b: 0.24, a: 1}
+    emberRadius: 2.6
+    readyBurstSize: 6
+    windupEmberMultiplier: 5
+  lightning:
+    color: {r: 1, g: 0.16, b: 0.12, a: 1}
+    brightness: 3.5
+    width: 0.08
+    jitter: 0.22
+    boltLife: 0.09
+    branchChance: 0.35
+    chargeRate: 22
+    chargeRadius: 2.4
+    windupMultiplier: 3
+    beamRate: 30
+    beamBoltLength: 4
+    edgeRate: 24
+    impactRate: 26
+  tube:
+    enabled: 1
+    sprite: {fileID: 0}
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    length: 5
+    width: 1.5
+    forwardOffset: 0
+    sideOffset: 0
+    sortingOrder: 140
+    appearSeconds: 0.3
+    fadeOutSeconds: 0.35
+    shakeAmount: 0.04
+    shakeAngle: 1.5
+    shakeFrequency: 100
+    strainAmount: 0.03
+    strainSurgeFrequency: 1.3
+    windupShakeMultiplier: 2.5
+    pulseAmount: 0.061
+    pulseFrequency: 40
+    pinchAmount: 0.55
+    pinchHeight: 0.45
+    pinchWidth: 0.09
+    swellAmount: 0.35
+    deflateAmount: 0.2
+    sideShrinkWhileFiring: 0.4
+    windupGrip: 0.45
+    swellRange: {x: 0.07, y: 0.84}
+    sliceCount: 40
+    recoilDistance: 0.35
+    dripRate: 10
+    dripColor: {r: 1, g: 0.82, b: 0.86, a: 1}
+    lightningRate: 12
+    thunderIntervalMin: 0.35
+    thunderIntervalMax: 0.9
+    thunderLength: 4.5
+    thunderWidthScale: 3
+    auraScale: 1.5
+    auraColor: {r: 1.4, g: 0.12, b: 0.1, a: 1}
+  muzzle:
+    flareColor: {r: 2.2, g: 0.6, b: 0.5, a: 1}
+    flareSize: 3.6
+    flareRays: 12
+    fireBurstSize: 9
+    sparkRate: 120
+    sparkSpeed: 16
+    sparkSpreadAngle: 70
+    shardRate: 70
+    shardReach: 10
+    emberRate: 60
+    speedLineRate: 70
+    speedLineSpeed: 45
+    particleColor: {r: 1, g: 0.48, b: 0.42, a: 1}
+    shardColor: {r: 1, g: 0.14, b: 0.12, a: 1}
+  impact:
+    flareColor: {r: 2.6, g: 0.95, b: 0.8, a: 1}
+    flareScale: 1.3
+    splashScale: 1.7
+    sparkRate: 220
+    sparkSpeed: 18
+    shockwaveInterval: 0.2
+    shockwaveScale: 1.6
+    emberRate: 50
+    sparkColor: {r: 1, g: 0.72, b: 0.66, a: 1}
+  cameraShake:
+    ownerViewOnly: 0
+    fire:
+      amplitude: 0.35
+      rollAmplitude: 0.8
+      frequency: 22
+      duration: 0.5
+    fireStrength: 10
+    impact:
+      amplitude: 0.1
+      rollAmplitude: 0.15
+      frequency: 26
+      duration: 0.18
+    impactStrength: 3
+    whileFiring:
+      amplitude: 0.22
+      rollAmplitude: 0.7
+      frequency: 32
+      duration: 0.16
+    whileFiringStrength: 3
+    whileFiringInterval: 0.1
+    impactInterval: 0.15
+  flash:
+    keepInsideLaser: 1
+    pulseStrength: 0.9
+    pulseSpacing: 5
+    pulseSpeed: 45
+    pulseWidth: 0.25
+    haloEnabled: 1
+    haloOnTop: 1
+    haloWidthScale: 2
+    haloColor: {r: 1, g: 0.22, b: 0.28, a: 1}
+    haloIntensity: 1.5
+    beamRingInterval: 0.16
+    beamRingSpeed: 40
+    beamRingThickness: 0.9
+    beamRingColor: {r: 2.2, g: 0.6, b: 0.7, a: 1}
+    muzzleFlare2Scale: 1.9
+    muzzleFlare2Rays: 6
+  sounds:
+    onReady:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onWindup:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onFire:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    whileFiring:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onImpact:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onEnd:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+  shaders:
+    beam: {fileID: 4800000, guid: 32afbcfe7e994540896ec5ef5f6901d7, type: 3}
+    radial: {fileID: 4800000, guid: 527d8e270d474a6488fcfeac9ed5f61a, type: 3}
+    particle: {fileID: 4800000, guid: b2109d45b11a4d1495705b82af89f548, type: 3}

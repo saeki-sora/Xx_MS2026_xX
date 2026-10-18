@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>赤スキル ガイド</title>
+<meta name="description" content="赤キャラのスキル「極太レーザー」と、キャラごとのスキル欄（スマッシュボールで溜まる・次の攻撃で発動）の使い方">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/guide.css">
+<style>
+:root{--acc:#ff5a4a;--acc-ink:#1d0300;--acc2:#ffb03a;--acc3:#ff8fd0}
+:root[data-theme="light"]{--acc:#b3200f;--acc-ink:#ffffff;--acc2:#9a5a00;--acc3:#a3266e}
+.beamviz{position:relative;height:120px;border-radius:10px;background:#120607;overflow:hidden;margin-top:18px}
+.beamviz .beam{position:absolute;left:8%;top:50%;width:84%;height:70%;transform:translateY(-50%);clip-path:polygon(0 42%,100% 0,100% 100%,0 58%);background:repeating-linear-gradient(115deg,#f21f29 0 16px,#ffd6db 22px 38px,#94050f 44px 60px,#ffe0e3 66px 82px,#f21f29 88px 104px)}
+.beamviz .wall{position:absolute;right:6%;top:6%;width:10px;height:88%;background:#8a8f99;border-radius:2px}
+.beamviz .flash{position:absolute;right:5%;top:50%;width:70px;height:70px;transform:translate(35%,-50%);border-radius:50%;background:radial-gradient(circle,#fff 0,#ffc4bc 25%,rgba(255,60,50,.55) 50%,rgba(255,0,0,0) 70%)}
+.beamviz .lbl{position:absolute;font-size:11px;color:#ffd9d3;font-family:var(--mono)}
+.timeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:22px}
+.timeline .card{padding:14px}
+.timeline .card h4{margin:0 0 6px}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<div class="orbs" aria-hidden="true"><div class="orb a"></div><div class="orb b"></div></div>
+
+<div class="shell">
+<nav class="side" aria-label="目次">
+  <a class="back" href="index.html">← ツール一覧</a>
+  <a class="brand" href="#top"><span class="mark">RS</span><span class="t">赤スキル</span></a>
+  <ol id="toc"></ol>
+  <div class="foot">
+    <button class="themebtn" id="themeBtn" type="button"><span aria-hidden="true">◐</span><span data-label>ライト表示</span></button>
+    <div class="meta mono">Assets/RedSkill<br>2026-10-15 時点</div>
+  </div>
+</nav>
+
+<main id="top">
+<header class="hero">
+  <div class="tags">
+    <span class="pill hot">キャラのスキル</span>
+    <span class="pill">スマッシュボールで溜まる</span>
+    <span class="pill">次の攻撃で発動</span>
+    <span class="pill">値は全部インスペクターで調整</span>
+  </div>
+  <h1 class="mega" aria-label="RED SKILL"><span class="o">RED</span><span class="f">SKILL</span></h1>
+  <p class="subname">赤キャラのスキル — <b>砲台の向きへ、広がっていく極太レーザー</b></p>
+  <div class="hero-row">
+    <div>
+      <p class="oneword">スマッシュボールを割ると <span class="hl">スキルが溜まり</span>、<br>次にレーザーを撃った瞬間が <span class="hl">極太レーザー</span> になる。</p>
+      <p class="analogy">格闘ゲームの「ゲージ技」と同じ考え方です。ボールを割ってゲージが満タンになると、発射口に光が灯り、赤い稲妻がビリビリ走ります。そのまま次に握ると、普段の細いレーザーの代わりに、先へ行くほど広がる太いレーザーが数秒間出ます。壁に当たるとそこで止まり、火花と光が飛び散ります。</p>
+    </div>
+    <div class="facts"><dl>
+      <dt>誰が使う</dt><dd>プランナー（強さ・長さの調整）／デザイナー（色・演出の調整）／プログラマー（キャラとの紐づけ）</dd>
+      <dt>入れ方</dt><dd><span class="mp">Tools<i>›</i>赤スキル<i>›</i>開いているシーンにスキルを入れる</span> → シーンを保存</dd>
+      <dt>調整する場所</dt><dd><span class="mp">Tools<i>›</i>赤スキル<i>›</i>スキルの設定ファイルを開く</span>（<code>Assets/RedSkill/Data/RedLaserSkill.asset</code>）</dd>
+      <dt>今の状況</dt><dd>テスト用シーン <code>redskill_testscene</code> で作成中。キャラ選択とのつなぎこみは準備だけ（対応表は空）</dd>
+    </dl></div>
+  </div>
+  <div class="marquee" aria-hidden="true"><div class="track" id="mq" data-words="スマッシュボール|溜め|極太レーザー|しま模様|広がる|壁で止まる|火花|衝撃の輪|グラデーション|キャラに紐づけ"></div></div>
+</header>
+
+<section id="what" data-nav="何ができる？">
+  <div class="rv">
+    <div class="eyebrow">01 — What it does</div>
+    <h2>溜めて、撃って、<br><em>壁で弾ける</em>。</h2>
+    <p class="lead">スキルは「溜まる → 使える → 撃つ」の順に進みます。どの段階の見た目・長さ・強さも、設定ファイル 1 つで変えられます。</p>
+  </div>
+  <div class="timeline">
+    <div class="card rv"><h4>① 溜まる</h4><p class="small">自分のレーザーでスマッシュボールを割る。</p></div>
+    <div class="card rv"><h4>② 使える</h4><p class="small">砲台の上に強力そうな歯磨き粉が「ポンッ」と出てブルブル震え、口に光が灯り、赤い稲妻がビリビリ走って、光の粒が吸い込まれる。次の攻撃（次に Q を押す）は普段のレーザーではなくスキルになる。</p></div>
+    <div class="card rv"><h4>③ ため</h4><p class="small">次に握った瞬間、歯磨き粉が押しつぶされて震えが強くなり、口に光が一気に集まる（0.3 秒）。</p></div>
+    <div class="card rv"><h4>④ 発射</h4><p class="small">衝撃の輪と画面の揺れ。広がる極太レーザーを 3 秒。</p></div>
+    <div class="card rv"><h4>⑤ 消える</h4><p class="small">細くなって消え、普段のレーザーに戻る。</p></div>
+  </div>
+  <div class="beamviz rv" aria-hidden="true"><div class="beam"></div><div class="wall"></div><div class="flash"></div><span class="lbl" style="left:8%;top:6px">根元 1.2m</span><span class="lbl" style="right:20%;top:6px">先 5.5m</span><span class="lbl" style="right:2%;bottom:6px">壁で止まる</span></div>
+  <div class="cards">
+    <div class="card feat rv"><div class="ic">🔴</div><h3>次の攻撃がスキル</h3><p>使える状態で次にレーザーを撃ち始めた瞬間に発動。</p><p class="ex">例：ボールを割ったときに撃っていたレーザーは、離すまでそのまま出る。次に Q を押した瞬間がスキル（普段のレーザーは出ない）。スキルは溜まるたびに 1 回だけ。</p></div>
+    <div class="card feat rv"><div class="ic">📐</div><h3>広がる極太レーザー</h3><p>根元は細く、先へ行くほど太い。撃ち始めは「ドンッ」と膨らんでから落ち着く。</p><p class="ex">例：根元 1.2m → 14m 先で 5.5m。</p></div>
+    <div class="card feat rv"><div class="ic">🧱</div><h3>壁で止まって弾ける</h3><p>壁・障害物の手前で止まり、当たった場所に光・壁に沿って広がる光・火花・衝撃の輪・小さな揺れ。</p></div>
+    <div class="card feat rv"><div class="ic">💥</div><h3>敵も物も壊せる</h3><p>群衆の敵・破壊できる物（箱・スマッシュボール・Actorの敵）にダメージ。倒した数は撃った人に入る。</p></div>
+    <div class="card feat rv"><div class="ic">🎨</div><h3>しま模様のグラデーション</h3><p>赤・薄いピンク・濃い赤の斜めのしまが、なめらかなグラデーションでつながって先へ流れる。ふちは赤く光ってにじむ。色はグラデーションの欄で自由に変えられる。</p></div>
+    <div class="card feat rv"><div class="ic">🧩</div><h3>どのシーンでも・どのキャラにも</h3><p>プレハブを置くだけで全砲台に配られる。キャラとスキルの対応表を埋めればキャラ選択と連動。</p></div>
+  </div>
+</section>
+
+<section id="start" data-nav="はじめての 5 分">
+  <div class="rv">
+    <div class="eyebrow">02 — First 5 minutes</div>
+    <h2>メニュー 1 回で、<br><em>すぐ試せる</em>。</h2>
+  </div>
+  <div class="steps">
+    <div class="step rv"><div class="n">1</div><div>
+      <h3>シーンに入れる</h3>
+      <p>試したいシーン（例：<code>Assets/Scenes/redskill_testscene.unity</code>）を開き、<span class="mp">Tools<i>›</i>赤スキル<i>›</i>開いているシーンにスキルを入れる</span>。<b>[RedSkill] Skill Installer</b> が置かれるので <kbd>Ctrl</kbd>+<kbd>S</kbd> で保存。</p>
+    </div></div>
+    <div class="step rv"><div class="n">2</div><div>
+      <h3>▶ Play して溜める</h3>
+      <p>本番どおりに溜めるなら、<kbd>Q</kbd>（P1 の握り）でレーザーを撃ってスマッシュボールを割ります。すぐ試したいときは、キーボードの <kbd>1</kbd>〜<kbd>4</kbd> で P1〜P4 を「使える」にできます（エディタだけ）。砲台の上に赤い歯磨き粉が出て、ブルブル震えていれば OK。</p>
+    </div></div>
+    <div class="step rv"><div class="n">3</div><div>
+      <h3>握って撃つ</h3>
+      <p><kbd>Q</kbd> を押すと極太レーザー。撃っている最中に溜まった場合は、一度離してからもう一度押します。</p>
+    </div></div>
+    <div class="step rv"><div class="n">4</div><div>
+      <h3>値を変える</h3>
+      <p><span class="mp">Tools<i>›</i>赤スキル<i>›</i>スキルの設定ファイルを開く</span>。Play 中に変えてもすぐ反映され、Play を止めても残ります。Inspector の下の <b>今すぐ撃つ</b> ボタンで、握らずに何度でも試せます。</p>
+      <p class="done">P2〜P4 は <kbd>W</kbd> <kbd>O</kbd> <kbd>P</kbd> で握れます。</p>
+    </div></div>
+  </div>
+</section>
+
+<section id="recipes" data-nav="やりたいこと逆引き">
+  <div class="rv"><div class="eyebrow">03 — Recipes</div><h2>「〜したい」から<br><em>探す</em>。</h2></div>
+  <label class="search rv"><span aria-hidden="true">🔍</span><span class="sr">やりたいことを検索</span><input id="recipeSearch" type="search" placeholder="例：長く、太く、色、壁、キャラ"></label>
+  <div class="chips rv" id="recipeChips" role="group" aria-label="カテゴリ">
+    <button class="chip" aria-pressed="true" data-f="all">すべて</button>
+    <button class="chip" aria-pressed="false" data-f="tune">強さ・形</button>
+    <button class="chip" aria-pressed="false" data-f="look">見た目・音</button>
+    <button class="chip" aria-pressed="false" data-f="setup">入れる・つなぐ</button>
+  </div>
+  <div class="recipes">
+    <details class="recipe" id="rc-longer" data-tags="tune"><summary><span class="q">もっと長く撃ちたい／短くしたい</span><span class="who">タイミング</span></summary><div class="a"><p><b>タイミング</b> › <b>撃ち続ける時間（秒）</b>（初期値 3）。撃つ前の <b>撃つ前のため（秒）</b>（0.3）を 0 にすると握った瞬間に出ます。</p></div></details>
+    <details class="recipe" id="rc-wider" data-tags="tune"><summary><span class="q">もっと太く・もっと広がるようにしたい</span><span class="who">形・大きさ</span></summary><div class="a"><p><b>形・大きさ</b> › <b>根元の太さ（m）</b>（1.2）と <b>先の太さ（m）</b>（5.5）。<b>広がりきる距離（m）</b>（14）を小さくすると、すぐ横に広がります。当たり判定も見た目と一緒に変わります。</p></div></details>
+    <details class="recipe" data-tags="tune"><summary><span class="q">敵が倒れにくい／倒れすぎる</span><span class="who">ダメージ・当たり判定</span></summary><div class="a"><p><b>群衆の敵へのダメージ（毎秒）</b>（100。普段のレーザーは最大 20、敵の体力は 10、ボスは 150）と <b>破壊できる物へのダメージ（毎秒）</b>（60）。</p></div></details>
+    <details class="recipe" data-tags="tune"><summary><span class="q">スキル中は砲台を止めたい／普段どおり回したい</span><span class="who">タイミング</span></summary><div class="a"><p><b>スキル中の回転速度の倍率</b>（0.3）。0 で止まり、1 で普段どおり。</p></div></details>
+    <details class="recipe" id="rc-partial-wall" data-tags="tune"><summary><span class="q">レーザーの一部だけが壁に当たったときの止まり方</span><span class="who">ダメージ・当たり判定</span></summary><div class="a"><p>極太レーザーは横に何本かの「筋」に分かれていて、<b>壁や障害物に当たった部分だけがそこで止まり</b>、当たっていない部分はそのまま先へ伸びます（障害物のかどの位置は細かく探して、きれいに切れるようにしています）。止まった部分の壁ぎわは明るく光り、火花・稲妻・衝撃の輪はその部分から出ます。</p><ul><li>筋の数は <b>横に分ける筋の数（止まる判定）</b>（20）。増やすと細い障害物でも止まりやすくなります（判定は少し重くなる）。</li><li>壁ぎわの光は <b>レーザーの色・模様</b> › <b>壁ぎわの光</b>（1.2、0 でなし）。</li><li><b>破壊できる物でも止まる</b> を OFF にすると、箱などは止まらずに壊しながら貫通します。Actor の敵（1体ずつの敵）ではいつも止まりません。</li></ul></div></details>
+    <details class="recipe" data-tags="tune"><summary><span class="q">握るのをやめたらすぐ終わるようにしたい</span><span class="who">タイミング</span></summary><div class="a"><p><b>離したらすぐ終わる</b> を ON。初期値は OFF（最後まで撃つ）。</p></div></details>
+    <details class="recipe" id="rc-color" data-tags="look"><summary><span class="q">レーザーの色・しま模様を変えたい</span><span class="who">レーザーの色・模様</span></summary><div class="a"><ol><li><b>しま模様の色（1周ぶん）</b>：左から右へが、しま 1 周ぶんの色です（右端の次は左端につながる）。初期値は赤 → 薄いピンク → 濃い赤 → 薄いピンク。色のキーを 2 つずつ近くに置くと「色の帯」になり、帯と帯の間がなめらかなグラデーションになります。キーの間を広げるほど、ぼんやりしたグラデーションになります。</li><li><b>しまのグラデーションの広さ</b>（0.65）：大きいほど色と色の間が広いグラデーションになります（0 でくっきりした帯、1 でほぼ全部グラデーション）。</li>
+               <li>しまの形は <b>しま1周の長さ（m）</b>（3.2）・<b>しまの傾き（度）</b>（40。0 で輪切り）・<b>しまが流れる速さ（m/秒）</b>（7。0 で止まる）。<b>しま模様の濃さ</b> を 0 にするとしまが消えます。</li><li><b>断面の色（中心→ふち）</b>：しまの色に掛け合わされます。初期値は中心が白く、外へ行くほど少しずつ赤くなり、ふちは濃い赤く光ってにじみます。<b>長さ方向の色（根元→先端）</b> も初期値は根元が白っぽく、先へ行くほど赤くなります。</li><li>全体の明るさは <b>明るさ</b>（1.15）。<b>塗りの強さ（明るい背景用）</b>（0.85）を下げると、しまが薄くなって光っぽくなります。真ん中の白い筋は <b>真ん中のツヤ</b>。</li></ol></div></details>
+    <details class="recipe" data-tags="look"><summary><span class="q">スジ模様・ふちのギザギザを減らしたい</span><span class="who">レーザーの色・模様</span></summary><div class="a"><p><b>スジの濃さ</b> と <b>ふちのギザギザ</b> を 0 に近づけます。<b>ちらつき</b> も 0 にするとおとなしい光になります。</p></div></details>
+    <details class="recipe" id="rc-tube" data-tags="look"><summary><span class="q">溜めの歯磨き粉の絵を差し替えたい・動きを変えたい</span><span class="who">溜めの歯磨き粉</span></summary><div class="a"><p>設定ファイルの <b>溜めの歯磨き粉</b> にまとまっています。スキルを使える間、砲台の上に乗り、<b>スキルのレーザーはこの歯磨き粉の口から出ます</b>。</p><ul><li>絵：<b>歯磨き粉の絵（口が上向き）</b> に、口が上を向いた絵（スプライト）を入れるだけで差し替わります。空なら仮の絵（タイトル画面の冒頭の歯磨き粉をお手本にした、縦長で赤いトゥーン調のチューブ。稲妻マーク付き）を使います。大きさは <b>長さ（m）</b>（3.4）・<b>横幅（m）</b>（1）で合わせます。</li><li>置く場所：<b>前へのずらし（m）</b>・<b>横へのずらし（m）</b>。砲台の絵より上に描くには <b>描く順番</b>（140）を砲台の絵（2）より大きく、レーザー（150）より小さく。</li><li>雷：<b>雷の間隔（最短・秒）</b>（0.35）〜<b>雷の間隔（最長・秒）</b>（0.9）ごとに、まわりから太い雷が歯磨き粉に落ちます（ため中は3倍の速さ）。<b>雷の長さ（m）</b>・<b>雷の太さ（倍）</b>。</li><li>今にも出そうな動き：<b>震えの大きさ（m）</b>（0.04）・<b>震えの速さ（回/秒）</b>（40。画面の更新より速いと毎フレーム左右に震える）・<b>踏ん張りの強さ</b>（0.06。押しつぶされて力んでいる感じ）・<b>力みの波（回/秒）</b>（1.3。「ぐっ」と強く力む）・<b>震えの角度（度）</b>・<b>ふくらみの大きさ</b>・<b>口からにじむ粒（毎秒）</b>・<b>チューブを走る稲妻（毎秒）</b>・<b>後ろの光の大きさ（倍）</b>。</li><li>しぼり方（タイトル画面の冒頭の歯磨き粉と同じ）：ため（撃つ前）で真ん中を握り始めてくびれ、ほかがふくらみます。撃っている間はくびれが徐々に徐々に深くなり（撃ち終わりで一番深い）、中身が出てだんだんやせていき、チューブ全体も左右から細くなっていきます（長さは変わりません）。<b>撃つ間に横から縮む割合</b>（0.4。撃ち終わりで4割細くなる。おしりの帯とキャップは少しだけ）。<b>くびれの深さ</b>（0.55）・<b>くびれる高さ</b>（0.45）・<b>くびれの幅</b>（0.09）・<b>ふくらむ大きさ</b>（0.35）・<b>やせる大きさ</b>（0.2）・<b>ためで握る強さ</b>（0.15）。絵を差し替えたら、おしりの帯とキャップがふくらまないよう <b>ふくらむ範囲（下〜上）</b> を合わせます。</li><li>撃つとき：<b>撃った反動（m）</b>（後ろへ下がる）。</li><li><b>歯磨き粉を出す</b> を OFF にすると、前と同じく砲台の発射口から撃ちます。</li></ul></div></details>
+    <details class="recipe" data-tags="look"><summary><span class="q">溜めの光を変えたい</span><span class="who">溜め（使える状態）の演出</span></summary><div class="a"><p><b>溜めの光の色</b>・<b>発射口の光の大きさ（m）</b>・<b>吸い込まれる粒の数（毎秒）</b>・<b>吸い込まれる粒の色</b>。使えるようになった瞬間の輪は <b>使えるようになった瞬間の輪（m）</b>（0 で出さない）。</p></div></details>
+    <details class="recipe" id="rc-lightning" data-tags="look"><summary><span class="q">ビリビリ（稲妻）を増やしたい・減らしたい</span><span class="who">ビリビリ（稲妻）</span></summary><div class="a"><p>設定ファイルの <b>ビリビリ（稲妻）</b> にまとまっています。溜め中は <b>溜め中の稲妻の数（毎秒）</b>（22）と <b>溜め中の稲妻の範囲（m）</b>（2.4）、撃っている間は <b>レーザーにまとわりつく稲妻（毎秒）</b>（30）・<b>ふちから飛び出す稲妻（毎秒）</b>（24）、壁は <b>当たった場所の稲妻（毎秒）</b>（26）。どれも 0 で出なくなります。色・明るさ・太さ・ギザギザは上の <b>稲妻の色</b>・<b>稲妻の明るさ</b>・<b>稲妻の太さ（m）</b>・<b>ギザギザの大きさ</b>。</p></div></details>
+    <details class="recipe" id="rc-flash" data-tags="look"><summary><span class="q">レーザーをもっと派手に／控えめにしたい</span><span class="who">派手さ（追加の演出）</span></summary><div class="a"><p>設定ファイルの <b>派手さ（追加の演出）</b> にまとまっています。どれも 0（または OFF）で出なくなります。</p><p>いちばん上の <b>演出をレーザーと同じ太さに収める</b>（初期値 ON）で、外側の光・進む輪・壁に沿って広がる光・トゲ状の光・光の粒・ふちの稲妻・走る光の線が、レーザーと同じ太さの中に収まります（横にはみ出さない）。OFF にすると、それぞれの「太さ（倍）」の設定どおり外へ広がります。</p><ul><li><b>光の波</b>：レーザーの中を根元から先へ走る明るい帯。<b>光の波の明るさ</b>（0.9）・<b>光の波の間隔（m）</b>（5）・<b>光の波の速さ（m/秒）</b>（45）・<b>光の波の太さ</b>。</li><li><b>外側の光</b>：レーザーのまわりの大きなにじみ（壁で止まった所では一緒に止まる）。<b>外側の光を出す</b>・<b>外側の光をレーザーの上に重ねる</b>（ON: レーザー全体が光に包まれる／OFF: 後ろに描いて横にはみ出した所だけ見える）・<b>外側の光の太さ（倍）</b>（2）・<b>外側の光の色</b>・<b>外側の光の明るさ</b>（1.5）。</li><li><b>レーザーを進む輪</b>：発射口から先へ飛んでいく光の輪。<b>輪を出す間隔（秒）</b>（0.16）・<b>輪の速さ（m/秒）</b>（40）・<b>輪の厚み（m）</b>・<b>輪の色</b>。</li><li><b>発射口の二重の光</b>：後ろで逆向きに回る大きな光。<b>二重の光の大きさ（倍）</b>（1.9）・<b>二重の光のトゲの本数</b>。</li><li>撃っている間の画面の揺れ（ゴゴゴ…）は <b>カメラの揺れ</b> › <b>撃っている間の揺れ</b>（揺れ幅 0.22・回転の揺れ幅 0.7 度）と <b>撃っている間の揺れの強さ</b>（1、0 で揺れない）。撃った本人の画面だけ揺らしたいときは <b>撃った本人の画面だけ揺らす</b> を ON。</li></ul></div></details>
+    <span class="who">発射口の演出</span></summary><div class="a"><p><b>レーザーに沿って走る光の線（毎秒）</b>（70）と <b>走る光の線の速さ（m/秒）</b>（45。速いほど長い線）。0 で出なくなります。</p></div></details>
+    <details class="recipe" data-tags="look"><summary><span class="q">壁に当たったときの演出を派手に／控えめにしたい</span><span class="who">壁に当たった場所の演出</span></summary><div class="a"><p><b>火花の数（毎秒）</b>・<b>壁に沿って広がる光の長さ（倍）</b>・<b>衝撃の輪の間隔（秒）</b>（0 で輪なし）。揺れは <b>カメラの揺れ</b> › <b>当たっている間の揺れの強さ</b>（0 で揺れない）。</p></div></details>
+    <details class="recipe" data-tags="look"><summary><span class="q">効果音を付けたい</span><span class="who">効果音・追加エフェクト</span></summary><div class="a"><p><b>効果音・追加エフェクト（D-Drive）</b> の各欄（<b>使えるようになった瞬間</b>・<b>ため開始</b>・<b>撃ち始め</b>・<b>撃っている間（ループ）</b>・<b>壁に当たり始め</b>・<b>撃ち終わり</b>）に D-Drive の SE / VFX を選びます。ゲームの他の演出欄と同じ使い方です（要塞デザイナーのガイドの「演出」）。</p></div></details>
+    <details class="recipe" id="rc-scene" data-tags="setup"><summary><span class="q">別のシーンでも使いたい</span><span class="who">メニュー</span></summary><div class="a"><p>そのシーンを開いて <span class="mp">Tools<i>›</i>赤スキル<i>›</i>開いているシーンにスキルを入れる</span> → 保存。または <code>Assets/RedSkill/Prefabs/RedSkill_Installer.prefab</code> をシーンにドラッグ。シーンの全ての砲台に自動で配られます。</p></div></details>
+    <details class="recipe" id="rc-character" data-tags="setup"><summary><span class="q">キャラに紐づけたい（赤キャラだけがこのスキル）</span><span class="who">対応表</span></summary><div class="a"><ol><li><code>Assets/RedSkill/Data/CharacterSkillTable.asset</code> を開き、<b>対応表</b> に行を足す。</li><li><b>キャラ</b> に赤キャラのファイル（キャラ選択の CharacterDefinition）、<b>スキル</b> に <code>RedLaserSkill</code>。</li><li>スキルを配る係の <b>全員に配るスキル</b> を空にすれば、表にないキャラはスキルなしになります。</li></ol><p>キャラ選択を通らずにシーンを直接 Play したときは表は使われず、<b>プレイヤーごとのスキル</b> → <b>全員に配るスキル</b> の順で決まります。</p></div></details>
+    <details class="recipe" data-tags="setup"><summary><span class="q">P2 だけ別のスキル（または別の調整）にしたい</span><span class="who">スキルを配る係</span></summary><div class="a"><p>設定ファイルを複製（<kbd>Ctrl</kbd>+<kbd>D</kbd>）して値を変え、スキルを配る係の <b>プレイヤーごとのスキル（P1〜P4）</b> の 2 番目に入れます。</p></div></details>
+    <p class="noresult">見つかりませんでした。別の言葉で探してください。</p>
+  </div>
+  <div class="callout warn rv"><span class="ci">!</span><div><b>今の仕様の注意。</b>スキル中と、使える状態で握っている間（レーザーは出ません）も、握っている間は砲台の熱が溜まります（オーバーヒートすることがあります）。普段のレーザーの発射口のエフェクトもその間は出たままです。どちらも変えたい場合はプログラマーに相談してください。</div></div>
+</section>
+
+<section id="screen" data-nav="画面の見かた">
+  <div class="rv"><div class="eyebrow">04 — Inspector</div><h2>見る場所は<br><em>3 つ</em>。</h2></div>
+  <div class="tabguide">
+    <div class="tg-panel rv"><h3>スキルの設定ファイル（RedLaserSkill）</h3><p class="when">強さ・形・色・演出を変えるとき</p><ul class="points"><li>上から <b>スキルの情報</b>・<b>使えるようになる条件</b>・<b>通常のレーザーとの関係</b>、その下に ▶ で開くまとまり（<b>タイミング</b>／<b>形・大きさ</b>／<b>ダメージ・当たり判定</b>／<b>レーザーの色・模様</b>／<b>溜め（使える状態）の演出</b>／<b>発射口の演出</b>／<b>壁に当たった場所の演出</b>／<b>カメラの揺れ</b>／<b>効果音・追加エフェクト（D-Drive）</b>）。</li><li>項目にマウスを乗せると説明が出ます。</li><li>Play 中は一番下に、このスキルを持つ砲台ごとの状態と <b>使えるようにする</b>／<b>今すぐ撃つ</b>／<b>止める</b>。</li></ul></div>
+    <div class="tg-panel rv"><h3>スキルを配る係（[RedSkill] Skill Installer）</h3><p class="when">どの席にどのスキルを配るか決めるとき</p><ul class="points"><li><b>全員に配るスキル</b>・<b>プレイヤーごとのスキル（P1〜P4）</b>・<b>キャラ選択の結果を使う</b>・<b>キャラとスキルの対応表</b>。</li><li>テスト用：<b>最初から全員使える（テスト）</b>、<b>数字キー1〜4で溜める（テスト）</b>（エディタだけ）。</li><li>Play 中は全砲台の状態とテストボタンが並びます。</li></ul></div>
+    <div class="tg-panel rv"><h3>砲台のスキル欄（Player Skill Slot）</h3><p class="when">Play 中に 1 台だけ確かめるとき</p><ul class="points"><li>Play すると各砲台（Turret_P0 など）に自動で付きます。</li><li>状態：<b>スキルなし</b>／<b>まだ使えない</b>／<b>使える（次に撃つとスキル）</b>／<b>使える（今のレーザーを離したら次で発動）</b>／<b>スキルを撃っている</b>。</li></ul></div>
+  </div>
+</section>
+
+<section id="params" data-nav="数値の意味">
+  <div class="rv"><div class="eyebrow">05 — Numbers</div><h2>よく触る<br><em>数値</em>。</h2></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">タイミング・形・ダメージ</div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>撃つ前のため（秒）</td><td>握ってから出るまで</td><td>溜めが長い</td><td>すぐ出る（0 で即）</td><td class="def">0.3</td></tr>
+    <tr><td>撃ち続ける時間（秒）</td><td>レーザーの長さ（時間）</td><td>長く撃つ</td><td>短い</td><td class="def">3</td></tr>
+    <tr><td>太くなるまで／消えるまで（秒）</td><td>出始め・終わりの速さ</td><td>ゆっくり</td><td>パッと</td><td class="def">0.35 / 0.45</td></tr>
+    <tr><td>スキル中の回転速度の倍率</td><td>撃っている間の砲台の回転</td><td>よく回る（なぎ払う）</td><td>止まる（0）</td><td class="def">0.3</td></tr>
+    <tr><td>届く距離（m）</td><td>最大の長さ</td><td>遠くまで</td><td>近くだけ</td><td class="def">28（普段 20）</td></tr>
+    <tr><td>根元の太さ／先の太さ（m）</td><td>太さと広がり</td><td>太い</td><td>細い</td><td class="def">1.2 / 5.5</td></tr>
+    <tr><td>広がりきる距離（m）</td><td>どこで先の太さになるか</td><td>ゆっくり広がる</td><td>すぐ広がる</td><td class="def">14</td></tr>
+    <tr><td>先端が伸びる速さ（m/秒）</td><td>先が届くまでの速さ</td><td>一瞬で届く</td><td>伸びていくのが見える</td><td class="def">90</td></tr>
+    <tr><td>群衆の敵へのダメージ（毎秒）</td><td>敵の倒れやすさ</td><td>すぐ倒れる</td><td>倒れにくい</td><td class="def">100</td></tr>
+    <tr><td>破壊できる物へのダメージ（毎秒）</td><td>箱・ボールの壊れやすさ</td><td>すぐ壊れる</td><td>壊れにくい</td><td class="def">60</td></tr>
+    <tr><td>横に分ける筋の数（止まる判定）</td><td>壁で止まる部分の細かさ</td><td>細い障害物でも止まる・かどがきれい</td><td>判定が軽い</td><td class="def">20</td></tr>
+  </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">見た目</div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>溜め中の稲妻の数（毎秒）</td><td>溜め中のビリビリの激しさ</td><td>バチバチ激しい</td><td>静か（0 でなし）</td><td class="def">22</td></tr>
+    <tr><td>レーザーにまとわりつく稲妻（毎秒）</td><td>撃っている間のビリビリ</td><td>荒れ狂う</td><td>おとなしい（0 でなし）</td><td class="def">30</td></tr>
+    <tr><td>レーザーに沿って走る光の線（毎秒）</td><td>スピード感</td><td>速そう</td><td>なし（0）</td><td class="def">70</td></tr>
+    <tr><td>しまのグラデーションの広さ</td><td>しまの色の混ざり具合</td><td>なめらかに混ざる</td><td>くっきりした帯</td><td class="def">0.65</td></tr>
+    <tr><td>しま1周の長さ（m）</td><td>しまの太さ</td><td>太いしま</td><td>細かいしま</td><td class="def">3.2</td></tr>
+    <tr><td>しまの傾き（度）</td><td>しまの斜め具合</td><td>寝た斜め</td><td>輪切り（0）</td><td class="def">40</td></tr>
+    <tr><td>しまが流れる速さ（m/秒）</td><td>しまが先へ流れる速さ</td><td>速く流れる</td><td>止まる（0）</td><td class="def">7</td></tr>
+    <tr><td>明るさ</td><td>レーザー全体の光り方</td><td>白っぽく強く光る</td><td>暗く沈む</td><td class="def">1.15</td></tr>
+    <tr><td>塗りの強さ（明るい背景用）</td><td>後ろを隠す強さ</td><td>しまがはっきり見える</td><td>光を足すだけ（しまが薄い）</td><td class="def">0.85</td></tr>
+    <tr><td>スジの濃さ／ふちのギザギザ</td><td>模様の荒々しさ</td><td>荒れ狂う</td><td>なめらか</td><td class="def">0.2 / 0.2</td></tr>
+    <tr><td>見た目の太さの倍率</td><td>にじむ光の分の太さ</td><td>光が大きく見える</td><td>当たり判定どおり</td><td class="def">1.35</td></tr>
+    <tr><td>描く順番</td><td>何より手前に描くか</td><td>手前</td><td>奥</td><td class="def">150</td></tr>
+  </table></div></div>
+</section>
+
+<section id="faq" data-nav="困ったとき">
+  <div class="rv"><div class="eyebrow">06 — Troubleshooting</div><h2>困ったときは<br><em>ここ</em>。</h2></div>
+  <div class="faq rv">
+    <details><summary>ボールを割ったのにスキルが出ない</summary><div class="a"><ol><li>発射口に光が灯って粒が吸い込まれているか（出ていなければ溜まっていない）。シーンに <b>[RedSkill] Skill Installer</b> があるか確認。</li><li>ボールを割ったときに握っていたままではありませんか？ そのレーザーは離すまで出続けます。次に握った（Q を押した）瞬間がスキルです。</li><li>オーバーヒート中は撃てないので、冷めるまで待つ。</li></ol></div></details>
+    <details><summary>レーザーがどぎついピンク一色（マゼンタ）・しまが出ない</summary><div class="a">シェーダーが読み込めていません。Console に <code>[RedSkill] シェーダー … が見つかりません</code> が出ていないか確認し、設定ファイルの <b>シェーダー（通常は触らない）</b> の 3 つが入っているか見てください。</div></details>
+    <details><summary>数字キーで溜まらない</summary><div class="a">エディタで Play 中だけ有効です。スキルを配る係の <b>数字キー1〜4で溜める（テスト）</b> が ON か、Game ビューをクリックしてキー入力がゲームに届いているか確認してください。</div></details>
+    <details><summary>ネット対戦でも動く？</summary><div class="a">はい。スマッシュボールが割れたことと砲台の状態は全員の PC に届くので、各 PC が自分でスキルを出します（通信は増えません）。ダメージを決めるのはホストだけです。PC ごとに出るタイミングがほんの少しずれることがあります。</div></details>
+  </div>
+</section>
+
+<section id="glossary" data-nav="用語集">
+  <div class="rv"><div class="eyebrow">07 — Words</div><h2>分からない言葉は<br><em>ここで引く</em>。</h2></div>
+  <dl class="gloss">
+    <div class="rv"><dt>スキル欄</dt><dd>砲台ごとに 1 つある「スキルを持つ場所」。溜まっているか・撃っているかを覚えている（Player Skill Slot）。</dd></div>
+    <div class="rv"><dt>スキルを配る係</dt><dd>シーンに 1 つ置く部品。全ての砲台にスキル欄を付けて、スキルを配る（Player Skill Installer）。</dd></div>
+    <div class="rv"><dt>設定ファイル</dt><dd>スキルの値をまとめたファイル（ScriptableObject）。Play 中に変えても残る。</dd></div>
+    <div class="rv"><dt>対応表</dt><dd>「どのキャラがどのスキルを持つか」の表（Character Skill Table）。</dd></div>
+    <div class="rv"><dt>ため</dt><dd>握ってからレーザーが出るまでの短い時間。発射口に光が集まる。</dd></div>
+    <div class="rv"><dt>D-Drive</dt><dd>このゲームの効果音・エフェクトをまとめて管理する仕組み。演出欄はすべてこれで選ぶ。</dd></div>
+  </dl>
+</section>
+
+<div class="devzone"></div>
+<section id="dev" data-nav="コードから使う" data-dev>
+  <div class="rv">
+    <div class="eyebrow">08 — For programmers</div>
+    <h2>スキルは<br><em>差し替えるだけ</em>。</h2>
+    <p class="lead">名前空間 <code>MS2026.Skills</code>（赤スキルは <code>MS2026.Skills.Red</code>）。asmdef <code>MS2026.RedSkill.Runtime</code>。既存のコードは変更していません（公開 API だけ使用）。</p>
+  </div>
+  <div class="tabs rv" role="tablist" aria-label="コード例">
+    <button class="tab" role="tab" aria-selected="true" aria-controls="cp-bind">キャラに紐づけ</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="cp-new">新しいスキル</button>
+  </div>
+  <div class="panel" id="cp-bind" role="tabpanel">
+    <div class="codebox"><div class="cap"><span>PlayerSkillSlot</span><button class="copy" type="button">copy</button></div><pre>
+using MS2026.Skills;
+
+var slot = PlayerSkillSlot.Find(playerIndex);   // 砲台のスキル欄（配る係が付ける）
+slot.SetSkill(skillAsset);                      // スキルの差し替え（使える状態は引き継ぐ）
+slot.GrantCharge();                             // 溜める（スマッシュボール以外の条件で溜めたいとき）
+PlayerSkillSlot.AnyStateChanged += s =&gt; { /* UI: s.State, s.IsReady ... */ };</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">配る順番</span>キャラ選択の結果＋対応表 → プレイヤーごと → 全員共通（<code>PlayerSkillInstaller.ResolveSkill</code>）。</div><div class="note"><span class="lbl">発動</span>Ready の状態で <code>LaserTurret.OnStateChanged(Firing)</code> が来た瞬間。</div></div>
+  </div>
+  <div class="panel" id="cp-new" role="tabpanel">
+    <div class="codebox"><div class="cap"><span>新しいスキル（例：黄色）</span><button class="copy" type="button">copy</button></div><pre>
+[CreateAssetMenu(menuName = "MS2026/スキル/イエロー：…")]
+public sealed class YellowSkill : CharacterSkill {
+    [SkillLabel("跳ねる回数")] public int bounces = 3;
+    public override CharacterSkillRunner CreateRunner(PlayerSkillSlot slot)
+        =&gt; slot.gameObject.AddComponent&lt;YellowSkillRunner&gt;();
+}
+public sealed class YellowSkillRunner : CharacterSkillRunner {
+    public override bool IsActive =&gt; _active;
+    public override void Activate() { /* 撃ち始め */ }
+    public override void Cancel()   { /* すぐ止める（NotifyFinished は呼ばない） */ }
+    // 終わったら NotifyFinished();  ダメージは FortressNet.HasSimulationAuthority のときだけ
+}</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">詳細</span><code>Docs/Tools/RedSkill_AI_Reference.md</code></div></div>
+  </div>
+</section>
+
+<section id="more" data-nav="関連ツール">
+  <div class="rv"><div class="eyebrow">09 — Related</div><h2>一緒に使う<br><em>ツール</em>。</h2></div>
+  <div class="links">
+    <a class="lk rv" href="FortressDesigner_ガイド.html"><span class="ti">要塞デザイナー</span><span class="ds">砲台・スマッシュボール・演出欄（効果音）の設定。</span></a>
+    <a class="lk rv" href="CharacterSelect_ガイド.html"><span class="ti">キャラクター選択</span><span class="ds">選ばれたキャラ → 対応表でスキルを決める。</span></a>
+    <a class="lk rv" href="D-Drive_ガイド.html"><span class="ti">D-Drive</span><span class="ds">効果音・エフェクトの素材の登録。</span></a>
+    <a class="lk rv" href="index.html"><span class="ti">ツール一覧</span><span class="ds">このプロジェクトの全ツール。</span></a>
+  </div>
+  <footer><span>Red Skill Guide · Xx_MS2026_xX</span><span>2026-10-15 時点のコードに基づく</span></footer>
+</section>
+</main>
+</div>
+<script src="assets/guide.js"></script>
+</body>
+</html>

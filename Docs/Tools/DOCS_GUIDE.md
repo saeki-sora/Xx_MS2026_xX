@@ -16,6 +16,7 @@ Each tool has **two docs**, both kept in sync with the code:
 | タイトル画面 / Title Screen | `TitleScreen_ガイド.html` | `TitleScreen_AI_Reference.md` | `Assets/Title/` |
 | キャラクター選択 / Character Select | `CharacterSelect_ガイド.html` | `CharacterSelect_AI_Reference.md` | `Assets/CharacterSelect/`, `Assets/Scenes/Character_Select.unity`, `Assets/_Game/UI/Game/Session/GameSession.CharacterSelect.cs` |
 | 録画しながらプレイ / Play Recorder | `PlayRecorder_ガイド.html` | `PlayRecorder_AI_Reference.md` | `Packages/com.ms2026.playrecorder/` (also keep its `README.md` in sync — it travels to other projects) |
+| 赤スキル / Red Skill (character skill slots) | `RedSkill_ガイド.html` | `RedSkill_AI_Reference.md` | `Assets/RedSkill/`, `Assets/Scenes/redskill_testscene.unity` |
 Hub: `index.html` (tool cards + 「どれを使う？」 list). Shared assets: `assets/guide.css`, `assets/guide.js`. Older design specs (`GripInputBridge_設計仕様書*.md`) are intent documents, not maintained references.
 
 ## 2. When to update (same task as the code change — not later)

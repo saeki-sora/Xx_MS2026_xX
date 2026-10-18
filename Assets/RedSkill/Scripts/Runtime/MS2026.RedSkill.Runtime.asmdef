@@ -1,0 +1,20 @@
+{
+    "name": "MS2026.RedSkill.Runtime",
+    "rootNamespace": "MS2026.Skills",
+    "references": [
+        "MS2026.Fortress.Runtime",
+        "MS2026.CharacterSelect.Data",
+        "DDrive.Runtime",
+        "DDrive.Foundation",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
