@@ -34,6 +34,16 @@ namespace MS2026.Fortress
         [ReadOnly] public NativeArray<float2> renderOffset;
         public int applyRenderOffset;
 
+        // 群れのうねり（つやの波）用の「混み具合」。詰め直し前の空間ハッシュ（keepList で詰め直し前の番号に戻す）の、まわり3×3マスの敵の数から求める。
+        // Host でも Client でも詰め直しのために空間ハッシュを作っているので、全PCで同じように求まる（見た目だけ）。
+        [ReadOnly] public NativeArray<int> keepList;
+        [ReadOnly] public NativeArray<int> cellOf;
+        [ReadOnly] public NativeArray<int> cellStart;
+        public int gridWidth;
+        public int gridHeight;
+        /// <summary>まわり3×3マスにこの数の敵がいると「混み具合1」。0以下なら求めない（常に0）。</summary>
+        public float crowdFullCount;
+
         [WriteOnly] public NativeArray<SwarmInstance> tmpInstances;
         [WriteOnly] public NativeArray<int> keyOf;
 
@@ -68,8 +78,44 @@ namespace MS2026.Fortress
             tmpInstances[i] = new SwarmInstance
             {
                 a = new float4(draw.x, draw.y, tp.spriteSize * (1f + tp.blinkSwell * blink), math.saturate(flash[i])),
-                b = new float4(frame, angle, 1f, blink * tp.blinkStrength)
+                b = new float4(frame, angle, Crowd(i), blink * tp.blinkStrength)
             };
+        }
+
+        private float Crowd(int i)
+        {
+            if (crowdFullCount <= 0f)
+            {
+                return 0f;
+            }
+
+            var cell = cellOf[keepList[i]];
+            var cx = cell % gridWidth;
+            var cy = cell / gridWidth;
+            var n = 0;
+            for (var dy = -1; dy <= 1; dy++)
+            {
+                var y = cy + dy;
+                if (y < 0 || y >= gridHeight)
+                {
+                    continue;
+                }
+
+                for (var dx = -1; dx <= 1; dx++)
+                {
+                    var x = cx + dx;
+                    if (x < 0 || x >= gridWidth)
+                    {
+                        continue;
+                    }
+
+                    var c = y * gridWidth + x;
+                    n += cellStart[c + 1] - cellStart[c];
+                }
+            }
+
+            // 自分自身は数えない。
+            return math.saturate((n - 1) / crowdFullCount);
         }
 
         private float Blink(float2 p, SwarmTypeParams tp, int id)

@@ -49,6 +49,32 @@ namespace MS2026.Fortress
         [Tooltip("広がる輪の色。")]
         public Color blastRingColor = new Color(1f, 0.55f, 0.15f, 0.9f);
 
+        [Tooltip("爆発のまわりの床・背景の物が、輪の形に波打って広がる（衝撃波）。敵・砲台・コアの絵は歪まない。各PCが自分で描く（通信しない）。")]
+        public bool shockwave = true;
+
+        [Tooltip("衝撃波で床・背景をずらす量（メートル）。")]
+        [Range(0f, 1f)]
+        public float shockwaveStrength = 0.25f;
+
+        [Tooltip("衝撃波が広がりきるまでの秒数。")]
+        [Range(0.1f, 2f)]
+        public float shockwaveSeconds = 0.45f;
+
+        [Tooltip("爆発の瞬間に、丸い閃光をパッと光らせる。")]
+        public bool flash = true;
+
+        [Tooltip("閃光の色。")]
+        [ColorUsage(false)]
+        public Color flashColor = new Color(1f, 0.85f, 0.55f, 1f);
+
+        [Tooltip("閃光の大きさ（爆発の半径に対する倍率）。")]
+        [Range(0.1f, 3f)]
+        public float flashSize = 1f;
+
+        [Tooltip("閃光が消えるまでの秒数。")]
+        [Range(0.05f, 1f)]
+        public float flashSeconds = 0.22f;
+
         [Header("点滅（爆発しそうな見た目）")]
         [Tooltip("点滅するときの色。")]
         public Color blinkColor = new Color(1f, 0.15f, 0.1f, 1f);

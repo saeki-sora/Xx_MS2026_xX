@@ -24,6 +24,9 @@ namespace MS2026.Fortress
         [ReadOnly] public NativeArray<SwarmBeam> beams;
         public int beamCount;
 
+        /// <summary>1ならダメージ0のビームでも「最後に当てた人」を記録する（Client。倒されたときの演出用）。</summary>
+        public int recordOwnerWithoutDamage;
+
         [ReadOnly] public NativeArray<SwarmBlast> blasts;
         public int blastCount;
 
@@ -181,8 +184,9 @@ namespace MS2026.Fortress
             hp[j] = hp[j] - damage;
             flash[j] = 1f;
 
-            // 最後にダメージを与えたプレイヤー（倒したときに、だれの撃破として数えるか）。Clientのビームはダメージ0なので書かない。
-            if (owner >= 0 && damage > 0f)
+            // 最後にダメージを与えたプレイヤー（倒したときに、だれの撃破として数えるか）。
+            // Clientのビームはダメージ0だが、倒されたときの演出（光の粒の色・行き先）に使うので書く（Clientでは撃破数は数えない）。
+            if (owner >= 0 && (damage > 0f || recordOwnerWithoutDamage != 0))
             {
                 lastHit[j] = owner;
             }

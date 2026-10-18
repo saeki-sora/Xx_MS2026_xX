@@ -51,9 +51,13 @@ namespace MS2026.Fortress
         public NativeArray<byte> removedReasons;
         public NativeList<SwarmExplosion> explosions;
 
+        /// <summary>倒された敵の位置と倒した人（演出用。Host: 体力0 / Client: Host から「倒された」と届いた番号）。</summary>
+        public NativeList<SwarmDeath> deaths;
+
         public void Execute()
         {
             explosions.Clear();
+            deaths.Clear();
             counters[1] = 0;
             counters[2] = 0;
             counters[3] = 0;
@@ -88,6 +92,11 @@ namespace MS2026.Fortress
                 {
                     if (removeIds.Contains(id))
                     {
+                        if (explodeIds.TryGetValue(id, out var removedReason) && removedReason == (byte)EnemyRemovalReason.Died)
+                        {
+                            deaths.Add(new SwarmDeath { position = pos[read], owner = lastHit[read], type = type });
+                        }
+
                         if (types[type].explodes != 0 && explodeIds.TryGetValue(id, out var reason))
                         {
                             var atCore = reason == (byte)EnemyRemovalReason.ReachedCore;
@@ -124,6 +133,7 @@ namespace MS2026.Fortress
                             AddExplosion(read, type, killer, SwarmExplosionCause.Killed);
                         }
 
+                        deaths.Add(new SwarmDeath { position = pos[read], owner = killer, type = type });
                         Record(id, EnemyRemovalReason.Died);
                         continue;
                     }

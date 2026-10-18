@@ -137,6 +137,74 @@ namespace MS2026.Fortress
         [Range(0f, 1f)]
         public float footShadowDarkness = 0.4f;
 
+        [Header("群れのうねり（混んだ所に白いつやの波が流れる。見た目だけ）")]
+        [Tooltip("混んだ所の敵の上を、白いつやの帯が波のようにゆっくり流れる。液体のように見える。")]
+        public bool crowdSheen = true;
+
+        [Tooltip("つやの強さ（0で光らない）。")]
+        [Range(0f, 2f)]
+        public float crowdSheenStrength = 0.45f;
+
+        [Tooltip("つやの色。")]
+        [ColorUsage(false)]
+        public Color crowdSheenColor = Color.white;
+
+        [Tooltip("混んだ所を少し暗くする量（0〜1）。立体感が出る。")]
+        [Range(0f, 1f)]
+        public float crowdDarken = 0.18f;
+
+        [Tooltip("つやの波が流れる速さ。")]
+        [Min(0f)]
+        public float crowdWaveSpeed = 1.6f;
+
+        [Tooltip("つやの波の細かさ（大きいほど波の間隔が狭い）。")]
+        [Range(0.05f, 5f)]
+        public float crowdWaveScale = 0.9f;
+
+        [Tooltip("まわりにこの数の敵がいると「すっかり混んでいる」とみなす（混み具合の基準。小さいほど少しの群れでも光る）。")]
+        [Min(1f)]
+        public float crowdFullCount = 24f;
+
+        [Header("倒したときの光の粒（見た目だけ）")]
+        [Tooltip("倒した敵が、倒したプレイヤーの色の光の粒になってパッと散り、その人の砲台へ吸い込まれる。だれが倒したか分からないときは、その場で消える。")]
+        public bool killSparks = true;
+
+        [Tooltip("1体倒すごとに出す光の粒の数。")]
+        [Range(0, 8)]
+        public int sparksPerKill = 3;
+
+        [Tooltip("画面に同時に出せる光の粒の上限。超えた分は出さない（大群を一度に倒しても重くならないように）。")]
+        [Range(100, 10000)]
+        public int maxSparks = 3000;
+
+        [Tooltip("1フレームに新しく出せる光の粒の上限。")]
+        [Range(10, 2000)]
+        public int maxNewSparksPerFrame = 300;
+
+        [Tooltip("光の粒の大きさ（メートル）。")]
+        [Range(0.02f, 1f)]
+        public float sparkSize = 0.16f;
+
+        [Tooltip("倒した瞬間に散る速さ（メートル/秒）。")]
+        [Min(0f)]
+        public float sparkBurstSpeed = 3.5f;
+
+        [Tooltip("散ってから砲台へ向かい始めるまでの秒数。")]
+        [Min(0f)]
+        public float sparkHomingDelay = 0.18f;
+
+        [Tooltip("砲台へ向かう速さ（メートル/秒）。")]
+        [Min(0.1f)]
+        public float sparkHomingSpeed = 16f;
+
+        [Tooltip("倒した瞬間の、燃え尽きるような光の大きさ（敵の絵の大きさに対する倍率）。0なら出さない。")]
+        [Range(0f, 3f)]
+        public float deathFlashSize = 0.9f;
+
+        [Tooltip("光の粒の明るさ。")]
+        [Range(0.1f, 4f)]
+        public float sparkBrightness = 1.4f;
+
         [Header("演出")]
         [Tooltip("レーザーが群衆の敵に当たった瞬間のエフェクト（砲台配置タブ「群衆の敵に当たった瞬間」）を、" +
                  "全レーザー合計で1秒に出してよい最大数。0で無制限（非推奨。数千体に当たると一瞬で大量に出る。それでも1フレーム256個まで）。" +

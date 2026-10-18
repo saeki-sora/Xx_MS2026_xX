@@ -308,6 +308,10 @@
 
 倒すと爆発して、まわりの敵（爆弾なら連鎖）・破壊可能物・コアを巻き込む群衆の敵（`EnemyTypeDefinition.bomb`、見本 `Bomb_EnemyType`＝爆弾スピキ）。**通信は増やしていない**: ダメージ・連鎖は Host だけが計算し、結果（敵の消滅・破壊可能物・コアのHP・撃破数）は今までの同期で届く。爆発の演出（エフェクト・効果音・範囲の輪）は、Host から「倒された／コアに着いた」と届いた爆弾の位置で各PCが自分で出す。点滅は各PCが描画だけで計算（個体ごとのずらしは通信用の番号から作るので全員そろう）。詳細は `Docs/Tools/FortressDesigner_AI_Reference.md` の Bomb enemy。**宿題（未確認）**: Unity での動作確認と、2台で Client にも爆発が同じ場所に出るか。
 
+## 5g2. 倒した敵の光の粒・群れのつや・爆弾の衝撃波（2026-10-18・見た目だけ）
+
+**通信は増やしていない**。群衆の詰め直しのジョブが「倒された敵の位置と倒した人」を記録し、`SwarmSystem.AgentsDied` で演出（`SwarmFxDirector`）に渡す。Host は体力0になった敵、Client は Host から「倒された」と届いた敵（`RememberReplicaExplosion` が覚えている番号）。Client の「倒した人」は、自分のPCで見えていたビームから決める（`SwarmLaserJob.recordOwnerWithoutDamage`：Client ではダメージ0のビームでも「最後に当てた人」を記録。**撃破数は今までどおり Host だけが数える**）ので、まれに Host と粒の色が違うことがある。群れのつやの「混み具合」は、Host でも Client でも作っている空間ハッシュから求めるので全員そろう。爆弾の閃光・衝撃波は既存の `BombsExploded`（全PC）で出す。**宿題（未確認）**: Unity での見た目と、2台で Client にも粒・衝撃波が出るか。詳細は `Docs/Tools/FortressDesigner_AI_Reference.md` の Swarm look C1/C3/C4。
+
 ## 5h. 画面を回した視点と敵の絵の向き（2026-10-17・試し中）
 
 各プレイヤーの画面を回す案（視点プリセット `CameraViewPreset_CoreBottom`／`CoreTop`。まだ本仕様ではない）に合わせて、群衆の敵の絵を各PCの画面に合わせて正立させるようにした（視点プリセットの「敵の絵を画面の向きに合わせる」）。**通信は増やしていない**: 各PCが自分のカメラの向きでシェーダーと重なり順を決めるだけで、敵の位置・当たり判定・送るデータは変わらない。戻すときは `CameraViewPreset_Default 2` を使うかチェックを外す。詳細は `Docs/Tools/FortressDesigner_AI_Reference.md` の Camera 節。**宿題（未確認）**: 4台（または1台で4つ起動）で、P2〜P4 の画面でも敵が正立して見えるか。
