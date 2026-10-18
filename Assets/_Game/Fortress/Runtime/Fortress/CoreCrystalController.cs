@@ -19,6 +19,12 @@ namespace MS2026.Fortress
         [Tooltip("コアが危ないほど画面全体が赤く熱っぽくなる演出（見た目だけ）。")]
         public CoreDangerLookSettings dangerLook = new CoreDangerLookSettings();
 
+        [Tooltip("コアを宝石のように見せる見た目（屈折・脈打つ光・HP が減るとひび）。見た目だけ。")]
+        public CoreGemLookSettings gemLook = new CoreGemLookSettings();
+
+        [Tooltip("ダメージを受けた瞬間に広がる警告の光の輪。見た目だけ。")]
+        public CoreHitRingSettings hitRing = new CoreHitRingSettings();
+
         [Tooltip("受けるダメージの倍率（1 = そのまま、0.5 = 半分）。試合の決まり（FortressMatchRules）が試合の始めに入れる。")]
         [Min(0f)]
         public float damageMultiplier = 1f;
@@ -57,6 +63,17 @@ namespace MS2026.Fortress
             if (GetComponent<CoreDangerLook>() == null)
             {
                 gameObject.AddComponent<CoreDangerLook>();
+            }
+
+            // 宝石の見た目と、ダメージの瞬間の警告の輪（どちらも見た目だけ）。
+            if (GetComponent<CoreGemLook>() == null)
+            {
+                gameObject.AddComponent<CoreGemLook>();
+            }
+
+            if (GetComponent<CoreHitRings>() == null)
+            {
+                gameObject.AddComponent<CoreHitRings>();
             }
         }
 
