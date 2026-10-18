@@ -12,7 +12,9 @@
         "Unity.Collections",
         "Unity.InputSystem",
         "UnityEngine.UI",
-        "DDrive.Runtime.Ngo"
+        "DDrive.Runtime.Ngo",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

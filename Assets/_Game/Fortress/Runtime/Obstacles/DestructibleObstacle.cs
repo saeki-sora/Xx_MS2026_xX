@@ -381,6 +381,13 @@ namespace MS2026.Fortress
         private void Awake()
         {
             EnsureRequiredComponents();
+
+            // 見た目だけの床の影（絵で描いている物のときだけ出る）。シーンには保存しないよう、Play中だけ付ける。
+            if (Application.isPlaying && GetComponent<GroundContactShadow>() == null)
+            {
+                gameObject.AddComponent<GroundContactShadow>();
+            }
+
             EnsureInitialized();
             dataVersion = CurrentDataVersion;
             IsInvulnerable = protection.startsInvulnerable;

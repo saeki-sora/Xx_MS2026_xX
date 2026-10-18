@@ -6,12 +6,15 @@ namespace MS2026.Fortress
 {
     /// <summary>
     /// 爆発の届く範囲を見せる、広がって消える輪（仮の見た目。EnemyBombSettings.showBlastRing）。
-    /// 地面に寝かせて置き、使い終わったら非表示にして使い回す。保存されない（HideFlags.DontSave）。
+    /// 地面に寝かせて置き、使い終わったら非表示にして使い回す。
+    /// 輪はPlay中のシーンの物として作る（DontSave にしない）。DontSave だと、爆発の途中でPlayを止めたとき輪がシーンの外に残り、
+    /// 広がりかけのまま固まって、コアの近くにオレンジの輪が残っていた（2026-10-18 修正）。すでに残った輪は <see cref="DestroyLeftovers"/> で消す。
     /// </summary>
     [AddComponentMenu("")]
     public sealed class BombBlastRing : MonoBehaviour
     {
         private const float Duration = 0.35f;
+        private const string RootName = "[Fortress] BombBlastRings";
         private const int TextureSize = 128;
 
         // 床（z=0）より少しだけカメラ側（上は -Z）に置いて、床に埋もれないようにする。
@@ -53,11 +56,11 @@ namespace MS2026.Fortress
         {
             if (_root == null)
             {
-                var rootObject = new GameObject("[Fortress] BombBlastRings") { hideFlags = HideFlags.DontSave };
+                var rootObject = new GameObject(RootName);
                 _root = rootObject.transform;
             }
 
-            var go = new GameObject("BlastRing") { hideFlags = HideFlags.DontSave };
+            var go = new GameObject("BlastRing");
             go.transform.SetParent(_root, false);
             go.AddComponent<BillboardIgnore>();
             var ring = go.AddComponent<BombBlastRing>();
@@ -89,6 +92,52 @@ namespace MS2026.Fortress
             var color = _color;
             color.a *= 1f - t;
             _renderer.color = color;
+        }
+
+        /// <summary>
+        /// 以前の作り方（DontSave）でPlayの外に残ってしまった輪を、すべて消す。残った輪は誰にも動かされず、広がりかけのまま固まって見える。
+        /// Play開始時（下の ResetStatics）と、エディタでスクリプトを読み込んだとき・Playを止めたとき（エディタ側の BombBlastRingCleanup）に呼ぶ。
+        /// 戻り値は消したオブジェクトの数。
+        /// </summary>
+        public static int DestroyLeftovers()
+        {
+            var count = 0;
+            foreach (var go in Resources.FindObjectsOfTypeAll<GameObject>())
+            {
+                if (go == null || go.transform.parent != null || go.name != RootName || !IsLeftover(go))
+                {
+                    continue;
+                }
+
+                DestroyImmediate(go);
+                count++;
+            }
+
+            // 親が無くなって単独で残った輪も消す。
+            foreach (var ring in Resources.FindObjectsOfTypeAll<BombBlastRing>())
+            {
+                if (ring != null && IsLeftover(ring.gameObject))
+                {
+                    DestroyImmediate(ring.transform.root.gameObject);
+                    count++;
+                }
+            }
+
+            Pool.Clear();
+            _root = null;
+            return count;
+        }
+
+        // アセット（Prefab など）は消さない。シーンに属する物か、シーンに保存しない印の付いた物だけ。
+        private static bool IsLeftover(GameObject go)
+        {
+            return go.scene.IsValid() || (go.hideFlags & HideFlags.DontSaveInEditor) != 0;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            DestroyLeftovers();
         }
 
         private static Sprite GetSprite()

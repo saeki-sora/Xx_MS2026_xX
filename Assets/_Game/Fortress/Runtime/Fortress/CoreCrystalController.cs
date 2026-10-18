@@ -16,6 +16,9 @@ namespace MS2026.Fortress
         [Tooltip("ダメージを受けたとき・壊れたときの演出（エフェクトと効果音）。")]
         public CoreEffectSettings effects = new CoreEffectSettings();
 
+        [Tooltip("コアが危ないほど画面全体が赤く熱っぽくなる演出（見た目だけ）。")]
+        public CoreDangerLookSettings dangerLook = new CoreDangerLookSettings();
+
         [Tooltip("受けるダメージの倍率（1 = そのまま、0.5 = 半分）。試合の決まり（FortressMatchRules）が試合の始めに入れる。")]
         [Min(0f)]
         public float damageMultiplier = 1f;
@@ -43,6 +46,17 @@ namespace MS2026.Fortress
             if (GetComponent<CoreDirtVisual>() == null)
             {
                 gameObject.AddComponent<CoreDirtVisual>();
+            }
+
+            // 床の影と、コアが危ないほど画面が赤くなる演出（どちらも見た目だけ）。
+            if (GetComponent<GroundContactShadow>() == null)
+            {
+                gameObject.AddComponent<GroundContactShadow>();
+            }
+
+            if (GetComponent<CoreDangerLook>() == null)
+            {
+                gameObject.AddComponent<CoreDangerLook>();
             }
         }
 

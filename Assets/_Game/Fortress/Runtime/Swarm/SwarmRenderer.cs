@@ -11,11 +11,13 @@ namespace MS2026.Fortress
     /// 敵の種類ごとに1回だけ描画を呼ぶ（種類が5つなら描画呼び出しは5回）。
     /// 背景（ステージ背景スタジオ）が「隠れた敵を影で見せる」をONにしている間だけ、種類ごとにもう1回、
     /// 背景の裏に隠れた部分を単色の影で描く（グローバル値 _FortressSilhouetteEnabled が0より大きいとき。既定は0で描かない）。
+    /// 群衆の設定「足元の影」がONなら、全ての敵の足元の影を本体より先に1回の描画でまとめて描く。
     /// </summary>
     public sealed class SwarmRenderer : IDisposable
     {
         private const string ShaderResourcePath = "Fortress/SwarmSprite";
         private const string SilhouetteShaderResourcePath = "Fortress/SwarmSilhouette";
+        private const string ShadowShaderResourcePath = "Fortress/SwarmShadow";
         private const int InstanceStride = 32;
 
         private static readonly int InstancesId = Shader.PropertyToID("_Instances");
@@ -27,11 +29,15 @@ namespace MS2026.Fortress
         private static readonly int BlinkColorId = Shader.PropertyToID("_BlinkColor");
         private static readonly int ZWriteId = Shader.PropertyToID("_SwarmZWrite");
         private static readonly int SilhouetteEnabledId = Shader.PropertyToID("_FortressSilhouetteEnabled");
+        private static readonly int ShadowSizeId = Shader.PropertyToID("_ShadowSize");
+        private static readonly int ShadowDarknessId = Shader.PropertyToID("_ShadowDarkness");
 
         private readonly GraphicsBuffer _buffer;
         private readonly Mesh _quad;
         private readonly Shader _shader;
         private readonly Shader _silhouetteShader;
+        private readonly Shader _shadowShader;
+        private Material _shadowMaterial;
         private readonly List<TypeVisual> _visuals = new List<TypeVisual>();
         private bool _missingShaderLogged;
 
@@ -56,6 +62,7 @@ namespace MS2026.Fortress
             }
 
             _silhouetteShader = Resources.Load<Shader>(SilhouetteShaderResourcePath);
+            _shadowShader = Resources.Load<Shader>(ShadowShaderResourcePath);
         }
 
         public void Render(
@@ -86,6 +93,7 @@ namespace MS2026.Fortress
 
             var bounds = new Bounds(Vector3.zero, Vector3.one * 100000f);
             var drawSilhouettes = _silhouetteShader != null && Shader.GetGlobalFloat(SilhouetteEnabledId) > 0f;
+            RenderFootShadows(total, settings, bounds);
             for (var t = 0; t < types.Count; t++)
             {
                 var start = typeStart[t];
@@ -162,6 +170,37 @@ namespace MS2026.Fortress
             var standing = Shader.GetGlobalFloat(Billboards.BillboardShaderGlobals.SwarmStandId) > 0f;
             material.SetFloat(ZWriteId, standing ? 1f : 0f);
             return material;
+        }
+
+        /// <summary>全ての敵の足元の影（種類に関係なく同じ形なので、1回でまとめて描く）。本体より1つ前の描画順で描く。</summary>
+        private void RenderFootShadows(int total, SwarmSettings settings, Bounds bounds)
+        {
+            if (_shadowShader == null || !settings.footShadow || settings.footShadowDarkness <= 0f || settings.footShadowSize <= 0f)
+            {
+                return;
+            }
+
+            if (_shadowMaterial == null)
+            {
+                _shadowMaterial = new Material(_shadowShader) { hideFlags = HideFlags.HideAndDontSave };
+            }
+
+            _shadowMaterial.renderQueue = settings.renderQueue - 1;
+            _shadowMaterial.SetBuffer(InstancesId, _buffer);
+            _shadowMaterial.SetFloat(InstanceOffsetId, 0f);
+            _shadowMaterial.SetFloat(ShadowSizeId, settings.footShadowSize);
+            _shadowMaterial.SetFloat(ShadowDarknessId, settings.footShadowDarkness);
+
+            var renderParams = new RenderParams(_shadowMaterial)
+            {
+                worldBounds = bounds,
+                layer = 0,
+                shadowCastingMode = ShadowCastingMode.Off,
+                receiveShadows = false
+            };
+
+            Graphics.RenderMeshPrimitives(renderParams, _quad, 0, total);
+            LastBatchCount++;
         }
 
         /// <summary>影用のマテリアルを、本体と同じ絵・同じ並び・同じ範囲にそろえる（本体の後に描く）。</summary>
@@ -243,6 +282,7 @@ namespace MS2026.Fortress
             }
 
             _visuals.Clear();
+            DestroyObject(_shadowMaterial);
             DestroyObject(_quad);
         }
     }

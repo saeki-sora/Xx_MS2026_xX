@@ -160,6 +160,17 @@ namespace MS2026.Fortress
             {
                 gameObject.AddComponent<LaserTurretLook>();
             }
+
+            // ビームがまわりを照らす光と、砲台の下の影も同じく自動で付ける。
+            if (GetComponent<LaserBeamLight>() == null)
+            {
+                gameObject.AddComponent<LaserBeamLight>();
+            }
+
+            if (GetComponent<GroundContactShadow>() == null)
+            {
+                gameObject.AddComponent<GroundContactShadow>();
+            }
         }
 
         private void Update()

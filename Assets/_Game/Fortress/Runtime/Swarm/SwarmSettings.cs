@@ -126,6 +126,17 @@ namespace MS2026.Fortress
         [Min(0.01f)]
         public float hitFlashDuration = 0.1f;
 
+        [Tooltip("敵1体ずつの足元に、ぼんやりした丸い影を落とす。地面に立っている感じが出る（全ての敵を1回の描画でまとめて描くので軽い）。")]
+        public bool footShadow = true;
+
+        [Tooltip("足元の影の横幅（敵の絵の大きさに対する割合）。")]
+        [Range(0.1f, 2f)]
+        public float footShadowSize = 0.75f;
+
+        [Tooltip("足元の影の濃さ（0〜1）。")]
+        [Range(0f, 1f)]
+        public float footShadowDarkness = 0.4f;
+
         [Header("演出")]
         [Tooltip("レーザーが群衆の敵に当たった瞬間のエフェクト（砲台配置タブ「群衆の敵に当たった瞬間」）を、" +
                  "全レーザー合計で1秒に出してよい最大数。0で無制限（非推奨。数千体に当たると一瞬で大量に出る。それでも1フレーム256個まで）。" +

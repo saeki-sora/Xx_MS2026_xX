@@ -39,6 +39,8 @@ namespace MS2026.Fortress.EditorTools
                     EditorApplication.ExecuteMenuItem("Tools/握力入力ブリッジ/ウィンドウを開く");
                 }
 
+                EditorGUILayout.Space(10);
+                CoreDangerPanel.Draw();
                 return;
             }
 
@@ -47,6 +49,8 @@ namespace MS2026.Fortress.EditorTools
             DrawWaveControls();
             EditorGUILayout.Space(10);
             _actorSpawnPanel.Draw();
+            EditorGUILayout.Space(10);
+            CoreDangerPanel.Draw();
         }
 
         private static void DrawGripAndTurretStatus()

@@ -175,6 +175,7 @@
     <p><b>撃ったあとの湯気：</b>ビームを撃ち終わると、砲台から湯気のエフェクトが出て、出始めに「シュー」という音が鳴ります。<b>ビームを撃った時間が長いほど、湯気が出ている時間も長くなります</b>（既定は 1 秒撃つと 1 秒ぶん、上限 10 秒）。要塞デザイナーの「砲台配置」タブの「撃ったあとの湯気」の欄で選びます。時間は <code>Steam Seconds Per Fire Second</code>（撃った 1 秒あたりの湯気の秒数）と <code>Max Steam Seconds</code>（上限）で変えられます。仮素材は、上の手順 1・2（素材を生成→割り当て）で入ります。エフェクトの寿命は「Loop」にしてください。</p>
     <p><b>ビームのグニャグニャ：</b>砲台の <code>Laser Beam Visual</code> の <code>Wobble Amplitude</code>（うねりの大きさ。0 でまっすぐ）、<code>Wobble Wavelength</code>、<code>Wobble Speed</code>、<code>Bulge Amount</code>（太さのふくらみ）で、歯磨き粉のようにうねる見た目に変えられます。当たり判定はまっすぐなままです。さらに <code>Glow Material</code>・<code>Glow Layers</code>・<code>Glow Width Scale</code>・<code>Glow Alpha</code> で、ビームのまわりにぼんやり光る層を重ねられます（<code>Glow Material</code> を空にすると光は出ません）。</p>
     <p><b>歯磨き粉ビームの見た目（2026-10-18〜）：</b>ビームは白・赤・青の縞のまま、<b>縁がふくらんだりくびれたりして先へ流れる「こぶ」・太いつやの帯・ふちの透け・流れるきらめきと泡・押し出しのすじ</b>が付き、強く握るほどつやが増して速く流れます。見た目だけで、当たり判定・ダメージは変わりません。自動で付くので設定は不要。調整は「砲台配置」タブの <b>見た目（歯磨き粉ビーム）</b> で（<a href="#rc-laser-look">やり方</a>）。湯気・発射口のエフェクト・カメラの揺れ・ビームのうねりと光の層は今までどおりそのまま動きます。</p>
+    <p><b>光と影（2026-10-18〜）：</b>撃っている間、ビームのまわりの<b>床・背景の物・群衆の敵がその砲台のプレイヤー色で照らされます</b>。群衆の敵 1 体ずつの<b>足元に丸い影</b>、砲台・コア・絵で描いた壊せる物の<b>下にも影</b>が出て、床から浮いて見えません（背景の物の根元の影（SSAO）も強めました）。<b>コアの HP が減るほど画面全体が赤く熱っぽくなり</b>、残り 25% を切ると画面のふちが鼓動のように脈打ちます。どれも見た目だけで、自動で付きます。調整は <a href="#rc-lighting">やり方</a> を見てください。</p>
     <p><b>クリスタルの汚れ：</b>コアの HP が減るほど、クリスタルの色が少しずつ汚れた色（茶ぐろい色）に変わります。自動で付くので設定は不要です。色と汚れ方は、コアの <code>Core Dirt Visual</code>（再生中に自動で付く）で変えられます。割れる演出は、いまは「壊れたとき」だけ出ます。</p>
     <p><b>BGM を複数入れて聞き比べる：</b><code>[Fortress] Bgm</code> の <code>FortressBgmPlayer</code> で、<code>Bgm</code> が 1 曲目、<code>Extra Bgms</code> に 2 曲目以降を入れます。<code>Start Index</code> で選んだ 1 曲だけが鳴り、その曲の中でループ再生されます（0 = <code>Bgm</code>、1 = <code>Extra Bgms</code> の 1 つ目…）。試聴で切り替えたいときは <code>Next Key</code> にキーを入れます（通常は None）。</p>
     <div class="callout warn"><span class="ci">!</span><div>エフェクトのプレイヤー色の自動色付けは、この仮素材では効きません。BGM は仮の簡易ループです。エラーや「設定できなかった項目」の警告が Console に出たら、内容を開発担当に伝えてください。</div></div>
@@ -301,6 +302,13 @@
       <li>こぶ・つや・泡・すじの見た目は、<b>ビームのこぶ・つや・泡・すじを調整する（マテリアル）</b> を開いて変える（<b>流れるこぶの大きさ</b> を 0 にするとビームの縁はまっすぐに戻る）。マテリアルを書き換えるので、同じマテリアルの全砲台に反映され、Play 中に変えても残ります。マテリアル <code>Assets/_Game/Fortress/Effects/Toothpaste/Toothpaste_BeamLine.mat</code> を Project で選んで Inspector で変えても同じです。</li></ol>
       <p>以前の見た目（つやの無い縞だけ）に戻したいときは、砲台の <code>Laser Beam Visual</code> の <code>Beam Material</code> に <code>Toothpaste_BeamLine_Unlit</code> を入れます。うねりの大きさ・太さのふくらみ・まわりの光の層は、今までどおり砲台の <code>Laser Beam Visual</code>（<code>Wobble Amplitude</code> など）で変えます。</p>
     </div></details>
+    <details class="recipe" id="rc-lighting" data-tags="turret enemy"><summary><span class="q">ビームの光・敵の足元の影・コアが危ないときの赤さを調整したい</span><span class="who">砲台配置・群衆・テスト</span></summary><div class="a">
+      <ul><li><b>ビームの光</b>：<span class="mp">砲台配置<i>›</i>ビームの光（まわりを照らす）</span>。床・背景の物は <b>明るさ</b>・<b>光の届く距離（m）</b>、敵は <b>照らす強さ</b>・<b>照らす距離（m）</b>。止めたいときは <b>ビームでまわりを照らす</b> を OFF。光るのは 3D の床・背景の物と群衆の敵で、絵で描いた砲台・コアは照らされません。</li>
+      <li><b>敵の足元の影</b>：<span class="mp">群衆<i>›</i>描画</span> の <b>足元の影を出す</b>・<b>足元の影の大きさ</b>・<b>足元の影の濃さ</b>。</li>
+      <li><b>コアが危ないときの画面の色</b>：<span class="mp">テスト<i>›</i>コアが危ないときの画面の色</span>。<b>赤くなり始める HP（割合）</b>（はじめは 0.6 ＝残り 60% から）、色・ふちの暗さ・鼓動。設定はシーンのコアに保存されるので、Play していないときに変えて <kbd>Ctrl</kbd>+<kbd>S</kbd>。Play 中は <b>HP 50%</b>／<b>HP 25%</b>／<b>HP 10%</b> で HP を減らさずに見た目だけ試せます（<b>やめる</b> で戻る）。</li>
+      <li><b>砲台・コアの下の影</b>：Play 中に自動で付く <code>Ground Contact Shadow</code>。大きさ・濃さを変えたいときは、砲台やコアに <code>Ground Contact Shadow</code> を手で付けて <code>Size</code>・<code>Darkness</code> を変え、シーンを保存します。</li></ul>
+      <p>背景の物の根元の影（SSAO）の強さは、ゲーム全体の描画設定 <code>Assets/Settings/PC_Renderer.asset</code> の <code>Screen Space Ambient Occlusion</code>（<code>Intensity</code> 0.9・<code>Radius</code> 1）です。</p>
+    </div></details>
     <details class="recipe" data-tags="turret"><summary><span class="q">「溜めてから撃つ」方式にしたい</span><span class="who">砲台配置</span></summary><div class="a">
       <ol><li><span class="mp">砲台配置<i>›</i>チャージ発射<i>›</i>チャージ発射を使う</span> を ON。</li><li><b>チャージ時間(秒)</b>：この秒数だけ強く握り続けると発射開始。</li><li><b>チャージ判定しきい値</b>：この割合以上で握っている間だけ溜まる（1.0 = 完全な全力のみ。今は 0.95）。</li></ol>
       <p>OFF に戻すと、握った瞬間から撃てる元の方式になります。</p>
@@ -412,7 +420,7 @@
     <div>
       <div class="tg-panel" id="tg-turret" role="tabpanel"><h3>砲台配置</h3><div class="when">⏱ レーザーの手触り・難しさを決めたいとき</div>
         <p>上が「シーン内の砲台」（1 基ずつの設定）、下が「レーザー・熱チューニング」（4 基共通の設定ファイル）です。</p>
-        <ul class="points"><li><b>シーン内の砲台</b>：各砲台の自動回転 ON/OFF・向き・速度倍率、<b>シーンで選択</b>、仮の見た目（砲身など）の作成。</li><li><b>チャージ発射</b>：溜めてから撃つ方式の ON/OFF と秒数。</li><li><b>太さ・熱</b>：最小/最大の太さ、熱上昇係数、熱冷却速度、オーバーヒートしきい値、沈黙時間。</li><li><b>射程・最大秒間ダメージ・貫通</b>：レーザーの強さ。<b>敵を貫通する</b> を OFF にすると先頭の 1 体だけに当たる。</li><li><b>照準表示</b>：撃っていない間に出る、向きを示す細い線（照準線の長さ・太さ・濃さ）。</li><li><b>通常の回転速度(度/秒)</b>・<b>射出中の速度倍率</b>・<b>チャージ中／オーバーヒート中の速度倍率</b>：自動回転の速さ。</li><li><b>演出（エフェクト・効果音）</b>：発射口・着弾点・群衆の敵に当たった瞬間・撃ったあとの湯気の 4 欄、<b>群衆ヒットの上限</b>、<b>「▶ 試す」に使う砲台</b>、作り方のコツ。</li><li><b>見た目（歯磨き粉ビーム）</b>：ビームの表面が流れる速さと、ビームのマテリアル（こぶ・つや・泡・すじ）の調整。</li><li>一番下の <b>この設定が未割り当ての砲台に適用</b> で、設定ファイルの付け忘れを直せます。</li></ul></div>
+        <ul class="points"><li><b>シーン内の砲台</b>：各砲台の自動回転 ON/OFF・向き・速度倍率、<b>シーンで選択</b>、仮の見た目（砲身など）の作成。</li><li><b>チャージ発射</b>：溜めてから撃つ方式の ON/OFF と秒数。</li><li><b>太さ・熱</b>：最小/最大の太さ、熱上昇係数、熱冷却速度、オーバーヒートしきい値、沈黙時間。</li><li><b>射程・最大秒間ダメージ・貫通</b>：レーザーの強さ。<b>敵を貫通する</b> を OFF にすると先頭の 1 体だけに当たる。</li><li><b>照準表示</b>：撃っていない間に出る、向きを示す細い線（照準線の長さ・太さ・濃さ）。</li><li><b>通常の回転速度(度/秒)</b>・<b>射出中の速度倍率</b>・<b>チャージ中／オーバーヒート中の速度倍率</b>：自動回転の速さ。</li><li><b>演出（エフェクト・効果音）</b>：発射口・着弾点・群衆の敵に当たった瞬間・撃ったあとの湯気の 4 欄、<b>群衆ヒットの上限</b>、<b>「▶ 試す」に使う砲台</b>、作り方のコツ。</li><li><b>見た目（歯磨き粉ビーム）</b>：ビームの表面が流れる速さと、ビームのマテリアル（こぶ・つや・泡・すじ）の調整。</li><li><b>ビームの光（まわりを照らす）</b>：ビームが床・背景の物・敵をプレイヤー色で照らす明るさと距離。</li><li>一番下の <b>この設定が未割り当ての砲台に適用</b> で、設定ファイルの付け忘れを直せます。</li></ul></div>
       <div class="tg-panel" id="tg-wave" role="tabpanel"><h3>敵ウェーブ</h3><div class="when">⏱ 敵の出方（量・テンポ・方角）を決めたいとき</div>
         <ul class="points"><li><b>編集対象のウェーブ</b>：編集するウェーブの設定ファイル。<b>新規ウェーブを作成</b> で増やせます。</li><li><b>湧きエントリ</b>：1 行 = 「○秒後に、どこから、どの敵を、何体、何秒おきに」。</li><li><b>タイムライン</b>（表の上）：湧き位置ごとに 1 段。棒 1 本が表の 1 行で、長さ＝湧き始めから湧き終わりまで、色＝敵の種類、数字＝数。<b>棒をクリックすると表のその行が選ばれます</b>。上に <b>合計の数・行の数・最後に湧く時刻・種類ごとの数</b>。Play 中は今の時刻に赤い線と「ここまでに約○体」。湧き位置がシーンに無い段は赤い字です。</li><li><b>ループ再生</b> / <b>ループ間隔(秒)</b>：最後まで出したら最初から繰り返す。</li><li><b>湧き位置</b>：一覧・追加・複製・削除・グリッドに揃える・<b>リング状に自動配置</b>。</li></ul>
         <p class="small muted">Play 開始時に自動で再生されます。止めたいときは「テスト」タブの <b>停止</b>。</p></div>
@@ -477,6 +485,26 @@
     <tr><td>泡の量／泡の大きさ</td><td>ビームの中を流れる泡（マテリアル）</td><td class="up">泡だらけ</td><td class="down">泡なし（0）</td><td class="def">0.3／0.2</td></tr>
     <tr><td>押し出しのすじ／すじの間隔（メートル）</td><td>押し出したときの横すじ（マテリアル）</td><td colspan="2">—</td><td class="def">0.14／0.6</td></tr>
   </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">💡 ビームの光 <span class="src">砲台配置タブ › 「ビームの光（まわりを照らす）」</span></div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>明るさ</td><td>床・背景の物を照らす明るさ（0 で照らさない）</td><td class="up">はっきり色が付く</td><td class="down">ほんのり</td><td class="def">2.5</td></tr>
+    <tr><td>光の届く距離（m）</td><td>光 1 個が届く距離</td><td class="up">太い光の帯</td><td class="down">ビームのすぐそばだけ</td><td class="def">2.8</td></tr>
+    <tr><td>光を置く間隔（m）</td><td>ビームに沿って光を置く間隔（1 本に最大 8 個）</td><td class="up">光が少なく軽い（まだらになる）</td><td class="down">なめらか（少し重い）</td><td class="def">2.5</td></tr>
+    <tr><td>光の高さ（m）</td><td>光を床からどれだけ浮かせるか</td><td class="up">広くぼんやり</td><td class="down">狭くはっきり</td><td class="def">0.8</td></tr>
+    <tr><td>当たっている場所の明るさ（倍）</td><td>壁などに当たっている所の光</td><td class="up">当たった所が目立つ</td><td class="down">他と同じ</td><td class="def">1.6</td></tr>
+    <tr><td>照らす強さ／照らす距離（m）</td><td>ビームの近くの群衆の敵が照らされる強さと範囲</td><td class="up">敵がビームの色に光る</td><td class="down">控えめ（強さ 0 で照らさない）</td><td class="def">0.8／1.3</td></tr>
+    <tr><td>弱く握ったときの明るさ（割合）</td><td>一番弱く握ったときの明るさ（強く握ったとき＝1）</td><td colspan="2">—</td><td class="def">0.45</td></tr>
+    <tr><td>つく／消える速さ</td><td>撃ち始め・撃ち終わりの光の切り替わり</td><td class="up">パッと切り替わる</td><td class="down">ふわっと</td><td class="def">14</td></tr>
+  </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">🌑 敵の足元の影・コアが危ないときの画面 <span class="src">群衆タブ › 描画 ／ テストタブ › コアが危ないときの画面の色</span></div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>足元の影の大きさ／濃さ</td><td>敵 1 体ずつの足元の影（大きさは絵に対する割合）</td><td class="up">影がはっきり</td><td class="down">控えめ</td><td class="def">0.75／0.4</td></tr>
+    <tr><td>赤くなり始める HP（割合）</td><td>コアの HP がこの割合を切ると赤くなり始める</td><td class="up">早めに赤くなる</td><td class="down">ギリギリまで変わらない</td><td class="def">0.6</td></tr>
+    <tr><td>一番危ないときの画面の色／鮮やかさ</td><td>HP 0 のときの画面全体の色味</td><td colspan="2">色は白に近いほど控えめ</td><td class="def">薄い赤／+12</td></tr>
+    <tr><td>画面のふちの色／暗さ</td><td>HP 0 のときに画面のふちを染める色と強さ</td><td class="up">ふちが濃く染まる</td><td class="down">控えめ（0 で出さない）</td><td class="def">暗い赤／0.38</td></tr>
+    <tr><td>鼓動し始める HP（割合）／鼓動の速さ</td><td>ふちが脈打ち始める HP と、1 秒あたりの拍数</td><td colspan="2">0 で脈打たない</td><td class="def">0.25／1.4</td></tr>
+    <tr><td>色が追いつく速さ</td><td>HP が変わってから色が変わるまでの速さ</td><td class="up">すぐ変わる</td><td class="down">ゆっくり変わる</td><td class="def">1.5</td></tr>
+  </table></div></div>
   <div class="ptable-wrap rv"><div class="ptable-cap">👾 敵ウェーブの 1 行 <span class="src">敵ウェーブタブ ／ Presets/Default_EnemyWaveConfig.asset</span></div><div class="ptable-scroll"><table class="params">
     <tr><th>項目</th><th>意味</th><th colspan="2">メモ</th><th>初期値</th></tr>
     <tr><td>発生時刻(秒)</td><td>ウェーブ開始から何秒後に出すか</td><td colspan="2">行の順番は自由（時刻順に自動で並ぶ）</td><td class="def">0</td></tr>
@@ -527,6 +555,8 @@
     <h2>困ったときは<br><em>ここ</em>。</h2>
   </div>
   <div class="faq rv">
+    <details><summary>コアのまわりに、オレンジの輪が消えずに残っている</summary><div class="a">爆弾の敵の「爆発の輪」が、爆発の途中で Play を止めたときに残っていたものです（2026-10-18 に直しました）。残っていた輪は、Unity がスクリプトを読み込み直したとき・Play を止めたとき・Play を始めたときに自動で消え、Console に「残っていた爆発の輪を ○ 個消しました。」と出ます。</div></details>
+    <details><summary>ビームで床が照らされない／敵の足元に影が出ない／画面が赤くならない</summary><div class="a"><ol><li>Play 中か確認（どれも Play 中だけ動きます）。</li><li>ビームの光：<b>ビームでまわりを照らす</b> が ON か、<b>明るさ</b> が 0 でないか。照らされるのは 3D の床・背景の物と群衆の敵です（絵で描いた砲台・コアは照らされません）。</li><li>足元の影：<span class="mp">群衆<i>›</i>描画<i>›</i>足元の影を出す</span> が ON か。</li><li>画面の赤さ：コアの HP が <b>赤くなり始める HP（割合）</b> より減っているか。「テスト」タブの <b>HP 25%</b> ボタンですぐ確かめられます。</li></ol></div></details>
     <details><summary>ビームにこぶ・つや・泡が出ない</summary><div class="a"><ol><li>Play 中か確認（流れるのは Play 中だけ。止まっていても、こぶ・つやは見えます）。</li><li><b>表面を流す</b> が ON か確認。</li><li><b>ビームのマテリアル</b> が歯磨き粉ビームのシェーダーか確認（違うときは <b>歯磨き粉ビームのシェーダーに切り替える</b> ボタンが出ます）。</li><li>カメラが遠いと細かい模様は見えません。<b>流れるこぶの大きさ</b>・<b>つやの強さ</b> など大きく変わる項目を上げてください。</li></ol></div></details>
     <details><summary>エフェクトを入れたのに出ない／すぐ消える／音が鳴らない</summary><div class="a">よくある原因と直し方を表にまとめてあります → <a href="#effects">エフェクトを入れる › うまくいかないとき</a>。いちばん多いのは「Play していない」「着弾点なのに何にも当たっていない」「出しっぱなし用なのに Life Mode が Loop になっていない」の 3 つです。</div></details>
     <details><summary>Play を止めたら、置いた物や動かした物が元に戻った</summary><div class="a">Unity の仕様で、<b>Play 中にシーン上の物を変えた内容は Play 終了で元に戻ります</b>。配置・移動・破壊可能物の設定は Play していないときに行い、<kbd>Ctrl</kbd>+<kbd>S</kbd> でシーンを保存してください。一方、設定ファイル（レーザー・熱、ウェーブ、群衆の設定、敵の種類、カメラのプリセット）の数値は Play 中に変えても残ります。</div></details>

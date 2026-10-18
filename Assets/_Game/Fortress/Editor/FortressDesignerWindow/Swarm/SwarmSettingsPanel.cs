@@ -53,7 +53,10 @@ namespace MS2026.Fortress.EditorTools
             {
                 ("ySort", "手前の敵を上に描く（Yソート）"),
                 ("renderQueue", "描画順（レンダーキュー）"),
-                ("hitFlashDuration", "被弾フラッシュの長さ(秒)")
+                ("hitFlashDuration", "被弾フラッシュの長さ(秒)"),
+                ("footShadow", "足元の影を出す"),
+                ("footShadowSize", "足元の影の大きさ"),
+                ("footShadowDarkness", "足元の影の濃さ")
             }),
             ("演出", new[]
             {
