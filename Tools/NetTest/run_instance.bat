@@ -12,6 +12,11 @@ rem    default 1: <project>\Builds\TestBuild  (git-ignored)
 rem    default 2: %USERPROFILE%\Downloads\TestBuild
 rem  Logs are written to <build folder>\logs\p<player>_<role><LOGSUFFIX>.log (outside git).
 rem  -debug-ui keeps the debug overlays visible in builds (they are hidden in builds otherwise).
+rem
+rem  Screen: windowed 960x540 and tiled 2x2 (-fortress-tile) by default.
+rem    set MS2026_FULLSCREEN=1  -> fullscreen at the primary monitor's real resolution
+rem                               (read by screen_size.ps1; no tiling). Used by bench_offline.bat.
+rem    set MS2026_SCREEN_W / MS2026_SCREEN_H to force a resolution (fallback 1920x1080).
 rem ============================================================
 setlocal
 set ROLE=%~1
@@ -44,5 +49,20 @@ if not exist "%MS2026_BUILD_DIR%\MS2026.exe" (
 )
 
 if not exist "%MS2026_BUILD_DIR%\logs" mkdir "%MS2026_BUILD_DIR%\logs"
-start "" "%MS2026_BUILD_DIR%\MS2026.exe" -screen-fullscreen 0 -screen-width 960 -screen-height 540 -logFile "%MS2026_BUILD_DIR%\logs\p%PLAYER%_%ROLE%%LOGSUFFIX%.log" -fortress-start %ROLE% -fortress-player %PLAYER% -fortress-address %ADDR% -fortress-tile -debug-ui%EXTRA%
+
+set "SCREENARGS=-screen-fullscreen 0 -screen-width 960 -screen-height 540 -fortress-tile"
+if not "%MS2026_FULLSCREEN%"=="1" goto screen_done
+if not "%MS2026_SCREEN_W%"=="" goto screen_full
+for /f "tokens=1,2" %%a in ('powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0screen_size.ps1"') do (
+  set "MS2026_SCREEN_W=%%a"
+  set "MS2026_SCREEN_H=%%b"
+)
+:screen_full
+if "%MS2026_SCREEN_W%"=="" set "MS2026_SCREEN_W=1920"
+if "%MS2026_SCREEN_H%"=="" set "MS2026_SCREEN_H=1080"
+set "SCREENARGS=-screen-fullscreen 1 -screen-width %MS2026_SCREEN_W% -screen-height %MS2026_SCREEN_H%"
+echo Fullscreen %MS2026_SCREEN_W%x%MS2026_SCREEN_H%
+:screen_done
+
+start "" "%MS2026_BUILD_DIR%\MS2026.exe" %SCREENARGS% -logFile "%MS2026_BUILD_DIR%\logs\p%PLAYER%_%ROLE%%LOGSUFFIX%.log" -fortress-start %ROLE% -fortress-player %PLAYER% -fortress-address %ADDR% -debug-ui%EXTRA%
 endlocal
