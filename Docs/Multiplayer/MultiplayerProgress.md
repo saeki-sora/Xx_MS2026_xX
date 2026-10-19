@@ -208,7 +208,7 @@
 - `Tools\NetTest\bench_4p.bat` … Host+Client3人（P2〜P4）。3人そろってから3万体投入、50秒で終了。ログは `p0_host_bench4.log`〜`p3_client_bench4.log`。1台で4つ動かすのでFPSは実機より低い（正しさ・通信量・全員が同じに見えるかの確認用）。
 - `Tools\NetTest\bench_4p_latejoin.bat` … Host+Client2人で3万体投入し、約15秒後にP4が途中参加（3万体分の全員の写真を受け取ってから追従できるか）。ログは `*_latejoin.log`。
 - 改善前の設定で比べる: `bench_2p.bat -fortress-swarm-spawns-per-frame 0 -fortress-net-packet-queue 128`（ログ名を変えたいときは先に `set LOGSUFFIX=_before`）。
-- ネットワーク無しの基準: `bench_offline.bat`（`p0_ui_bench_offline.log`）。
+- ネットワーク無しの基準: `bench_offline.bat`（`p0_ui_bench_offline.log`）。**2026-10-19 からフルスクリーン**（メインモニターの実際の解像度。`screen_size.ps1` で読み取る。`set MS2026_SCREEN_W=1920` / `set MS2026_SCREEN_H=1080` で指定も可）なので、それ以前のウィンドウ表示（960×540）の結果とは直接比べられない。ほかの bat は今までどおりウィンドウ表示＋2×2並べ（`run_instance.bat` の `MS2026_FULLSCREEN=1` で切り替え）。
 - **計測中は試合が終わらない（2026-10-15）**: ゲームオーバーができてから、3万体を投入するとすぐコアが壊れてゲームオーバー → 敵が消えて bat がすぐ終わる状態になっていた。`-fortress-bench*` の引数があるときは、クリア・ゲームオーバーの判定をしない（`FortressMatch.EndChecksSuspended`。3万体の投入はそのまま。コアのHPは0まで減るが、そのまま続く）。ログの `START` 行に `matchEnd=off` と出る。終わらせて試したいときは `-fortress-bench-allow-end` を付ける。bat は変更なし（ビルドし直せば効く）。
 - 段階4の比較: 従来方式 `-fortress-swarm-smoothing blend -fortress-swarm-adaptive 0` / 新方式固定 `-fortress-swarm-adaptive 0` / 新方式＋自動調整（引数なし）/ 固定間隔 `-fortress-swarm-adaptive 0 -fortress-swarm-correction-cycle 0.25`（0.15 も）。
 - ⚠ 1台のPCで2つ起動すると、CPU/GPUを取り合うので本番より重く出る。
@@ -306,7 +306,11 @@
 
 ## 5g. 爆弾の敵（2026-10-16）
 
-倒すと爆発して、まわりの敵（爆弾なら連鎖）・破壊可能物・コアを巻き込む群衆の敵（`EnemyTypeDefinition.bomb`、見本 `Bomb_EnemyType`＝爆弾スピキ）。**通信は増やしていない**: ダメージ・連鎖は Host だけが計算し、結果（敵の消滅・破壊可能物・コアのHP・撃破数）は今までの同期で届く。爆発の演出（エフェクト・効果音・範囲の輪）は、Host から「倒された／コアに着いた」と届いた爆弾の位置で各PCが自分で出す。点滅は各PCが描画だけで計算（個体ごとのずらしは通信用の番号から作るので全員そろう）。詳細は `Docs/Tools/FortressDesigner_AI_Reference.md` の Bomb enemy。**宿題（未確認）**: Unity での動作確認と、2台で Client にも爆発が同じ場所に出るか。
+倒すと爆発して、まわりの敵（爆弾なら連鎖）・破壊可能物・コアを巻き込む群衆の敵（`EnemyTypeDefinition.bomb`、見本 `Bomb_EnemyType`＝爆弾スピキ）。**通信は増やしていない**: ダメージ・連鎖は Host だけが計算し、結果（敵の消滅・破壊可能物・コアのHP・撃破数）は今までの同期で届く。爆発の演出（エフェクト・効果音・範囲の輪）は、Host から「倒された／コアに着いた」と届いた爆弾の位置で各PCが自分で出す。点滅は各PCが描画だけで計算（個体ごとのずらしは通信用の番号から作るので全員そろう）。詳細は `Docs/Tools/FortressDesigner_AI_Reference.md` の Bomb enemy。**宿題（未確認）**: Unity での動作確認と、2台で Client にも爆発が同じ場所に出るか。2026-10-19: スマッシュボールは爆弾のダメージを受けない（Host の `DamageObstacles` で除外。通信は変わらない）。
+
+## 5g2. 倒した敵の光の粒・群れのつや・爆弾の衝撃波（2026-10-18・見た目だけ）
+
+**通信は増やしていない**。群衆の詰め直しのジョブが「倒された敵の位置と倒した人」を記録し、`SwarmSystem.AgentsDied` で演出（`SwarmFxDirector`）に渡す。Host は体力0になった敵、Client は Host から「倒された」と届いた敵（`RememberReplicaExplosion` が覚えている番号）。Client の「倒した人」は、自分のPCで見えていたビームから決める（`SwarmLaserJob.recordOwnerWithoutDamage`：Client ではダメージ0のビームでも「最後に当てた人」を記録。**撃破数は今までどおり Host だけが数える**）ので、まれに Host と粒の色が違うことがある。群れのつやの「混み具合」は、Host でも Client でも作っている空間ハッシュから求めるので全員そろう。爆弾の閃光・衝撃波は既存の `BombsExploded`（全PC）で出す。**宿題（未確認）**: Unity での見た目と、2台で Client にも粒・衝撃波が出るか。詳細は `Docs/Tools/FortressDesigner_AI_Reference.md` の Swarm look C1/C3/C4。
 
 ## 5h. 画面を回した視点と敵の絵の向き（2026-10-17・試し中）
 

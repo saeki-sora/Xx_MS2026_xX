@@ -58,6 +58,29 @@ namespace MS2026.Fortress.EditorTools
                 ("footShadowSize", "足元の影の大きさ"),
                 ("footShadowDarkness", "足元の影の濃さ")
             }),
+            ("群れのうねり（つやの波）", new[]
+            {
+                ("crowdSheen", "混んだ所につやの波を流す"),
+                ("crowdSheenStrength", "つやの強さ"),
+                ("crowdSheenColor", "つやの色"),
+                ("crowdDarken", "混んだ所の暗さ"),
+                ("crowdWaveSpeed", "波の速さ"),
+                ("crowdWaveScale", "波の細かさ"),
+                ("crowdFullCount", "混んでいるとみなす数")
+            }),
+            ("倒したときの光の粒", new[]
+            {
+                ("killSparks", "倒した敵を光の粒にする"),
+                ("sparksPerKill", "1体あたりの粒の数"),
+                ("maxSparks", "同時に出せる粒の上限"),
+                ("maxNewSparksPerFrame", "1フレームに出せる粒の上限"),
+                ("sparkSize", "粒の大きさ（m）"),
+                ("sparkBurstSpeed", "散る速さ"),
+                ("sparkHomingDelay", "砲台へ向かうまでの秒数"),
+                ("sparkHomingSpeed", "砲台へ向かう速さ"),
+                ("deathFlashSize", "燃え尽きる光の大きさ"),
+                ("sparkBrightness", "粒の明るさ")
+            }),
             ("演出", new[]
             {
                 ("hitEffectsPerSecond", "レーザー命中エフェクトの上限（個/秒・全員合計、0=無制限）")

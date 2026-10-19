@@ -235,7 +235,8 @@ namespace MS2026.Fortress
             foreach (var hit in _blastColliders)
             {
                 var obstacle = hit != null ? hit.GetComponentInParent<DestructibleObstacle>() : null;
-                if (obstacle != null)
+                // スマッシュボールは爆弾では割れない（プレイヤーがレーザーで割るもの。2026-10-19 ユーザー決定）。
+                if (obstacle != null && !obstacle.TryGetComponent<SmashBallModule>(out _))
                 {
                     _blastObstacles.Add(obstacle);
                 }

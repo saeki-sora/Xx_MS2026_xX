@@ -31,6 +31,8 @@ namespace MS2026.Fortress
         private static readonly int SilhouetteEnabledId = Shader.PropertyToID("_FortressSilhouetteEnabled");
         private static readonly int ShadowSizeId = Shader.PropertyToID("_ShadowSize");
         private static readonly int ShadowDarknessId = Shader.PropertyToID("_ShadowDarkness");
+        private static readonly int CrowdSheenId = Shader.PropertyToID("_FortressCrowdSheen");
+        private static readonly int CrowdSheenColorId = Shader.PropertyToID("_FortressCrowdSheenColor");
 
         private readonly GraphicsBuffer _buffer;
         private readonly Mesh _quad;
@@ -90,6 +92,12 @@ namespace MS2026.Fortress
             }
 
             _buffer.SetData(instances, 0, 0, total);
+
+            // 群れのうねり（つやの波）。混み具合は描画データ(b.z)に入っている。
+            Shader.SetGlobalVector(CrowdSheenId, settings.crowdSheen
+                ? new Vector4(settings.crowdSheenStrength, settings.crowdDarken, settings.crowdWaveSpeed, settings.crowdWaveScale)
+                : Vector4.zero);
+            Shader.SetGlobalColor(CrowdSheenColorId, settings.crowdSheenColor);
 
             var bounds = new Bounds(Vector3.zero, Vector3.one * 100000f);
             var drawSilhouettes = _silhouetteShader != null && Shader.GetGlobalFloat(SilhouetteEnabledId) > 0f;

@@ -78,6 +78,19 @@ namespace MS2026.Fortress
         public SwarmExplosionCause cause;
     }
 
+    /// <summary>
+    /// 群衆の敵が倒された記録1件分（演出用。詰め直しのジョブが書く）。Hostでは体力0になった敵、
+    /// Clientでは Host から「倒された」と届いた敵の、消える直前の位置。
+    /// </summary>
+    public struct SwarmDeath
+    {
+        public float2 position;
+        /// <summary>倒した人（最後にビームを当てたプレイヤー 0〜3）。不明なら -1。Clientでは自分のPCで見えていたビームから決める（見た目用）。</summary>
+        public int owner;
+        /// <summary>このシステム内の種類番号。</summary>
+        public int type;
+    }
+
     /// <summary>そのフレームに群衆の敵へ届く爆発のダメージ1件分（レーザー判定のジョブがまとめて与える）。</summary>
     public struct SwarmBlast
     {
@@ -88,7 +101,7 @@ namespace MS2026.Fortress
         public int owner;
     }
 
-    /// <summary>GPUに渡す1体分の描画データ（32バイト）。a=(x, y, 大きさ, 被弾フラッシュ) / b=(フレーム, 向いている角度(ラジアン, ワールド), 予備, 爆弾の点滅)。シートの行はシェーダーが画面の向きに合わせて決める。</summary>
+    /// <summary>GPUに渡す1体分の描画データ（32バイト）。a=(x, y, 大きさ, 被弾フラッシュ) / b=(フレーム, 向いている角度(ラジアン, ワールド), 混み具合0〜1(群れのうねり), 爆弾の点滅)。シートの行はシェーダーが画面の向きに合わせて決める。</summary>
     public struct SwarmInstance
     {
         public float4 a;

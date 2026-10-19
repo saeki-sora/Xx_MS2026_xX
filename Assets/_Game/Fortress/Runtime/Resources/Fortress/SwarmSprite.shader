@@ -49,6 +49,9 @@ Shader "MS2026/Fortress/SwarmSprite"
                 // 立たせているときは、深度を書くので半透明の縁を切り落とす(縁が奥の敵を四角く隠さないように)。
                 clip(color.a - (_FortressSwarmBillboardStand > 0.0 ? _FortressBillboardCutoff : 0.01));
                 // ビームの光（近くのビームの色で照らす）。暗い色の絵でも分かるよう、光の色そのものも「光の色を乗せる量」だけ足す。
+                // 群れのうねり: 混んだ所を少し暗くして立体感を出し、白いつやの波を流す（SwarmSpriteCommon.hlsl の SwarmCrowdWave）。
+                color.rgb *= 1.0 - input.crowd.x * _FortressCrowdSheen.y;
+                color.rgb += _FortressCrowdSheenColor.rgb * (input.crowd.x * input.crowd.y * _FortressCrowdSheen.x);
                 color.rgb = color.rgb * (1.0 + input.beamLight) + input.beamLight * _FortressBeamEnemyOverlay;
                 // 爆弾の敵の点滅（SwarmBombMath）。被弾フラッシュ(白)はその上にかける。
                 color.rgb = lerp(color.rgb, _BlinkColor.rgb, saturate(input.blink));

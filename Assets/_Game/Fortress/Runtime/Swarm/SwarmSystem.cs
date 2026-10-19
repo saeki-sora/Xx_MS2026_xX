@@ -152,6 +152,12 @@ namespace MS2026.Fortress
             // 計測表示(SwarmHud)はGUILayoutを使わないので、OnGUIの度のレイアウト準備(=毎フレームのGC)を止める。
             useGUILayout = false;
             Initialize();
+
+            // 見た目の演出（倒したときの光の粒・爆弾の閃光と衝撃波）。シーンには保存しないよう、Play中だけ付ける。
+            if (Application.isPlaying && GetComponent<SwarmFxDirector>() == null)
+            {
+                gameObject.AddComponent<SwarmFxDirector>();
+            }
         }
 
         private void Initialize()
@@ -191,6 +197,7 @@ namespace MS2026.Fortress
             _hitIdx = new NativeArray<int>(SwarmLimits.MaxPierceBuffer, Allocator.Persistent);
             InitializeHitReports();
             InitializeBombs();
+            InitializeDeaths();
 
             InitializeNet(capacity);
 
@@ -483,6 +490,7 @@ namespace MS2026.Fortress
             _renderTotal = Storage.Count;
             CollectRemovals();
             CollectExplosions();
+            CollectDeaths();
 
             ApplyCoreDamage(_flightDt);
             CollectBeamHits();
@@ -576,6 +584,7 @@ namespace MS2026.Fortress
                     types = _typeParams,
                     beams = _beamsJob,
                     beamCount = _beamCount,
+                    recordOwnerWithoutDamage = IsReplica ? 1 : 0,
                     blasts = _blastsJob,
                     blastCount = _blastCount,
                     cellStart = Grid.CellStart,
@@ -740,6 +749,7 @@ namespace MS2026.Fortress
                 removeIds = _removeIds,
                 explodeIds = _explodeIds,
                 explosions = _explosions,
+                deaths = _deaths,
                 count = count,
                 arrivalMode = (int)_settings.arrivalMode,
                 replicaMode = IsReplica ? 1 : 0,
@@ -807,6 +817,12 @@ namespace MS2026.Fortress
                 time = Time.time,
                 renderOffset = Storage.correctionB,
                 applyRenderOffset = IsReplica ? 1 : 0,
+                keepList = _keepList,
+                cellOf = Grid.CellOf,
+                cellStart = Grid.CellStart,
+                gridWidth = Grid.Width,
+                gridHeight = Grid.Height,
+                crowdFullCount = _settings.crowdSheen ? _settings.crowdFullCount : 0f,
                 tmpInstances = _tmpInstances,
                 keyOf = _keyOf
             }.Schedule(count, 256, handle);
@@ -1097,6 +1113,7 @@ namespace MS2026.Fortress
             DisposeArray(ref _hitIdx);
             DisposeHitReports();
             DisposeBombs();
+            DisposeDeaths();
             DisposeNet();
         }
 
