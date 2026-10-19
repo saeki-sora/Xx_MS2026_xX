@@ -23,9 +23,16 @@ namespace MS2026.Fortress.EditorTools
                 ("momentumTransfer", "押されて流れる度合い"),
                 ("turnSharpness", "向きが変わる鋭さ")
             }),
+            ("押し合いの方式", new[]
+            {
+                ("crowdSolver", "押し合いの方式"),
+                ("fluidPressure", "【流体】混んだ所から押し出す強さ"),
+                ("fluidRestOccupancy", "【流体】押し返し始める混み具合"),
+                ("fluidRefineIterations", "【流体】仕上げの押し合い回数")
+            }),
             ("押し合い（重なりの押し戻し）", new[]
             {
-                ("separationIterations", "押し戻しの反復回数"),
+                ("separationIterations", "押し戻しの反復回数（1体ずつの方式のとき）"),
                 ("separationStiffness", "押し戻しの強さ"),
                 ("personalSpace", "敵同士が保つ距離の倍率"),
                 ("maxCorrectionRatio", "1回の最大移動量（半径比）"),

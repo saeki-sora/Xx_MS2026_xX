@@ -8,6 +8,8 @@ namespace MS2026.Fortress
     /// <summary>
     /// 各敵の「行きたい速度」を決めて速度を更新し、押し合い計算の出発点となる予測位置を出す。
     /// 進行方向=経路のフロー・フィールド、速度=混み具合で減速。
+    /// 混み具合は、押し合いの方式が「流体」のときはマスの混み具合（<see cref="SwarmOccupancyJob"/>）を読むだけ、
+    /// 「1体ずつ」のときは近くの敵を数える（重い）。
     /// </summary>
     [BurstCompile]
     public struct SwarmSteerJob : IJobParallelFor
@@ -50,6 +52,13 @@ namespace MS2026.Fortress
         public float minSpeedFactor;
         public int maxNeighbors;
 
+        // 【流体】マスの混み具合（空間ハッシュと同じマス）。useOccupancy=1 のとき、近くの敵を数える代わりにこれを読む。
+        [ReadOnly] public NativeArray<float> occupancy;
+        public int useOccupancy;
+        public float hashCell;
+        /// <summary>この混み具合で「密集」（減速が最大）とみなす。「密集とみなす数」を面積の割合に直した値。</summary>
+        public float crowdReferenceOccupancy;
+
         public void Execute(int i)
         {
             var p = pos[i];
@@ -76,7 +85,9 @@ namespace MS2026.Fortress
                 flow = math.lengthsq(direct) < 1e-6f ? flow : heading;
 
                 var terrain = speedMul[SwarmMath.NearestIndex(p, navOrigin, navCell, navW, navH)];
-                var crowd = math.saturate(CountNeighbors(i, p) / densityReference);
+                var crowd = useOccupancy != 0
+                    ? math.saturate(SwarmMath.SampleScalar(occupancy, p, hashOrigin, hashCell, hashW, hashH) / math.max(1e-4f, crowdReferenceOccupancy))
+                    : math.saturate(CountNeighbors(i, p) / densityReference);
                 var slow = math.max(minSpeedFactor, 1f - densitySlowdown * crowd);
                 desired = flow * (tp.maxSpeed * speedScale[i] * terrain * slow);
             }

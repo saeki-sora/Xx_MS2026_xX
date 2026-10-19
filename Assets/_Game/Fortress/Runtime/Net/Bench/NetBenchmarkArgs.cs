@@ -21,6 +21,7 @@ namespace MS2026.Fortress.Net
     ///   -fortress-bench-disable A+B+...     指定した型名の部品(MonoBehaviour)を止めて測る(GCや負荷の出どころの二分探索用)。
     ///                                       区切りは + を使う(cmd/batはカンマを引数の区切りとして扱うため。カンマは引用符で囲めば可)
     ///   -fortress-swarm-spawns-per-frame N  1フレームに追加する群衆の上限(0=無制限=改善前の動き)
+    ///   -fortress-swarm-solver fluid|peragent   押し合いの方式を上書きする(流体の圧力 / 1体ずつ。群衆の設定 crowdSolver より優先。比べる用)
     ///   -fortress-net-packet-queue N        1フレームに送受信できるパケット数の上限(未指定ならFortressNetworkBootstrapの設定)
     ///   -fortress-swarm-snapshot-rate N         写真方式で1秒に送る写真の枚数
     ///   -fortress-swarm-snapshot-lead S         写真方式で、届く遅れの見込みとしてさらに先読みする秒数
@@ -41,6 +42,7 @@ namespace MS2026.Fortress.Net
         public bool NoOnGui;
         public string[] DisableTypes;
         public int? SpawnsPerFrame;
+        public SwarmCrowdSolver? CrowdSolver;
         public int? PacketQueueSize;
         public float? SnapshotRate;
         public float? SnapshotLeadSeconds;
@@ -101,6 +103,9 @@ namespace MS2026.Fortress.Net
                     case "-fortress-swarm-spawns-per-frame":
                         result.SpawnsPerFrame = NextInt(args, ref i);
                         break;
+                    case "-fortress-swarm-solver":
+                        result.CrowdSolver = ParseSolver(i + 1 < args.Length ? args[++i] : string.Empty);
+                        break;
                     case "-fortress-net-packet-queue":
                         result.PacketQueueSize = NextInt(args, ref i);
                         break;
@@ -120,6 +125,22 @@ namespace MS2026.Fortress.Net
             }
 
             return result;
+        }
+
+        private static SwarmCrowdSolver? ParseSolver(string value)
+        {
+            switch (value.Trim().ToLowerInvariant())
+            {
+                case "fluid":
+                case "1":
+                    return SwarmCrowdSolver.Fluid;
+                case "peragent":
+                case "agent":
+                case "0":
+                    return SwarmCrowdSolver.PerAgent;
+                default:
+                    return null;
+            }
         }
 
         private static bool? NextBool(string[] args, ref int i)

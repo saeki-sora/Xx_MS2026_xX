@@ -370,6 +370,7 @@
     <details class="recipe" id="rc-swarm-feel" data-tags="enemy"><summary><span class="q">敵の群れを「詰まりやすく」「さらさら流れる」ようにしたい</span><span class="who">群衆</span></summary><div class="a">
       <p><span class="mp">群衆<i>›</i>群衆の設定（流体らしさ）</span> のプリセットから選び、数値で微調整します。Play 中でもすぐ反映されます。</p>
       <ul><li><b>標準</b>：バランスの取れた押し合い</li><li><b>どろどろ</b>：粘り気があり、密集すると強く減速</li><li><b>さらさら</b>：押されると流れるように動き、詰まりにくい</li><li><b>ぎゅうぎゅう</b>：密度が高く、詰まって溜まりやすい</li></ul>
+      <p><b>押し合いの方式</b>（2026-10-19〜）：はじめは <b>流体の圧力でまとめて押す（軽い）</b>。マスごとの混み具合から、混んだ所から空いた所へまとめて押すので、群衆の計算がかなり軽くなります。<b>【流体】混んだ所から押し出す強さ</b> を上げるとさらさら広がり、<b>【流体】押し返し始める混み具合</b> を上げるとぎゅうぎゅうに詰まります。重なりが気になるときは <b>【流体】仕上げの押し合い回数</b> を 2 に。前の動きと見比べたいときは <b>1体ずつ押し合う（従来）</b> に切り替えます（押し合いを計算するのはホストだけなので、マルチプレイの通信には関係しません）。</p>
     </div></details>
     <details class="recipe" id="rc-wall" data-tags="stage"><summary><span class="q">壁を置いて、敵に回り道をさせたい</span><span class="who">経路・障害物</span></summary><div class="a">
       <ol><li>「経路・障害物」タブで、まだ無ければ <b>経路フィールドを作成</b>。</li><li>下のボタンで障害物を追加：<b>＋ 壊れない壁</b> / <b>＋ 破壊可能ブロック</b>（レーザーで壊れて時間で戻る）/ <b>＋ 通行コスト地帯</b>（通れるが遅くなり、敵が避けたがる泥地）。</li><li>Scene に出る <b>進行方向の矢印</b> と <b>湧き位置→コアの予想ルート</b>（緑=到達可、赤=到達不可）で確認。</li></ol>
@@ -559,6 +560,10 @@
     <tr><td>密集時の減速の強さ</td><td>混んだときにどれだけ遅くなるか</td><td class="up">細い通路で渋滞</td><td class="down">混んでも進む</td><td class="def">0.55</td></tr>
     <tr><td>押されて流れる度合い</td><td>押された分をそのまま速度にする割合</td><td class="up">さらさら流れる</td><td class="down">どろどろ粘る</td><td class="def">0.6</td></tr>
     <tr><td>敵同士が保つ距離の倍率</td><td>敵同士が保つ距離（1＝体の大きさちょうど）</td><td class="up">間隔が空く</td><td class="down">ぎゅうぎゅうに詰まる</td><td class="def">1</td></tr>
+    <tr><td>押し合いの方式</td><td>流体の圧力でまとめて押す（軽い）／1体ずつ押し合う（従来）</td><td colspan="2">流体のほうがかなり軽い。動きは液体寄り</td><td class="def">流体</td></tr>
+    <tr><td>【流体】混んだ所から押し出す強さ</td><td>混んだ所から空いた所へ押す強さ</td><td class="up">さらさら広がる</td><td class="down">詰まったまま溜まる</td><td class="def">0.35</td></tr>
+    <tr><td>【流体】押し返し始める混み具合</td><td>体でこの割合までマスが埋まると押し返す</td><td class="up">ぎゅうぎゅうに詰まる</td><td class="down">間隔が空く</td><td class="def">0.6</td></tr>
+    <tr><td>【流体】仕上げの押し合い回数</td><td>まとめて押した後の、近くの重なりの仕上げ</td><td class="up">重なりにくい（少し重い）</td><td class="down">軽い（0 で重なりが少し残る）</td><td class="def">1</td></tr>
     <tr><td>押し戻しの強さ</td><td>重なりを許さない度合い（0〜1）</td><td class="up">硬い群れ</td><td class="down">重なりやすい</td><td class="def">0.85</td></tr>
     <tr><td>障害物を事前に避ける度合い</td><td>壁を見越して避けるか</td><td class="up">早めに回り込む</td><td class="down">ぶつかってから壁沿いに流れる</td><td class="def">0.1</td></tr>
     <tr><td>最大同時敵数（再Playで反映）</td><td>容量（変えたら Play し直し）</td><td class="up">大量に出せる（メモリ増）</td><td class="down">軽い</td><td class="def">40000</td></tr>

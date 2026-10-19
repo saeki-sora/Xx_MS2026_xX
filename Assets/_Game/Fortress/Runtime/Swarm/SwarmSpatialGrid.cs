@@ -25,6 +25,9 @@ namespace MS2026.Fortress
         public NativeArray<int> CellItems;
         public NativeArray<int> CellOf;
 
+        /// <summary>マスごとの混み具合（体の面積の合計 ÷ マスの面積）。押し合いの方式が「流体」のときだけ毎フレーム計算する（<see cref="SwarmOccupancyJob"/>）。</summary>
+        public NativeArray<float> Occupancy;
+
         public SwarmSpatialGrid(int capacity)
         {
             CellItems = new NativeArray<int>(capacity, Allocator.Persistent, NativeArrayOptions.ClearMemory);
@@ -58,18 +61,21 @@ namespace MS2026.Fortress
             if (Cursor.IsCreated) Cursor.Dispose();
             if (CellItems.IsCreated) CellItems.Dispose();
             if (CellOf.IsCreated) CellOf.Dispose();
+            if (Occupancy.IsCreated) Occupancy.Dispose();
         }
 
         private void ResizeCells(int width, int height)
         {
             if (CellStart.IsCreated) CellStart.Dispose();
             if (Cursor.IsCreated) Cursor.Dispose();
+            if (Occupancy.IsCreated) Occupancy.Dispose();
 
             Width = width;
             Height = height;
             var cells = width * height;
             CellStart = new NativeArray<int>(cells + 1, Allocator.Persistent, NativeArrayOptions.ClearMemory);
             Cursor = new NativeArray<int>(cells, Allocator.Persistent, NativeArrayOptions.ClearMemory);
+            Occupancy = new NativeArray<float>(cells, Allocator.Persistent, NativeArrayOptions.ClearMemory);
         }
     }
 

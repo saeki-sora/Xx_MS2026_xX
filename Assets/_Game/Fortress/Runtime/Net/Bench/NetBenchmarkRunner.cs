@@ -74,6 +74,11 @@ namespace MS2026.Fortress.Net
                 swarm.SpawnsPerFrameOverride = Mathf.Max(0, args.SpawnsPerFrame.Value);
             }
 
+            if (swarm != null && args.CrowdSolver.HasValue)
+            {
+                swarm.CrowdSolverOverride = args.CrowdSolver.Value;
+            }
+
             var hub = FindFirstObjectByType<SwarmNetworkHub>();
             if (hub != null)
             {
@@ -131,7 +136,9 @@ namespace MS2026.Fortress.Net
 
             LogAndDisableComponents();
             StartWindow();
-            Log($"START matchEnd={(_args.SuspendMatchEnd ? "off" : "on")} args={string.Join(" ", Environment.GetCommandLineArgs(), 1, Environment.GetCommandLineArgs().Length - 1)}");
+            var swarmForLog = FindFirstObjectByType<SwarmSystem>();
+            var solver = swarmForLog != null ? swarmForLog.ActiveCrowdSolver.ToString() : "-";
+            Log($"START matchEnd={(_args.SuspendMatchEnd ? "off" : "on")} solver={solver} args={string.Join(" ", Environment.GetCommandLineArgs(), 1, Environment.GetCommandLineArgs().Length - 1)}");
         }
 
         // 動いている部品の種類と数をログに出し(どれを止めて試すかの手がかり)、指定された部品を止める。

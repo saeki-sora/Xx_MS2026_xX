@@ -28,6 +28,16 @@ namespace MS2026.Fortress
         LingerAndAttack = 1
     }
 
+    /// <summary>敵同士の押し合いの計算方法（群衆の設定「押し合いの方式」）。</summary>
+    public enum SwarmCrowdSolver
+    {
+        /// <summary>1体ずつ近くの敵を調べて押し戻す（従来の方式）。くり返し回数は「押し戻しの反復回数」。</summary>
+        [UnityEngine.InspectorName("1体ずつ押し合う（従来）")] PerAgent = 0,
+
+        /// <summary>マスごとの混み具合から、混んでいる所 → 空いている所へまとめて押す（流体の圧力）。軽い。近くの重なりの仕上げだけ1体ずつ行う。</summary>
+        [UnityEngine.InspectorName("流体の圧力でまとめて押す（軽い）")] Fluid = 1
+    }
+
     /// <summary>ジョブから参照する、敵の種類ごとの数値（EnemyTypeDefinitionから毎フレーム作る）。</summary>
     public struct SwarmTypeParams
     {

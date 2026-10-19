@@ -515,6 +515,16 @@ namespace MS2026.Fortress
             }
         }
 
+        /// <summary>
+        /// 「密集とみなす数」（半径 densityRadius の円の中にいる数）を、マスの混み具合（体の面積の割合）に直す。
+        /// 流体の方式で、近くの敵を数える代わりに混み具合で減速するときの基準。
+        /// </summary>
+        private float CrowdReferenceOccupancy(float typicalRadius, float densityRadius)
+        {
+            var body = typicalRadius * Mathf.Max(0.1f, _settings.personalSpace);
+            return _settings.densityReferenceCount * body * body / Mathf.Max(1e-4f, densityRadius * densityRadius);
+        }
+
         private JobHandle BuildJobChain(int count, float dt)
         {
             var maxRadius = 0.1f;
@@ -572,6 +582,24 @@ namespace MS2026.Fortress
             }.Schedule(handle);
             Mark(ref handle, 0);
 
+            // 押し合いの方式が「流体」なら、マスごとの混み具合を出す（Host・オフラインのみ。レーザー判定と同時に走らせる）。
+            var fluid = !IsReplica && ActiveCrowdSolver == SwarmCrowdSolver.Fluid;
+            var gridHandle = handle;
+            var occupancyHandle = gridHandle;
+            if (fluid)
+            {
+                occupancyHandle = new SwarmOccupancyJob
+                {
+                    cellStart = Grid.CellStart,
+                    cellItems = Grid.CellItems,
+                    typeIdx = Storage.typeIdx,
+                    types = _typeParams,
+                    occupancy = Grid.Occupancy,
+                    invCellArea = 1f / (Grid.CellSize * Grid.CellSize),
+                    personalSpace = _settings.personalSpace
+                }.Schedule(Grid.Width * Grid.Height, 64, gridHandle);
+            }
+
             if (_beamCount > 0 || _blastCount > 0)
             {
                 handle = new SwarmLaserJob
@@ -603,6 +631,11 @@ namespace MS2026.Fortress
                     beamOffset = _hitBeamOffset
                 }.Schedule(handle);
                 Mark(ref handle, 1);
+            }
+
+            if (fluid)
+            {
+                handle = JobHandle.CombineDependencies(handle, occupancyHandle);
             }
 
             if (IsReplica)
@@ -663,13 +696,48 @@ namespace MS2026.Fortress
                 densityReference = _settings.densityReferenceCount,
                 densitySlowdown = _settings.densitySlowdown,
                 minSpeedFactor = _settings.minSpeedFactor,
-                maxNeighbors = _settings.maxNeighborsChecked
+                maxNeighbors = _settings.maxNeighborsChecked,
+                occupancy = Grid.Occupancy,
+                useOccupancy = fluid ? 1 : 0,
+                hashCell = Grid.CellSize,
+                crowdReferenceOccupancy = CrowdReferenceOccupancy(maxRadius, densityRadius)
             }.Schedule(count, 128, handle);
             Mark(ref handle, 2);
 
             var input = Storage.predA;
             var output = Storage.predB;
             var separationIterations = _settings.separationIterations;
+            if (fluid)
+            {
+                // 流体: 混み具合の勾配でまとめて押してから、近くの重なりの仕上げだけ1体ずつ行う。
+                handle = new SwarmPressureJob
+                {
+                    predIn = Storage.predA,
+                    predOut = Storage.predB,
+                    typeIdx = Storage.typeIdx,
+                    state = Storage.state,
+                    types = _typeParams,
+                    occupancy = Grid.Occupancy,
+                    gridOrigin = Grid.Origin,
+                    gridCell = Grid.CellSize,
+                    gridW = Grid.Width,
+                    gridH = Grid.Height,
+                    sdf = Navigation.Sdf,
+                    sdfGradient = Navigation.SdfGradient,
+                    navOrigin = Navigation.Origin,
+                    navCell = Navigation.CellSize,
+                    navW = Navigation.Width,
+                    navH = Navigation.Height,
+                    pressure = _settings.fluidPressure,
+                    restOccupancy = _settings.fluidRestOccupancy,
+                    frameScale = dt * 60f,
+                    maxCorrectionRatio = _settings.maxCorrectionRatio,
+                    wallStiffness = _settings.wallStiffness
+                }.Schedule(count, 128, handle);
+                input = Storage.predB;
+                output = Storage.predA;
+                separationIterations = _settings.fluidRefineIterations;
+            }
             for (var iteration = 0; iteration < separationIterations; iteration++)
             {
                 handle = new SwarmSeparationJob

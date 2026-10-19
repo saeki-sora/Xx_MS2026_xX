@@ -42,6 +42,12 @@ namespace MS2026.Fortress
         /// <summary>1フレームに追加する上限の上書き(計測で改善前後を比べる用)。負なら群衆の設定(maxSpawnsPerFrame)どおり。0は無制限。</summary>
         public int SpawnsPerFrameOverride { get; set; } = -1;
 
+        /// <summary>押し合いの方式の上書き(計測で比べる用。起動引数 -fortress-swarm-solver)。null なら群衆の設定(crowdSolver)どおり。</summary>
+        public SwarmCrowdSolver? CrowdSolverOverride { get; set; }
+
+        /// <summary>今使っている押し合いの方式。</summary>
+        public SwarmCrowdSolver ActiveCrowdSolver => CrowdSolverOverride ?? (_settings != null ? _settings.crowdSolver : SwarmCrowdSolver.Fluid);
+
         /// <summary>Client: 今の先読みの秒数(写真の時刻から、表示している時刻まで。計測用)。</summary>
         public float ReplicaExtrapolationSeconds { get; private set; }
 

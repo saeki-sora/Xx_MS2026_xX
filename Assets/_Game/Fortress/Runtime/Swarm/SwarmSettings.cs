@@ -77,6 +77,25 @@ namespace MS2026.Fortress
         [Range(0, 256)]
         public int maxNeighborsChecked = 48;
 
+        [Header("押し合いの方式")]
+        [Tooltip("1体ずつ押し合う（従来）: 1体ごとに近くの敵を調べて押し戻す。上の「押し戻しの反復回数」だけくり返す。重い。\n" +
+                 "流体の圧力でまとめて押す: マスごとの混み具合を出し、混んでいる所から空いている所へまとめて押す（液体のような動き）。" +
+                 "近くの重なりの仕上げだけ1体ずつ行う（下の「仕上げの押し合い回数」）。群衆の計算がかなり軽くなる。" +
+                 "押し合いを計算するのは Host（とオフライン）だけなので、通信や参加側には関係しない。")]
+        public SwarmCrowdSolver crowdSolver = SwarmCrowdSolver.Fluid;
+
+        [Tooltip("【流体】混んでいる所から押し出す強さ。大きいほど早く広がる（さらさら）、小さいほど詰まったまま溜まる（どろどろ）。")]
+        [Range(0f, 2f)]
+        public float fluidPressure = 0.35f;
+
+        [Tooltip("【流体】体でこの割合までマスが埋まると押し返し始める（0〜1。1でマスいっぱい）。大きいほどぎゅうぎゅうに詰まる。")]
+        [Range(0.1f, 1.2f)]
+        public float fluidRestOccupancy = 0.6f;
+
+        [Tooltip("【流体】まとめて押した後に、1体ずつの押し合い（近くの重なりの仕上げ）を何回行うか。0なら行わない（一番軽いが、重なりが少し残る）。")]
+        [Range(0, 4)]
+        public int fluidRefineIterations = 1;
+
         [Header("障害物とのぶつかり（ぶつかってから避ける挙動）")]
         [Tooltip("障害物を事前に見て避ける度合い。0=障害物を気にせずコアへ一直線に進み、ぶつかってから壁沿いに流れて回り込む。" +
                  "1=最初から経路どおりに迂回する（ぶつからない）。")]
@@ -227,6 +246,8 @@ namespace MS2026.Fortress
                     separationStiffness = 0.6f;
                     separationIterations = 3;
                     personalSpace = 1f;
+                    fluidPressure = 0.22f;
+                    fluidRestOccupancy = 0.65f;
                     break;
 
                 case SwarmPreset.Fluid:
@@ -235,6 +256,8 @@ namespace MS2026.Fortress
                     separationStiffness = 0.95f;
                     separationIterations = 4;
                     personalSpace = 1f;
+                    fluidPressure = 0.55f;
+                    fluidRestOccupancy = 0.5f;
                     break;
 
                 case SwarmPreset.Packed:
@@ -243,6 +266,8 @@ namespace MS2026.Fortress
                     separationStiffness = 0.7f;
                     separationIterations = 4;
                     personalSpace = 0.8f;
+                    fluidPressure = 0.25f;
+                    fluidRestOccupancy = 0.8f;
                     break;
 
                 default:
@@ -251,6 +276,8 @@ namespace MS2026.Fortress
                     separationStiffness = 0.85f;
                     separationIterations = 3;
                     personalSpace = 1f;
+                    fluidPressure = 0.35f;
+                    fluidRestOccupancy = 0.6f;
                     break;
             }
         }
