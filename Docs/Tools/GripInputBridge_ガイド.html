@@ -160,9 +160,16 @@
       <p><b>USB を挿し直しても大丈夫</b>（2026-10-12）：使っているポートから <b>Device Lost Seconds</b>（既定 3 秒）のあいだ値が届かない・ポートが使えなくなったら（USB が抜けた・デバイスが止まった）、Console に「値が届かなくなりました」と出てキーボードに切り替わり、ポートをさがし直し続けます。挿し直すと数秒（さがし直す間隔＋Uno の再起動）で自動で実機に戻ります。試合中・キャラ選択中でもゲームは止まりません。</p>
       <p><b>タイトルに置く物は「Keep Across Scenes」を ON</b>：シーンが変わっても消えずに同じポートを使い続けます。ほかのシーン（ロビー・ゲーム）の ArduinoSerialReader は、これがあれば何もしません。シーンごとにポートを開け直すと、Arduino Uno は開くたびに約 2 秒再起動して値が途切れるためです。タイトルへの配置は <span class="mp">Tools<i>›</i>タイトル<i>›</i>握力センサーの読み取りを置く</span> で行えます（<a href="TitleScreen_ガイド.html">タイトル画面のガイド</a>）。</p>
       <p>Arduino からは <code>Serial.println(analogRead(A0));</code> のように <b>1 行に数値 1 つ</b>（P1）、または <code>512,300</code> のように <b>カンマ区切りで最大 4 つ</b>（P1〜P4）を送れば OK です。</p>
+      <p><b>実機の値でレーザーが出るのは、最初は P1 だけ</b>（2026-10-20）：<b>Device Player Count</b>（既定 1）より後のプレイヤーは、Arduino が <code>512,300</code> のように 2 つ以上送ってきても実機の値を使わず、キーボードだけで動きます。1 台の PC で 2 人以上が実機で遊ぶときだけ、人数に合わせて増やしてください（下の「実機の値で P2 以降のレーザーまで出てしまう」）。</p>
+    </div></details>
+    <details class="recipe" data-tags="hw"><summary><span class="q">実機の値で P2 以降のレーザーまで出てしまう／P2 も実機で動かしたい</span><span class="who">実機 › Device Player Count</span></summary><div class="a">
+      <p>ArduinoSerialReader の <b>Device Player Count</b> で、実機の値を使うプレイヤーの数（P1 から数える）を決めます。</p>
+      <ul><li><b>1</b>（既定）：P1 だけ実機。1 人プレイ・通信なしのときや、通信ありで各 PC が 1 人ずつのときはこれ。</li><li><b>2〜4</b>：1 台の PC に 2 人以上のセンサーをつなぐとき。</li><li><b>0</b>：実機を全員使わない（キーボードだけ）。</li></ul>
+      <p>Console に「COM3 (9600bps) を入力元にしました（実機の値を使うのは P1 だけ…）」と、今の設定が出ます。<kbd>F8</kbd> の表では、実機を使わないプレイヤーの状態に「実機OFF」と付きます（届いた値は表示されますが、レーザーには使いません）。どのプレイヤーでもキーボード（Q/W/O/P）は効きます。</p>
+      <p class="small muted">設定はタイトルに置いた ArduinoSerialReader（Keep Across Scenes が ON の物）のものが使われます。ゲームのシーンの物を変えても効かないので注意。</p>
     </div></details>
     <details class="recipe" data-tags="hw live"><summary><span class="q">コントローラーから届いている生の値を画面で見たい</span><span class="who">実機 › F8</span></summary><div class="a">
-      <ol><li>▶ Play 中（またはビルドしたゲーム）で <kbd>F8</kbd> を押すと、画面の左上に表が出ます。もう一度 <kbd>F8</kbd> で消えます。</li><li>上から <b>状態</b>（受信中／ポートをさがしています など）、<b>ポートと通信速度</b>、<b>受信</b>（1 秒に何行届いているか・最後の行が何秒前か・届いた行の数・読めなかった行の数）。</li><li><b>届いた1行</b> は、コントローラーが送った文字をそのまま表示します（Arduino の <code>println</code> の行末の見えない文字は <code>\r</code> と表示）。形が合わず捨てた行があれば <b>読めなかった行</b> にも出ます。</li><li>下の 4 行は P1〜P4。<b>届いた値(0-1023)</b>・<b>raw</b>（センサー特性の変換後 0〜1）・<b>grip</b>（ゲームが使う最終の値 0〜1）・状態。届いた値の大きさが、プレイヤー色の帯で後ろに描かれます。値がまだ一度も来ていないプレイヤーは「—」。</li></ol>
+      <ol><li>▶ Play 中（またはビルドしたゲーム）で <kbd>F8</kbd> を押すと、画面の左上に表が出ます。もう一度 <kbd>F8</kbd> で消えます。</li><li>上から <b>状態</b>（受信中／ポートをさがしています など）、<b>ポートと通信速度</b>、<b>受信</b>（1 秒に何行届いているか・最後の行が何秒前か・届いた行の数・読めなかった行の数）。</li><li><b>届いた1行</b> は、コントローラーが送った文字をそのまま表示します（Arduino の <code>println</code> の行末の見えない文字は <code>\r</code> と表示）。形が合わず捨てた行があれば <b>読めなかった行</b> にも出ます。</li><li>下の 4 行は P1〜P4。<b>届いた値(0-1023)</b>・<b>raw</b>（センサー特性の変換後 0〜1）・<b>grip</b>（ゲームが使う最終の値 0〜1）・状態。届いた値の大きさが、プレイヤー色の帯で後ろに描かれます。値がまだ一度も来ていないプレイヤーは「—」。状態に「実機OFF」と付いたプレイヤーは、<b>Device Player Count</b> の外なので実機の値をレーザーに使いません。</li></ol>
       <p>始めから出しておきたいときは、ArduinoSerialReader の <b>Show Raw Values</b> を ON（エディタの中だけ。ビルドでは起動オプション <code>-debug-ui</code> を付けたときだけ効きます）。ビルドで確実に始めから出すなら、起動オプション <code>-gripdebug</code>。会場（キーボードなし）では何もしなければ出ません。</p>
       <p class="small muted">見分け方：「受信 0.0 行/秒」なら値が来ていない（USB・ポート・通信速度を確認）。行は届いているのに「読めなかった行」が増えるなら、送っている文字の形が合っていません（<code>512</code> や <code>512,300</code> のような 0〜1023 の整数が 1 行に最大 4 つ）。表が出ないときは、シーンに ArduinoSerialReader があるか確認（タイトルに置いた物がシーンをまたいで使われます）。</p>
     </div></details>
@@ -216,6 +223,7 @@
     <tr><td>Port Name</td><td>COM ポート名</td><td colspan="2">デバイスマネージャー／Arduino IDE で確認</td><td class="def">COM3</td></tr>
     <tr><td>Baud Rate</td><td>通信速度</td><td colspan="2">Arduino 側と同じにする</td><td class="def">9600 ／ 115200</td></tr>
     <tr><td>Heartbeat Timeout Ms</td><td>この時間データが来ないと「切断」</td><td colspan="2">Arduino の送信間隔より長く</td><td class="def">1000 ／ 200</td></tr>
+    <tr><td>Device Player Count</td><td>実機の値を使うプレイヤー数（P1 から数える）</td><td colspan="2">ArduinoSerialReader のみ。1 = P1 だけ。これより後のプレイヤーはキーボードだけ</td><td class="def">1</td></tr>
     <tr><td>Centered Sensor</td><td>中心からの距離を握力にする</td><td colspan="2">ホールセンサー（49E 等）は ON</td><td class="def">ON ／ OFF</td></tr>
     <tr><td>Sensor Center 01</td><td>何もしていないときの値（0〜1）</td><td colspan="2">Uno の 512 なら 0.5</td><td class="def">0.5</td></tr>
     <tr><td>Auto Find Port</td><td>Port Name で値が届かないとき、ほかの COM ポートも試す</td><td colspan="2">ArduinoSerialReader のみ。OFF なら Port Name だけ（今までの動き）</td><td class="def">ON</td></tr>

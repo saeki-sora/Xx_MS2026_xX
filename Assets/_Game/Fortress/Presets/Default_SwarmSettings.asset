@@ -37,5 +37,25 @@ MonoBehaviour:
   ySort: 1
   renderQueue: 2990
   hitFlashDuration: 0.1
+  footShadow: 1
+  footShadowSize: 0.75
+  footShadowDarkness: 0.4
+  crowdSheen: 1
+  crowdSheenStrength: 0.45
+  crowdSheenColor: {r: 1, g: 1, b: 1, a: 1}
+  crowdDarken: 0.18
+  crowdWaveSpeed: 1.6
+  crowdWaveScale: 0.9
+  crowdFullCount: 24
+  killSparks: 1
+  sparksPerKill: 3
+  maxSparks: 3000
+  maxNewSparksPerFrame: 300
+  sparkSize: 0.16
+  sparkBurstSpeed: 3.5
+  sparkHomingDelay: 0.18
+  sparkHomingSpeed: 16
+  deathFlashSize: 0.9
+  sparkBrightness: 1.4
   hitEffectsPerSecond: 60
   fallbackAreaSize: 64

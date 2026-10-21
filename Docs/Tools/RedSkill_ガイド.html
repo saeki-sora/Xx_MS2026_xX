@@ -33,7 +33,7 @@
   <ol id="toc"></ol>
   <div class="foot">
     <button class="themebtn" id="themeBtn" type="button"><span aria-hidden="true">◐</span><span data-label>ライト表示</span></button>
-    <div class="meta mono">Assets/RedSkill<br>2026-10-15 時点</div>
+    <div class="meta mono">Assets/RedSkill<br>2026-10-20 時点</div>
   </div>
 </nav>
 
@@ -56,7 +56,7 @@
       <dt>誰が使う</dt><dd>プランナー（強さ・長さの調整）／デザイナー（色・演出の調整）／プログラマー（キャラとの紐づけ）</dd>
       <dt>入れ方</dt><dd><span class="mp">Tools<i>›</i>赤スキル<i>›</i>開いているシーンにスキルを入れる</span> → シーンを保存</dd>
       <dt>調整する場所</dt><dd><span class="mp">Tools<i>›</i>赤スキル<i>›</i>スキルの設定ファイルを開く</span>（<code>Assets/RedSkill/Data/RedLaserSkill.asset</code>）</dd>
-      <dt>今の状況</dt><dd>テスト用シーン <code>redskill_testscene</code> で作成中。キャラ選択とのつなぎこみは準備だけ（対応表は空）</dd>
+      <dt>今の状況</dt><dd>テスト用シーン <code>redskill_testscene</code> で作成中。対応表には赤キャラ（Chara_Alpha）→ 赤スキル、緑キャラ（Chara_Gamma）→ <a href="GreenSkill_ガイド.html">緑スキル</a> が入っている（2026-10-20）。スキルを配る係のプレハブでは P3 が緑スキル</dd>
     </dl></div>
   </div>
   <div class="marquee" aria-hidden="true"><div class="track" id="mq" data-words="スマッシュボール|溜め|極太レーザー|しま模様|広がる|壁で止まる|火花|衝撃の輪|グラデーション|キャラに紐づけ"></div></div>
@@ -150,7 +150,7 @@
   <div class="rv"><div class="eyebrow">04 — Inspector</div><h2>見る場所は<br><em>3 つ</em>。</h2></div>
   <div class="tabguide">
     <div class="tg-panel rv"><h3>スキルの設定ファイル（RedLaserSkill）</h3><p class="when">強さ・形・色・演出を変えるとき</p><ul class="points"><li>上から <b>スキルの情報</b>・<b>使えるようになる条件</b>・<b>通常のレーザーとの関係</b>、その下に ▶ で開くまとまり（<b>タイミング</b>／<b>形・大きさ</b>／<b>ダメージ・当たり判定</b>／<b>レーザーの色・模様</b>／<b>溜め（使える状態）の演出</b>／<b>発射口の演出</b>／<b>壁に当たった場所の演出</b>／<b>カメラの揺れ</b>／<b>効果音・追加エフェクト（D-Drive）</b>）。</li><li>項目にマウスを乗せると説明が出ます。</li><li>Play 中は一番下に、このスキルを持つ砲台ごとの状態と <b>使えるようにする</b>／<b>今すぐ撃つ</b>／<b>止める</b>。</li></ul></div>
-    <div class="tg-panel rv"><h3>スキルを配る係（[RedSkill] Skill Installer）</h3><p class="when">どの席にどのスキルを配るか決めるとき</p><ul class="points"><li><b>全員に配るスキル</b>・<b>プレイヤーごとのスキル（P1〜P4）</b>・<b>キャラ選択の結果を使う</b>・<b>キャラとスキルの対応表</b>。</li><li>テスト用：<b>最初から全員使える（テスト）</b>、<b>数字キー1〜4で溜める（テスト）</b>（エディタだけ）。</li><li>Play 中は全砲台の状態とテストボタンが並びます。</li></ul></div>
+    <div class="tg-panel rv"><h3>スキルを配る係（[RedSkill] Skill Installer）</h3><p class="when">どの席にどのスキルを配るか決めるとき</p><ul class="points"><li><b>全員に配るスキル</b>・<b>プレイヤーごとのスキル（P1〜P4）</b>・<b>キャラ選択の結果を使う</b>・<b>キャラとスキルの対応表</b>。</li><li>テスト用：<b>最初から全員使える（テスト）</b>、<b>数字キー1〜4で溜める（テスト）</b>（エディタだけ）。</li><li>プレハブでは <b>プレイヤーごとのスキル（P1〜P4）</b> の 3 番目（P3）が緑スキル（<code>GreenMintSkill</code>）。ほかの席は <b>全員に配るスキル</b>（赤）。</li><li>Play 中は全砲台の状態とテストボタンが並びます。</li></ul></div>
     <div class="tg-panel rv"><h3>砲台のスキル欄（Player Skill Slot）</h3><p class="when">Play 中に 1 台だけ確かめるとき</p><ul class="points"><li>Play すると各砲台（Turret_P0 など）に自動で付きます。</li><li>状態：<b>スキルなし</b>／<b>まだ使えない</b>／<b>使える（次に撃つとスキル）</b>／<b>使える（今のレーザーを離したら次で発動）</b>／<b>スキルを撃っている</b>。</li></ul></div>
   </div>
 </section>
@@ -252,12 +252,13 @@ public sealed class YellowSkillRunner : CharacterSkillRunner {
 <section id="more" data-nav="関連ツール">
   <div class="rv"><div class="eyebrow">09 — Related</div><h2>一緒に使う<br><em>ツール</em>。</h2></div>
   <div class="links">
+    <a class="lk rv" href="GreenSkill_ガイド.html"><span class="ti">緑スキル</span><span class="ds">同じスキル欄で動く、コアを回復して守る緑キャラのスキル。</span></a>
     <a class="lk rv" href="FortressDesigner_ガイド.html"><span class="ti">要塞デザイナー</span><span class="ds">砲台・スマッシュボール・演出欄（効果音）の設定。</span></a>
     <a class="lk rv" href="CharacterSelect_ガイド.html"><span class="ti">キャラクター選択</span><span class="ds">選ばれたキャラ → 対応表でスキルを決める。</span></a>
     <a class="lk rv" href="D-Drive_ガイド.html"><span class="ti">D-Drive</span><span class="ds">効果音・エフェクトの素材の登録。</span></a>
     <a class="lk rv" href="index.html"><span class="ti">ツール一覧</span><span class="ds">このプロジェクトの全ツール。</span></a>
   </div>
-  <footer><span>Red Skill Guide · Xx_MS2026_xX</span><span>2026-10-15 時点のコードに基づく</span></footer>
+  <footer><span>Red Skill Guide · Xx_MS2026_xX</span><span>2026-10-20 時点のコードに基づく</span></footer>
 </section>
 </main>
 </div>

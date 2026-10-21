@@ -6,7 +6,10 @@
         "MS2026.CharacterSelect.Data",
         "DDrive.Runtime",
         "DDrive.Foundation",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "Unity.Mathematics",
+        "Unity.Collections",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

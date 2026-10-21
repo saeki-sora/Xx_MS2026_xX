@@ -1593,6 +1593,30 @@ MonoBehaviour:
     pulseBelowHealth01: 0.25
     pulsePerSecond: 1.4
     response: 1.5
+  gemLook:
+    enabled: 1
+    opacity: 0.92
+    refraction: 0.035
+    rimStrength: 0.8
+    highlight: 0.9
+    caustic: 0.35
+    glowColor: {r: 0.75, g: 0.95, b: 1, a: 1}
+    hurtColor: {r: 1, g: 0.25, b: 0.15, a: 1}
+    glowStrength: 0.6
+    calmPulsePerSecond: 0.5
+    hurtPulsePerSecond: 2.4
+    crackStartHealth01: 0.8
+    crackColor: {r: 1, g: 0.45, b: 0.2, a: 1}
+    crackWidth: 0.06
+    hitFlashSeconds: 0.25
+  hitRing:
+    enabled: 1
+    color: {r: 1, g: 0.2, b: 0.15, a: 1}
+    brightness: 1.5
+    radius: 3.5
+    seconds: 0.6
+    width: 0.18
+    minInterval: 0.25
   damageMultiplier: 1
 --- !u!212 &526317132
 SpriteRenderer:
@@ -2396,7 +2420,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0dcf6c8c3df64ee79179f6957c84e665, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.FortressMatchRules
-  clearKills: 200
+  clearKills: 2000
   removeEnemiesOnEnd: 1
   coreMaxHealth: 1000
   coreDamageMultiplier: 1

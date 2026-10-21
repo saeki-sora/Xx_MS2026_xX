@@ -1,0 +1,197 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a814300853e1494599ec0cd56be92ac2, type: 3}
+  m_Name: GreenMintSkill
+  m_EditorClassIdentifier: MS2026.RedSkill.Runtime::MS2026.Skills.Green.GreenMintSkill
+  skillId: green_mint_satellite
+  displayName: "\u30DF\u30F3\u30C8\u30FB\u30B5\u30C6\u30E9\u30A4\u30C8"
+  description: "\u30B3\u30A2\u306E\u5468\u308A\u3092\u30DF\u30F3\u30C8\u30BF\u30D6\u30EC\u30C3\u30C8\u306E\u885B\u661F\u304C\u56DE\u308A\u3001\u8FD1\u3065\u3044\u305F\u6575\u3092\u9320\u5264\u306E\u5F3E\u3067\u6483\u3061\u843D\u3068\u3059\u3002\u767A\u52D5\u306E\u77AC\u9593\u306B\u30B3\u30A2\u3092\u5927\u304D\u304F\u56DE\u5FA9\u3057\u3001\u305D\u306E\u5F8C\u3082\u3058\u308F\u3058\u308F\u56DE\u5FA9\u3059\u308B\u3002"
+  themeColor: {r: 0.25, g: 0.8, b: 0.5, a: 1}
+  chargeBySmashBall: 1
+  ignoreChargeWhileActive: 1
+  replacesNormalLaser: 1
+  hideNormalLaserUntilRelease: 1
+  timing:
+    launchSeconds: 0.6
+    activeSeconds: 12
+    endSeconds: 0.7
+  heal:
+    burstPercent: 20
+    regenPercent: 15
+    stopWhenMatchEnded: 1
+  attack:
+    range: 9
+    shotsPerSecond: 10
+    damagePerShot: 14
+    splashRadius: 0.55
+    maxHitsPerShot: 3
+    targetActors: 1
+    bombPriorityMeters: 3
+    bulletSpeed: 20
+    bulletTurnRate: 900
+    bulletLifetime: 1.4
+    maxImpactsPerFrame: 6
+  boost:
+    boostedShotsPerSecond: 22
+    boostedWidthScale: 2.1
+    boostedFlowScale: 2.4
+    response: 8
+  palette:
+    mint: {r: 0.55, g: 1, b: 0.76, a: 1}
+    green: {r: 0.2, g: 0.82, b: 0.5, a: 1}
+    deep: {r: 0.04, g: 0.42, b: 0.27, a: 1}
+    outline: {r: 0.03, g: 0.2, b: 0.13, a: 1}
+    tablet: {r: 0.97, g: 1, b: 0.98, a: 1}
+    leaf: {r: 0.22, g: 0.72, b: 0.36, a: 1}
+    glow: {r: 0.55, g: 1.6, b: 0.95, a: 1}
+  tabletCase:
+    enabled: 1
+    height: 2.2
+    width: 1.45
+    screenUpOffset: 1.7
+    appearSeconds: 0.35
+    trembleAmount: 0.035
+    rattleIntervalMin: 0.45
+    rattleIntervalMax: 1.05
+    rattleJump: {x: 0.16, y: 9}
+    tabletsInside: 6
+    sparkleRate: 10
+    crossRate: 1.6
+    auraScale: 1.9
+    lidOpenSeconds: 0.18
+    fadeOutSeconds: 0.45
+    sortingOrder: 140
+  satellites:
+    count: 5
+    size: 1.3
+    orbitRadius: 2.9
+    orbitDegreesPerSecond: 75
+    bobAmount: 0.18
+    shotPunch: 0.22
+    membraneRadius: 2.1
+    membraneOpacity: 0.55
+    showRangeRing: 1
+    rangeRingOpacity: 0.4
+    sortingOrder: 160
+  link:
+    width: 0.6
+    wobbleAmount: 0.22
+    wobbleWaves: 2.2
+    bow: 0.8
+    flowSpeed: 5
+    carriedTablets: 7
+    opacity: 0.9
+    extendSeconds: 0.4
+    segments: 40
+    sortingOrder: 145
+  shots:
+    bulletSize: 0.6
+    bulletSpin: 540
+    trailSeconds: 0.16
+    trailWidthScale: 0.75
+    powderCount: 9
+    powderSize: 0.75
+    leafCount: 2
+    leafSize: 0.6
+    sparkleCount: 7
+    ringSize: 1.7
+    muzzleFlashSize: 1.4
+  burst:
+    waveSize: 40
+    waveSeconds: 1.1
+    flashSize: 11
+    screenEdgeStrength: 0.55
+    screenEdgeSeconds: 1.1
+    sparkleCount: 110
+    leafCount: 18
+    crossCount: 10
+    shine: 1
+    regenCrossRate: 2.2
+  cameraShake:
+    ownerViewOnly: 0
+    burst:
+      amplitude: 0.16
+      rollAmplitude: 0.35
+      frequency: 18
+      duration: 0.35
+    burstStrength: 1
+  sounds:
+    onReady:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onActivate:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onBurst:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    whileActive:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onShot:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    shotInterval: 0.08
+    onHit:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    hitInterval: 0.08
+    onEnd:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+  shaders:
+    radial: {fileID: 4800000, guid: 527d8e270d474a6488fcfeac9ed5f61a, type: 3}
+    particle: {fileID: 4800000, guid: b2109d45b11a4d1495705b82af89f548, type: 3}
+    gel: {fileID: 4800000, guid: 698ddccdb643414aa6bf56f29b6fa0bc, type: 3}
+    sprite: {fileID: 4800000, guid: 13c6d6d42d3846b98e1768dc19ad7fee, type: 3}

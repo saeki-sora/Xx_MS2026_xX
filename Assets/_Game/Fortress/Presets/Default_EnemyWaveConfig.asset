@@ -17,8 +17,8 @@ MonoBehaviour:
   - triggerTime: 0
     spawnPointId: Spawn_0
     enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
-    count: 30
-    intervalBetweenSpawns: 0.08
+    count: 90
+    intervalBetweenSpawns: 0.03
   - triggerTime: 2
     spawnPointId: Spawn_2
     enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
@@ -42,7 +42,7 @@ MonoBehaviour:
   - triggerTime: 1
     spawnPointId: Spawn_0
     enemyType: {fileID: 11400000, guid: 6d198346f01843cead1c71f12aff332a, type: 2}
-    count: 4
+    count: 10
     intervalBetweenSpawns: 0.25
   - triggerTime: 4.5
     spawnPointId: Spawn_4

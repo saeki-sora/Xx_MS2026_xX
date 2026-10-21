@@ -17,6 +17,7 @@
 | キャラクター選択（作業中） | `Docs/Tools/CharacterSelect_AI_Reference.md` | `CharacterSelect_ガイド.html` | `Assets/CharacterSelect/`, `Assets/Scenes/Character_Select.unity`, `Assets/_Game/UI/Game/Session/GameSession.CharacterSelect.cs` |
 | 録画しながらプレイ（自作パッケージ） | `Docs/Tools/PlayRecorder_AI_Reference.md` | `PlayRecorder_ガイド.html` | `Packages/com.ms2026.playrecorder/`（パッケージ内 `README.md` も同時に更新） |
 | 赤スキル（キャラのスキル欄・作業中） | `Docs/Tools/RedSkill_AI_Reference.md` | `RedSkill_ガイド.html` | `Assets/RedSkill/`（スキル欄・配る係・対応表は4色共通、`Red/` が赤の極太レーザー）, `Assets/Scenes/redskill_testscene.unity` |
+| 緑スキル（ミント・サテライト・作業中） | `Docs/Tools/GreenSkill_AI_Reference.md` | `GreenSkill_ガイド.html` | `Assets/RedSkill/Scripts/Runtime/Green/`, `Assets/RedSkill/Shaders/GreenSkill*.shader`, `Assets/RedSkill/Scripts/Editor/GreenSkillMenu.cs`, `Assets/_Game/UI/Game/HudCoreHealFx.cs`（HUD のコアのバーの回復演出） |
 
 1. **読む**: 上のツールに関わる作業では、ソースを読み始める前に該当する `*_AI_Reference.md` を読むこと。ソースを開くのは、そこに書いていないことを確かめるときだけにする。
 2. **更新する**: ツールのコード・挙動・UI の文言・メニュー・既定値・パス・公開 API を変更／追加したら、**同じ作業の中で**そのツールの `*_ガイド.html` と `*_AI_Reference.md` を両方更新する（後回しにしない）。D-Drive は版の更新、ID の追加・変更、呼び出し箇所や設定の変更が対象。

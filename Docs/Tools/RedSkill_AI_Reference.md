@@ -41,8 +41,9 @@ Assets/RedSkill/
           RedSkillMenu.cs (menus)
   Shaders/  RedSkillBeam.shader ("MS2026/RedSkill/Beam") · RedSkillRadial.shader ("MS2026/RedSkill/Radial") · RedSkillParticle.shader ("MS2026/RedSkill/Particle") · RedSkillCommon.hlsl
   Data/     RedLaserSkill.asset (only skillId/displayName/description/themeColor/shaders serialized; everything else = C# field initializers until Unity re-saves it)
-            CharacterSkillTable.asset (entries empty)
-  Prefabs/  RedSkill_Installer.prefab (defaultSkill = RedLaserSkill.asset, characterTable = CharacterSkillTable.asset, useCharacterSelection on, enableTestKeys on)
+            CharacterSkillTable.asset (2026-10-20: Chara_Alpha (alpha) → RedLaserSkill, Chara_Gamma (gamma) → GreenMintSkill)
+  Prefabs/  RedSkill_Installer.prefab (defaultSkill = RedLaserSkill.asset, perPlayerSkills[2] (P3) = GreenMintSkill.asset since 2026-10-20, characterTable = CharacterSkillTable.asset, useCharacterSelection on, enableTestKeys on)
+  Green skill (2026-10-20): Scripts/Runtime/Green/, Scripts/Editor/GreenSkillMenu.cs, Shaders/GreenSkill{Gel,Sprite}.shader, Data/GreenMintSkill.asset — see GreenSkill_AI_Reference.md. The runtime asmdef now also references Unity.Mathematics, Unity.Collections, UnityEngine.UI (for the green skill).
 Docs/Tools/RedSkill_AI_Reference.md, RedSkill_ガイド.html
 ```
 - Test scene `Assets/Scenes/redskill_testscene.unity` (copy of the game setup: 4 turrets `Turret_P0..P3`, smash ball on `Destructible_0`, swarm, spawn points). The installer is **not** in the scene file yet — the user adds it via the menu (the editor had the scene open, so the YAML was not edited).
@@ -146,6 +147,7 @@ sealed class RedLaserSkill : CharacterSkill { timing, shape, damage, look, charg
 ## 5. Editor UI
 - Menu `Tools/赤スキル/開いているシーンにスキルを入れる` (instantiates the prefab, or builds the same object if the prefab is missing; selects an existing installer instead of adding a second; disabled in Play) and `Tools/赤スキル/スキルの設定ファイルを開く`.
 - Inspectors draw Japanese labels (`SkillInspectorGUI`): groups are foldouts (`タイミング`, `形・大きさ`, `ダメージ・当たり判定`, `レーザーの色・模様`, `溜め（使える状態）の演出`, `発射口の演出`, `壁に当たった場所の演出`, `カメラの揺れ`, `効果音・追加エフェクト（D-Drive）`, `シェーダー（通常は触らない）`). `FortressEffect` fields use the Fortress drawer.
+- `SkillTestButtons.DrawExtraTools` (static event `Action<CharacterSkill>`, 2026-10-20): drawn at the bottom of the skill-asset inspector (`CharacterSkillEditor`) so a skill's editor code can add its own Play-mode test tools (green: core HP + `コアを30%減らす` / `コアを満タンにする`). Register from an `[InitializeOnLoad]` static class.
 - Play-mode test rows (`SkillTestButtons.DrawRow`): `P{n}  スキル名` + state text, buttons `使えるようにする` / `今すぐ撃つ` / `止める` — on the slot, the installer (all slots) and the skill asset (slots using it).
 - Create menus: `MS2026/スキル/レッド：極太レーザー`, `MS2026/スキル/キャラとスキルの対応表`; AddComponent `MS2026/スキル/スキルを砲台に配る`.
 

@@ -133,8 +133,15 @@ public sealed class GripRawValueOverlay : MonoBehaviour
             var color = PlayerColors[i];
             color.a = 0.35f;
             DrawRect(bar, color);
+            // 実機の値を使わないプレイヤー（ArduinoSerialReader の devicePlayerCount より後）は、届いていてもレーザーには使わない。
+            var status = provider.GetStatus(i).ToString();
+            if (hasSerial && i >= reader.devicePlayerCount)
+            {
+                status += " 実機OFF";
+            }
+
             DrawRow(x, y, $"P{i + 1}", receivedText, provider.GetRawValue(i).ToString("0.000"), provider.GetGripValue(i).ToString("0.000"),
-                provider.GetStatus(i).ToString(), _mono);
+                status, _mono);
             y += LineHeight;
         }
 

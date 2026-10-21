@@ -108,6 +108,48 @@ namespace MS2026.GripInputBridge.Tests.EditMode
         }
 
         [Test]
+        public void DevicePlayerCount_PlayersAfterCountUseKeyboardOnly()
+        {
+            var composite = new CompositeGripTransport(_device, _keyboard, 1);
+            for (var i = 0; i < GripInputBridgeConstants.PlayerCount; i++)
+            {
+                _device.Connected[i] = true;
+                _device.Values[i] = 0.9f;
+                _keyboard.Values[i] = 0.1f;
+            }
+
+            Assert.AreEqual(0.9f, composite.GetRawValue(0), 1e-5f);
+            Assert.IsTrue(composite.IsDeviceConnected(0));
+
+            // P2以降はマイコンが値を送ってきても使わない(キーボードの値だけ)。
+            Assert.AreEqual(0.1f, composite.GetRawValue(1), 1e-5f);
+            Assert.AreEqual(0.1f, composite.GetRawValue(3), 1e-5f);
+            Assert.IsFalse(composite.IsDeviceConnected(1));
+        }
+
+        [Test]
+        public void DevicePlayerCount_EventsOnlyForUsedPlayers()
+        {
+            var composite = new CompositeGripTransport(_device, _keyboard, 1);
+            var connected = -1;
+            composite.OnConnected += p => connected = p;
+
+            _device.RaiseConnected(2);
+            Assert.AreEqual(-1, connected);
+
+            _device.RaiseConnected(0);
+            Assert.AreEqual(0, connected);
+        }
+
+        [Test]
+        public void DevicePlayerCount_IsClamped()
+        {
+            Assert.AreEqual(0, new CompositeGripTransport(_device, _keyboard, -3).DevicePlayerCount);
+            Assert.AreEqual(GripInputBridgeConstants.PlayerCount, new CompositeGripTransport(_device, _keyboard, 99).DevicePlayerCount);
+            Assert.AreEqual(GripInputBridgeConstants.PlayerCount, _composite.DevicePlayerCount);
+        }
+
+        [Test]
         public void NullArguments_Throw()
         {
             Assert.Throws<ArgumentNullException>(() => new CompositeGripTransport(null, _keyboard));

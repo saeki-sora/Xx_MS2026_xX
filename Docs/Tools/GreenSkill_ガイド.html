@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>緑スキル ガイド</title>
+<meta name="description" content="緑キャラのスキル「ミント・サテライト」（コアの周りをミントタブレットの衛星が回って敵を撃ち、コアを回復する）の使い方">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/guide.css">
+<style>
+:root{--acc:#3fe08a;--acc-ink:#012012;--acc2:#b8ffd9;--acc3:#c8f560}
+:root[data-theme="light"]{--acc:#0b7a43;--acc-ink:#ffffff;--acc2:#1f6b45;--acc3:#4d6b00}
+.orbitviz{position:relative;height:230px;border-radius:12px;background:radial-gradient(circle at 50% 50%,#173a2a 0,#0b1a13 70%);overflow:hidden;margin-top:18px}
+.orbitviz .range{position:absolute;left:50%;top:50%;width:210px;height:210px;transform:translate(-50%,-50%);border-radius:50%;border:2px dashed rgba(140,255,200,.45)}
+.orbitviz .core{position:absolute;left:50%;top:50%;width:46px;height:46px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,#fff 0,#dff 40%,#9fd 70%);box-shadow:0 0 0 14px rgba(120,255,190,.25),0 0 40px 18px rgba(100,255,170,.35)}
+.orbitviz .ring{position:absolute;left:50%;top:50%;width:124px;height:124px;margin:-62px 0 0 -62px;animation:gs-spin 7s linear infinite}
+.orbitviz .sat{position:absolute;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff 0,#f4fff8 45%,#9feac2 70%,#08402a 74%);box-shadow:0 0 12px rgba(120,255,190,.8)}
+.orbitviz .sat:nth-child(1){left:51px;top:-11px}.orbitviz .sat:nth-child(2){left:113px;top:34px}.orbitviz .sat:nth-child(3){left:90px;top:107px}.orbitviz .sat:nth-child(4){left:12px;top:107px}.orbitviz .sat:nth-child(5){left:-11px;top:34px}
+.orbitviz .gel{position:absolute;left:8%;top:62%;width:38%;height:14px;border-radius:8px;background:repeating-linear-gradient(90deg,#9ff5c6 0 10px,#57d68f 10px 22px);border:2px solid #0b3a25;transform:rotate(-12deg);opacity:.9}
+.orbitviz .case{position:absolute;left:5%;top:52%;width:26px;height:38px;border-radius:7px;background:#36d07f;border:2px solid #0b3a25}
+.orbitviz .case::before{content:"";position:absolute;left:4px;right:4px;top:5px;height:12px;border-radius:3px;background:#d9ffee}
+.orbitviz .shot{position:absolute;width:9px;height:9px;border-radius:50%;background:#fff;box-shadow:0 0 8px 3px rgba(120,255,190,.8)}
+.orbitviz .lbl{position:absolute;font-size:11px;color:#c9ffe3;font-family:var(--mono)}
+@keyframes gs-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.orbitviz .ring{animation:none}}
+.timeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:22px}
+.timeline .card{padding:14px}
+.timeline .card h4{margin:0 0 6px}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<div class="orbs" aria-hidden="true"><div class="orb a"></div><div class="orb b"></div></div>
+
+<div class="shell">
+<nav class="side" aria-label="目次">
+  <a class="back" href="index.html">← ツール一覧</a>
+  <a class="brand" href="#top"><span class="mark">GS</span><span class="t">緑スキル</span></a>
+  <ol id="toc"></ol>
+  <div class="foot">
+    <button class="themebtn" id="themeBtn" type="button"><span aria-hidden="true">◐</span><span data-label>ライト表示</span></button>
+    <div class="meta mono">Assets/RedSkill/…/Green<br>2026-10-20 時点</div>
+  </div>
+</nav>
+
+<main id="top">
+<header class="hero">
+  <div class="tags">
+    <span class="pill hot">キャラのスキル</span>
+    <span class="pill">回復・サポート</span>
+    <span class="pill">スマッシュボールで溜まる</span>
+    <span class="pill">次の攻撃で発動</span>
+  </div>
+  <h1 class="mega" aria-label="GREEN SKILL"><span class="o">GREEN</span><span class="f">SKILL</span></h1>
+  <p class="subname">緑キャラのスキル「ミント・サテライト」 — <b>コアがミントの衛星をしたがえて、自分で戦い、回復する</b></p>
+  <div class="hero-row">
+    <div>
+      <p class="oneword">握った瞬間、ミントタブレットがコアへ飛び、<span class="hl">「ドン」とコアが回復</span>。<br>そのあと 8 秒間、<span class="hl">コアの周りの衛星が近づく敵を撃ち落とす</span>。</p>
+      <p class="analogy">口の中にミントタブレットを入れて「スーッ」とする感じを、コアに起こすスキルです。スキルが溜まると、緑の砲台の上でミントタブレットのケースが「カシャカシャ」と震えます。握ると蓋がパカッと開き、中のタブレットがコアへ飛んでいき、コアに着いた瞬間に画面いっぱいにミントの波が広がってコアが回復。そのあとはタブレットがコアの周りを衛星のように回り、近づいた敵へ錠剤の弾を撃ち続けます。緑の砲台はその間、緑のジェルでコアへ力を送り続けます。</p>
+    </div>
+    <div class="facts"><dl>
+      <dt>誰が使う</dt><dd>プランナー（回復量・強さ・長さ）／デザイナー（色・演出）／プログラマー（キャラとの紐づけ）</dd>
+      <dt>入れ方</dt><dd>赤スキルと同じ「スキルを配る係」を使う。プレハブでは <b>P3（緑の席）</b> が緑スキル</dd>
+      <dt>調整する場所</dt><dd><span class="mp">Tools<i>›</i>緑スキル<i>›</i>スキルの設定ファイルを開く</span>（<code>Assets/RedSkill/Data/GreenMintSkill.asset</code>）</dd>
+      <dt>今の状況</dt><dd>コードは完成・コンパイル確認済み。<b>Unity でまだ動かしていない</b>（見た目の最終調整はこれから）</dd>
+    </dl></div>
+  </div>
+  <div class="marquee" aria-hidden="true"><div class="track" id="mq" data-words="ミント|タブレットケース|カシャカシャ|ドンと回復|ミントの波|衛星|錠剤の弾|粉と葉っぱ|緑のジェル|握ると強化|じわじわ回復"></div></div>
+</header>
+
+<section id="what" data-nav="何ができる？">
+  <div class="rv">
+    <div class="eyebrow">01 — What it does</div>
+    <h2>溜めて、握って、<br><em>コアが戦う</em>。</h2>
+    <p class="lead">流れは「溜まる → 使える → 発動 → ドン → 守る → おしまい」。どの段階の長さ・強さ・見た目も、設定ファイル 1 つで変えられます。</p>
+  </div>
+  <div class="timeline">
+    <div class="card rv"><h4>① 溜まる</h4><p class="small">自分のレーザーでスマッシュボールを割る（赤と同じ）。</p></div>
+    <div class="card rv"><h4>② 使える</h4><p class="small">緑の砲台の上（画面の上側）にミントタブレットのケースが「ポン」と出る。小刻みに震え、ときどき「カシャカシャ」と跳ねて、窓の中のタブレットが跳ね回る。キラキラと回復の十字（＋）も浮かぶ。</p></div>
+    <div class="card rv"><h4>③ 発動</h4><p class="small">次に握った瞬間、蓋がパカッと開いて、タブレットが弧を描いてコアへ飛ぶ。砲台からコアへ緑のジェルが伸びる（0.6 秒）。</p></div>
+    <div class="card rv"><h4>④ ドン！</h4><p class="small">コアに着いた瞬間、<b>コアが 20% 回復</b>。ミントの波が画面いっぱいに広がり、画面のふちがミント色に光り、光の帯がコアを磨くように通り抜ける（全員の画面）。</p></div>
+    <div class="card rv"><h4>⑤ 守る（8 秒）</h4><p class="small">タブレットがコアの周りを回り、コアに近い敵から順に錠剤の弾を撃つ。当たると粉と葉っぱが弾ける。コアはじわじわ回復（合計 15%）。緑の人が握ると、ジェルが太くなって弾が増える。</p></div>
+    <div class="card rv"><h4>⑥ おしまい</h4><p class="small">衛星がらせんを描いてコアに吸い込まれ、ジェルもコアへ吸い込まれて消える。</p></div>
+  </div>
+  <div class="orbitviz rv" aria-hidden="true">
+    <div class="range"></div>
+    <div class="ring"><div class="sat"></div><div class="sat"></div><div class="sat"></div><div class="sat"></div><div class="sat"></div></div>
+    <div class="core"></div>
+    <div class="gel"></div><div class="case"></div>
+    <div class="shot" style="left:68%;top:22%"></div><div class="shot" style="left:74%;top:66%"></div>
+    <span class="lbl" style="left:50%;top:8px;transform:translateX(-50%)">守る範囲 半径 9m（点線の輪）</span>
+    <span class="lbl" style="left:4%;bottom:8px">緑の砲台 → ジェル → コア</span>
+    <span class="lbl" style="left:50%;top:26px;transform:translateX(-50%)">衛星 5 個・回る半径 2.9m</span>
+  </div>
+  <div class="cards">
+    <div class="card feat rv"><div class="ic">💚</div><h3>ドンと回復＋じわじわ回復</h3><p>コアに着いた瞬間に最大体力の 20%、そのあと 8 秒かけて合計 15%。</p><p class="ex">例：最大 100 のコアが 40 のとき → ドンで 60、8 秒後には 75。汚れ・ひびも体力に合わせて消えていく。HUD のコアのバーも緑に光る。</p></div>
+    <div class="card feat rv"><div class="ic">💊</div><h3>コアの衛星が自動で撃つ</h3><p>コアから半径 9m（砲台は 6m）の中の敵を、コアに近い順に狙う。1 秒に 10 発。1 発 14 ダメージで、ふつうの敵（体力 10）は 1 発、まわりも少し巻き込む。</p><p class="ex">例：コアに張り付きそうな敵が次々に弾ける。爆弾の敵は早めに（3m 分先に）狙うので、コアのすぐそばで爆発させにくい。</p></div>
+    <div class="card feat rv"><div class="ic">✊</div><h3>握ると強くなる</h3><p>スキル中に緑の人が握ると、ジェルが最大 2.1 倍に太く・流れが速くなり、弾が最大 1 秒に 22 発まで増える。</p><p class="ex">注意：握っている間は普段どおり砲台の熱が上がる（握りすぎるとスキルの後にオーバーヒートしていることがある）。</p></div>
+    <div class="card feat rv"><div class="ic">🌿</div><h3>全部ミントの緑</h3><p>ケース・衛星・弾・ジェル・波・粉・葉っぱ・十字まで、色は「色（ミントの配色）」の 7 色から作る。青や「凍る」感じは使わない。</p></div>
+    <div class="card feat rv"><div class="ic">🏆</div><h3>倒した敵は緑の手柄</h3><p>衛星の弾で倒した敵は、緑のプレイヤーの撃破数・コンボに入る（倒したときの粒も緑の砲台へ集まる）。</p></div>
+    <div class="card feat rv"><div class="ic">🌐</div><h3>4 人対戦でも同じに見える</h3><p>通信は増やさず、各 PC が自分で演出を出す。回復とダメージはホストだけが決め、結果は今までどおり全員に届く。</p></div>
+  </div>
+</section>
+
+<section id="start" data-nav="はじめての 5 分">
+  <div class="rv">
+    <div class="eyebrow">02 — First 5 minutes</div>
+    <h2>P3 で、<br><em>すぐ試せる</em>。</h2>
+  </div>
+  <div class="steps">
+    <div class="step rv"><div class="n">1</div><div>
+      <h3>シーンを開いて ▶ Play</h3>
+      <p><code>Assets/Scenes/Game.unity</code>（スキルを配る係 <b>RedSkill_Installer</b> が入っています）を開いて Play。スキルを配る係のプレハブで <b>P3</b> が緑スキルになっています（他の席は赤スキル）。入っていないシーンでは <span class="mp">Tools<i>›</i>赤スキル<i>›</i>開いているシーンにスキルを入れる</span> → 保存。</p>
+    </div></div>
+    <div class="step rv"><div class="n">2</div><div>
+      <h3>コアを減らしておく</h3>
+      <p>回復はコアが減っていないと見えないので、<span class="mp">Tools<i>›</i>緑スキル<i>›</i>コアを30%減らす（回復を試す・Play中）</span>。設定ファイルのインスペクターの一番下の <b>コアを30%減らす</b> ボタンでも同じです。</p>
+    </div></div>
+    <div class="step rv"><div class="n">3</div><div>
+      <h3>溜めて握る</h3>
+      <p>キーボードの <kbd>3</kbd> で P3 を「使える」にします（エディタだけ）。緑の砲台の上にケースが出て震えていれば OK。<kbd>O</kbd>（P3 の握り）を押すと発動します。握り続けると弾が増えます。握らずに試すなら <span class="mp">Tools<i>›</i>緑スキル<i>›</i>緑スキルを今すぐ撃つ（Play中）</span>。</p>
+    </div></div>
+    <div class="step rv"><div class="n">4</div><div>
+      <h3>値を変える</h3>
+      <p><span class="mp">Tools<i>›</i>緑スキル<i>›</i>スキルの設定ファイルを開く</span>。Play 中に変えてもすぐ反映され、Play を止めても残ります（<b>色（ミントの配色）</b> だけは次の Play から）。インスペクターの下の <b>今すぐ撃つ</b> で何度でも試せます。</p>
+      <p class="done">画面の向きは P1〜P4 で違いますが、ケースはどの画面でも上向きに立ちます。</p>
+    </div></div>
+  </div>
+</section>
+
+<section id="recipes" data-nav="やりたいこと逆引き">
+  <div class="rv"><div class="eyebrow">03 — Recipes</div><h2>「〜したい」から<br><em>探す</em>。</h2></div>
+  <label class="search rv"><span aria-hidden="true">🔍</span><span class="sr">やりたいことを検索</span><input id="recipeSearch" type="search" placeholder="例：回復、長く、範囲、弾、色、ケース"></label>
+  <div class="chips rv" id="recipeChips" role="group" aria-label="カテゴリ">
+    <button class="chip" aria-pressed="true" data-f="all">すべて</button>
+    <button class="chip" aria-pressed="false" data-f="tune">強さ・回復</button>
+    <button class="chip" aria-pressed="false" data-f="look">見た目・音</button>
+    <button class="chip" aria-pressed="false" data-f="setup">入れる・つなぐ</button>
+  </div>
+  <div class="recipes">
+    <details class="recipe" id="rc-heal" data-tags="tune"><summary><span class="q">回復量を変えたい</span><span class="who">コアの回復</span></summary><div class="a"><p><b>コアの回復</b> › <b>ドンと回復（%）</b>（初期値 20）と <b>じわじわ回復（合計 %）</b>（15）。どちらもコアの最大体力に対する割合です。じわじわ分は <b>タイミング</b> › <b>続く時間（秒）</b> の間に均等に入ります。満タンを超えた分は捨てられます。<b>試合が終わったら回復しない</b>（ON）で、クリア・ゲームオーバーの後は回復しません。</p></div></details>
+    <details class="recipe" id="rc-time" data-tags="tune"><summary><span class="q">もっと長く守らせたい／短くしたい</span><span class="who">タイミング</span></summary><div class="a"><p><b>タイミング</b> › <b>続く時間（秒）</b>（8）。握ってからコアに着くまでは <b>コアに着くまで（秒）</b>（0.6）、最後に吸い込まれるのは <b>消えるまで（秒）</b>（0.7）。</p></div></details>
+    <details class="recipe" id="rc-range" data-tags="tune"><summary><span class="q">狙う範囲を広く／狭くしたい</span><span class="who">コアの攻撃</span></summary><div class="a"><p><b>コアの攻撃（錠剤の弾）</b> › <b>守る範囲の半径（m）</b>（9）。画面の縦は約 28m、砲台はコアから 6m です。範囲のふちには点線の輪が出ます（<b>衛星とコアの膜</b> › <b>守る範囲の輪を出す</b> で消せます）。</p></div></details>
+    <details class="recipe" id="rc-power" data-tags="tune"><summary><span class="q">敵が倒れにくい／倒れすぎる</span><span class="who">コアの攻撃</span></summary><div class="a"><ul><li><b>1秒に撃つ数</b>（10。衛星全部の合計）と <b>1発のダメージ</b>（14。ふつうの敵の体力は 10）。</li><li><b>巻き込む半径（m）</b>（0.55）と <b>1発で当たる最大数</b>（3。0 なら範囲の全員）で、1 発でまわりの敵も倒せる量が変わります。</li><li>握ったときの増え方は <b>握ったときの強化</b> › <b>握りきったときの1秒に撃つ数</b>（22）。</li><li>弾が速すぎて見えにくいときは <b>弾の速さ（m/秒）</b>（20）を下げます。動く敵に当たりにくいときは <b>弾が曲がる速さ（度/秒）</b>（900）を上げます。</li></ul></div></details>
+    <details class="recipe" data-tags="tune"><summary><span class="q">爆弾の敵の狙い方を変えたい</span><span class="who">コアの攻撃</span></summary><div class="a"><p><b>爆弾の敵を先に狙う（m）</b>（3）。爆弾の敵は、本当の距離よりこの分だけコアに近いものとして先に狙います（コアのすぐそばで爆発させないため）。0 でほかの敵と同じ扱い。</p></div></details>
+    <details class="recipe" data-tags="tune"><summary><span class="q">Actor の敵（1体ずつ動く敵）は狙わないようにしたい</span><span class="who">コアの攻撃</span></summary><div class="a"><p><b>Actor の敵も狙う</b> を OFF。群衆の敵だけを狙います。</p></div></details>
+    <details class="recipe" id="rc-boost" data-tags="tune"><summary><span class="q">握ったときの強化を強く／弱くしたい</span><span class="who">握ったときの強化</span></summary><div class="a"><p><b>握りきったときの1秒に撃つ数</b>（22）・<b>握りきったときのジェルの太さ（倍）</b>（2.1）・<b>握りきったときの流れの速さ（倍）</b>（2.4）。握る強さに合わせて、普段の値からここまで増えます。<b>反応の速さ</b>（8）を下げるとゆっくり変わります。強化をなくすなら 3 つを普段と同じ値（撃つ数は <b>1秒に撃つ数</b> と同じ、倍率は 1）に。</p></div></details>
+    <details class="recipe" id="rc-color" data-tags="look"><summary><span class="q">色を変えたい</span><span class="who">色（ミントの配色）</span></summary><div class="a"><p><b>色（ミントの配色）</b> の 7 色（<b>明るいミント</b>・<b>ミントグリーン</b>・<b>濃い緑</b>・<b>輪郭の線</b>・<b>タブレットの白</b>・<b>葉っぱ</b>・<b>光（HDR）</b>）から、ケース・タブレット・葉っぱの絵と、ジェル・波・粉・十字・光の色を作ります。絵の色は Play の始めに描くので、変えたら Play をやり直してください（ほかの値はすぐ反映）。</p></div></details>
+    <details class="recipe" id="rc-case" data-tags="look"><summary><span class="q">溜めのケースの大きさ・動きを変えたい</span><span class="who">溜めのタブレットケース</span></summary><div class="a"><ul><li>大きさ：<b>高さ（m）</b>（2.2）・<b>幅（m）</b>（1.45）。カメラが遠いので大きめです（砲台は約 1.2m）。</li><li>置く場所：<b>画面の上へずらす（m）</b>（1.7）。どのプレイヤーの画面でも、ケースは画面の上向きに立ちます。</li><li>動き：<b>震える幅（m）</b>（0.035）、<b>カシャカシャの間隔・最短／最長（秒）</b>（0.45〜1.05）、<b>カシャカシャの跳ね（m・度）</b>（0.16m・9 度）、<b>中のタブレットの数</b>（6）。</li><li>まわり：<b>キラキラ（毎秒）</b>（10）・<b>回復の十字（毎秒）</b>（1.6）・<b>後ろの光の大きさ（倍）</b>（1.9）。</li><li>発動：<b>蓋が開く時間（秒）</b>（0.18）、<b>消える時間（秒）</b>（0.45）。<b>ケースを出す</b> を OFF にすると、タブレットは砲台から直接飛びます。</li></ul></div></details>
+    <details class="recipe" id="rc-satellite" data-tags="look"><summary><span class="q">衛星（コアの周りのタブレット）を変えたい</span><span class="who">衛星とコアの膜</span></summary><div class="a"><p><b>衛星の数</b>（5）・<b>衛星の大きさ（m）</b>（1.3）・<b>回る半径（m）</b>（2.9）・<b>回る速さ（度/秒）</b>（75。握ると最大 1.6 倍）・<b>ふわふわの幅（m）</b>（0.18）・<b>撃ったときの弾み</b>（0.22）。コアを包む膜は <b>膜の半径（m）</b>（2.1）と <b>膜の濃さ</b>（0.55）。コアの絵より手前に描くため <b>描く順番</b>（160）。</p></div></details>
+    <details class="recipe" id="rc-gel" data-tags="look"><summary><span class="q">ジェル（砲台→コア）の見た目を変えたい</span><span class="who">コアへ送るジェル</span></summary><div class="a"><p><b>太さ（m）</b>（0.6）・<b>うねりの幅（m）</b>（0.22）・<b>うねりの数</b>（2.2）・<b>弓なりの曲がり（m）</b>（0.8）・<b>流れる速さ（m/秒）</b>（5）・<b>運ばれるタブレットの数</b>（7）・<b>濃さ</b>（0.9）・<b>伸びる時間（秒）</b>（0.4）。ジェルの中には泡が流れ、ところどころ「ごくっ」とふくらみがコアへ運ばれていきます。</p></div></details>
+    <details class="recipe" id="rc-burst" data-tags="look"><summary><span class="q">回復の瞬間（ドン）をもっと派手に／控えめにしたい</span><span class="who">回復の瞬間の演出</span></summary><div class="a"><ul><li>波：<b>波の大きさ（m）</b>（40。画面全体を通り抜ける）・<b>波の時間（秒）</b>（1.1）。</li><li>コア：<b>コアの光の大きさ（m）</b>（11）、<b>コアを磨く光の帯</b>（ON）。</li><li>画面のふち：<b>画面のふちの光の濃さ</b>（0.55。0 で光らない）・<b>画面のふちの光の時間（秒）</b>（1.1）。HUD より奥に描くので、HUD は隠れません。</li><li>粒：<b>キラキラの数</b>（110）・<b>葉っぱの数</b>（18）・<b>回復の十字の数</b>（10）、じわじわ回復中の <b>じわじわ中の十字（毎秒）</b>（2.2）。</li><li>揺れ：<b>カメラの揺れ</b> › <b>回復の瞬間の揺れ</b> と <b>回復の瞬間の揺れの強さ</b>（1。0 で揺れない）。緑の人の画面だけ揺らすなら <b>緑の人の画面だけ揺らす</b>。</li></ul></div></details>
+    <details class="recipe" id="rc-shots" data-tags="look"><summary><span class="q">弾と当たったときの演出を変えたい</span><span class="who">弾と当たった場所の演出</span></summary><div class="a"><p><b>弾の大きさ（m）</b>（0.6）・<b>弾が回る速さ（度/秒）</b>・<b>尾の長さ（秒）</b>（0.16）・<b>尾の太さ（倍）</b>。当たったとき：<b>粉の数</b>（9）・<b>粉の大きさ（m）</b>・<b>葉っぱの数</b>（2）・<b>葉っぱの大きさ（m）</b>・<b>キラキラの数</b>（7）・<b>輪の大きさ（m）</b>（1.7、0 で出さない）。撃つ瞬間の衛星の光は <b>撃つ瞬間の光（m）</b>。</p></div></details>
+    <details class="recipe" id="rc-sound" data-tags="look"><summary><span class="q">効果音を付けたい</span><span class="who">効果音・追加エフェクト</span></summary><div class="a"><p><b>効果音・追加エフェクト（D-Drive）</b> の各欄（<b>使えるようになった瞬間</b>・<b>発動（蓋が開く）</b>・<b>回復の瞬間</b>・<b>衛星が回っている間（ループ）</b>・<b>弾を撃つ</b>・<b>弾が当たる</b>・<b>おしまい</b>）に D-Drive の SE / VFX を選びます。弾は数が多いので <b>弾を撃つ音の最短間隔（秒）</b>・<b>弾が当たる音の最短間隔（秒）</b>（どちらも 0.08）で間引きます。今はどれも空です。</p></div></details>
+    <details class="recipe" id="rc-hud" data-tags="look"><summary><span class="q">HUD のコアのバーの回復演出を変えたい</span><span class="who">UIスタジオ</span></summary><div class="a"><p>HUD のコアのバー（<b>CoreBar</b>）に、ゲーム中に自動で <b>HudCoreHealFx</b> が付きます（回復した区間がミント色に光る・バーの外側と歯のアイコンが光る・十字が浮かぶ）。色や長さを変えるときは、HUD の <b>CoreBar</b> に <span class="mp">Add Component<i>›</i>UI Studio<i>›</i>コアの体力バーの回復演出 (HudCoreHealFx)</span> を手で付けて値を変えます。詳しくは UIスタジオのガイド。</p></div></details>
+    <details class="recipe" id="rc-character" data-tags="setup"><summary><span class="q">キャラに紐づけたい（緑キャラだけがこのスキル）</span><span class="who">対応表</span></summary><div class="a"><p><code>Assets/RedSkill/Data/CharacterSkillTable.asset</code> に、もう <b>Chara_Gamma（緑のキャラ）→ GreenMintSkill</b> と <b>Chara_Alpha（赤のキャラ）→ RedLaserSkill</b> が入っています。キャラ選択を通ってきたときはこの表で決まり、表にないキャラは <b>プレイヤーごとのスキル</b> → <b>全員に配るスキル</b> の順で決まります。</p><p>キャラ選択を通らずにシーンを直接 Play したときは表は使われず、P3 が緑、ほかが赤になります（スキルを配る係の <b>プレイヤーごとのスキル（P1〜P4）</b> の 3 番目）。</p></div></details>
+    <details class="recipe" data-tags="setup"><summary><span class="q">別の席（P1 など）で緑スキルを試したい</span><span class="who">スキルを配る係</span></summary><div class="a"><p>シーンの <b>RedSkill_Installer</b> の <b>プレイヤーごとのスキル（P1〜P4）</b> の試したい席に <code>GreenMintSkill</code> を入れます。P1 なら <kbd>1</kbd> で溜めて <kbd>Q</kbd> で発動。</p></div></details>
+    <p class="noresult">見つかりませんでした。別の言葉で探してください。</p>
+  </div>
+  <div class="callout warn rv"><span class="ci">!</span><div><b>今の仕様の注意。</b>スキル中に握っている間は、緑の砲台の熱が普段どおり上がります（握って強化しすぎると、スキルの後にオーバーヒートしていることがあります。ユーザー決定 2026-10-20：砲台のコードは触らない）。スキル中は普段のレーザーと照準線は出ません。普段のレーザーの発射口のエフェクトは握っている間出たままです。</div></div>
+</section>
+
+<section id="screen" data-nav="画面の見かた">
+  <div class="rv"><div class="eyebrow">04 — Inspector</div><h2>見る場所は<br><em>2 つ</em>。</h2></div>
+  <div class="tabguide">
+    <div class="tg-panel rv"><h3>スキルの設定ファイル（GreenMintSkill）</h3><p class="when">回復量・強さ・色・演出を変えるとき</p><ul class="points"><li>上から <b>スキルの情報</b>・<b>使えるようになる条件</b>・<b>通常のレーザーとの関係</b>（赤と共通）、その下に ▶ で開くまとまり（<b>タイミング</b>／<b>コアの回復</b>／<b>コアの攻撃（錠剤の弾）</b>／<b>握ったときの強化</b>／<b>色（ミントの配色）</b>／<b>溜めのタブレットケース</b>／<b>衛星とコアの膜</b>／<b>コアへ送るジェル</b>／<b>弾と当たった場所の演出</b>／<b>回復の瞬間の演出</b>／<b>カメラの揺れ</b>／<b>効果音・追加エフェクト（D-Drive）</b>／<b>シェーダー（通常は触らない）</b>）。</li><li>Play 中は一番下に、このスキルを持つ砲台の状態と <b>使えるようにする</b>／<b>今すぐ撃つ</b>／<b>止める</b>、その下に <b>テスト（コア）</b>：コアの体力と <b>コアを30%減らす</b>／<b>コアを満タンにする</b>。</li></ul></div>
+    <div class="tg-panel rv"><h3>スキルを配る係（RedSkill_Installer）</h3><p class="when">どの席にどのスキルを配るか決めるとき</p><ul class="points"><li>赤スキルのガイドと同じです。プレハブでは <b>プレイヤーごとのスキル（P1〜P4）</b> の 3 番目（P3）が <code>GreenMintSkill</code>、<b>全員に配るスキル</b> が赤。</li></ul></div>
+  </div>
+</section>
+
+<section id="params" data-nav="数値の意味">
+  <div class="rv"><div class="eyebrow">05 — Numbers</div><h2>よく触る<br><em>数値</em>。</h2></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">回復・タイミング・攻撃</div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>ドンと回復（%）</td><td>コアに着いた瞬間の回復</td><td>一気に持ち直す</td><td>控えめ（0 でなし）</td><td class="def">20</td></tr>
+    <tr><td>じわじわ回復（合計 %）</td><td>守っている間の回復</td><td>長く支える</td><td>控えめ（0 でなし）</td><td class="def">15</td></tr>
+    <tr><td>続く時間（秒）</td><td>衛星が守る長さ</td><td>長く守る</td><td>すぐ終わる</td><td class="def">8</td></tr>
+    <tr><td>コアに着くまで（秒）</td><td>握ってから「ドン」まで</td><td>ため感が出る</td><td>すぐ回復</td><td class="def">0.6</td></tr>
+    <tr><td>守る範囲の半径（m）</td><td>狙う敵の範囲</td><td>遠くの敵も撃つ</td><td>コアの近くだけ</td><td class="def">9</td></tr>
+    <tr><td>1秒に撃つ数</td><td>弾の数（握っていないとき）</td><td>敵が近づけない</td><td>すり抜けが増える</td><td class="def">10</td></tr>
+    <tr><td>1発のダメージ</td><td>1 発の強さ</td><td>ボスも早く倒れる</td><td>ふつうの敵も 2 発以上</td><td class="def">14</td></tr>
+    <tr><td>巻き込む半径（m）／1発で当たる最大数</td><td>1 発で倒せる数</td><td>まとめて倒す</td><td>1 体ずつ</td><td class="def">0.55 / 3</td></tr>
+    <tr><td>握りきったときの1秒に撃つ数</td><td>握ったときの弾の数</td><td>握る価値が大きい</td><td>握っても変わらない</td><td class="def">22</td></tr>
+  </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">見た目</div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>高さ（m）／幅（m）（ケース）</td><td>溜めのケースの大きさ</td><td>目立つ</td><td>控えめ</td><td class="def">2.2 / 1.45</td></tr>
+    <tr><td>衛星の大きさ（m）</td><td>コアの周りのタブレット</td><td>目立つ</td><td>小さい</td><td class="def">1.3</td></tr>
+    <tr><td>回る半径（m）</td><td>衛星とコアの距離</td><td>外を回る</td><td>コアに近い</td><td class="def">2.9</td></tr>
+    <tr><td>太さ（m）（ジェル）</td><td>砲台→コアのジェル</td><td>太い</td><td>細い</td><td class="def">0.6</td></tr>
+    <tr><td>波の大きさ（m）</td><td>回復の瞬間の波</td><td>画面の外まで</td><td>コアの周りだけ</td><td class="def">40</td></tr>
+    <tr><td>画面のふちの光の濃さ</td><td>回復の瞬間の画面のふち</td><td>はっきり光る</td><td>光らない（0）</td><td class="def">0.55</td></tr>
+    <tr><td>弾の大きさ（m）</td><td>錠剤の弾</td><td>見やすい</td><td>小さい</td><td class="def">0.6</td></tr>
+    <tr><td>粉の数／葉っぱの数</td><td>当たったときの弾け方</td><td>にぎやか</td><td>おとなしい</td><td class="def">9 / 2</td></tr>
+  </table></div></div>
+</section>
+
+<section id="faq" data-nav="困ったとき">
+  <div class="rv"><div class="eyebrow">06 — Troubleshooting</div><h2>困ったときは<br><em>ここ</em>。</h2></div>
+  <div class="faq rv">
+    <details><summary>回復しているように見えない</summary><div class="a"><ol><li>コアが満タンではありませんか？ 満タンを超えた分は捨てられます。<span class="mp">Tools<i>›</i>緑スキル<i>›</i>コアを30%減らす（回復を試す・Play中）</span> で減らしてから試してください。</li><li>試合が終わった後（クリア・ゲームオーバー）は回復しません（<b>試合が終わったら回復しない</b>）。</li><li>ネット対戦の Client では、回復はホストから届くので少し遅れて見えます。</li></ol></div></details>
+    <details><summary>衛星が撃たない</summary><div class="a">コアから <b>守る範囲の半径（m）</b>（9）の中に敵がいないときは撃ちません。点線の輪の中に敵が入ると撃ち始めます。</div></details>
+    <details><summary>どぎついピンク一色（マゼンタ）・ジェルが出ない</summary><div class="a">シェーダーが読み込めていません。Console に <code>[GreenSkill] シェーダー … が見つかりません</code> が出ていないか確認し、設定ファイルの <b>シェーダー（通常は触らない）</b> の 4 つ（<b>光・輪</b>・<b>キラキラ・光の尾</b>・<b>ジェル</b>・<b>粉・葉っぱ</b>）が入っているか見てください。</div></details>
+    <details><summary>ケースが緑の砲台に重なって見えにくい／画面の外に出る</summary><div class="a"><b>溜めのタブレットケース</b> › <b>画面の上へずらす（m）</b>（1.7）で、砲台からの距離を変えます。</div></details>
+    <details><summary>ネット対戦でも動く？</summary><div class="a">はい。スマッシュボールが割れたこと・砲台の状態・握る強さ・敵の位置は全員の PC に届いているので、各 PC が自分で演出を出します（通信は増えません）。回復とダメージを決めるのはホストだけで、コアの体力と撃破数は今までどおり全員に届きます。PC ごとに弾の狙いがほんの少しずれることがあります（見た目だけ）。</div></details>
+  </div>
+</section>
+
+<section id="glossary" data-nav="用語集">
+  <div class="rv"><div class="eyebrow">07 — Words</div><h2>分からない言葉は<br><em>ここで引く</em>。</h2></div>
+  <dl class="gloss">
+    <div class="rv"><dt>衛星</dt><dd>スキル中、コアの周りを回る大きなタブレット。ここから錠剤の弾が出る。</dd></div>
+    <div class="rv"><dt>ジェル</dt><dd>緑の砲台からコアへ流れる半透明の緑の帯。「力を送っている」見た目。</dd></div>
+    <div class="rv"><dt>膜</dt><dd>スキル中にコアを包む、シャボン玉のようなミント色の丸。</dd></div>
+    <div class="rv"><dt>守る範囲</dt><dd>衛星が狙う範囲（コアからの半径）。ふちに点線の輪が出る。</dd></div>
+    <div class="rv"><dt>スキル欄・スキルを配る係・対応表</dt><dd>赤スキルと共通の仕組み（赤スキルのガイドの用語集）。</dd></div>
+    <div class="rv"><dt>D-Drive</dt><dd>このゲームの効果音・エフェクトをまとめて管理する仕組み。演出欄はすべてこれで選ぶ。</dd></div>
+  </dl>
+</section>
+
+<div class="devzone"></div>
+<section id="dev" data-nav="コードから使う" data-dev>
+  <div class="rv">
+    <div class="eyebrow">08 — For programmers</div>
+    <h2>赤と同じ<br><em>スキル欄の上で動く</em>。</h2>
+    <p class="lead">名前空間 <code>MS2026.Skills.Green</code>、asmdef は赤と同じ <code>MS2026.RedSkill.Runtime</code>（<code>Unity.Mathematics</code> / <code>Unity.Collections</code> / <code>UnityEngine.UI</code> を参照に追加）。既存のゲームのコードは変更していません（公開 API だけ使用）。</p>
+  </div>
+  <div class="tabs rv" role="tablist" aria-label="コード例">
+    <button class="tab" role="tab" aria-selected="true" aria-controls="cp-flow">中の作り</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="cp-api">使える値</button>
+  </div>
+  <div class="panel" id="cp-flow" role="tabpanel">
+    <div class="codebox" data-plain><div class="cap"><span>GreenMintSkillRunner の流れ</span><button class="copy" type="button">copy</button></div><pre>
+Ready     : GreenMintCase.Show()            ケースが震える
+Activate  : Case.Open() / Satellites.Launch()   タブレットがコアへ（launchSeconds）
+Active    : GreenMintBurst.Play() + Heal(burst%)   ドン（全員の画面）
+            毎フレーム Regenerate / Shoot / Satellites / Volley / GelLink
+Ending    : Satellites.BeginEnd()           らせんでコアへ（endSeconds）
+Finish    : NotifyFinished()
+
+回復  : GreenMintUtil.Heal → CoreCrystalController.ApplyReplicatedHealth（ホストだけ）
+弾    : GreenTargetScanner（SwarmSystem.StorageReadable で群衆を読む・netId で追う）
+        → GreenTabletVolley → SwarmSystem.QueueBeam(…, owner = 緑の番号)</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">ネット</span>通信なし。回復・ダメージは <code>FortressNet.HasSimulationAuthority</code> のときだけ。</div></div>
+  </div>
+  <div class="panel" id="cp-api" role="tabpanel">
+    <div class="codebox"><div class="cap"><span>GreenMintSkillRunner</span><button class="copy" type="button">copy</button></div><pre>
+var runner = PlayerSkillSlot.Find(2).Runner as GreenMintSkillRunner;
+runner.IsActive;        // スキル中か
+runner.Boost01;         // 今の握りの強さ（0〜1、なめらか）
+runner.HealedThisUse;   // この 1 回で回復した量</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">詳細</span><code>Docs/Tools/GreenSkill_AI_Reference.md</code></div></div>
+  </div>
+</section>
+
+<section id="more" data-nav="関連ツール">
+  <div class="rv"><div class="eyebrow">09 — Related</div><h2>一緒に使う<br><em>ツール</em>。</h2></div>
+  <div class="links">
+    <a class="lk rv" href="RedSkill_ガイド.html"><span class="ti">赤スキル</span><span class="ds">スキル欄・スキルを配る係・対応表（4色共通）。</span></a>
+    <a class="lk rv" href="UIStudio_ガイド.html"><span class="ti">UIスタジオ</span><span class="ds">HUD のコアのバー（回復演出）。</span></a>
+    <a class="lk rv" href="FortressDesigner_ガイド.html"><span class="ti">要塞デザイナー</span><span class="ds">コア・群衆の敵・演出欄（効果音）。</span></a>
+    <a class="lk rv" href="D-Drive_ガイド.html"><span class="ti">D-Drive</span><span class="ds">効果音・エフェクトの素材の登録。</span></a>
+    <a class="lk rv" href="index.html"><span class="ti">ツール一覧</span><span class="ds">このプロジェクトの全ツール。</span></a>
+  </div>
+  <footer><span>Green Skill Guide · Xx_MS2026_xX</span><span>2026-10-20 時点のコードに基づく</span></footer>
+</section>
+</main>
+</div>
+<script src="assets/guide.js"></script>
+</body>
+</html>

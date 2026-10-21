@@ -1,3 +1,4 @@
+using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -6,6 +7,17 @@ namespace MS2026.Skills.EditorTools
     /// <summary>スキル欄のテスト用ボタン（スキル欄・配る係・スキルの設定ファイルのインスペクターで共通に使う）。</summary>
     internal static class SkillTestButtons
     {
+        /// <summary>
+        /// スキルの設定ファイルのインスペクターの一番下（Play 中）に、そのスキル専用のテスト道具を足す（例: 緑スキルの「コアを減らす」）。
+        /// スキルごとのエディタのコードが [InitializeOnLoad] で登録する。
+        /// </summary>
+        public static event Action<CharacterSkill> DrawExtraTools;
+
+        public static void DrawExtra(CharacterSkill skill)
+        {
+            DrawExtraTools?.Invoke(skill);
+        }
+
         public static string StateLabel(PlayerSkillSlot slot)
         {
             if (slot == null)
@@ -172,6 +184,8 @@ namespace MS2026.Skills.EditorTools
             {
                 EditorGUILayout.HelpBox("このスキルを持っている砲台がありません。", MessageType.Info);
             }
+
+            SkillTestButtons.DrawExtra((CharacterSkill)target);
         }
     }
 }

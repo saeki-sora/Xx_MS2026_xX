@@ -42,6 +42,11 @@ public sealed class ArduinoSerialReader : MonoBehaviour
     [Min(1)]
     public int heartbeatTimeoutMs = 1000;
 
+    [Tooltip("実機（マイコン）の値を使うプレイヤー数。P1から数える。1 = P1のレーザーだけ実機で出す（1人プレイ・通信なし／通信ありでも各PCの1人目のセンサーだけ使う）。" +
+             "マイコンがカンマ区切りで2つ以上の値を送ってきても、ここより後のプレイヤーは実機の値を使わず、キーボードだけで動く。1台のPCで2人以上が実機で遊ぶときに増やす。")]
+    [Range(0, 4)]
+    public int devicePlayerCount = 1;
+
     [Header("センサー特性")]
     [Tooltip("ONなら「中心値からどれだけ離れたか」を握力とする。何もしていないときに約512を出し、" +
              "磁石のN極/S極で上下に振れるリニアホールセンサー(49E等)向け。どちらの極を近づけても反応する。")]
@@ -299,12 +304,17 @@ public sealed class ArduinoSerialReader : MonoBehaviour
     {
         // 実機とキーボードを合成する。実機が繋がっていれば大きい方、途切れたらキーボードの値になる。
         _transport = transport;
-        _composite = new CompositeGripTransport(_transport, MS2026.GripInputBridge.GripInputBridge.Simulator);
+        _composite = new CompositeGripTransport(_transport, MS2026.GripInputBridge.GripInputBridge.Simulator, devicePlayerCount);
         MS2026.GripInputBridge.GripInputBridge.SetTransport(_composite);
         _installedAt = Time.unscaledTime;
         _warnedNotFound = false;
-        Debug.Log($"[ArduinoSerialReader] {transport.PortName} ({_config.baudRate}bps) を入力元にしました(キーボードも併用できます)。" +
+        Debug.Log($"[ArduinoSerialReader] {transport.PortName} ({_config.baudRate}bps) を入力元にしました（実機の値を使うのは {DescribeDevicePlayers(_composite.DevicePlayerCount)}。キーボードも併用できます）。" +
                   (hasData ? string.Empty : "まだ値は届いていません。"));
+    }
+
+    private static string DescribeDevicePlayers(int count)
+    {
+        return count <= 0 ? "だれもいない" : count == 1 ? "P1 だけ" : $"P1〜P{count}";
     }
 
     // 使っているポートから値が届かなくなったら（USBが抜けた・デバイスが止まった）、キーボードに戻してさがし直す。
