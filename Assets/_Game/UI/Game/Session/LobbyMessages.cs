@@ -90,6 +90,7 @@ namespace MS2026.UI.Game
         {
             reader.ReadValueSafe(out byte phase);
             reader.ReadValueSafe(out float countdown);
+            reader.ReadValueSafe(out short stage);
             var incoming = new LobbyRoster();
             for (var i = 0; i < LobbyRoster.SeatCount; i++)
             {
@@ -104,6 +105,7 @@ namespace MS2026.UI.Game
 
             incoming.phase = Enum.IsDefined(typeof(LobbyPhase), phase) ? (LobbyPhase)phase : LobbyPhase.Waiting;
             incoming.countdownRemaining = countdown;
+            incoming.stageIndex = stage;
             into.CopyFrom(incoming);
         }
 
@@ -111,6 +113,7 @@ namespace MS2026.UI.Game
         {
             writer.WriteValueSafe((byte)roster.phase);
             writer.WriteValueSafe(roster.countdownRemaining);
+            writer.WriteValueSafe((short)roster.stageIndex);
             foreach (var seat in roster.seats)
             {
                 writer.WriteValueSafe(seat.present);

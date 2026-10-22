@@ -151,7 +151,7 @@ namespace MS2026.UI.Game
                 {
                     // 参加側は NGO が自動でゲームのシーンを読み込む。読み終わるまで幕で隠す（キャラクター選択からなら、その幕）。
                     Func<bool> loaded = () => IsGameLoaded || !IsOnline || Roster.phase == LobbyPhase.Waiting;
-                    if (before == LobbyPhase.CharacterSelect)
+                    if (before == LobbyPhase.CharacterSelect || before == LobbyPhase.StageRoulette)
                     {
                         PlayGameStartCover(null, loaded);
                     }
@@ -175,6 +175,7 @@ namespace MS2026.UI.Game
             }
 
             OnCharacterSelectPhase(before, after);
+            OnStageRoulettePhase(before, after);
             RaiseChanged();
         }
 
@@ -187,18 +188,20 @@ namespace MS2026.UI.Game
                 return;
             }
 
+            // ステージ（あれば）をランダムに選んで、ステージ → ゲームの順に読み込む（この流れではルーレットは出さない）。
+            Roster.SetStage(UsesStages ? ChooseStage() : -1);
             ChangePhase(LobbyPhase.Loading);
             var root = UiRoot.Active;
-            Action load = () =>
+            Action load = () => StartCoroutine(LoadStageThenGame((title, body) =>
             {
-                var status = NetworkManager.Singleton.SceneManager.LoadScene(gameSceneName, LoadSceneMode.Additive);
-                if (status != SceneEventProgressStatus.Started)
+                ChangePhase(LobbyPhase.Waiting);
+                if (!IsGameLoaded)
                 {
-                    Debug.LogWarning($"[Lobby] ゲームのシーン「{gameSceneName}」を読み込めませんでした（{status}）。ビルドの設定にシーンが入っているか確かめてください。");
-                    ChangePhase(LobbyPhase.Waiting);
-                    ShowMessage("ゲームを始められませんでした", $"シーン「{gameSceneName}」を読み込めませんでした（{status}）。");
+                    UnloadStageAfterGame();
                 }
-            };
+
+                ShowMessage(title, body);
+            }));
 
             if (root != null)
             {
@@ -320,6 +323,7 @@ namespace MS2026.UI.Game
                 }
 
                 UnloadCharacterSelectLocally();
+                UnloadStageLocally();
             };
 
             if (root != null)
@@ -383,6 +387,12 @@ namespace MS2026.UI.Game
             if (scene.name != gameSceneName && !IsCharacterSelectScene(scene))
             {
                 return;
+            }
+
+            if (scene.name == gameSceneName)
+            {
+                // ゲームのシーンが外れたら、ステージのシーンも外す（ホストは全員の分）。
+                UnloadStageAfterGame();
             }
 
             // キャラクター選択からゲームへ進む途中（選択のシーンを外した後、ゲームのシーンを読み込む）。ロビーには戻らない。

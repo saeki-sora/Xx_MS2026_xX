@@ -251,6 +251,7 @@ namespace MS2026.UI.Game
             }
 
             UnloadCharacterSelectLocally();
+            UnloadStageLocally();
         }
 
         /// <summary>自動接続のときの席（来た順。好みの席として保存はしない）。</summary>

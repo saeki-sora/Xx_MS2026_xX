@@ -21,7 +21,10 @@ namespace MS2026.UI.Game
         Returning = 4,
 
         /// <summary>キャラクター選択のシーンにいる（「ゲーム開始」の後、ゲームのシーンの前）。</summary>
-        CharacterSelect = 5
+        CharacterSelect = 5,
+
+        /// <summary>キャラクター選択の後、ステージ抽選のルーレットを見せている（選ばれたステージは <see cref="LobbyRoster.stageIndex"/>）。2026-10-21。</summary>
+        StageRoulette = 6
     }
 
     /// <summary>
@@ -50,6 +53,9 @@ namespace MS2026.UI.Game
 
         /// <summary>カウントダウンの残り秒（カウントダウン中だけ意味がある）。</summary>
         public float countdownRemaining;
+
+        /// <summary>この試合のステージ（ステージの一覧 StageCatalog の番号。決まっていなければ -1）。ホストが決めて全員へ配る。</summary>
+        public int stageIndex = -1;
 
         /// <summary>中身が変わるたびに増える（画面の更新や送信の判定に使う）。</summary>
         public int Version { get; private set; }
@@ -100,6 +106,7 @@ namespace MS2026.UI.Game
 
             phase = LobbyPhase.Waiting;
             countdownRemaining = 0f;
+            stageIndex = -1;
             Touch();
         }
 
@@ -193,6 +200,17 @@ namespace MS2026.UI.Game
             }
         }
 
+        /// <summary>この試合のステージを決める（変わったときだけ全員へ配る対象になる）。</summary>
+        public void SetStage(int index)
+        {
+            index = Math.Max(-1, index);
+            if (stageIndex != index)
+            {
+                stageIndex = index;
+                Touch();
+            }
+        }
+
         /// <summary>その通信相手の席（いなければ -1）。</summary>
         public int SeatOf(ulong clientId)
         {
@@ -213,6 +231,7 @@ namespace MS2026.UI.Game
             Array.Copy(other.seats, seats, SeatCount);
             phase = other.phase;
             countdownRemaining = other.countdownRemaining;
+            stageIndex = other.stageIndex;
             Touch();
         }
 

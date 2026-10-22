@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using DDrive.Runtime.Loop;
 using Unity.Netcode;
@@ -26,6 +27,13 @@ namespace MS2026.Fortress.Net
         public int packetQueueSize = 1024;
 
         public static FortressNetworkBootstrap Instance { get; private set; }
+
+        /// <summary>
+        /// 起動引数（-fortress-start）で自動で通信を始める前に、true になるまで待つ条件（null なら待たない）。
+        /// ステージを読み込む係（MS2026.Stages の StageBootstrap）が、Game だけで起動したときにステージを読み終えるまで待たせるために使う
+        /// （壊せる物の番号は通信が始まったときに振るので、ステージの物がそろってから始める。2026-10-21）。
+        /// </summary>
+        public static Func<bool> AutoStartGate { get; set; }
 
         private readonly Dictionary<ulong, int> _clientIdToPlayerIndex = new();
         private readonly HashSet<int> _takenPlayerIndices = new();
@@ -71,6 +79,27 @@ namespace MS2026.Fortress.Net
                 TileWindow(LaunchArgs.PlayerIndex ?? 0);
             }
 
+            if (LaunchArgs.Start != FortressLaunchArgs.StartMode.None && AutoStartGate != null && !AutoStartGate())
+            {
+                StartCoroutine(AutoStartWhenReady());
+                return;
+            }
+
+            AutoStart();
+        }
+
+        private IEnumerator AutoStartWhenReady()
+        {
+            while (AutoStartGate != null && !AutoStartGate())
+            {
+                yield return null;
+            }
+
+            AutoStart();
+        }
+
+        private void AutoStart()
+        {
             var launchPlayerIndex = LaunchArgs.PlayerIndex ?? 0;
             switch (LaunchArgs.Start)
             {

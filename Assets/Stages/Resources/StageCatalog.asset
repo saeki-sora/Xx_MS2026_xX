@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76ec424d48a34b38ae551be6927a296e, type: 3}
+  m_Name: StageCatalog
+  m_EditorClassIdentifier: MS2026.Stages.Runtime::MS2026.Stages.StageCatalog
+  commonSceneName: Game
+  stages:
+  - {fileID: 11400000, guid: 4598b3e355563c04991227ff6d654a5a, type: 2}
+  - {fileID: 11400000, guid: 889f228d605a57b418646c933b59b0a6, type: 2}
+  defaultStageIndex: 1
+  avoidRepeat: 1
+  roulette:
+    enabled: 1
+    spinSeconds: 3.6
+    holdSeconds: 1.8
+    minLaps: 4
+    overshootCards: 0.18
+    title: STAGE ROULETTE
+    caption: "\u30B9\u30C6\u30FC\u30B8\u62BD\u9078\u4E2D\u2026"
+    decidedText: "\u6C7A\u5B9A\uFF01"
+    accent: {r: 0.35, g: 0.95, b: 1, a: 1}
+    flashColor: {r: 1, g: 0.95, b: 0.55, a: 1}
+    cardFrame: {fileID: 0}
+    stripes: {fileID: 2800000, guid: 2940c2ef56d65bf4ca9491553388945a, type: 3}
+    sortingOrder: 900
+    onStart:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onTick:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onStop:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color

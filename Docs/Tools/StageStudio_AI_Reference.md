@@ -122,7 +122,8 @@ Rebuilt 2026-10-07 at the user's request: the Scene-view overlays (`ステージ
 3. `NavigationField.cellSize` (default 0.5) decides whether a narrow gap exists for pathfinding at all; the gap ruler shows red when the midpoint cell is blocked.
 4. Holes/silhouettes need materials on `MS2026/Stage/Prop`; silhouettes need prop materials with stencil 64 and the swarm shader (any material using another shader neither writes the mark nor gets holes).
 5. Changing `見た目の反応 › 裏に隠れた敵を影で見せる` requires `専用シェーダーに切り替え` again (it picks the `_NoMark` copy).
-6. `StageRoot.SwitchAtRuntime` refuses while connected (see §2). Switching stages mid-match needs a synchronized switch + rebuilding the destructible index — not implemented (multiplayer homework).
+6. **2026-10-21 (Stages tool, `Stages_AI_Reference.md`)**: after the split tool runs, the `[Stage]` StageRoot lives in each **stage scene** (`Assets/Scenes/Stages/StageN.unity`), not in `Game.unity`. Open the stage together with Game (`Tools/ステージ/選んだステージを Game と一緒に開く（編集用）`) to use the studio; `ステージに保存` still writes the StageSet prefab, and the scene to save is the stage scene. Stage switching between matches is done by loading another stage scene (not by `SwitchAtRuntime`).
+7. `StageRoot.SwitchAtRuntime` refuses while connected (see §2). Switching stages mid-match needs a synchronized switch + rebuilding the destructible index — not implemented (multiplayer homework).
 9. A new stage only contains background props: turrets, core, spawn points, NavigationField, SwarmSystem and existing obstacles stay in the scene untouched. Placing a stage applies its lighting (`lighting.apply` defaults to true): Trilight ambient + a `[Stage] Sun` directional light, which can double up with an existing Directional Light.
 7. Depth priming must stay off (holes are not applied in the Lit depth passes).
 8. Unverified in Unity as of 2026-10-06 (see header).

@@ -81,7 +81,7 @@ namespace MS2026.UI.Game
         public bool IsCharacterSelectLoaded => UsesCharacterSelect && SceneManager.GetSceneByName(characterSelectSceneName).isLoaded;
 
         /// <summary>ゲームかキャラクター選択のシーン（ロビーの上に重ねるシーン）が読み込まれているか。</summary>
-        private bool IsMatchSceneLoaded => IsGameLoaded || IsCharacterSelectLoaded;
+        private bool IsMatchSceneLoaded => IsGameLoaded || IsCharacterSelectLoaded || IsStageLoaded;
 
         private bool IsCharacterSelectScene(Scene scene) => UsesCharacterSelect && scene.name == characterSelectSceneName;
 
@@ -112,12 +112,30 @@ namespace MS2026.UI.Game
         // ───────── ホスト: キャラクター選択 → ゲーム ─────────
 
         /// <summary>
-        /// 全員のキャラクターが決まったら、選択画面（ホストのPC）が呼ぶ。幕で隠して選択のシーンを外し、ゲームのシーンを全員で読み込む。
+        /// 全員のキャラクターが決まったら、選択画面（ホストのPC）が呼ぶ。ステージを選んでルーレットを見せ（ステージが 2 つ以上あるとき）、
+        /// その後、幕で隠して選択のシーンを外し、ステージとゲームのシーンを全員で読み込む。
         /// ホスト以外・キャラクター選択中でないときは何もしない。
         /// </summary>
         public void ProceedToGame()
         {
             if (!IsHost || Roster.phase != LobbyPhase.CharacterSelect || !IsCharacterSelectLoaded)
+            {
+                return;
+            }
+
+            if (TryBeginStageRoulette())
+            {
+                // ルーレットを見せ終わったら ProceedAfterRoulette が呼ばれる（GameSession.Stage.cs）。
+                return;
+            }
+
+            ProceedAfterRoulette();
+        }
+
+        /// <summary>ホスト: ルーレットの後（または見せないとき）、幕で隠して選択のシーンを外し、ステージとゲームのシーンを読み込む。</summary>
+        private void ProceedAfterRoulette()
+        {
+            if (!IsHost || !IsCharacterSelectLoaded)
             {
                 return;
             }
@@ -148,29 +166,13 @@ namespace MS2026.UI.Game
                 }
             }
 
-            // 外し終わるのを待ってから読み込む。
+            // 外し終わるのを待ってから、ステージ → ゲームの順に読み込む（GameSession.Stage.cs）。
             while (IsCharacterSelectLoaded && IsOnline && Time.unscaledTime < deadline)
             {
                 yield return null;
             }
 
-            while (IsOnline)
-            {
-                var status = NetworkManager.Singleton.SceneManager.LoadScene(gameSceneName, LoadSceneMode.Additive);
-                if (status == SceneEventProgressStatus.Started)
-                {
-                    yield break;
-                }
-
-                if (status != SceneEventProgressStatus.SceneEventInProgress || Time.unscaledTime > deadline)
-                {
-                    Debug.LogWarning($"[Lobby] ゲームのシーン「{gameSceneName}」を読み込めませんでした（{status}）。ビルドの設定にシーンが入っているか確かめてください。");
-                    FailToRoom("ゲームを始められませんでした", $"シーン「{gameSceneName}」を読み込めませんでした（{status}）。");
-                    yield break;
-                }
-
-                yield return null;
-            }
+            yield return LoadStageThenGame(FailToRoom);
         }
 
         /// <summary>ホスト: キャラクター選択からゲームへ進めなかったので、全員を部屋の画面に戻す。</summary>
@@ -178,6 +180,13 @@ namespace MS2026.UI.Game
         {
             // 先に「待っている」に戻す（選択のシーンを外したときに「ゲームへ進む途中」と見なされないように）。
             ChangePhase(LobbyPhase.Waiting);
+            CancelStageRoulette();
+            if (!IsGameLoaded)
+            {
+                // ステージだけ読み込めていたら外す。
+                UnloadStageAfterGame();
+            }
+
             if (IsCharacterSelectLoaded)
             {
                 // 外れたら HandleSceneUnloaded が部屋の画面に戻す。
@@ -204,11 +213,16 @@ namespace MS2026.UI.Game
             var sceneManager = NetworkManager.Singleton.SceneManager;
             if (IsGameLoaded)
             {
+                // ステージはゲームのシーンが外れた後に外す（HandleSceneUnloaded → UnloadStageAfterGame）。
                 sceneManager.UnloadScene(GameScene);
             }
             else if (IsCharacterSelectLoaded)
             {
                 sceneManager.UnloadScene(SceneManager.GetSceneByName(characterSelectSceneName));
+            }
+            else if (IsStageLoaded)
+            {
+                UnloadStageAfterGame();
             }
         }
 

@@ -1,7 +1,7 @@
 # マルチプレイ化 進捗と宿題（4人対戦・LAN）
 
 > 別のチャット（Claude Code のセッション）で作業を再開するときは、まずこのファイルを読んでください。
-> 最終更新: 2026-10-14（参加側が歯磨き粉の幕で止まる不具合を修正。5d章／2回目のキャラ選択でホストがタイトルへ戻る不具合を修正。5f章）。2026-10-12（展示用の自動接続: ロビーの画面を出さずに タイトル → キャラ選択 → ゲーム。5d章）。2026-10-08（ロビーのシーンを追加。5b章／ロビーとゲームの間にキャラクター選択を追加。5c章）。コードの詳細は `Docs/Tools/FortressDesigner_AI_Reference.md` の「Net」「Hud」「Swarm」節にあります。
+> 最終更新: 2026-10-21（ステージ切り替えとステージ抽選ルーレット。5i章）。2026-10-14（参加側が歯磨き粉の幕で止まる不具合を修正。5d章／2回目のキャラ選択でホストがタイトルへ戻る不具合を修正。5f章）。2026-10-12（展示用の自動接続: ロビーの画面を出さずに タイトル → キャラ選択 → ゲーム。5d章）。2026-10-08（ロビーのシーンを追加。5b章／ロビーとゲームの間にキャラクター選択を追加。5c章）。コードの詳細は `Docs/Tools/FortressDesigner_AI_Reference.md` の「Net」「Hud」「Swarm」節にあります。
 > 最初の計画書（承認済み）: `C:\Users\soret\.claude\plans\snoopy-forging-castle.md`。
 
 ## 1. 目標と方針（ユーザー承認済み）
@@ -316,6 +316,16 @@
 
 各プレイヤーの画面を回す案（視点プリセット `CameraViewPreset_CoreBottom`／`CoreTop`。まだ本仕様ではない）に合わせて、群衆の敵の絵を各PCの画面に合わせて正立させるようにした（視点プリセットの「敵の絵を画面の向きに合わせる」）。**通信は増やしていない**: 各PCが自分のカメラの向きでシェーダーと重なり順を決めるだけで、敵の位置・当たり判定・送るデータは変わらない。戻すときは `CameraViewPreset_Default 2` を使うかチェックを外す。詳細は `Docs/Tools/FortressDesigner_AI_Reference.md` の Camera 節。**宿題（未確認）**: 4台（または1台で4つ起動）で、P2〜P4 の画面でも敵が正立して見えるか。
 
+## 5i. ステージ切り替えとステージ抽選ルーレット（2026-10-21・Unity で未確認）
+
+ユーザー決定: ステージを複数にする。遊ぶステージはランダムで、**キャラ選択の後にルーレットの画面を挟む**（自動で回って自動で止まる・カードが横に流れる）。ステージごとに障害物・背景・敵の出方と難しさ・砲台とコアの位置が変わる。作りは「**共通のゲームのシーン（Game）＋ステージの中身だけのシーン（Stage1, Stage2…）**」。Game の名前はそのまま。最初は Stage1（今の Game の中身）と仮の Stage2。詳しくは `Docs/Tools/Stages_AI_Reference.md`、人間向けは `Stages_ガイド.html`。
+
+- 流れ: キャラ選択で全員決定 → ホストがランダムにステージを選び（続けて同じにはしない）、部屋の状態（`LobbyRoster.stageIndex`、段階 `LobbyPhase.StageRoulette` = 6）で全員に配る → 全員の PC が同じステージで止まるルーレットを見せる（通信はしない。約 3.6 秒＋1.8 秒）→ ホストが幕で隠して、キャラ選択のシーンを外し、**ステージ → Game の順に** NGO で重ねて読み込む → Game が外れたらホストがステージも外す。
+- **順番が大事**: 壊せる物の番号は通信の部品（`[Fortress] NetSync`）が動き出したときに振るので、その前にステージの壊せる物がそろっている必要がある。ホストはステージを先に読み込む。途中参加は NGO が全部のシーンを読み終えてから通信の部品を動かす（NGO のソースで確認）。ステージが先に来たときは、Game が来るまでステージの中身（群衆・敵を出す係・障害物・経路）を止めておく（先に敵が湧いたり、コアが無いまま試合が始まったりしないように）。
+- **テスト用の bat（Game だけで起動）**: Game の「ステージを読み込む係」（`StageBootstrap`）がステージを自分で読み込み、読み終わるまで `-fortress-start` の通信開始を待たせる（`FortressNetworkBootstrap.AutoStartGate`）。参加側は、自分で読み込んだステージを NGO にもう一度読み込ませないよう断る（`VerifySceneBeforeLoading`）。ステージは `-fortress-stage Stage2` で選べる（ホストと参加側に同じ値を付けること）。bat 自体は変更なし。
+- 通信: 部屋の状態のメッセージ（`MS2026.Lobby.State`）にステージ番号（2 バイト）を追加。**ホストと参加側は同じビルドで**（違うと読めない）。NetworkObject は増やしていない。ステージのシーンに NetworkObject は置かない約束（`Tools/ステージ/チェック` で確かめる）。
+- **宿題（未確認）**: Unity で `Tools/ステージ/今の Game を共通と Stage1 に分ける（1回だけ）` を押してから、①Game だけで Play（Stage1 が重なる）、②Title からキャラ選択 → ルーレット → ゲーム（1 台）、③bat の 2 人・4 人（`-fortress-stage` なし／あり）、④2 台以上で、参加側にも同じステージ・同じルーレットの結果が出るか、途中参加、全員でロビーに戻る → 次の試合で別のステージ。
+
 ## 6. 主なファイル
 
 | 何 | 場所 |
@@ -328,5 +338,6 @@
 | シーンへの配置 | メニュー `Tools/要塞/ネットワーク/同期オブジェクトをシーンに配置`（`Editor/Net/FortressNetSceneSetup.cs`） |
 | キャラクター選択 | `Assets/CharacterSelect/`（`CharacterSelectController`・`CharacterSelectBoard`・`CharacterSelectMessages`）、`Assets/_Game/UI/Game/Session/GameSession.CharacterSelect.cs`、`Assets/Scenes/Character_Select.unity` |
 | ロビー（タイトル→ロビー→ゲーム） | `Assets/_Game/UI/Game/Session/`（`GameSession`・展示用の自動接続 `GameSession.Auto`・`AutoMatchRules`・`LobbyRoster`・`LobbyMessages`・`LanDiscovery`・`GameSceneSessionGuard`・画面の部品）、`Assets/Scenes/Lobby.unity`、組み立て `Assets/_Game/UI/Editor/Session/SessionFlowBuilder.cs` |
+| ステージ切り替え・ルーレット | `Assets/Stages/`（`StageCatalog`・`StageDefinition`・`StageLayout`・`StageBootstrap`・`Roulette/`、メニュー `Tools/ステージ/…`）、`Assets/_Game/UI/Game/Session/GameSession.Stage.cs`、ステージのシーン `Assets/Scenes/Stages/`（分けた後） |
 | 起動用bat | `Tools/NetTest/`（`launch_2p/4p`, `launch_ui_2p`, `launch_duplicate_test`, `bench_2p`, `bench_4p`, `bench_4p_latejoin`, `bench_offline`, `run_instance`） |
 | 画面のUI配置 | `Runtime/Hud/DebugOverlayLayout.cs`（左上の縦積み）。自分のゲージ（`LocalTurretGaugeHud.cs`）は 2026-10-17 に削除（ゲーム中の表示は UIスタジオの画面 Hud） |

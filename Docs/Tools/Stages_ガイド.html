@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ステージ切り替え ガイド</title>
+<meta name="description" content="ステージを増やす仕組み（共通の Game＋ステージごとのシーン）と、キャラ選択の後のステージ抽選ルーレットの使い方">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/guide.css">
+<style>
+:root{--acc:#9fb4ff;--acc-ink:#05082a;--acc2:#ffe08a;--acc3:#7ff0e0}
+:root[data-theme="light"]{--acc:#3346b0;--acc-ink:#ffffff;--acc2:#8a5b00;--acc3:#006b60}
+.reel{position:relative;height:190px;border-radius:12px;background:linear-gradient(135deg,#0a0f2c,#141c48);overflow:hidden;margin-top:18px}
+.reel .track{position:absolute;top:50%;left:calc(50% - 75px);display:flex;gap:18px;transform:translateY(-50%);animation:st-slide 4s cubic-bezier(.1,.7,.2,1) infinite}
+.reel .card{width:150px;height:110px;border-radius:12px;border:3px solid #cfe0ff;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;font-weight:900;color:#fff;flex:0 0 auto}
+.reel .card b{font-size:44px;line-height:1;margin-bottom:auto;margin-top:10px}
+.reel .card span{background:#071030;border-radius:8px;padding:2px 10px;margin:6px;font-size:13px}
+.reel .c1{background:#2d9ac2}.reel .c2{background:#c23c86}.reel .c3{background:#6c8a2a}
+.reel .sel{position:absolute;left:50%;top:50%;width:176px;height:136px;transform:translate(-50%,-50%);border:4px solid #7ff0e0;border-radius:16px;box-shadow:0 0 22px rgba(127,240,224,.7)}
+.reel .lbl{position:absolute;font-size:11px;color:#cfe0ff;font-family:var(--mono)}
+@keyframes st-slide{0%{transform:translate(0,-50%)}80%{transform:translate(-512px,-50%)}100%{transform:translate(-504px,-50%)}}
+@media (prefers-reduced-motion:reduce){.reel .track{animation:none}}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+.split .card ul{margin:6px 0 0 1.1em;padding:0}
+@media (max-width:640px){.split{grid-template-columns:1fr}}
+.timeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:22px}
+.timeline .card{padding:14px}
+.timeline .card h4{margin:0 0 6px}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<div class="orbs" aria-hidden="true"><div class="orb a"></div><div class="orb b"></div></div>
+
+<div class="shell">
+<nav class="side" aria-label="目次">
+  <a class="back" href="index.html">← ツール一覧</a>
+  <a class="brand" href="#top"><span class="mark">ST</span><span class="t">ステージ切り替え</span></a>
+  <ol id="toc"></ol>
+  <div class="foot">
+    <button class="themebtn" id="themeBtn" type="button"><span aria-hidden="true">◐</span><span data-label>ライト表示</span></button>
+    <div class="meta mono">Assets/Stages<br>2026-10-21 時点</div>
+  </div>
+</nav>
+
+<main id="top">
+<header class="hero">
+  <div class="tags">
+    <span class="pill hot">ステージを増やす</span>
+    <span class="pill">ランダム</span>
+    <span class="pill">ルーレット</span>
+    <span class="pill">4 人対戦でも同じステージ</span>
+  </div>
+  <h1 class="mega" aria-label="STAGES"><span class="o">STAGE</span><span class="f">SELECT</span></h1>
+  <p class="subname">ステージ切り替え — <b>共通の Game に、ステージごとの中身を重ねる</b></p>
+  <div class="hero-row">
+    <div>
+      <p class="oneword">キャラを決めたら <span class="hl">ルーレットでステージが決まり</span>、<br>そのステージの <span class="hl">障害物・背景・敵・砲台の位置</span> で遊ぶ。</p>
+      <p class="analogy">お店のくじ引きのようなものです。全員がキャラを決めると、画面いっぱいにステージのカードが横に流れ、だんだんゆっくりになって 1 枚で止まり「決定！」。そのステージの部屋（シーン）が、全員共通の土台（Game）の上に重なって始まります。土台には通信・カメラ・UI・コア・砲台があり、どのステージでも同じ物を使います。</p>
+    </div>
+    <div class="facts"><dl>
+      <dt>誰が使う</dt><dd>レベルデザイナー（ステージを作る）／プランナー（ルーレット・ステージの選ばれ方）／プログラマー（仕組み）</dd>
+      <dt>最初にやること</dt><dd><span class="mp">Tools<i>›</i>ステージ<i>›</i>今の Game を共通と Stage1 に分ける（1回だけ）</span></dd>
+      <dt>調整する場所</dt><dd><span class="mp">Tools<i>›</i>ステージ<i>›</i>ステージの一覧を開く</span>（<code>Assets/Stages/Resources/StageCatalog.asset</code>）</dd>
+      <dt>今の状況</dt><dd>コードは完成・コンパイル確認済み。<b>Unity ではまだ「分ける」を押していない・動かしていない</b></dd>
+    </dl></div>
+  </div>
+  <div class="marquee" aria-hidden="true"><div class="track" id="mq" data-words="ステージ1|ステージ2|ルーレット|ランダム|決定！|共通の Game|ステージのシーン|配置の目印|障害物|背景|敵の出方|砲台とコアの位置"></div></div>
+</header>
+
+<section id="what" data-nav="何ができる？">
+  <div class="rv">
+    <div class="eyebrow">01 — What it does</div>
+    <h2>キャラ選択の後に<br><em>ステージ抽選</em>。</h2>
+    <p class="lead">流れは「タイトル → キャラ選択 → <b>ルーレット</b> → ゲーム」。ルーレットは握らなくても自動で回って止まるので、展示会場（キーボード無し）でも止まりません。</p>
+  </div>
+  <div class="timeline">
+    <div class="card rv"><h4>① 全員決定</h4><p class="small">キャラ選択で全員が決める（今までどおり）。</p></div>
+    <div class="card rv"><h4>② 抽選</h4><p class="small">ホスト（P1）の PC がランダムにステージを選び、全員に配る。続けて同じステージにはならない（設定で変えられる）。</p></div>
+    <div class="card rv"><h4>③ ルーレット</h4><p class="small">全員の画面でカードが横に流れ、だんだんゆっくり、少し行き過ぎて戻って止まる → 光って「決定！」（約 3.6 秒＋見せる時間 1.8 秒）。</p></div>
+    <div class="card rv"><h4>④ 読み込み</h4><p class="small">歯磨き粉の幕で隠して、ステージ → 共通の Game の順に読み込む。コアと砲台がそのステージの位置へ移る。</p></div>
+    <div class="card rv"><h4>⑤ 試合</h4><p class="small">そのステージの障害物・背景・敵・クリアの撃破数で遊ぶ。終わったら、ステージも一緒に片付く。</p></div>
+  </div>
+  <div class="reel rv" aria-hidden="true">
+    <div class="track"><div class="card c1"><b>1</b><span>ステージ1</span></div><div class="card c2"><b>2</b><span>ステージ2</span></div><div class="card c3"><b>3</b><span>ステージ3</span></div><div class="card c1"><b>1</b><span>ステージ1</span></div><div class="card c2"><b>2</b><span>ステージ2</span></div><div class="card c3"><b>3</b><span>ステージ3</span></div><div class="card c1"><b>1</b><span>ステージ1</span></div><div class="card c2"><b>2</b><span>ステージ2</span></div></div>
+    <div class="sel"></div>
+    <span class="lbl" style="left:12px;top:10px">STAGE ROULETTE（イメージ）</span>
+  </div>
+  <div class="split">
+    <div class="card rv"><h3>共通（Game）</h3><p class="small">どのステージでも同じ物。</p><ul class="small"><li>通信・カメラ・UI・握力センサー</li><li>コア・砲台 4 台・スキルを配る係</li><li>BGM</li><li>ステージを読み込む係（<code>[Stage] Bootstrap</code>）</li></ul></div>
+    <div class="card rv"><h3>ステージ（Stage1, Stage2…）</h3><p class="small">ステージごとに違う物。</p><ul class="small"><li>背景（ステージ背景スタジオの <code>[Stage]</code>）</li><li>障害物・壁・スマッシュボール・経路</li><li>敵の湧き位置・敵を出す係・群衆</li><li>試合の決まり（クリアの撃破数・コアの体力）</li><li>配置の目印（コアと砲台の位置・カメラの視点）</li></ul></div>
+  </div>
+</section>
+
+<section id="start" data-nav="はじめての 5 分">
+  <div class="rv">
+    <div class="eyebrow">02 — First 5 minutes</div>
+    <h2>メニュー 1 回で<br><em>分けて試す</em>。</h2>
+  </div>
+  <div class="steps">
+    <div class="step rv"><div class="n">1</div><div>
+      <h3>Game を分ける（1 回だけ）</h3>
+      <p><span class="mp">Tools<i>›</i>ステージ<i>›</i>今の Game を共通と Stage1 に分ける（1回だけ）</span> を押して <b>分ける</b>。今の Game の中身が <code>Assets/Scenes/Stages/Stage1.unity</code> に移り、仮の <b>Stage2</b>（障害物と湧き位置が左右反対、クリアの撃破数 1.5 倍）・ステージの一覧・ビルドのシーン一覧まで自動で作られます。終わると何をしたかの一覧が出ます。</p>
+    </div></div>
+    <div class="step rv"><div class="n">2</div><div>
+      <h3>Game を Play</h3>
+      <p><code>Game</code> を開いて ▶ Play すると、Stage1 が自動で重なって始まります（今までと同じ見た目になるはず）。Stage2 を試すには、ステージの一覧の <b>Default Stage Index</b> を <code>1</code> にします（0 が一番上のステージ）。</p>
+    </div></div>
+    <div class="step rv"><div class="n">3</div><div>
+      <h3>ルーレットを見る</h3>
+      <p>ルーレットは本番の流れ（タイトル → キャラ選択 → ゲーム）でだけ出ます。ビルドした .exe をふつうに起動するか、Unity で <code>Title</code> から Play して、キャラ選択で全員決定してください。</p>
+    </div></div>
+    <div class="step rv"><div class="n">4</div><div>
+      <h3>確かめる</h3>
+      <p><span class="mp">Tools<i>›</i>ステージ<i>›</i>チェック</span> で、ステージのシーンに足りない物・余計な物（通信の部品など）が無いかを確かめられます。</p>
+      <p class="done">分けた後の Game・Stage1 は Git で元に戻せます。</p>
+    </div></div>
+  </div>
+</section>
+
+<section id="recipes" data-nav="やりたいこと逆引き">
+  <div class="rv"><div class="eyebrow">03 — Recipes</div><h2>「〜したい」から<br><em>探す</em>。</h2></div>
+  <label class="search rv"><span aria-hidden="true">🔍</span><span class="sr">やりたいことを検索</span><input id="recipeSearch" type="search" placeholder="例：新しいステージ、砲台の位置、ルーレット、テスト"></label>
+  <div class="chips rv" id="recipeChips" role="group" aria-label="カテゴリ">
+    <button class="chip" aria-pressed="true" data-f="all">すべて</button>
+    <button class="chip" aria-pressed="false" data-f="make">ステージを作る</button>
+    <button class="chip" aria-pressed="false" data-f="roulette">ルーレット</button>
+    <button class="chip" aria-pressed="false" data-f="test">試す</button>
+  </div>
+  <div class="recipes">
+    <details class="recipe" id="rc-new-stage" data-tags="make"><summary><span class="q">新しいステージを作りたい</span><span class="who">メニュー</span></summary><div class="a"><ol><li>Project ウィンドウで、もとにするステージのシーン（例 <code>Assets/Scenes/Stages/Stage1</code>）を選ぶ。</li><li><span class="mp">Tools<i>›</i>ステージ<i>›</i>新しいステージを作る（選んだステージを写す）</span>。次の番号の <code>StageN</code> ができ、ステージの一覧とビルドのシーン一覧に入り、Game と一緒に開きます。</li><li>名前・カードの色は <code>Assets/Stages/Data/Stage_N</code>（<b>Display Name</b>・<b>Subtitle</b>・<b>Theme Color</b>・<b>Thumbnail</b>）。</li></ol></div></details>
+    <details class="recipe" id="rc-edit-stage" data-tags="make"><summary><span class="q">ステージの中身（障害物・背景・敵）を直したい</span><span class="who">メニュー</span></summary><div class="a"><p>ステージのシーンを選んで <span class="mp">Tools<i>›</i>ステージ<i>›</i>選んだステージを Game と一緒に開く（編集用）</span>。障害物・湧き位置・経路は <code>[Stage] Content</code> の下、背景は <code>[Stage]</code>（ステージ背景スタジオ）、クリアの撃破数・コアの体力は <code>[Fortress] Match Rules</code> にあります。要塞デザイナー・ステージ背景スタジオはそのまま使えます（両方のシーンが開いていれば OK）。<b>直した物はステージのシーンに保存</b>されます（Game は触らない）。</p></div></details>
+    <details class="recipe" id="rc-layout" data-tags="make"><summary><span class="q">このステージだけ砲台・コアの位置を変えたい</span><span class="who">配置の目印</span></summary><div class="a"><p>ステージのシーンの <code>[Stage] Layout</code> の子 <b>Core</b>・<b>Turret_P1〜P4</b> を動かす／回します（Z の回転が砲台の向き）。ゲームの始めに、Game のコア・砲台がそこへ移ります。シーンビューでは、コアは水色の丸、砲台はプレイヤーの色の丸と向きの線で見えます。</p><p>Game の砲台を動かして決めたいときは、Game と一緒に開いて砲台を動かし、<code>[Stage] Layout</code> のインスペクターの <b>今の砲台・コアの位置を目印に写す</b>（その後 Game の変更は保存しない）。</p><p class="small"><b>注意</b>：プレイヤーごとの画面の向き（カメラの視点）は砲台の位置に合わせて作ってあります。位置を変えたら、要塞デザイナーのカメラでそのステージ用の視点を作り、<b>Camera Preset</b> に入れてください。</p></div></details>
+    <details class="recipe" id="rc-difficulty" data-tags="make"><summary><span class="q">ステージごとに難しさ（撃破数・コアの体力・敵）を変えたい</span><span class="who">ステージのシーン</span></summary><div class="a"><p><code>[Fortress] Match Rules</code>（<b>Clear Kills</b>・<b>Core Max Health</b> など）と、<code>[Stage] Content</code> › <code>EnemySpawnDirector</code> のウェーブ設定を、そのステージのシーンで変えます。</p></div></details>
+    <details class="recipe" id="rc-bgm" data-tags="make"><summary><span class="q">ステージごとに BGM を変えたい</span><span class="who">ステージ背景スタジオ</span></summary><div class="a"><p>BGM（<code>[Fortress] Bgm</code>）は共通の Game にあります。ステージごとに変えるときは、ステージ背景スタジオでそのステージ（StageSet）の BGM を入れ、Game の <code>[Fortress] Bgm</code> の BGM を空にします（両方鳴らないように）。</p></div></details>
+    <details class="recipe" id="rc-roulette-time" data-tags="roulette"><summary><span class="q">ルーレットの長さ・文字・色を変えたい</span><span class="who">ステージの一覧 › Roulette</span></summary><div class="a"><p>ステージの一覧（<span class="mp">Tools<i>›</i>ステージ<i>›</i>ステージの一覧を開く</span>）の <b>Roulette</b>：<b>Spin Seconds</b>（回る秒数 3.6）・<b>Hold Seconds</b>（止まってから見せる秒数 1.8）・<b>Min Laps</b>（最低何周 4）・<b>Overshoot Cards</b>（止まる直前に行き過ぎる大きさ 0.18、0 でぴたっと止まる）・<b>Title</b>（STAGE ROULETTE）・<b>Caption</b>（ステージ抽選中…）・<b>Decided Text</b>（決定！）・<b>Accent</b>・<b>Flash Color</b>・<b>Card Frame</b>（カードの枠の絵）・<b>Stripes</b>（後ろのしま。最初はキャラ選択のしまの絵）。</p></div></details>
+    <details class="recipe" id="rc-roulette-sound" data-tags="roulette"><summary><span class="q">ルーレットに効果音を付けたい</span><span class="who">ステージの一覧 › Roulette</span></summary><div class="a"><p><b>On Start</b>（回り始め）・<b>On Tick</b>（カードが真ん中を通るたび）・<b>On Stop</b>（止まったとき）に D-Drive の SE / VFX を選びます。今は空です。</p></div></details>
+    <details class="recipe" id="rc-exclude" data-tags="roulette"><summary><span class="q">作りかけのステージをルーレットに出したくない</span><span class="who">ステージの設定</span></summary><div class="a"><p>そのステージの設定（<code>Assets/Stages/Data/Stage_N</code>）の <b>Include In Roulette</b> を OFF。Game だけで Play するときの <b>Default Stage Index</b> や、bat の <code>-fortress-stage</code> では選べます。</p></div></details>
+    <details class="recipe" id="rc-repeat" data-tags="roulette"><summary><span class="q">続けて同じステージになってもよい／ルーレットを出さない</span><span class="who">ステージの一覧</span></summary><div class="a"><p><b>Avoid Repeat</b>（初期値 ON：前回と同じステージは選ばない）を OFF にすると完全にランダム。<b>Roulette › Enabled</b> を OFF にすると、ランダムに選んだステージへルーレット無しですぐ進みます。ルーレットに出るステージが 1 つだけのときも出ません。</p></div></details>
+    <details class="recipe" id="rc-test-stage" data-tags="test"><summary><span class="q">特定のステージで試したい（Unity・bat）</span><span class="who">一覧・起動引数</span></summary><div class="a"><ul><li>Unity：ステージの一覧の <b>Default Stage Index</b>（0 が一番上）。または、そのステージを Game と一緒に開いて Play（開いているステージで始まる）。ステージのシーンだけを開いて Play しても、Game が自動で重なります。</li><li>テスト用の bat：起動引数に <code>-fortress-stage Stage2</code>（ステージの id・シーン名・1 からの番号のどれでも）。ホストと参加側に同じ値を付けてください。</li></ul></div></details>
+    <details class="recipe" id="rc-check" data-tags="test make"><summary><span class="q">ステージのシーンが正しく作れているか確かめたい</span><span class="who">メニュー</span></summary><div class="a"><p><span class="mp">Tools<i>›</i>ステージ<i>›</i>チェック</span>。Game に「ステージを読み込む係」があるか、各ステージに 配置の目印・群衆・経路・敵を出す係 が 1 つずつあるか、通信の部品（NetworkObject）や砲台・コアの本体が紛れていないか、ビルドのシーン一覧に入っているかを調べます。ビルドの一覧だけ直すなら <span class="mp">Tools<i>›</i>ステージ<i>›</i>ビルドのシーン一覧を整える</span>。</p></div></details>
+    <p class="noresult">見つかりませんでした。別の言葉で探してください。</p>
+  </div>
+  <div class="callout warn rv"><span class="ci">!</span><div><b>今の仕様の注意。</b>ステージのシーンには通信の部品（NetworkObject）を置かないでください。砲台・コアの本体も Game だけに置き、位置は「配置の目印」で決めます。ホストと参加側は同じビルドを使ってください（ステージの番号のやり取りが増えたため）。</div></div>
+</section>
+
+<section id="screen" data-nav="画面の見かた">
+  <div class="rv"><div class="eyebrow">04 — Inspector</div><h2>見る場所は<br><em>3 つ</em>。</h2></div>
+  <div class="tabguide">
+    <div class="tg-panel rv"><h3>ステージの一覧（StageCatalog）</h3><p class="when">ステージの並び・ルーレット・Game だけのときのステージ</p><ul class="points"><li><b>Common Scene Name</b>（Game）・<b>Stages</b>（上から 1, 2, 3…）・<b>Default Stage Index</b>・<b>Avoid Repeat</b>・<b>Roulette</b>（上の逆引き）。</li><li>項目にマウスを乗せると説明が出ます。</li></ul></div>
+    <div class="tg-panel rv"><h3>ステージの設定（StageDefinition）</h3><p class="when">名前・カードの見た目</p><ul class="points"><li><b>Stage Id</b>（あとから変えない）・<b>Display Name</b>・<b>Subtitle</b>・<b>Scene Name</b>・<b>Thumbnail</b>（空ならテーマ色の板に番号）・<b>Theme Color</b>・<b>Include In Roulette</b>。</li></ul></div>
+    <div class="tg-panel rv"><h3>配置の目印（[Stage] Layout）</h3><p class="when">このステージのコア・砲台の位置とカメラ</p><ul class="points"><li><b>Core Anchor</b>・<b>Turret Anchors</b>（P1〜P4）・<b>Camera Preset</b>・<b>Content</b>（ステージの中身の親。Game がそろうまで止めておく）・<b>Load Common Scene When Alone</b>。</li><li>ボタン <b>今の砲台・コアの位置を目印に写す</b>。</li></ul></div>
+  </div>
+</section>
+
+<section id="params" data-nav="数値の意味">
+  <div class="rv"><div class="eyebrow">05 — Numbers</div><h2>よく触る<br><em>数値</em>。</h2></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">ルーレット（ステージの一覧 › Roulette）</div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>Spin Seconds</td><td>回る時間</td><td>じらす</td><td>すぐ決まる</td><td class="def">3.6</td></tr>
+    <tr><td>Hold Seconds</td><td>止まってからゲームへ進むまで</td><td>決まったステージをじっくり見せる</td><td>すぐ始まる</td><td class="def">1.8</td></tr>
+    <tr><td>Min Laps</td><td>最低何周するか</td><td>速く・たくさん流れる</td><td>ゆっくり</td><td class="def">4</td></tr>
+    <tr><td>Overshoot Cards</td><td>止まる直前の行き過ぎ</td><td>「おっとっと」が大きい</td><td>ぴたっと止まる（0）</td><td class="def">0.18</td></tr>
+    <tr><td>Sorting Order</td><td>画面の重なり</td><td>手前</td><td>奥</td><td class="def">900（幕 950 より下）</td></tr>
+  </table></div></div>
+</section>
+
+<section id="faq" data-nav="困ったとき">
+  <div class="rv"><div class="eyebrow">06 — Troubleshooting</div><h2>困ったときは<br><em>ここ</em>。</h2></div>
+  <div class="faq rv">
+    <details><summary>Game を Play したのにステージが出ない（障害物・敵がいない）</summary><div class="a"><ol><li>「分ける」を押しましたか？（押す前の Game は今までどおり全部入り）</li><li>ステージのシーンがビルドのシーン一覧に入っているか：<span class="mp">Tools<i>›</i>ステージ<i>›</i>ビルドのシーン一覧を整える</span>。</li><li>Console に <code>[Stage]</code> で始まる案内が出ていないか。</li></ol></div></details>
+    <details><summary>ルーレットが出ない</summary><div class="a">ルーレットは本番の流れ（キャラ選択の後）でだけ出ます。Game だけで Play したときは出ません。また、ルーレットに出るステージが 2 つ以上必要です（<b>Include In Roulette</b>）。<b>Roulette › Enabled</b> も確かめてください。</div></details>
+    <details><summary>砲台・カメラの向きがおかしい</summary><div class="a">ステージの <code>[Stage] Layout</code> の目印と <b>Camera Preset</b> を確かめてください。砲台の位置を変えたステージでは、それに合わせた視点が必要です。</div></details>
+    <details><summary>テスト用の bat で、参加側だけ様子がおかしい</summary><div class="a">ホストと参加側に同じ <code>-fortress-stage</code> を付けているか確かめてください（違うと壊せる物の並びが合わず同期しません）。</div></details>
+    <details><summary>ネット対戦でも全員同じステージ？</summary><div class="a">はい。ステージを選ぶのはホストだけで、番号を全員に配ります。ステージのシーンはホストが読み込むと、参加側の PC にも同じ順番で読み込まれます（途中参加でも同じ）。</div></details>
+  </div>
+</section>
+
+<section id="glossary" data-nav="用語集">
+  <div class="rv"><div class="eyebrow">07 — Words</div><h2>分からない言葉は<br><em>ここで引く</em>。</h2></div>
+  <dl class="gloss">
+    <div class="rv"><dt>共通のシーン（Game）</dt><dd>どのステージでも同じ物（通信・カメラ・UI・コア・砲台）が入ったシーン。</dd></div>
+    <div class="rv"><dt>ステージのシーン</dt><dd>ステージごとの中身（背景・障害物・敵・試合の決まり・配置の目印）が入ったシーン。Game に重ねて読み込む。</dd></div>
+    <div class="rv"><dt>重ねて読み込む</dt><dd>今のシーンを残したまま、別のシーンを足す読み込み方（Additive）。</dd></div>
+    <div class="rv"><dt>配置の目印</dt><dd>そのステージでコア・砲台を置く位置と、カメラの視点を決める物（<code>[Stage] Layout</code>）。</dd></div>
+    <div class="rv"><dt>ステージを読み込む係</dt><dd>Game に置く部品（<code>[Stage] Bootstrap</code>）。Game だけで Play したときにステージを読み込む。</dd></div>
+    <div class="rv"><dt>ホスト</dt><dd>4 人対戦でまとめ役になる PC（P1）。ステージを選ぶのもホスト。</dd></div>
+  </dl>
+</section>
+
+<div class="devzone"></div>
+<section id="dev" data-nav="コードから使う" data-dev>
+  <div class="rv">
+    <div class="eyebrow">08 — For programmers</div>
+    <h2>読み込む順番が<br><em>いちばん大事</em>。</h2>
+    <p class="lead">名前空間 <code>MS2026.Stages</code>、asmdef <code>MS2026.Stages.Runtime</code> / <code>.Editor</code>。ロビー側は <code>GameSession.Stage.cs</code>。壊せる物の番号は通信が始まったときに振るので、<b>ステージ → Game</b> の順に読み込む（Game が先に来たら、ステージの中身を止めておく）。</p>
+  </div>
+  <div class="tabs rv" role="tablist" aria-label="コード例">
+    <button class="tab" role="tab" aria-selected="true" aria-controls="cp-flow">流れ</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="cp-api">使える物</button>
+  </div>
+  <div class="panel" id="cp-flow" role="tabpanel">
+    <div class="codebox" data-plain><div class="cap"><span>本番（ロビー経由）</span><button class="copy" type="button">copy</button></div><pre>
+CharacterSelectController (host) → GameSession.ProceedToGame()
+  → TryBeginStageRoulette(): Roster.SetStage(random), phase = StageRoulette
+      → 全員: StageRouletteView.Play(catalog, stageIndex)
+  → (TotalSeconds 後) ProceedAfterRoulette(): phase = Loading, 幕
+      → Character_Select を外す → NGO LoadScene(Stage) → NGO LoadScene(Game)
+Game の [Stage] Bootstrap.Awake → StageLayout.TryApply()（コア・砲台・カメラ → 中身を動かす）
+Game が外れたら → ホストが NGO UnloadScene(Stage)</pre></div>
+  </div>
+  <div class="panel" id="cp-api" role="tabpanel">
+    <div class="codebox"><div class="cap"><span>MS2026.Stages</span><button class="copy" type="button">copy</button></div><pre>
+var catalog = StageCatalog.Load();          // Resources/StageCatalog
+var layout  = StageLayout.Active;           // 今のステージの配置の目印
+StageLayout.Applied += l =&gt; { /* l.definition.DisplayName など */ };
+// テスト用の bat: -fortress-stage Stage2</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">詳細</span><code>Docs/Tools/Stages_AI_Reference.md</code></div></div>
+  </div>
+</section>
+
+<section id="more" data-nav="関連ツール">
+  <div class="rv"><div class="eyebrow">09 — Related</div><h2>一緒に使う<br><em>ツール</em>。</h2></div>
+  <div class="links">
+    <a class="lk rv" href="StageStudio_ガイド.html"><span class="ti">ステージ背景スタジオ</span><span class="ds">ステージの背景（[Stage]）を作る。</span></a>
+    <a class="lk rv" href="FortressDesigner_ガイド.html"><span class="ti">要塞デザイナー</span><span class="ds">障害物・敵・経路・カメラの視点。</span></a>
+    <a class="lk rv" href="CharacterSelect_ガイド.html"><span class="ti">キャラクター選択</span><span class="ds">ルーレットの前の画面。</span></a>
+    <a class="lk rv" href="UIStudio_ガイド.html"><span class="ti">UIスタジオ</span><span class="ds">ロビー・自動接続の流れ。</span></a>
+    <a class="lk rv" href="index.html"><span class="ti">ツール一覧</span><span class="ds">このプロジェクトの全ツール。</span></a>
+  </div>
+  <footer><span>Stages Guide · Xx_MS2026_xX</span><span>2026-10-21 時点のコードに基づく</span></footer>
+</section>
+</main>
+</div>
+<script src="assets/guide.js"></script>
+</body>
+</html>

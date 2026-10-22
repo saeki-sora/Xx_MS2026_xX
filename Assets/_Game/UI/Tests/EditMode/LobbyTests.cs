@@ -61,6 +61,29 @@ namespace MS2026.UI.Tests.EditMode
         }
 
         [Test]
+        public void Roster_StageIndexIsCopiedAndCleared()
+        {
+            var roster = new LobbyRoster();
+            Assert.AreEqual(-1, roster.stageIndex, "最初はステージ未定");
+            var version = roster.Version;
+            roster.SetStage(1);
+            roster.SetPhase(LobbyPhase.StageRoulette);
+            Assert.AreNotEqual(version, roster.Version, "ステージが変わったら配り直す");
+
+            var copy = new LobbyRoster();
+            copy.CopyFrom(roster);
+            Assert.AreEqual(1, copy.stageIndex);
+            Assert.AreEqual(LobbyPhase.StageRoulette, copy.phase);
+
+            version = roster.Version;
+            roster.SetStage(1);
+            Assert.AreEqual(version, roster.Version, "同じステージなら変化なし");
+
+            roster.Clear();
+            Assert.AreEqual(-1, roster.stageIndex);
+        }
+
+        [Test]
         public void Roster_ClearReadyAndCopy()
         {
             var roster = new LobbyRoster();
