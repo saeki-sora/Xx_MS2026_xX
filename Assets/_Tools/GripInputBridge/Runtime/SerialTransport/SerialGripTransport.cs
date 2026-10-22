@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.IO.Ports;
 using System.Threading;
 using MS2026.GripInputBridge.Data;
+using MS2026.GripInputBridge.Relay;
 using Debug = UnityEngine.Debug;
 
 namespace MS2026.GripInputBridge.Transports
@@ -30,9 +31,10 @@ namespace MS2026.GripInputBridge.Transports
     /// 受信はバックグラウンドスレッドで行い、メインスレッドをブロックしない。
     /// スレッド間の値の受け渡しは <see cref="Volatile"/> のみで行い、ロックを使わずに単純化している
     /// （書き込み手はスレッド1つだけのため、この単純な方式で安全）。
+    /// IsConnected / GetRawValue / GetReceivedValue はどのスレッドから呼んでもよいので、LAN への握力の放送（<see cref="IGripRelayDevice"/>）にも使える。
     /// </para>
     /// </summary>
-    public sealed class SerialGripTransport : IGripTransport, IDisposable
+    public sealed class SerialGripTransport : IGripRelayDevice, IDisposable
     {
         private readonly GripDeviceConfig _config;
         private readonly SerialPort _serialPort;

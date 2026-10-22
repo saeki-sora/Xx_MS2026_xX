@@ -6,6 +6,7 @@ namespace MS2026.CharacterSelect
     /// <summary>
     /// 歯磨き粉の幕（<see cref="PasteCurtain"/>）の設定。Resources に置いた1つ（<see cref="ResourcePath"/>）を使う。
     /// 絵はタイトルのオープニングと同じ歯磨き粉の絵（Title_PasteCurtain）を入れておくと、タイトルと同じ見た目になる。
+    /// 「連番の絵」を入れると、縦の列を垂らす代わりにその連番を画面いっぱいに順番に出す（2026-10-22〜）。
     /// </summary>
     [CreateAssetMenu(menuName = "MS2026/キャラ選択/歯磨き粉の幕の設定", fileName = "CharacterSelectCurtain", order = 10)]
     public sealed class PasteCurtainSettings : ScriptableObject
@@ -28,7 +29,23 @@ namespace MS2026.CharacterSelect
         [Range(0f, 0.9f)]
         public float unevenness = 0.45f;
 
-        [Header("時間（秒）")]
+        [Header("連番の絵（入れると、上の列の幕の代わりにこれを再生）")]
+        [Tooltip("画面いっぱいの連番（After Effects などで書き出した透過PNG）。名前順に並べる。空なら上の列の幕。")]
+        public Texture2D[] frames = new Texture2D[0];
+
+        [Tooltip("連番の1秒の枚数。")]
+        [Min(1f)]
+        public float frameRate = 30f;
+
+        [Tooltip("画面を覆いきるコマ（0 から数える）。ここまで来たら次の画面の読み込みを始める。")]
+        [Min(0)]
+        public int coveredFrame = 24;
+
+        [Tooltip("抜け始めるコマ（0 から数える）。覆いきったコマからこの1つ前までを、読み込みを待つ間に出す（最後は止めて待つ）。")]
+        [Min(0)]
+        public int revealFrame = 32;
+
+        [Header("時間（秒。連番の絵を使うときは、覆ったままにする時間だけ使う）")]
         [Tooltip("上から垂れてきて画面を覆いきるまで（長いほど、どろーっと遅い）。")]
         [Min(0.05f)]
         public float dropSeconds = 1.1f;

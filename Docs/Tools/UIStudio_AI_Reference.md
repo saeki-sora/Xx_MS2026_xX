@@ -43,6 +43,9 @@ Assets/_Game/UI/
                 Kill_Plate (900×176 slanted navy plate, cyan→pink border), Kill_YouTag (280×72 white slanted tag, tinted by local.color), Kill_GermIcon (180², germ with X eyes + cyan laser slash), Kill_Bar (64×24, 9-slice 12/11), Kill_Burst (512², white rays), Kill_Ring (256²) .png — drawn offline with Python/PIL (2026-10-13), overwrite to reskin; the builder sets Sprite import settings
   Art/Session/  Session_Background (1920×1080), Session_Panel (96², 9-slice border 36), Session_Dot, Session_Ready (check), Session_Host (crown) .png — created only if missing (overwrite to reskin)
   Transitions/ Transition_*.asset (6 defaults)
+    Frames/Transition1/ tora00..tora59.png (60 frames, 1920×1080 RGBA, team-drawn toothpaste drip curtain, added 2026-10-22). Used by the **character-select toothpaste curtain** (`PasteCurtain` frame mode,
+                `CharacterSelect_AI_Reference.md`: lobby → Character_Select and GO! → Game), NOT by UiScreenTransition (its patterns are shader-only; `gameTransition` for back-to-lobby/title etc. is unchanged).
+                Importer (hand-written .meta): Default, no mips, Clamp, max 2048, Normal compression (≈2 MB VRAM each as DXT5, ≈125 MB for all 60, loaded together with the curtain settings).
 Assets/Scenes/Lobby.unity  (built by SessionFlowBuilder)   Assets/Scenes/Game.unity gets root `[Session] Guard`
 Assets/_Tools/StudioKit/Editor/  shared shell + StudioIssue/StudioIssueList + StudioAssets (EnsureFolder / UniquePath / SafeFileName) (also used by Stage Studio)
 ```

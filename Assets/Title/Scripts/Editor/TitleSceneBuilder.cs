@@ -25,6 +25,15 @@ namespace MS2026.Title.EditorTools
         private const string EffectDir = Root + "/Effects";
         private const string RootName = "[Title]";
         private const string ModelName = "Model";
+        // キャラの立ち絵（2026-10-22: 左 = 赤、右 = 黄色）。無ければ仮のキューブ。
+        // 大きさ = 絵の高さ（画面の高さは 10.8）、ずれ = キャラの位置から絵の真ん中まで（足元が画面の下近く、ロゴにかからない所）。
+        private const string CharacterLeftFile = "Title_CharaLeft.png";
+        private const string CharacterRightFile = "Title_CharaRight.png";
+        private const float CharacterLeftSize = 7.6f;
+        private const float CharacterRightSize = 7f;
+        private static readonly Vector3 CharacterLeftOffset = new Vector3(-0.6f, 1.1f, 0f);
+        private static readonly Vector3 CharacterRightOffset = new Vector3(0.6f, 0.8f, 0f);
+        private const int CharacterSortingOrder = 10;
         // 今の作りの目印: どろーっと垂れる歯磨き粉（Raw Image の「FadeCanvas/PasteCurtain」）がある。
         private static bool IsCurrentLayout(Transform root)
         {
@@ -109,12 +118,7 @@ namespace MS2026.Title.EditorTools
                 p.modules.Add(new GlitchModule { amount = 0f, blockSize = 14f, speed = 18f, rgbSplit = 0.03f });
                 p.modules.Add(new HitFlashModule { color = Color.white });
             });
-            var characterProfile = GetOrCreateProfile(EffectDir + "/TitleFX_Character.asset", p =>
-            {
-                p.modules.Add(new RimLightModule { color = new Color(0.35f, 0.95f, 1f, 1f), power = 3f, intensity = 1.2f });
-                p.modules.Add(new GlitchModule { amount = 0f, blockSize = 10f, speed = 16f, rgbSplit = 0.025f });
-                p.modules.Add(new HitFlashModule { color = Color.white });
-            });
+            var characterProfile = GetOrCreateCharacterProfile();
 
             var cubeLeftMaterial = GetOrCreateLitMaterial(MaterialDir + "/Title_CubeLeft.mat", new Color(1f, 0.75f, 0.93f, 1f));
             var cubeRightMaterial = GetOrCreateLitMaterial(MaterialDir + "/Title_CubeRight.mat", new Color(0.7f, 0.93f, 1f, 1f));
@@ -186,13 +190,18 @@ namespace MS2026.Title.EditorTools
             logo.flashOnExit = 0.8f;
             logo.glitchOnExit = 1f;
 
-            // --- キャラ（仮のキューブ）: 回転しながら左下・右下に落ちてきて「ドン」（画面が揺れる）
-            var characterLeft = CreateCubeElement(root.transform, "CharacterLeft", new Vector3(-6.2f, -2.6f, 0f), 35f,
-                cubeLeftMaterial, characterProfile, keptModels);
-            SetupFallingCharacter(characterLeft, 0.45f, new Vector3(90f, 200f, 60f));
-            var characterRight = CreateCubeElement(root.transform, "CharacterRight", new Vector3(6.2f, -2.6f, 0f), -35f,
-                cubeRightMaterial, characterProfile, keptModels);
-            SetupFallingCharacter(characterRight, 0.7f, new Vector3(90f, -200f, -60f));
+            // --- キャラ: 左下・右下に落ちてきて「ドン」（画面が揺れる）。立ち絵（左 = 赤、右 = 黄色。2026-10-22）があればそれ、
+            //     無ければ仮のキューブ（回転しながら落ちる）。立ち絵は平らなので、横に傾くだけにする。
+            var leftPortrait = Pick(keptSprites, "CharacterLeft", CharacterLeftFile);
+            var characterLeft = CreateCharacterElement(root.transform, "CharacterLeft", new Vector3(-6.2f, -2.6f, 0f), 35f,
+                cubeLeftMaterial, characterProfile, keptModels, leftPortrait, fxMaterial, CharacterLeftSize, CharacterLeftOffset,
+                out var leftWasCube);
+            SetupFallingCharacter(characterLeft, 0.45f, leftPortrait != null ? new Vector3(0f, 0f, 25f) : new Vector3(90f, 200f, 60f));
+            var rightPortrait = Pick(keptSprites, "CharacterRight", CharacterRightFile);
+            var characterRight = CreateCharacterElement(root.transform, "CharacterRight", new Vector3(6.2f, -2.6f, 0f), -35f,
+                cubeRightMaterial, characterProfile, keptModels, rightPortrait, fxMaterial, CharacterRightSize, CharacterRightOffset,
+                out var rightWasCube);
+            SetupFallingCharacter(characterRight, 0.7f, rightPortrait != null ? new Vector3(0f, 0f, -25f) : new Vector3(90f, -200f, -60f));
 
             // --- 「〇〇でスタート！」: 真ん中より少し下に弾んで現れ、ゆっくり点滅。スタートでノイズを走らせ、速く点滅して消える
             var pressStart = CreateElement(root.transform, "PressStart", new Vector3(0f, -1.5f, 0f),
@@ -227,6 +236,9 @@ namespace MS2026.Title.EditorTools
             {
                 var applied = keptValues.Apply(root.transform, "タイトルシーンを組み立てる");
                 Debug.Log($"[Title] 調整した数値・位置を引き継ぎました（{applied} か所）。");
+                // キューブから立ち絵に替えたときは、キューブ用の「回転しながら落ちる」を引き継がない（平らな絵が裏返って見えるため）。
+                if (leftWasCube) characterLeft.rotateFrom = new Vector3(0f, 0f, 25f);
+                if (rightWasCube) characterRight.rotateFrom = new Vector3(0f, 0f, -25f);
             }
 
             AddSceneToBuildList();
@@ -562,19 +574,32 @@ namespace MS2026.Title.EditorTools
             return ps;
         }
 
-        private static TitleElementMotion CreateCubeElement(Transform parent, string name, Vector3 position, float yaw,
-            Material material, EffectProfile profile, Dictionary<string, GameObject> keptModels)
+        // キャラ1人分。差し替えた 3D モデル（子「Model」）があればそのまま、無ければ立ち絵（子「Sprite」）、立ち絵も無ければ仮のキューブ。
+        // replacedCube = 前の仮のキューブを立ち絵に替えた。
+        private static TitleElementMotion CreateCharacterElement(Transform parent, string name, Vector3 position, float yaw,
+            Material material, EffectProfile profile, Dictionary<string, GameObject> keptModels,
+            Sprite portrait, Material fxMaterial, float portraitSize, Vector3 portraitOffset, out bool replacedCube)
         {
+            replacedCube = false;
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
             go.transform.localPosition = position;
             var motion = go.AddComponent<TitleElementMotion>();
 
-            if (keptModels.TryGetValue(name, out var kept) && kept != null)
+            keptModels.TryGetValue(name, out var kept);
+            if (kept != null && !(portrait != null && IsPlaceholderCube(kept)))
             {
                 Undo.SetTransformParent(kept.transform, go.transform, "タイトルシーンを組み立てる");
                 kept.transform.localPosition = Vector3.zero;
                 keptModels.Remove(name);
+                return motion;
+            }
+
+            if (portrait != null)
+            {
+                // 仮のキューブは、最後に「引き継げなかったモデル」として消える。
+                replacedCube = kept != null;
+                CreatePortraitChild(go.transform, portrait, fxMaterial, profile, portraitSize, portraitOffset);
                 return motion;
             }
 
@@ -598,6 +623,133 @@ namespace MS2026.Title.EditorTools
                 so.ApplyModifiedPropertiesWithoutUndo();
             }
             return motion;
+        }
+
+        // キャラの立ち絵（子「Sprite」）。白フラッシュ・グリッチ・輪郭の光は ShaderFX（キューブと同じ設定）。
+        private static GameObject CreatePortraitChild(Transform parent, Sprite portrait, Material fxMaterial, EffectProfile profile,
+            float size, Vector3 offset)
+        {
+            var spriteGo = new GameObject("Sprite");
+            spriteGo.transform.SetParent(parent, false);
+            spriteGo.transform.localPosition = offset;
+            var sr = spriteGo.AddComponent<SpriteRenderer>();
+            sr.sprite = portrait;
+            sr.sortingOrder = CharacterSortingOrder;
+            var fit = spriteGo.AddComponent<TitleSpriteFit>();
+            fit.mode = TitleSpriteFit.FitMode.Height;
+            fit.size = size;
+            fit.Fit();
+            if (fxMaterial != null && profile != null)
+            {
+                sr.sharedMaterial = fxMaterial;
+                var target = spriteGo.AddComponent<EffectTarget>();
+                var so = new SerializedObject(target);
+                so.FindProperty("profile").objectReferenceValue = profile;
+                so.FindProperty("targetRenderer").objectReferenceValue = sr;
+                so.FindProperty("originalMaterial").objectReferenceValue = fxMaterial;
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+            return spriteGo;
+        }
+
+        private static EffectProfile GetOrCreateCharacterProfile() =>
+            GetOrCreateProfile(EffectDir + "/TitleFX_Character.asset", p =>
+            {
+                p.modules.Add(new RimLightModule { color = new Color(0.35f, 0.95f, 1f, 1f), power = 3f, intensity = 1.2f });
+                p.modules.Add(new GlitchModule { amount = 0f, blockSize = 10f, speed = 16f, rgbSplit = 0.025f });
+                p.modules.Add(new HitFlashModule { color = Color.white });
+            });
+
+        /// <summary>
+        /// メニュー「Tools/タイトル/キャラを立ち絵にする」。組み立て直さずに、タイトルのシーンの仮のキューブだけを立ち絵に替える
+        /// （位置・動きの数値はそのまま。落ちるときの回転だけ立ち絵用の「少し傾く」にする）。差し替えた 3D モデルはそのまま。
+        /// </summary>
+        [MenuItem("Tools/タイトル/キャラを立ち絵にする")]
+        private static void SwapCubesToPortraitsMenu()
+        {
+            if (EditorApplication.isPlaying)
+            {
+                EditorUtility.DisplayDialog("タイトル", "再生中は替えられません。再生を止めてから実行してください。", "OK");
+                return;
+            }
+
+            var swapped = SwapCubesToPortraitsInTitleScene();
+            EditorUtility.DisplayDialog("タイトル", swapped > 0
+                ? $"仮のキューブ {swapped} 個を立ち絵に替えて、タイトルのシーンを保存しました。"
+                : $"替えるキューブはありませんでした（もう立ち絵か、立ち絵の画像 {SpriteDir}/{CharacterLeftFile} / {CharacterRightFile} がありません）。", "OK");
+        }
+
+        /// <summary>
+        /// Title.unity の仮のキューブを立ち絵に替えて保存する。開いていなければ裏で開いて閉じる。替えた数を返す。
+        /// タイトルのシーンを開いていて、保存していない変更があるときは保存せずに、保存するようログで知らせる。
+        /// </summary>
+        internal static int SwapCubesToPortraitsInTitleScene()
+        {
+            var scene = SceneManager.GetSceneByPath(ScenePath);
+            var wasOpen = scene.IsValid() && scene.isLoaded;
+            var hadChanges = wasOpen && scene.isDirty;
+            if (!wasOpen) scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Additive);
+
+            var swapped = 0;
+            try
+            {
+                var root = scene.GetRootGameObjects().FirstOrDefault(go => go.name == RootName);
+                if (root == null) return 0;
+                ConfigureSpriteImports();
+                var fxMaterial = GetOrCreateMaterial(MaterialDir + "/Title_SpriteFX.mat", "ShaderFX/Uber Sprite", null);
+                var profile = GetOrCreateCharacterProfile();
+                if (SwapCubeToPortrait(root.transform, "CharacterLeft", CharacterLeftFile, CharacterLeftSize, CharacterLeftOffset, 25f, fxMaterial, profile)) swapped++;
+                if (SwapCubeToPortrait(root.transform, "CharacterRight", CharacterRightFile, CharacterRightSize, CharacterRightOffset, -25f, fxMaterial, profile)) swapped++;
+                if (swapped > 0)
+                {
+                    EditorSceneManager.MarkSceneDirty(scene);
+                    if (hadChanges)
+                    {
+                        Debug.LogWarning("[Title] キャラを立ち絵に替えました。タイトルのシーンに保存していない変更があったので、保存はしていません。シーンを保存してください。");
+                    }
+                    else
+                    {
+                        EditorSceneManager.SaveScene(scene);
+                        Debug.Log($"[Title] 仮のキューブ {swapped} 個を立ち絵に替えて、タイトルのシーンを保存しました。");
+                    }
+                }
+            }
+            finally
+            {
+                if (!wasOpen) EditorSceneManager.CloseScene(scene, true);
+            }
+            return swapped;
+        }
+
+        private static bool SwapCubeToPortrait(Transform root, string name, string file, float size, Vector3 offset, float tilt,
+            Material fxMaterial, EffectProfile profile)
+        {
+            var character = root.Find(name);
+            var model = character != null ? character.Find(ModelName) : null;
+            if (model == null || !IsPlaceholderCube(model.gameObject) || character.Find("Sprite") != null) return false;
+            var portrait = AssetDatabase.LoadAssetAtPath<Sprite>(SpriteDir + "/" + file);
+            if (portrait == null) return false;
+
+            Undo.DestroyObjectImmediate(model.gameObject);
+            var spriteGo = CreatePortraitChild(character, portrait, fxMaterial, profile, size, offset);
+            Undo.RegisterCreatedObjectUndo(spriteGo, "キャラを立ち絵にする");
+            var motion = character.GetComponent<TitleElementMotion>();
+            if (motion != null)
+            {
+                Undo.RecordObject(motion, "キャラを立ち絵にする");
+                motion.rotateFrom = new Vector3(0f, 0f, tilt);
+            }
+            return true;
+        }
+
+        // 組み立てが置いた仮のキューブか（キューブの形で、仮キューブの材質）。差し替えた 3D モデルは false。
+        private static bool IsPlaceholderCube(GameObject model)
+        {
+            var filter = model.GetComponent<MeshFilter>();
+            var renderer = model.GetComponent<MeshRenderer>();
+            if (filter == null || filter.sharedMesh == null || filter.sharedMesh.name != "Cube" || renderer == null) return false;
+            var material = renderer.sharedMaterial;
+            return material == null || material.name.StartsWith("Title_Cube");
         }
 
         private static void SetupFallingCharacter(TitleElementMotion motion, float delay, Vector3 tumble)

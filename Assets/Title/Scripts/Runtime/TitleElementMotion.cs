@@ -36,6 +36,8 @@ namespace MS2026.Title
         public bool fadeIn = true;
         [Tooltip("最終位置から見て、どこから動いてくるか（ワールドの単位）。(0,0,0)なら動かない。")]
         public Vector3 moveFrom;
+        [Tooltip("ONなら、絵やモデルを大きくしても、動き始めは必ず画面の外にいるように、動いてくる距離を自動でのばす（向きはそのまま。足りているときは変えない）。")]
+        public bool startOffscreen = true;
         [Tooltip("登場開始時の大きさ（1 = 最終の大きさ）。")]
         public float scaleFrom = 1f;
         [Tooltip("登場開始時の向きのずれ（度。X/Y/Z軸まわり）。落ちながら回転させたいときに使う。")]
@@ -113,6 +115,10 @@ namespace MS2026.Title
         private float[] baseAlphas = Array.Empty<float>();
         private EffectTarget[] effectTargets = Array.Empty<EffectTarget>();
         private bool captured;
+        // 最終位置での絵・モデルの外枠の角（このオブジェクトの位置から見たワールドの向き）。画面の外から出すために使う。
+        private Vector3[] restCorners = Array.Empty<Vector3>();
+        // 今回の登場で実際に使う「どこから動いてくるか」（startOffscreen でのびた後）。
+        private Vector3 enterFrom;
 
         // グリッチを使う設定のときだけ値を書き込む（書き込むと SRP Batcher のまとめ描きから外れるため）。
         private bool UsesGlitch => glitchIn > 0f || glitchInterval > 0f || glitchOnExit > 0f;
@@ -141,6 +147,63 @@ namespace MS2026.Title
             baseAlphas = new float[sprites.Length];
             for (var i = 0; i < sprites.Length; i++) baseAlphas[i] = sprites[i].color.a;
             effectTargets = GetComponentsInChildren<EffectTarget>(true);
+            enterFrom = moveFrom;
+            CaptureRestCorners();
+        }
+
+        private void CaptureRestCorners()
+        {
+            var has = false;
+            var bounds = new Bounds();
+            foreach (var r in renderers)
+            {
+                if (r == null || r is ParticleSystemRenderer) continue;
+                if (!has) bounds = r.bounds;
+                else bounds.Encapsulate(r.bounds);
+                has = true;
+            }
+            if (!has || bounds.size == Vector3.zero) return;
+
+            var min = bounds.min - transform.position;
+            var max = bounds.max - transform.position;
+            restCorners = new[]
+            {
+                new Vector3(min.x, min.y, min.z), new Vector3(max.x, min.y, min.z), new Vector3(min.x, max.y, min.z), new Vector3(max.x, max.y, min.z),
+                new Vector3(min.x, min.y, max.z), new Vector3(max.x, min.y, max.z), new Vector3(min.x, max.y, max.z), new Vector3(max.x, max.y, max.z),
+            };
+        }
+
+        // 動き始め（向き rotateFrom・大きさ scaleFrom）の外枠が、カメラに映る範囲の外に出きるまで moveFrom をのばす。
+        // 上下・左右のどちらか1つで外に出ればよい（例: 上から落ちてくるなら、絵の下のふちが画面の上より上）。
+        private Vector3 OffscreenMoveFrom()
+        {
+            if (!startOffscreen || moveFrom == Vector3.zero || restCorners.Length == 0) return moveFrom;
+            var cam = Camera.main;
+            if (cam == null || !cam.orthographic) return moveFrom;
+
+            var move = transform.parent != null ? transform.parent.TransformVector(moveFrom) : moveFrom;
+            var parentRotation = transform.parent != null ? transform.parent.rotation : Quaternion.identity;
+            var startRotation = parentRotation * Quaternion.Euler(rotateFrom) * Quaternion.Inverse(parentRotation);
+            float minX = float.MaxValue, maxX = float.MinValue, minY = float.MaxValue, maxY = float.MinValue;
+            foreach (var corner in restCorners)
+            {
+                var p = startRotation * (corner * scaleFrom);
+                minX = Mathf.Min(minX, p.x); maxX = Mathf.Max(maxX, p.x);
+                minY = Mathf.Min(minY, p.y); maxY = Mathf.Max(maxY, p.y);
+            }
+
+            var pos = transform.parent != null ? transform.parent.TransformPoint(basePosition) : basePosition;
+            var center = cam.transform.position;
+            var halfH = cam.orthographicSize;
+            var halfW = halfH * cam.aspect;
+            var factor = float.MaxValue;
+            if (move.y > 0.0001f) factor = Mathf.Min(factor, (center.y + halfH - (pos.y + minY)) / move.y);
+            if (move.y < -0.0001f) factor = Mathf.Min(factor, (pos.y + maxY - (center.y - halfH)) / -move.y);
+            if (move.x > 0.0001f) factor = Mathf.Min(factor, (center.x + halfW - (pos.x + minX)) / move.x);
+            if (move.x < -0.0001f) factor = Mathf.Min(factor, (pos.x + maxX - (center.x - halfW)) / -move.x);
+            if (factor == float.MaxValue || factor <= 1f) return moveFrom;
+            // 少しだけ余分に（ゆらぎ・カメラの揺れで端がのぞかないように）。
+            return moveFrom * (factor * 1.03f);
         }
 
         /// <summary>登場前（隠れて合図を待つ状態）に戻す。「最初から再生」用。</summary>
@@ -162,7 +225,9 @@ namespace MS2026.Title
         public void PlayEnter()
         {
             Capture();
-            SetVisible(true);
+            enterFrom = OffscreenMoveFrom();
+            // 待っている間は隠したまま（動き始めの位置が画面にかかっても見えないように）。動き始めで見せる。
+            SetVisible(false);
             phase = Phase.Waiting;
             phaseTime = 0f;
             idleTime = 0f;
@@ -206,6 +271,7 @@ namespace MS2026.Title
                     {
                         phase = Phase.Entering;
                         phaseTime -= Mathf.Max(0f, enterDelay);
+                        SetVisible(true);
                         goto case Phase.Entering;
                     }
                     Apply(EnterPose(0f));
@@ -284,7 +350,7 @@ namespace MS2026.Title
             var e = TitleEase.Evaluate(enterEase, t);
             return new Pose
             {
-                offset = Vector3.LerpUnclamped(moveFrom, Vector3.zero, e),
+                offset = Vector3.LerpUnclamped(enterFrom, Vector3.zero, e),
                 scale = Mathf.LerpUnclamped(scaleFrom, 1f, e),
                 rotation = Vector3.LerpUnclamped(rotateFrom, Vector3.zero, e),
                 alpha = fadeIn ? Mathf.Clamp01(t * 1.5f) : 1f,

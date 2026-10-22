@@ -7,7 +7,7 @@
 | ツール | AI 向け（作業前に読む） | 人間向け | コード |
 |---|---|---|---|
 | 要塞デザイナー | `Docs/Tools/FortressDesigner_AI_Reference.md` | `FortressDesigner_ガイド.html` | `Assets/_Game/Fortress/` |
-| 握力入力ブリッジ | `Docs/Tools/GripInputBridge_AI_Reference.md` | `GripInputBridge_ガイド.html` | `Assets/_Tools/GripInputBridge/`, `Assets/ArduinoSerialReader.cs` |
+| 握力入力ブリッジ | `Docs/Tools/GripInputBridge_AI_Reference.md` | `GripInputBridge_ガイド.html` | `Assets/_Tools/GripInputBridge/`, `Assets/ArduinoSerialReader.cs`, `Tools/Exhibition/`（展示用：LAN で配る起動アイコン） |
 | ShaderFX | `Docs/Tools/ShaderFX_AI_Reference.md` | `ShaderFX_ガイド.html` | `Packages/com.ms2026.shaderfx/` |
 | SpriteAnim | `Docs/Tools/SpriteAnim_AI_Reference.md` | `SpriteAnim_ガイド.html` | `Packages/com.ms2026.spriteanim/` |
 | ステージ背景スタジオ | `Docs/Tools/StageStudio_AI_Reference.md` | `StageStudio_ガイド.html` | `Assets/_Game/Stage/`, `Assets/_Tools/StudioKit/`（共通の画面部品） |

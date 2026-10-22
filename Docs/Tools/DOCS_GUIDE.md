@@ -7,7 +7,7 @@ Each tool has **two docs**, both kept in sync with the code:
 | Tool | Human guide (planner-friendly HTML) | AI reference (Claude Code) | Code |
 |---|---|---|---|
 | 要塞デザイナー / Fortress Designer | `FortressDesigner_ガイド.html` | `FortressDesigner_AI_Reference.md` | `Assets/_Game/Fortress/` |
-| 握力入力ブリッジ / Grip Input Bridge | `GripInputBridge_ガイド.html` | `GripInputBridge_AI_Reference.md` | `Assets/_Tools/GripInputBridge/`, `Assets/ArduinoSerialReader.cs` |
+| 握力入力ブリッジ / Grip Input Bridge | `GripInputBridge_ガイド.html` | `GripInputBridge_AI_Reference.md` | `Assets/_Tools/GripInputBridge/`, `Assets/ArduinoSerialReader.cs`, `Tools/Exhibition/` |
 | ShaderFX | `ShaderFX_ガイド.html` | `ShaderFX_AI_Reference.md` | `Packages/com.ms2026.shaderfx/` |
 | SpriteAnim | `SpriteAnim_ガイド.html` | `SpriteAnim_AI_Reference.md` | `Packages/com.ms2026.spriteanim/` |
 | ステージ背景スタジオ / Stage Studio | `StageStudio_ガイド.html` | `StageStudio_AI_Reference.md` | `Assets/_Game/Stage/`, `Assets/_Tools/StudioKit/` |
