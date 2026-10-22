@@ -21,6 +21,16 @@ namespace MS2026.Stages.EditorTools
             EditorGUILayout.Space();
             using (new EditorGUI.DisabledScope(EditorApplication.isPlaying))
             {
+                if (GUILayout.Button(new GUIContent("Game のコア・砲台をこの目印に並べる（編集画面）",
+                        "Game も開いているとき、Game のコア・砲台 4 台とカメラの視点を、この目印の位置・向き・視点にして見せる（Play で動く位置と同じ）。" +
+                        "見せるだけで、Game のファイルには保存されない。ステージを Game と一緒に開いたときは自動で並ぶ。")))
+                {
+                    if (!StageEditPreview.Place((StageLayout)target, true))
+                    {
+                        EditorUtility.DisplayDialog("配置の目印", "コア・砲台が見つかりません。Game のシーンも一緒に開いてください（Tools › ステージ › 選んだステージを Game と一緒に開く）。", "OK");
+                    }
+                }
+
                 if (GUILayout.Button(new GUIContent("今の砲台・コアの位置を目印に写す", "Game も開いているとき、Game のコア・砲台の今の位置と向きを、この目印に写す。")))
                 {
                     CopyFromScene((StageLayout)target);

@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: Stage_2
   m_EditorClassIdentifier: MS2026.Stages.Runtime::MS2026.Stages.StageDefinition
   stageId: stage2
-  displayName: "\u30B9\u30C6\u30FC\u30B82\uFF08\u4EEE\uFF09"
-  subtitle: "\u969C\u5BB3\u7269\u304C\u5DE6\u53F3\u53CD\u5BFE"
-  sceneName: Stage2
+  displayName: "\u304A\u98A8\u5442\u5834"
+  subtitle: "\u6A4B\u304C\u5D29\u308C\u308B\u3068\u30B3\u30A2\u304C\u843D\u3061\u308B"
+  sceneName: Stage2_Bath
   thumbnail: {fileID: 0}
-  themeColor: {r: 1, g: 0.45, b: 0.75, a: 1}
+  themeColor: {r: 0.55, g: 0.8, b: 1, a: 1}
   includeInRoulette: 1
