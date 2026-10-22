@@ -41,11 +41,12 @@ Assets/RedSkill/
           RedSkillMenu.cs (menus)
   Shaders/  RedSkillBeam.shader ("MS2026/RedSkill/Beam") · RedSkillRadial.shader ("MS2026/RedSkill/Radial") · RedSkillParticle.shader ("MS2026/RedSkill/Particle") · RedSkillCommon.hlsl
   Data/     RedLaserSkill.asset (only skillId/displayName/description/themeColor/shaders serialized; everything else = C# field initializers until Unity re-saves it)
-            CharacterSkillTable.asset (2026-10-20: Chara_Alpha (alpha) → RedLaserSkill, Chara_Gamma (gamma) → GreenMintSkill)
-  Prefabs/  RedSkill_Installer.prefab (defaultSkill = RedLaserSkill.asset, perPlayerSkills[2] (P3) = GreenMintSkill.asset since 2026-10-20, characterTable = CharacterSkillTable.asset, useCharacterSelection on, enableTestKeys on)
+            CharacterSkillTable.asset (2026-10-20: Chara_Alpha (alpha) → RedLaserSkill, Chara_Gamma (gamma) → GreenMintSkill; 2026-10-22: Chara_Delta (delta) → YellowArrowSkill)
+  Prefabs/  RedSkill_Installer.prefab (defaultSkill = RedLaserSkill.asset, perPlayerSkills[2] (P3) = GreenMintSkill.asset since 2026-10-20, perPlayerSkills[3] (P4) = YellowArrowSkill.asset since 2026-10-22, characterTable = CharacterSkillTable.asset, useCharacterSelection on, enableTestKeys on)
   Green skill (2026-10-20): Scripts/Runtime/Green/, Scripts/Editor/GreenSkillMenu.cs, Shaders/GreenSkill{Gel,Sprite}.shader, Data/GreenMintSkill.asset — see GreenSkill_AI_Reference.md. The runtime asmdef now also references Unity.Mathematics, Unity.Collections, UnityEngine.UI (for the green skill).
 Docs/Tools/RedSkill_AI_Reference.md, RedSkill_ガイド.html
 ```
+- Yellow skill (2026-10-22): `Scripts/Runtime/Yellow/`, `Data/YellowArrowSkill.asset` — see §2b.
 - Test scene `Assets/Scenes/redskill_testscene.unity` (copy of the game setup: 4 turrets `Turret_P0..P3`, smash ball on `Destructible_0`, swarm, spawn points). The installer is **not** in the scene file yet — the user adds it via the menu (the editor had the scene open, so the YAML was not edited).
 
 ## 2. Public API
@@ -77,6 +78,13 @@ sealed class RedLaserSkill : CharacterSkill { timing, shape, damage, look, charg
 [DefaultExecutionOrder(10)] sealed class RedLaserSkillRunner : CharacterSkillRunner { RedLaserSkill Definition; float CurrentLength; bool HasImpact; }
 ```
 - Adding another character's skill: subclass `CharacterSkill` (+ `[CreateAssetMenu]`), implement a runner, add `[SkillLabel]` to fields, assign the asset (installer / table). Slot, charging, suppression, test buttons and inspectors work unchanged.
+
+## 2b. Yellow skill「リコシェアロー」(YellowArrowSkill)
+- Files: `Scripts/Runtime/Yellow/YellowArrowSkill.cs` (SO, ns `MS2026.Skills.Yellow`, CreateAssetMenu `MS2026/スキル/イエロー：リコシェアロー`) · `YellowArrowSkillRunner.cs` · asset `Data/YellowArrowSkill.asset` (skillId `yellow_ricochet_arrow`). The arrow itself (movement, wall bounce via raycasts, enemy damage only where `FortressNet.HasSimulationAuthority`, visuals, bounce shake) is `MS2026.Fortress.YellowSkillArrow` in `Assets/_Game/Fortress/Runtime/Effects/YellowSkillArrow.cs` (unchanged, public `Initialize(direction, speed, lifetime, length, walls, attacker, dps, launchShake, bounceShake)`).
+- History: the yellow branch (`イエロースキル`, merged 2026-10-22) first shipped `MS2026.Fortress.YellowArrowSkill`, a scene MonoBehaviour (`[Skill] Yellow Arrow` in Game.unity) that listened to `SmashBallModule.AnyBroken` and fired immediately; since the installer had no yellow entry the yellow turret also got the default red skill. User report 2026-10-22: 「スマッシュボールを壊したら、一度離して再度握ったら発動ではなく、即時発動」「その後赤スキルを構えてしまう。黄色が撃てるのは黄色スキルだけ」. Fix: converted to a `CharacterSkill` (the MonoBehaviour, its scene object and the Fortress asmdef's `MS2026.CharacterSelect.Data` reference were removed); its serialized values moved to the asset.
+- Flow = the normal slot flow (§0): smash ball → Ready (if gripping at that moment, wait for release) → next transition into Firing → `Activate()` spawns one arrow at the turret position along `AimDirection` (GameObject `[YellowSkill] Arrow Pn` at scene root, destroys itself after `arrow.lifetime`), plays `sounds.onLaunch` (VFX via `FortressEffectPlayer.SpawnVfx`; SE played directly through `DDriveRuntimeBootstrap.Instance.Audio` so `sounds.launchVolume` applies), then calls `NotifyFinished()` immediately (`IsActive` is always false). Because `hideNormalLaserUntilRelease` is on and the turret is still Firing, the slot keeps the normal laser hidden until the grip is released.
+- Data: `arrow.speed/lifetime/length/damagePerSecond/wallLayers` = 12 / 5 / 4.8 / 200 / ~0; `cameraShake.launch` (0.65, 1.1°, 17 Hz, 0.32 s), `cameraShake.bounce` (0.45, 0.75°, 20 Hz, 0.24 s); `sounds.onReady` (empty), `sounds.onLaunch` (SE id 16135865275358210923, from the old scene object), `sounds.launchVolume` 1.
+- No Ready visual yet (only `sounds.onReady`). Live arrows are destroyed with the runner (`OnDestroy`).
 
 ## 3. RedLaserSkill data (defaults; `[SkillLabel]` = Inspector label)
 | group.field | default | meaning |

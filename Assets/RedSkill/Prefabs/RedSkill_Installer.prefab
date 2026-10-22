@@ -49,7 +49,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 11400000, guid: 57d56c6a3ce242c6a13bb3f71bc24bc8, type: 2}
-  - {fileID: 0}
+  - {fileID: 11400000, guid: e493c07d159f43b4bdf2fa462978c2b9, type: 2}
   useCharacterSelection: 1
   characterTable: {fileID: 11400000, guid: 6777678fc6cf4c38a6277ae671c4c9f8, type: 2}
   startReady: 0

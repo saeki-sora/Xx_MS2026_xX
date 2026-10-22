@@ -19,3 +19,6 @@ MonoBehaviour:
   - character: {fileID: 11400000, guid: 7db4767292e776b40a3fe296749d3284, type: 2}
     characterId: gamma
     skill: {fileID: 11400000, guid: 57d56c6a3ce242c6a13bb3f71bc24bc8, type: 2}
+  - character: {fileID: 11400000, guid: d9c336238095ceb428bd5086a39bda20, type: 2}
+    characterId: delta
+    skill: {fileID: 11400000, guid: e493c07d159f43b4bdf2fa462978c2b9, type: 2}
