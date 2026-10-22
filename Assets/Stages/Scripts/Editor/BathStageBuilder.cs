@@ -45,6 +45,7 @@ namespace MS2026.Stages.EditorTools
         private const float BridgeHealth = 600f;
         private static readonly Vector2 CorePosition = new Vector2(0f, -5f);
         private static readonly Vector2 CoreDropPosition = new Vector2(0f, -9.5f); // 床の上。撃破数（画面の下の真ん中）に隠れない高さ
+        private static readonly Vector2 SmashBallPosition = new Vector2(8f, -2f); // バスタブの中（浮いて動き回る）
 
         private static readonly (string id, Vector2 position)[] SpawnPoints =
         {
@@ -164,6 +165,7 @@ namespace MS2026.Stages.EditorTools
 
             var bridge = Bridge(obstacles.transform, destructibleSource);
             report.Add($"橋 Bridge（壊れる障害物・体力 {BridgeHealth}・再生しない・敵の通り道はふさがない）を置いた。");
+            CopySmashBall(source, obstacles.transform, report);
 
             // ── 仮の見た目（当たり判定なし） ──
             var look = NewRoot(scene, "[Stage] 仮の見た目");
@@ -307,6 +309,23 @@ namespace MS2026.Stages.EditorTools
             collider.isTrigger = passBeams;
             go.AddComponent<NavigationObstacle>().mode = NavigationObstacleMode.Block;
             visual.Apply();
+        }
+
+        /// <summary>Stage1 のスマッシュボール（設定・演出ごと）を写して、バスタブの中に置く。浮いて動く範囲は経路の範囲に合わせる設定のまま。</summary>
+        private static void CopySmashBall(Scene source, Transform parent, List<string> report)
+        {
+            var original = FindIn<SmashBallModule>(source).FirstOrDefault();
+            if (original == null)
+            {
+                report.Add("Stage1 にスマッシュボールが無かったので、置かなかった。");
+                return;
+            }
+
+            var copy = Object.Instantiate(original.gameObject);
+            copy.name = "SmashBall_0";
+            copy.transform.SetParent(parent, false);
+            copy.transform.position = new Vector3(SmashBallPosition.x, SmashBallPosition.y, 0f);
+            report.Add($"Stage1 のスマッシュボールを写して SmashBall_0 を {SmashBallPosition} に置いた。");
         }
 
         /// <summary>見た目だけの仮の板（当たり判定なし。敵・ビームに関係しない）。地面より少し奥に置く。</summary>
