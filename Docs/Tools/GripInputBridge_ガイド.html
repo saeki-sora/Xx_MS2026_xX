@@ -87,6 +87,7 @@
     <div class="card feat rv"><div class="ic">🩺</div><h3>診断</h3><p>4 人分の接続状態と現在の値を一覧。ケーブル抜けなどにすぐ気づける。</p><p class="ex"><b>使う場面</b> 展示本番の監視</p></div>
     <div class="card feat rv"><div class="ic">⏺️</div><h3>記録と再生</h3><p>握力の動きをファイルに記録して、あとで同じ動きを再生できる。</p><p class="ex"><b>使う場面</b> 本番で起きた不具合の再現</p></div>
     <div class="card feat rv"><div class="ic">🔌</div><h3>実機（Arduino）</h3><p>USB でつないだマイコンのセンサー値を受け取る。最大 4 人分。</p><p class="ex"><b>使う場面</b> 筐体での実プレイ</p></div>
+    <div class="card feat rv"><div class="ic">📡</div><h3>LAN で配る（展示）</h3><p>1 台の Arduino につないだ 4 人分の握力を、LAN で 4 台の PC に配る。各 PC は自分の席の番号の値を使う。</p><p class="ex"><b>使う場面</b> 展示本番（1 台の Arduino・4 台の PC）</p></div>
   </div>
 </section>
 
@@ -141,6 +142,26 @@
     <button class="chip" aria-pressed="false" data-f="hw">実機・配線</button>
   </div>
   <div class="recipes">
+    <details class="recipe" data-tags="live hw"><summary><span class="q">展示：1 台の Arduino（4 人分のセンサー）を 4 台の PC で使いたい</span><span class="who">LAN で配る › -grip-sensor</span></summary><div class="a">
+      <p><b>しくみ</b>：Arduino をつないだ PC が、4 人分の握力を <b>LAN へ放送</b>します（1 秒に約 60 回）。どの PC も 4 人分を受け取りますが、使うのは<b>自分の席の番号のセンサーだけ</b>で、それを「この PC の前の人の握力」としてタイトル・キャラ選択・砲台・リザルトに使います。ゲームの接続（部屋さがし）とは別なので、<b>タイトルの時点から</b>握ってスタートできます。席（砲台の色）が来た順で決まっても、握る人・見る画面・動く砲台は同じ PC の中でつながるので、ずれません。</p>
+      <ol>
+        <li><b>配線の番号＝席の番号</b>：Arduino が送る <code>a,b,c,d</code> の順（例：A0〜A3）がセンサー 1〜4 です。ケーブルと机に同じ番号を書いておきます。</li>
+        <li><b>アイコンを作る</b>（PC ごとに 1 回）：ビルドのフォルダ（<code>MS2026.exe</code> のある所）に <code>Tools\Exhibition\make_sensor_shortcuts.bat</code> と <code>make_sensor_shortcuts.ps1</code> をコピーしてダブルクリック。デスクトップに「<b>MS2026 センサー1で起動</b>」〜「センサー4で起動」の 4 つができます。予備の PC にも作っておきます。</li>
+        <li><b>起動</b>：各 PC で、<b>その机の番号のアイコン</b>をダブルクリック。Arduino をつないだ PC も同じです（例：机 1 なら「センサー1で起動」）。Arduino がつながった PC は<b>自動で放送係</b>になります（設定はいりません）。</li>
+        <li><b>確認</b>：各 PC で <kbd>F8</kbd>。「LAN: このPCはセンサー3番」「受信: ○○ から 60 回/秒」と出て、その席のセンサーを握ると「LAN の4人分」の 3 の数字が動けば OK。</li>
+      </ol>
+      <p><b>予備の PC に替えるとき</b>：壊れた PC と<b>同じ番号のアイコン</b>をダブルクリックするだけ（マウスだけでできます）。Arduino をつないだ PC が壊れたら、Arduino の USB を予備に挿し替えて同じ番号のアイコンで起動します。ほかの PC は、放送が戻ると自動でまた受け取ります（放送が 0.5 秒以上止まると、その間は全員の握力が 0 になります）。</p>
+      <div class="callout"><span class="ci">!</span><div><b>LAN とファイアウォール</b>：放送は UDP <b>47781〜47784</b> を使います。Windows の許可は <code>MS2026.exe</code> ごとなので、ゲームの接続（7777・部屋さがし 47777）が通っている PC では新しい確認画面は出ません。ただし会場で LAN につないだとき Windows がそのネットワークを「<b>パブリック</b>」と判断すると止まることがあるので、各 PC のネットワークを「<b>プライベート</b>」にしてください（初回の許可画面では両方にチェックしておくと安心）。<b>4 台が 1 つの部屋にまとまってキャラ選択に入れたら、放送も届く</b>と考えてかまいません（同じ仕組み）。</div></div>
+      <p class="small muted">アイコンを使わずに起動するときは、起動オプション <code>-grip-sensor 3</code>（3 = 席の番号）を付けます。付けなければ今まで通り（各 PC の Arduino をその PC の P1 として使い、LAN では配らない）です。</p>
+    </div></details>
+    <details class="recipe" data-tags="dev hw"><summary><span class="q">展示の「LAN で配る」を、1 台の PC（Arduino なし）で試したい</span><span class="who">-grip-relay-send</span></summary><div class="a">
+      <ol>
+        <li>ビルドした <code>MS2026.exe</code> を 4 つ起動します。1 つ目だけ <code>-grip-sensor 1 -grip-relay-send</code>、残りは <code>-grip-sensor 2</code>／<code>3</code>／<code>4</code>（<kbd>Alt</kbd>+<kbd>Enter</kbd> でウィンドウにできます）。<code>-grip-relay-send</code> は「Arduino が無くても、この PC のキーボード <kbd>Q</kbd><kbd>W</kbd><kbd>O</kbd><kbd>P</kbd> をセンサー 1〜4 として放送する」テスト用のオプションです。</li>
+        <li>1 つ目のウィンドウを選んで <kbd>W</kbd> を押すと、2 つ目（センサー 2）の握力として届きます。タイトルのスタート・キャラ選択・砲台が 2 つ目で動けば OK。</li>
+        <li>bat で試すなら、<code>run_instance.bat</code> の最後に付け足します（例：<code>run_instance.bat host 0 - -grip-sensor 1 -grip-relay-send</code>、<code>run_instance.bat client 1 - -grip-sensor 2</code>）。</li>
+      </ol>
+      <p>Unity の中で試すときは、タイトル（またはゲーム）のシーンの <b>ArduinoSerialReader</b> の <b>Editor Relay Sensor Number</b> に番号、<b>Editor Relay Force Send</b> を ON（エディタの中だけ効きます）。同じ PC で同じ番号を 2 つ起動すると、2 つ目は「UDP ○ を使えません」と出て受け取れません。</p>
+    </div></details>
     <details class="recipe" data-tags="dev"><summary><span class="q">4 人同時に握った状態を試したい</span><span class="who">シミュレータ</span></summary><div class="a"><p><kbd>Q</kbd><kbd>W</kbd><kbd>O</kbd><kbd>P</kbd> を同時に押しっぱなしにします。手が足りなければ、何人かを <b>波形プリセット</b>（そっと／しっかり／渾身）にして自動で握らせます。</p></div></details>
     <details class="recipe" data-tags="dev"><summary><span class="q">「そっと」「しっかり」「渾身」の強さで試したい</span><span class="who">シミュレータ</span></summary><div class="a"><ul><li><b>そっと</b>：20〜30% をゆらゆら維持</li><li><b>しっかり</b>：50〜60% を維持</li><li><b>渾身</b>：90〜100% を維持（オーバーヒートの確認に）</li><li><b>リズムテスト</b>：0.4 秒ごとに 80% と 0% を交互に（握る／離すの繰り返し）</li></ul><p><b>なし(キーボード操作)</b> に戻すとキー入力に戻ります。</p></div></details>
     <details class="recipe" data-tags="live"><summary><span class="q">本番で来場者ごとにキャリブレーションしたい</span><span class="who">キャリブレーション</span></summary><div class="a">
@@ -169,7 +190,7 @@
       <p class="small muted">設定はタイトルに置いた ArduinoSerialReader（Keep Across Scenes が ON の物）のものが使われます。ゲームのシーンの物を変えても効かないので注意。</p>
     </div></details>
     <details class="recipe" data-tags="hw live"><summary><span class="q">コントローラーから届いている生の値を画面で見たい</span><span class="who">実機 › F8</span></summary><div class="a">
-      <ol><li>▶ Play 中（またはビルドしたゲーム）で <kbd>F8</kbd> を押すと、画面の左上に表が出ます。もう一度 <kbd>F8</kbd> で消えます。</li><li>上から <b>状態</b>（受信中／ポートをさがしています など）、<b>ポートと通信速度</b>、<b>受信</b>（1 秒に何行届いているか・最後の行が何秒前か・届いた行の数・読めなかった行の数）。</li><li><b>届いた1行</b> は、コントローラーが送った文字をそのまま表示します（Arduino の <code>println</code> の行末の見えない文字は <code>\r</code> と表示）。形が合わず捨てた行があれば <b>読めなかった行</b> にも出ます。</li><li>下の 4 行は P1〜P4。<b>届いた値(0-1023)</b>・<b>raw</b>（センサー特性の変換後 0〜1）・<b>grip</b>（ゲームが使う最終の値 0〜1）・状態。届いた値の大きさが、プレイヤー色の帯で後ろに描かれます。値がまだ一度も来ていないプレイヤーは「—」。状態に「実機OFF」と付いたプレイヤーは、<b>Device Player Count</b> の外なので実機の値をレーザーに使いません。</li></ol>
+      <ol><li>▶ Play 中（またはビルドしたゲーム）で <kbd>F8</kbd> を押すと、画面の左上に表が出ます。もう一度 <kbd>F8</kbd> で消えます。</li><li>上から <b>状態</b>（受信中／ポートをさがしています など）、<b>ポートと通信速度</b>、<b>受信</b>（1 秒に何行届いているか・最後の行が何秒前か・届いた行の数・読めなかった行の数）。</li><li><b>届いた1行</b> は、コントローラーが送った文字をそのまま表示します（Arduino の <code>println</code> の行末の見えない文字は <code>\r</code> と表示）。形が合わず捨てた行があれば <b>読めなかった行</b> にも出ます。</li><li>下の 4 行は P1〜P4。<b>届いた値(0-1023)</b>・<b>raw</b>（センサー特性の変換後 0〜1）・<b>grip</b>（ゲームが使う最終の値 0〜1）・状態。届いた値の大きさが、プレイヤー色の帯で後ろに描かれます。値がまだ一度も来ていないプレイヤーは「—」。状態に「実機OFF」と付いたプレイヤーは、<b>Device Player Count</b> の外なので実機の値をレーザーに使いません。</li><li>LAN で配る使い方（<code>-grip-sensor N</code>）のときは、さらに <b>LAN:</b>（この PC のセンサー番号・握力の出どころ＝この PC の Arduino／LAN の放送／なし）、<b>放送:</b>（この PC が放送しているか・回/秒）、<b>受信:</b>（どの PC の放送を何回/秒・何秒前に受け取ったか）、<b>LAN の4人分</b>（届いている 4 人分の値。届いていない番号は「—」）が出ます。困ったことはオレンジ色の行で出ます。</li></ol>
       <p>始めから出しておきたいときは、ArduinoSerialReader の <b>Show Raw Values</b> を ON（エディタの中だけ。ビルドでは起動オプション <code>-debug-ui</code> を付けたときだけ効きます）。ビルドで確実に始めから出すなら、起動オプション <code>-gripdebug</code>。会場（キーボードなし）では何もしなければ出ません。</p>
       <p class="small muted">見分け方：「受信 0.0 行/秒」なら値が来ていない（USB・ポート・通信速度を確認）。行は届いているのに「読めなかった行」が増えるなら、送っている文字の形が合っていません（<code>512</code> や <code>512,300</code> のような 0〜1023 の整数が 1 行に最大 4 つ）。表が出ないときは、シーンに ArduinoSerialReader があるか確認（タイトルに置いた物がシーンをまたいで使われます）。</p>
     </div></details>
@@ -232,9 +253,20 @@
     <tr><td>Device Lost Seconds</td><td>この秒数値が届かなければ「抜けた」とみなし、キーボードに切り替えてさがし直す</td><td colspan="2">ArduinoSerialReader のみ。Arduino の送信間隔より長く</td><td class="def">3</td></tr>
     <tr><td>Show Raw Values</td><td>始めから画面に生の値の表を出す</td><td colspan="2">ArduinoSerialReader のみ。エディタの中だけ（ビルドは <code>-debug-ui</code> を付けたとき）。<code>-gripdebug</code> ならここが OFF でも出す</td><td class="def">OFF</td></tr>
     <tr><td>Raw Values Toggle Key</td><td>生の値の表を出す／消すキー</td><td colspan="2">ArduinoSerialReader のみ。F1〜F7 はカメラのデバッグが使うので避ける</td><td class="def">F8</td></tr>
+    <tr><td>Relay Base Port</td><td>LAN の放送で使う UDP の番号（センサー 1。2〜4 は続きの番号）</td><td colspan="2">ArduinoSerialReader のみ。全部の PC で同じにする。<code>-grip-sensor</code> を付けたときだけ使う</td><td class="def">47781</td></tr>
+    <tr><td>Relay Timeout Seconds</td><td>この秒数放送が届かなければ、握力を 0 にする</td><td colspan="2">撃ちっぱなしを防ぐ</td><td class="def">0.5</td></tr>
+    <tr><td>Relay Send Rate</td><td>Arduino の PC が 1 秒に放送する回数</td><td colspan="2">Windows の都合で実際は 60 前後</td><td class="def">60</td></tr>
+    <tr><td>Editor Relay Sensor Number</td><td>エディタで試すときのセンサー番号（0 = 使わない）</td><td colspan="2">ビルドでは使わない（起動オプションで決める）</td><td class="def">0</td></tr>
+    <tr><td>Editor Relay Force Send</td><td>エディタで、Arduino が無くてもキーボードを放送する</td><td colspan="2">テスト用</td><td class="def">OFF</td></tr>
     <tr><td>Keep Across Scenes</td><td>シーンが変わっても残る</td><td colspan="2">最初のシーン（タイトル）に置く物だけ ON。あればほかのシーンの同じ部品は何もしない</td><td class="def">OFF</td></tr>
   </table></div></div>
   <p class="small muted rv" style="margin-top:12px">「既定」が 2 つあるものは「ArduinoSerialReader ／ GripDeviceConfig」の順。</p>
+  <div class="ptable-wrap rv" style="margin-top:18px"><div class="ptable-cap">📡 起動オプション（LAN で配る） <span class="src">MS2026.exe の後ろに付ける・デスクトップのアイコンに入っている</span></div><div class="ptable-scroll"><table class="params">
+    <tr><th>オプション</th><th>意味</th><th colspan="2">メモ</th><th>例</th></tr>
+    <tr><td><code>-grip-sensor N</code></td><td>この PC の前の人のセンサー番号（1〜4）。付けると LAN で配る・受け取る</td><td colspan="2">付けなければ今まで通り。間違った値（5 など）は F8 にオレンジ色で出て、使わない</td><td class="def">-grip-sensor 3</td></tr>
+    <tr><td><code>-grip-relay-send</code></td><td>Arduino が無くても、キーボード（Q/W/O/P）をセンサー 1〜4 として放送する</td><td colspan="2">テスト用。<code>-grip-sensor</code> と一緒に使う。会場では付けない</td><td class="def">—</td></tr>
+    <tr><td><code>-grip-relay-port P</code></td><td>放送の UDP の番号を変える（P〜P+3 を使う）</td><td colspan="2">ほかのソフトとぶつかったときだけ。全部の PC で同じにする</td><td class="def">47781</td></tr>
+  </table></div></div>
 </section>
 
 <section id="faq" data-nav="困ったとき">
@@ -245,6 +277,7 @@
   <div class="faq rv">
     <details><summary>キーを押してもバーが上がらない</summary><div class="a"><ol><li>Play 中か確認（Play していないと動きません）。</li><li>Game ビューをクリックしてから押す。</li><li>その人の <b>波形プリセット</b> が「なし(キーボード操作)」になっているか（プリセット中はキーを無視）。</li><li><b>入力元</b> がシミュレータか実機か確認（記録再生中はキーが効きません）。</li></ol></div></details>
     <details><summary>実機の値が来ない（Disconnected のまま）</summary><div class="a"><ol><li>Arduino IDE のシリアルモニタを閉じる（ポートの取り合い）。</li><li>COM ポート名とボーレートが Arduino 側と一致しているか。</li><li>Console に「シリアルポート 'COM3' を開けませんでした」が出ていないか。</li><li>前の Play がポートを掴んだままのことがあります。Play を止めてもう一度 Play、それでもダメなら Unity を再起動。</li><li>Console に「キーボードシミュレータのまま動かします」と出ていたら、ポートを開けていません（上の 1〜3 を確認）。</li><li>「値が届くポートがありませんでした（試したポート: …）」と出たら、どのポートからも正しい形の値が来ていません。一覧にデバイスのポートが無ければ USB・ドライバ、あればボーレートと Arduino 側の送信を確認。</li><li>「前のシーンから残っている読み取りを使うので、ここではポートを開きません」は正常です（タイトルに置いた物が使われています）。</li><li><kbd>F8</kbd> で生の値の表を出すと、値が届いているか（受信 行/秒）・届いた文字そのものが見られます（「コントローラーから届いている生の値を画面で見たい」）。</li><li>途中で「値が届かなくなりました」と出たら、USB が抜けたかデバイスが止まっています。挿し直せば自動で戻ります（戻らなければ Console の「値が届くポートがありませんでした」の試したポートを確認）。</li></ol></div></details>
+    <details><summary>展示（LAN で配る）で、Arduino の無い PC の握力が動かない</summary><div class="a"><ol><li><kbd>F8</kbd> を押して、オレンジ色の行を見る。</li><li>「<b>放送が届いていません</b>」：Arduino の PC が起動しているか、その PC の F8 で「放送: このPCの Arduino の4人分を放送中」になっているか。なっていなければ Arduino の USB を確認。なっていれば LAN（同じハブにつながっているか）と、各 PC のネットワークが「プライベート」になっているか（ファイアウォール）を確認。</li><li>「<b>UDP ○ を使えません</b>」：同じ PC で同じ番号のゲームが 2 つ動いています（1 つ閉じる）。</li><li>「<b>放送が2か所から来ています</b>」：Arduino をつないだ PC が 2 台あるか、<code>-grip-relay-send</code> を付けた PC があります。1 台だけにする。</li><li>「<b>形の違う放送</b>」：ビルドの違う PC が混ざっています。全部同じビルドにする。</li><li>受信は来ているのに動かない：「LAN の4人分」で自分の番号が「—」なら、Arduino がその番号のセンサーの値を送っていません（配線・スケッチを確認）。別の番号が動くなら、<b>アイコンの番号と机の番号</b>が合っているか確認。</li></ol></div></details>
     <details><summary>Console に「実機通信が無効のため…」と出る</summary><div class="a">実機通信には <b>Project Settings › Player › Api Compatibility Level を「.NET Framework」</b>、<b>Scripting Define Symbols に <code>MS2026_GRIP_SERIAL_ENABLED</code></b> が必要です。このプロジェクトでは Standalone（PC）向けに設定済みなので、別のビルド対象に切り替えていないか確認してください。設定の変更はプログラマーに相談を。</div></details>
     <details><summary>キャリブレーションしたのに、次に Play したら元に戻った</summary><div class="a">今の仕様です。保存したファイルは残りますが、次の Play では自動で読み込まれません。もう一度キャリブレーションするか、プログラマーに「起動時に読み込む処理」を追加してもらってください。</div></details>
     <details><summary>値がガタガタ震える</summary><div class="a">ノイズ除去の設定ファイル（GripFilterSettings）は用意されていますが、<b>今は使われていません</b>（何も通さずにそのまま値が届いている状態）。ガタつきが気になる場合は、プログラマーにフィルタ設定の適用を依頼してください（おすすめは既定の「メディアン → EMA」）。</div></details>
@@ -266,6 +299,9 @@
     <div class="rv"><dt>COM ポート</dt><dd>USB でつないだマイコンに Windows が付ける番号（COM3 など）。</dd></div>
     <div class="rv"><dt>ボーレート</dt><dd>シリアル通信の速さ。送る側と受ける側で同じにしないと読めない。</dd></div>
     <div class="rv"><dt>ハートビート</dt><dd>「生きてるよ」の定期的なデータ。一定時間途切れたら切断とみなす。</dd></div>
+    <div class="rv"><dt>放送 <small>ブロードキャスト</small></dt><dd>LAN につながっている全員に同じ物を送ること。展示では Arduino の PC が 4 人分の握力を放送し、各 PC が自分の番号の分だけ使う。</dd></div>
+    <div class="rv"><dt>センサー番号</dt><dd>Arduino が送る 4 つの値の何番目か（1〜4）。展示では「机（ケーブル）の番号」と同じにして、各 PC の起動アイコンで指定する。</dd></div>
+    <div class="rv"><dt>UDP</dt><dd>ネットワークで小さなデータを送るやり方の 1 つ。届いたか確かめない代わりに速い。握力の放送は 1 秒に約 60 回送るので、たまに 1 回落ちても困らない。</dd></div>
     <div class="rv"><dt>ホールセンサー</dt><dd>磁石の近さで値が変わるセンサー。何もしないと中間の値を出す。</dd></div>
   </dl>
 </section>
@@ -308,10 +344,15 @@ if (serial.IsPortOpen)                                              // 開けな
     GripInputBridge.SetTransport(new CompositeGripTransport(serial, GripInputBridge.Simulator)); // 実機＋キーボード
 GripInputBridge.SetTransport(new ReplayGripTransport(path));         // 記録再生
 
+// LAN で配る（展示）: ArduinoSerialReader が -grip-sensor N を見て自動で行う
+var relay = new GripRelaySession(GripRelayOptions.Parse(args), 0.5, 60f);   // 受け取り＋放送係
+GripInputBridge.SetTransport(relay.Transport);  // P1 = センサー N（この PC の Arduino → 無ければ放送）＋Q
+relay.SetLocalDevice(serial);                   // この PC に Arduino があれば放送する（無くなったら null）
+
 GripInputBridge.SetCalibrationProfiles(profiles);   // 4 人分（null は既定）
 GripInputBridge.SetFilterSettings(filterSettings);  // 未呼び出しなら素通し
 GripInputBridge.StartRecording();  /* ... */  GripInputBridge.StopRecording();</pre></div>
-    <div class="notes"><div class="note"><span class="lbl">注意</span><code>SerialGripTransport</code> は差し替え時に <code>Dispose()</code> 必須（COM ポート解放）。<code>#if MS2026_GRIP_SERIAL_ENABLED</code> 内。入力元は全体で 1 つ（最後に設定した人が勝つ）ので、元に戻すときは <code>GripInputBridge.CurrentTransport</code> が自分の設定したものか確かめてから戻す。ポートの自動さがしは <code>SerialGripPortSearch</code>（候補を別スレッドで同時に開き、最初に値が届いたポートを選ぶ）と <code>GripPortCandidates.Build</code>（試す順番。テストあり）。</div><div class="note"><span class="lbl">詳細</span><code>Docs/Tools/GripInputBridge_AI_Reference.md</code>。設計意図は <code>GripInputBridge_設計仕様書.md</code>。</div></div>
+    <div class="notes"><div class="note"><span class="lbl">注意</span><code>SerialGripTransport</code> は差し替え時に <code>Dispose()</code> 必須（COM ポート解放）。<code>#if MS2026_GRIP_SERIAL_ENABLED</code> 内。入力元は全体で 1 つ（最後に設定した人が勝つ）ので、元に戻すときは <code>GripInputBridge.CurrentTransport</code> が自分の設定したものか確かめてから戻す。ポートの自動さがしは <code>SerialGripPortSearch</code>（候補を別スレッドで同時に開き、最初に値が届いたポートを選ぶ）と <code>GripPortCandidates.Build</code>（試す順番。テストあり）。</div><div class="note"><span class="lbl">LAN</span><code>Runtime/Relay/</code>：放送の形 <code>GripRelayCodec</code>、受け取った値 <code>GripRelayReceiverState</code>（放送が 2 か所なら先の方。止まった・値が無いときはもう一方へ）、起動オプション <code>GripRelayOptions</code>、送受信 <code>UdpGripRelaySender</code>／<code>UdpGripRelayReceiver</code>（専用スレッド。本物の UDP のテストあり）、P1 にする <code>RelayedSensorTransport</code>。ゲーム側（砲台の通信・キャラ選択・タイトル）は変えていない。</div><div class="note"><span class="lbl">詳細</span><code>Docs/Tools/GripInputBridge_AI_Reference.md</code>。設計意図は <code>GripInputBridge_設計仕様書.md</code>。</div></div>
   </div>
   <div class="panel" id="cp-proto" role="tabpanel">
     <div class="codebox" data-plain><div class="cap"><span>1 行 = 1 サンプル（"\n" 区切り）</span><button class="copy" type="button">copy</button></div><pre>

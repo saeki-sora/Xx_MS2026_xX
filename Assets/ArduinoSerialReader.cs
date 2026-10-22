@@ -1,4 +1,5 @@
 using MS2026.GripInputBridge.Data;
+using MS2026.GripInputBridge.Relay;
 using MS2026.GripInputBridge.Transports;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -16,6 +17,10 @@ using UnityEngine.InputSystem;
 /// 使っているポートから <see cref="deviceLostSeconds"/> 秒値が届かない・ポートが使えなくなったら(USBが抜けた等)、キーボードに切り替えてさがし直す。
 /// USBを挿し直せば自動で実機に戻る。
 /// <see cref="rawValuesToggleKey"/>（F8）で、コントローラーから届いた生の値（届いた1行そのまま・数値）を画面に出せる（<see cref="GripRawValueOverlay"/>）。
+///
+/// 展示（1台の Arduino に4人分のセンサー・4台のPC）: 起動オプション <c>-grip-sensor N</c>（N = そのPCの前の人のセンサー番号 1〜4）を付けると、
+/// Arduino をつないだPCが4人分の値を LAN へ放送し、どのPCも自分の番号の値を「このPCの前の人（P1）」の握力として使う（<see cref="GripRelaySession"/>）。
+/// 付けなければ今まで通り（通信しない）。
 ///
 /// Arduino側の出力は次のどちらでもよい（どちらも1行1サンプル、Serial.println で送る）:
 /// <list type="bullet">
@@ -43,7 +48,8 @@ public sealed class ArduinoSerialReader : MonoBehaviour
     public int heartbeatTimeoutMs = 1000;
 
     [Tooltip("実機（マイコン）の値を使うプレイヤー数。P1から数える。1 = P1のレーザーだけ実機で出す（1人プレイ・通信なし／通信ありでも各PCの1人目のセンサーだけ使う）。" +
-             "マイコンがカンマ区切りで2つ以上の値を送ってきても、ここより後のプレイヤーは実機の値を使わず、キーボードだけで動く。1台のPCで2人以上が実機で遊ぶときに増やす。")]
+             "マイコンがカンマ区切りで2つ以上の値を送ってきても、ここより後のプレイヤーは実機の値を使わず、キーボードだけで動く。1台のPCで2人以上が実機で遊ぶときに増やす。" +
+             "起動オプション -grip-sensor N（LAN で配る使い方）のときは使わない（4人分を放送し、P1 にはセンサー N を使う）。")]
     [Range(0, 4)]
     public int devicePlayerCount = 1;
 
@@ -72,6 +78,27 @@ public sealed class ArduinoSerialReader : MonoBehaviour
              "USBを挿し直せば、上の「さがし直す秒数」ごとにさがして自動で戻る（ポートの自動さがしが OFF なら、上のポートだけをさがし直す）。Arduino の送信間隔より長くする。")]
     [Min(0.5f)]
     public float deviceLostSeconds = 3f;
+
+    [Header("LAN で握力を配る（1台の Arduino に4人分・展示）")]
+    [Tooltip("センサー1の放送を受け取る UDP の番号。センサー n は「この番号 + n - 1」。全部のPCで同じにする（起動オプション -grip-relay-port でも変えられる）。" +
+             "起動オプション -grip-sensor N を付けたときだけ使う。")]
+    public int relayBasePort = GripRelayOptions.DefaultBasePort;
+
+    [Tooltip("この秒数 LAN の放送が届かなければ、その人の握力は「届いていない」（0）にする（撃ちっぱなしを防ぐ）。")]
+    [Min(0.1f)]
+    public float relayTimeoutSeconds = 0.5f;
+
+    [Tooltip("Arduino をつないだPCが、1秒に放送する回数。")]
+    [Range(10f, 120f)]
+    public float relaySendRate = 60f;
+
+    [Tooltip("エディタで試すとき用: このPCの前の人のセンサー番号（1〜4）。0 = LAN で配らない（今まで通り）。" +
+             "ビルドしたゲームでは使わない（起動オプション -grip-sensor N で決める。デスクトップの「センサーNで起動」アイコン）。")]
+    [Range(0, 4)]
+    public int editorRelaySensorNumber;
+
+    [Tooltip("エディタで試すとき用: Arduino が無くても、キーボード（Q/W/O/P = センサー1〜4）の値を LAN へ放送する（起動オプション -grip-relay-send と同じ）。")]
+    public bool editorRelayForceSend;
 
     [Header("シーンをまたぐ")]
     [Tooltip("ONなら、シーンが変わっても消えずに実機を使い続ける（最初のシーン＝タイトルに置く物をON）。これがあると、ほかのシーンの同じ部品は何もしない（ポートを開け直さない）。")]
@@ -175,8 +202,72 @@ public sealed class ArduinoSerialReader : MonoBehaviour
         return false;
     }
 
+    // ───────── LAN で握力を配る（-grip-sensor N のときだけ）─────────
+
+    private GripRelaySession _relay;
+    private string _relayOptionsError;
+
+    /// <summary>LAN で握力を配る使い方（-grip-sensor N）で動いているか。</summary>
+    public bool IsRelayMode => _relay != null;
+
+    /// <summary>LAN で配る仕組みの今の様子（生の値の表示用）。使っていなければ null。</summary>
+    public GripRelayStatus? RelayStatus => _relay?.GetStatus();
+
+    /// <summary>LAN で配る起動オプションの書き方が間違っていて、使わずに動いているときの説明（無ければ null）。</summary>
+    public string RelayOptionsError => _relayOptionsError;
+
+    // 起動オプション -grip-sensor N（エディタでは editorRelaySensorNumber）があれば、LAN で配る仕組みを動かして入力元にする。
+    private void StartRelay()
+    {
+        var options = Application.isEditor && editorRelaySensorNumber > 0
+            ? GripRelayOptions.Create(editorRelaySensorNumber, editorRelayForceSend, relayBasePort)
+            : GripRelayOptions.Parse(System.Environment.GetCommandLineArgs(), relayBasePort);
+        if (options.Error != null)
+        {
+            Debug.LogError("[ArduinoSerialReader] 起動オプションの書き方が違います: " + options.Error);
+        }
+
+        if (!options.Enabled)
+        {
+            _relayOptionsError = options.Error;
+            return;
+        }
+
+        try
+        {
+            _relay = new GripRelaySession(options, relayTimeoutSeconds, relaySendRate);
+        }
+        catch (System.Exception e)
+        {
+            // 放送の準備に失敗しても、このPCの Arduino・キーボードでは動くようにする（ポートのさがし始めを止めない）。
+            _relayOptionsError = "LAN で配る仕組みを始められませんでした: " + e.Message;
+            Debug.LogError("[ArduinoSerialReader] " + _relayOptionsError);
+            return;
+        }
+
+        MS2026.GripInputBridge.GripInputBridge.SetTransport(_relay.Transport);
+    }
+
+    private void StopRelay()
+    {
+        if (_relay == null)
+        {
+            return;
+        }
+
+        // 自分が設定した入力元がまだ使われているときだけシミュレータへ戻す(ウィンドウ等が別の入力元に切り替えていたら触らない)。
+        if (ReferenceEquals(MS2026.GripInputBridge.GripInputBridge.CurrentTransport, _relay.Transport))
+        {
+            MS2026.GripInputBridge.GripInputBridge.SetTransport(MS2026.GripInputBridge.GripInputBridge.Simulator);
+        }
+
+        _relay.Dispose();
+        _relay = null;
+    }
+
     private void Update()
     {
+        _relay?.Tick();
         TickRawValueOverlay();
         TickDeviceHealth();
         TickPortSearch();
@@ -228,6 +319,7 @@ public sealed class ArduinoSerialReader : MonoBehaviour
         }
 
         SetUpRawValueOverlay();
+        StartRelay();
         _config = deviceConfig != null ? deviceConfig : CreateInlineConfig();
         if (autoFindPort)
         {
@@ -241,7 +333,7 @@ public sealed class ArduinoSerialReader : MonoBehaviour
             // ポートが無い(デバイス未接続)・使用中のときは入力元を差し替えない。差し替えると、
             // 何も届かない実機が入力元になってキーボードまで効かなくなる。
             transport.Dispose();
-            Debug.LogWarning($"[ArduinoSerialReader] {_config.serialPortName} を開けなかったため、キーボードシミュレータのまま動かします。");
+            Debug.LogWarning($"[ArduinoSerialReader] {_config.serialPortName} を開けなかったため、{FallbackDescription}。");
             return;
         }
 
@@ -293,7 +385,7 @@ public sealed class ArduinoSerialReader : MonoBehaviour
         if (!_warnedNotFound)
         {
             _warnedNotFound = true;
-            Debug.LogWarning($"[ArduinoSerialReader] 握力デバイスから値が届くポートがありませんでした（試したポート: {tried}）。キーボードシミュレータのまま動かします。" +
+            Debug.LogWarning($"[ArduinoSerialReader] 握力デバイスから値が届くポートがありませんでした（試したポート: {tried}）。{FallbackDescription}。" +
                              (portRetrySeconds > 0f ? $"{portRetrySeconds:0.#}秒ごとにさがし直します。" : string.Empty));
         }
 
@@ -302,15 +394,31 @@ public sealed class ArduinoSerialReader : MonoBehaviour
 
     private void Install(SerialGripTransport transport, bool hasData)
     {
-        // 実機とキーボードを合成する。実機が繋がっていれば大きい方、途切れたらキーボードの値になる。
         _transport = transport;
-        _composite = new CompositeGripTransport(_transport, MS2026.GripInputBridge.GripInputBridge.Simulator, devicePlayerCount);
-        MS2026.GripInputBridge.GripInputBridge.SetTransport(_composite);
         _installedAt = Time.unscaledTime;
         _warnedNotFound = false;
+        if (_relay != null)
+        {
+            // LAN で配る使い方: 入力元は最初に設定した物のまま。この Arduino の4人分を LAN へ放送し、自分の分（センサー N）もここから取る。
+            _composite = null;
+            _relay.SetLocalDevice(transport);
+            Debug.Log($"[ArduinoSerialReader] {transport.PortName} ({_config.baudRate}bps) の Arduino を使います。4人分の値を LAN へ放送し、" +
+                      $"このPCの前の人はセンサー{_relay.Options.SensorNumber}番の値で動きます（キーボードも併用できます）。" +
+                      (hasData ? string.Empty : "まだ値は届いていません。"));
+            return;
+        }
+
+        // 実機とキーボードを合成する。実機が繋がっていれば大きい方、途切れたらキーボードの値になる。
+        _composite = new CompositeGripTransport(_transport, MS2026.GripInputBridge.GripInputBridge.Simulator, devicePlayerCount);
+        MS2026.GripInputBridge.GripInputBridge.SetTransport(_composite);
         Debug.Log($"[ArduinoSerialReader] {transport.PortName} ({_config.baudRate}bps) を入力元にしました（実機の値を使うのは {DescribeDevicePlayers(_composite.DevicePlayerCount)}。キーボードも併用できます）。" +
                   (hasData ? string.Empty : "まだ値は届いていません。"));
     }
+
+    // このPCに Arduino が無いときに、何で動くか（ログ用）。
+    private string FallbackDescription => _relay != null
+        ? $"LAN の放送（センサー{_relay.Options.SensorNumber}番。届かなければキーボード）で動かします"
+        : "キーボードシミュレータのまま動かします";
 
     private static string DescribeDevicePlayers(int count)
     {
@@ -351,8 +459,11 @@ public sealed class ArduinoSerialReader : MonoBehaviour
 
     private void Uninstall()
     {
+        // LAN で配る使い方: 放送をやめ、自分の分は LAN の放送（ほかのPCに Arduino を挿し替えた場合など）かキーボードで続ける。
+        _relay?.SetLocalDevice(null);
+
         // 自分が設定した入力元がまだ使われているときだけシミュレータへ戻す(ウィンドウ等が別の入力元に切り替えていたら触らない)。
-        if (ReferenceEquals(MS2026.GripInputBridge.GripInputBridge.CurrentTransport, _composite))
+        if (_composite != null && ReferenceEquals(MS2026.GripInputBridge.GripInputBridge.CurrentTransport, _composite))
         {
             MS2026.GripInputBridge.GripInputBridge.SetTransport(MS2026.GripInputBridge.GripInputBridge.Simulator);
         }
@@ -373,13 +484,17 @@ public sealed class ArduinoSerialReader : MonoBehaviour
 
         _search?.Dispose();
         _search = null;
+
+        // 放送を先に止める（放送のスレッドが、閉じた後のポートを読まないように）。
+        _relay?.SetLocalDevice(null);
+        StopRelay();
         if (_transport == null)
         {
             return;
         }
 
         // 自分が設定した入力元がまだ使われているときだけシミュレータへ戻す(ウィンドウ等が別の入力元に切り替えていたら触らない)。
-        if (ReferenceEquals(MS2026.GripInputBridge.GripInputBridge.CurrentTransport, _composite))
+        if (_composite != null && ReferenceEquals(MS2026.GripInputBridge.GripInputBridge.CurrentTransport, _composite))
         {
             MS2026.GripInputBridge.GripInputBridge.SetTransport(MS2026.GripInputBridge.GripInputBridge.Simulator);
         }
@@ -474,6 +589,8 @@ public sealed class ArduinoSerialReader : MonoBehaviour
         {
             s_persistent = null;
         }
+
+        StopRelay();
     }
 
     private void Start()
@@ -484,6 +601,9 @@ public sealed class ArduinoSerialReader : MonoBehaviour
         }
 
         SetUpRawValueOverlay();
+
+        // 実機通信が無効でも、LAN の放送は受け取れる（Arduino はほかのPCにある）。
+        StartRelay();
         Debug.LogWarning(
             "[ArduinoSerialReader] 実機通信が無効のため、キーボードシミュレータのままです。\n" +
             "1. Edit > Project Settings > Player > Other Settings > Api Compatibility Level を「.NET Framework」に変更\n" +

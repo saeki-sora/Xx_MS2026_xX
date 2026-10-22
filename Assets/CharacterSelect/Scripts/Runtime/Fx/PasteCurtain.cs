@@ -14,6 +14,7 @@ namespace MS2026.CharacterSelect
     /// ロビー（<see cref="GameSession"/>）がキャラ選択に入るとき、キャラ選択の「GO!」からゲームへ進むときに使う
     /// （起動時に <see cref="GameSession.CharacterSelectCurtain"/> と <see cref="GameSession.GameStartCurtain"/> に登録する）。
     /// シーンをまたいで残る（ロビー → キャラ選択の間も消えない）。設定は Resources の <see cref="PasteCurtainSettings"/>。
+    /// 設定に「連番の絵」が入っていれば、列を垂らす代わりにその連番を画面いっぱいに出す（流れは同じ。<see cref="PasteCurtainFrameTiming"/>）。
     /// </summary>
     [AddComponentMenu("")]
     public sealed class PasteCurtain : MonoBehaviour
@@ -35,6 +36,8 @@ namespace MS2026.CharacterSelect
         private readonly List<float> _lags = new List<float>();
         private PasteCurtainSettings _settings;
         private RectTransform _area;
+        private RawImage _frameImage;
+        private PasteCurtainFrameTiming _timing;
         private Stage _stage;
         private float _t;
         private float _held;
@@ -131,9 +134,22 @@ namespace MS2026.CharacterSelect
             _instance = go.AddComponent<PasteCurtain>();
             _instance._settings = settings;
             _instance._area = area;
-            _instance.BuildColumns();
+            var frames = settings.frames;
+            _instance._timing = new PasteCurtainFrameTiming(frames != null ? frames.Length : 0, settings.frameRate,
+                settings.coveredFrame, settings.revealFrame);
+            if (_instance.UsesFrames)
+            {
+                _instance.BuildFrameImage();
+            }
+            else
+            {
+                _instance.BuildColumns();
+            }
+
             return _instance;
         }
+
+        private bool UsesFrames => _timing.IsUsable;
 
         private void OnDestroy()
         {
@@ -163,6 +179,30 @@ namespace MS2026.CharacterSelect
                 _columns.Add(image);
                 _lags.Add(0f);
             }
+        }
+
+        private void BuildFrameImage()
+        {
+            var go = new GameObject("Frames", typeof(RectTransform));
+            var rect = (RectTransform)go.transform;
+            rect.SetParent(_area, false);
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            _frameImage = go.AddComponent<RawImage>();
+            _frameImage.color = _settings.color;
+            _frameImage.raycastTarget = false;
+            _frameImage.enabled = false;
+        }
+
+        // -1 で幕を消す。
+        private void ShowFrame(int frame)
+        {
+            var frames = _settings.frames;
+            var texture = frame >= 0 && frame < frames.Length ? frames[frame] : null;
+            _frameImage.texture = texture;
+            _frameImage.enabled = texture != null;
         }
 
         private void Begin(Action onCovered, Func<bool> isReady, bool startCovered)
@@ -197,14 +237,31 @@ namespace MS2026.CharacterSelect
             {
                 _t = 1f;
                 _stage = Stage.Holding;
-                Apply(1f);
+                if (UsesFrames)
+                {
+                    // 覆ったままの最後のコマから始める（読み込み済みなので、すぐ抜けていく）。
+                    _held = _timing.HoldSeconds;
+                    ShowFrame(_timing.HoldFrameAt(_held));
+                }
+                else
+                {
+                    Apply(1f);
+                }
+
                 return;
             }
 
             _t = 0f;
             _stage = Stage.Covering;
             CharacterSelectEffects.Play(_settings.onCover, Vector3.zero, -1);
-            Apply(0f);
+            if (UsesFrames)
+            {
+                ShowFrame(0);
+            }
+            else
+            {
+                Apply(0f);
+            }
         }
 
         private void Update()
@@ -215,6 +272,12 @@ namespace MS2026.CharacterSelect
             }
 
             var dt = Time.unscaledDeltaTime;
+            if (UsesFrames)
+            {
+                UpdateFrames(dt);
+                return;
+            }
+
             switch (_stage)
             {
                 case Stage.Covering:
@@ -252,6 +315,50 @@ namespace MS2026.CharacterSelect
                         {
                             column.enabled = false;
                         }
+                    }
+
+                    break;
+            }
+        }
+
+        // 連番の絵のとき。_t はその段階に入ってからの秒数。
+        private void UpdateFrames(float dt)
+        {
+            _t += dt;
+            switch (_stage)
+            {
+                case Stage.Covering:
+                    ShowFrame(_timing.CoverFrameAt(_t));
+                    if (_t >= _timing.CoverSeconds)
+                    {
+                        _stage = Stage.Holding;
+                        _held = 0f;
+                        ShowFrame(_timing.CoveredFrame);
+                        var covered = _onCovered;
+                        _onCovered = null;
+                        covered?.Invoke();
+                    }
+
+                    break;
+                case Stage.Holding:
+                    _held += dt;
+                    ShowFrame(_timing.HoldFrameAt(_held));
+                    if (_held >= Mathf.Max(_settings.holdSeconds, _timing.HoldSeconds) && (_isReady == null || _isReady()))
+                    {
+                        _stage = Stage.Revealing;
+                        _t = 0f;
+                        CharacterSelectEffects.Play(_settings.onReveal, Vector3.zero, -1);
+                        ShowFrame(_timing.RevealFrameAt(0f));
+                    }
+
+                    break;
+                case Stage.Revealing:
+                    var frame = _timing.RevealFrameAt(_t);
+                    ShowFrame(frame);
+                    if (frame < 0)
+                    {
+                        _stage = Stage.Idle;
+                        _isReady = null;
                     }
 
                     break;

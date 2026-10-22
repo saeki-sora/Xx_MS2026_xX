@@ -36,6 +36,9 @@ Assets/_Game/Stage/
     Inspectors/ StagePropEditor, StagePropShaderGUI, StageLookProfileEditor (Japanese-labelled UI Toolkit inspector, grouped; also used by the 見え方 page)
   Tests/EditMode (MS2026.Stage.Tests.EditMode): FootprintBuilderTests, FootprintGeometryTests, StageReactionMathTests, StageNameRulesTests, StagePlaceMathTests
   Models/<Stage>/  recommended place for the Maya FBX + textures (user-managed; do NOT use DDrive/SourceAssets/Model, which auto-registers D-Drive ModelData/Addressables)
+    Stage01/       stage_1.fbx (nodes include cup, Soap/Soap_bottle/Soap_dish/soap1/soap2, Toothpaste/Toothpaste_body/Toothpaste_lid, floor1…), stage_2.fbx, E06_Seema_v01.fbx;
+                   cup/cup.fbx, Soap/Soap.fbx, Toothpaste/Toothpaste.fbx (+ TX_*_Base/NRM_v01.png each) = newer standalone versions of those props (assets_v1, added 2026-10-22).
+                   The props in the stage were split-imported from stage_1.fbx (unlinked copies), so the new FBXs are NOT used until each prop is swapped via `オブジェクト › モデル › 差し替える` (not yet done). Keep stage_1.fbx (floor etc. still come from it).
   Stages/<Name>/   created by the tool: StageSet_<Name>.asset, Stage_<Name>.prefab, Materials/*.mat, optional StageLookProfile_<Name>.asset
   Presets/StageLookProfile_Default.asset   created on demand
 Assets/_Tools/StudioKit/Editor/  (asmdef MS2026.StudioKit.Editor, ns MS2026.StudioKit) StudioKit.uss, StudioUi, StudioShell, StudioIssue/StudioIssueList, StudioAssets (`EnsureFolder`, `UniquePath` — use it instead of `AssetDatabase.GenerateUniqueAssetPath`, which returns "" when the parent folder is missing; that crashed `＋ 新しいステージ` before 2026-10-06) — shared by Stage Studio and UI Studio

@@ -1,12 +1,12 @@
 # マルチプレイ化 進捗と宿題（4人対戦・LAN）
 
 > 別のチャット（Claude Code のセッション）で作業を再開するときは、まずこのファイルを読んでください。
-> 最終更新: 2026-10-21（ステージ切り替えとステージ抽選ルーレット。5i章）。2026-10-14（参加側が歯磨き粉の幕で止まる不具合を修正。5d章／2回目のキャラ選択でホストがタイトルへ戻る不具合を修正。5f章）。2026-10-12（展示用の自動接続: ロビーの画面を出さずに タイトル → キャラ選択 → ゲーム。5d章）。2026-10-08（ロビーのシーンを追加。5b章／ロビーとゲームの間にキャラクター選択を追加。5c章）。コードの詳細は `Docs/Tools/FortressDesigner_AI_Reference.md` の「Net」「Hud」「Swarm」節にあります。
+> 最終更新: 2026-10-22（展示は1台の Arduino に4人分のセンサー → 握力を LAN で配る。5j章）。2026-10-21（ステージ切り替えとステージ抽選ルーレット。5i章）。2026-10-14（参加側が歯磨き粉の幕で止まる不具合を修正。5d章／2回目のキャラ選択でホストがタイトルへ戻る不具合を修正。5f章）。2026-10-12（展示用の自動接続: ロビーの画面を出さずに タイトル → キャラ選択 → ゲーム。5d章）。2026-10-08（ロビーのシーンを追加。5b章／ロビーとゲームの間にキャラクター選択を追加。5c章）。コードの詳細は `Docs/Tools/FortressDesigner_AI_Reference.md` の「Net」「Hud」「Swarm」節にあります。
 > 最初の計画書（承認済み）: `C:\Users\soret\.claude\plans\snoopy-forging-castle.md`。
 
 ## 1. 目標と方針（ユーザー承認済み）
 
-- 4人がそれぞれ別のPC（握力センサー1台ずつ）を持ち寄り、LANで同じ試合を遊ぶ。最大3万体の群衆も同期する。
+- 4人がそれぞれ別のPCの前で、LANで同じ試合を遊ぶ。最大3万体の群衆も同期する。握力センサーは **4人分を1台の Arduino にまとめ、1台のPCにつなぐ**（2026-10-22 ユーザー確定。5j章）。
 - プレイヤー1（番号0）のPCがHostを兼ねる。**Host権威**（結果はHostが決め、Clientは入力を送って結果を表示する）。
 - 通信は NGO（Netcode for GameObjects）+ D-Drive のネットワーク層。接続は `FortressNetworkBootstrap`（D-Drive の `StartHost/StartClient` を呼ぶ）。
 - 同期は、シーンに1つの「[Fortress] NetSync」（NetworkObject）に付けた中継役（`*NetworkHub`）が行う。敵や破壊可能物に NetworkObject は付けない（デザイナーの手間を増やさないため）。
@@ -25,7 +25,7 @@
 | 6 | ホスト引き継ぎ（Host離脱時に番号最小の人が引き継ぐ） | ⬜ 未着手 |
 
 ### ユーザーが決めたこと（作業中に確認した内容）
-- 各PCのセンサーは、そのPCでは常にP1（番号0、キーボードならQ）として読む。
+- 各PCの前の人の握力は、そのPCでは常にP1（番号0、キーボードならQ）として読む。展示では、Arduino をつないだPCが4人分を LAN へ放送し、各PCは起動オプション `-grip-sensor N`（N = そのPCの席のセンサー番号）で自分の番号の値を P1 として使う（2026-10-22、5j章）。ゲーム側（砲台の通信・キャラ選択・タイトル）はこの決まりのまま変えていない。
 - Phase 1〜3の間の当たり判定はHostだけ。自分のレーザーはHost確定のみ（予測なし）。ゲージは自分の分だけ。
 - ドロップ品は「未定（今は見た目扱い、各PCで別々に出す）」。
 - 群衆は最初「各PCで計算＋Hostで補正」方式だったが、密集するとClientの敵が震えて隙間だらけになるため、2026-10-05に「写真方式」（Hostの写真を先読みして表示）に変更し、補正方式のコードは削除した（ユーザー決定）。
@@ -326,6 +326,18 @@
 - 通信: 部屋の状態のメッセージ（`MS2026.Lobby.State`）にステージ番号（2 バイト）を追加。**ホストと参加側は同じビルドで**（違うと読めない）。NetworkObject は増やしていない。ステージのシーンに NetworkObject は置かない約束（`Tools/ステージ/チェック` で確かめる）。
 - **宿題（未確認）**: Unity で `Tools/ステージ/今の Game を共通と Stage1 に分ける（1回だけ）` を押してから、①Game だけで Play（Stage1 が重なる）、②Title からキャラ選択 → ルーレット → ゲーム（1 台）、③bat の 2 人・4 人（`-fortress-stage` なし／あり）、④2 台以上で、参加側にも同じステージ・同じルーレットの結果が出るか、途中参加、全員でロビーに戻る → 次の試合で別のステージ。
 
+## 5j. 展示: 1台の Arduino の4人分の握力を LAN で配る（2026-10-22・Unity・実機で未確認）
+
+ユーザー確定: 展示では **1台のPCに4人分の握力を測る Arduino を1つつなぎ、4台のPCで協力通信プレイ**する（各PCの前に1人。キーボードなし）。センサー1〜4の値を、それぞれのPCの画面と砲台に反映させる。
+
+- 検討した案: ①ゲームの通信（NGO）でホストが4人分を配る案は、タイトルではまだ接続していない・席が来た順で決まる・ホストの引き継ぎ、の作り直しが要るため見送り。②**ゲームとは別に、握力だけを LAN へ放送する案を採用**（ユーザー了承）。各PCから見ると「自分のPCにセンサーが1つある」のと同じになるので、ゲーム側は変えずに済む。
+- 仕組み: Arduino をつないだPCが4人分を UDP **47781〜47784**（センサーごと）へ1秒約60回放送（ゲームとは別のスレッド）。各PCは自分の番号の値を「このPCの前の人（P1）」の握力にする。タイトルの時点から届くので握ってスタートできる。席（砲台の色）は今まで通り来た順で、ずれない（つながりは「センサーとPC」）。Arduino をつないだPCが放送係になるのは自動。詳しくは `Docs/Tools/GripInputBridge_AI_Reference.md` 6b章、人間向けは `GripInputBridge_ガイド.html` の「展示：1 台の Arduino…」。
+- 起動: 各PCのデスクトップに「MS2026 センサー1で起動」〜「4」のアイコン（`Tools/Exhibition/make_sensor_shortcuts.bat` で作る。中身は `MS2026.exe -grip-sensor N`）。予備のPCに替えるときは同じ番号のアイコンをダブルクリック。Arduino のPCが壊れたら USB を予備に挿し替えて同じ番号で起動（ほかのPCは自動で新しい放送に移る）。
+- `-grip-sensor` を付けなければ今まで通り（通信しない。bat のテストも変わらない）。1台で試すときは1つ目に `-grip-sensor 1 -grip-relay-send`（キーボード Q/W/O/P をセンサー1〜4として放送）、残りに `-grip-sensor 2〜4`。
+- 弱いところ: Arduino のPCが止まると全員の握力が 0（ハードの構成上避けられない。ゲームは続く）。会場の LAN が「パブリック」扱いだとファイアウォールで止まる（ゲームの接続と同じ。プライベートにする）。
+- 確認済み: Unity の外でコンパイル（実機通信あり・なしの両方）、放送の形・受け取りの決まり・起動オプション・本物の UDP（127.0.0.1）での「Arduino → 放送 → 4台がそれぞれ自分の番号だけを使う」まで含むテスト 59 件が Unity の外で通る、デスクトップのアイコン作成（Windows PowerShell 5.1）。
+- **宿題（未確認）**: ①Unity の EditMode テスト、②1台で4つ起動（`-grip-relay-send`）してタイトル・キャラ選択・砲台がそれぞれ動くか、③**2台以上の実機PCで**放送が届くか（F8 の「受信: … 回/秒」）、④本物の Arduino（4人分）で、センサー n を握ると n のアイコンで起動したPCだけが動くか、⑤Arduino の USB を抜く／予備PCに挿し替えたときに戻るか。
+
 ## 6. 主なファイル
 
 | 何 | 場所 |
@@ -340,4 +352,5 @@
 | ロビー（タイトル→ロビー→ゲーム） | `Assets/_Game/UI/Game/Session/`（`GameSession`・展示用の自動接続 `GameSession.Auto`・`AutoMatchRules`・`LobbyRoster`・`LobbyMessages`・`LanDiscovery`・`GameSceneSessionGuard`・画面の部品）、`Assets/Scenes/Lobby.unity`、組み立て `Assets/_Game/UI/Editor/Session/SessionFlowBuilder.cs` |
 | ステージ切り替え・ルーレット | `Assets/Stages/`（`StageCatalog`・`StageDefinition`・`StageLayout`・`StageBootstrap`・`Roulette/`、メニュー `Tools/ステージ/…`）、`Assets/_Game/UI/Game/Session/GameSession.Stage.cs`、ステージのシーン `Assets/Scenes/Stages/`（分けた後） |
 | 起動用bat | `Tools/NetTest/`（`launch_2p/4p`, `launch_ui_2p`, `launch_duplicate_test`, `bench_2p`, `bench_4p`, `bench_4p_latejoin`, `bench_offline`, `run_instance`） |
+| 握力を LAN で配る（展示） | `Assets/_Tools/GripInputBridge/Runtime/Relay/`（`GripRelaySession` ほか）、`Assets/ArduinoSerialReader.cs`（起動・F8）、`Tools/Exhibition/make_sensor_shortcuts.bat`（アイコン作成） |
 | 画面のUI配置 | `Runtime/Hud/DebugOverlayLayout.cs`（左上の縦積み）。自分のゲージ（`LocalTurretGaugeHud.cs`）は 2026-10-17 に削除（ゲーム中の表示は UIスタジオの画面 Hud） |
