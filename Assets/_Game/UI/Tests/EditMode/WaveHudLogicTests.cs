@@ -53,6 +53,17 @@ namespace MS2026.UI.Tests.EditMode
         }
 
         [Test]
+        public void BrushPreviewShowsWhatYouWouldGetNow()
+        {
+            Assert.AreEqual("いま HP +120", WaveHudLogic.BrushPreviewText(120.4f, 0f));
+            Assert.AreEqual("いま HP +40　コーティング +80", WaveHudLogic.BrushPreviewText(40f, 80f));
+            Assert.AreEqual("いま コーティング +80", WaveHudLogic.BrushPreviewText(0f, 80f));
+            Assert.AreEqual("100% で +250", WaveHudLogic.BrushFullText(250f));
+            Assert.AreEqual("ピカピカ！", WaveHudLogic.BrushResultTitle(1f));
+            Assert.AreEqual("もう少し…", WaveHudLogic.BrushResultTitle(0.2f));
+        }
+
+        [Test]
         public void ResultSubtitleTellsWhy()
         {
             StringAssert.Contains("WAVE 3", WaveHudLogic.ResultSubtitle(MatchEndReason.TimeUp, 3, 5));

@@ -35,6 +35,10 @@ namespace MS2026.Fortress
         private const int SPlayers = 9; // 数える人（bit）
         private const int STeam = 10;
         private const int SEnd = 11; // みがき終わりの時刻（Elapsed）。早く 100% になったら早まる
+        private const int SRequired = 12; // 100% に必要な回数（いる人数 × 1人分）
+        private const int SPreviewHeal = 13; // 今のきれい度でもらえる回復
+        private const int SPreviewCoating = 14; // 今のきれい度でもらえるコーティング
+        private const int SFullReward = 15; // 100% のときにもらえる量（回復＋コーティングの合計の上限）
 
         private const int Players = FortressWaves.PlayerCount;
 
@@ -86,6 +90,24 @@ namespace MS2026.Fortress
 
         /// <summary>結果: 付いたコーティングの量。</summary>
         public float CoatingAmount => State[SCoating];
+
+        /// <summary>100% に必要な「にぎにぎ」の回数（全員分）。</summary>
+        public int Required => Mathf.RoundToInt(State[SRequired]);
+
+        /// <summary>100% まで、あと何回（全員分）。</summary>
+        public int Remaining => Mathf.Max(0, Required - Mathf.RoundToInt(State[STeam]));
+
+        /// <summary>今のきれい度でもらえる回復（みがいている間の見通し）。</summary>
+        public float PreviewHeal => State[SPreviewHeal];
+
+        /// <summary>今のきれい度でもらえるコーティング（満タンからあふれる分）。</summary>
+        public float PreviewCoating => State[SPreviewCoating];
+
+        /// <summary>100% のときにもらえる量（回復＋コーティング）。</summary>
+        public float FullReward => State[SFullReward];
+
+        /// <summary>みがく時間（秒。残り時間の輪の割合用）。</summary>
+        public float BrushDuration => _settings == null ? 0f : Mathf.Max(0.01f, _settings.brushSeconds);
 
         /// <summary>シンクロした回数。</summary>
         public int SyncCount => Mathf.RoundToInt(State[SSyncCount]);
@@ -240,7 +262,10 @@ namespace MS2026.Fortress
 
             // オフラインは、何人で握っても1人分で 100%（ひとりでテストできるように）。
             var participants = offline ? 1 : Mathf.Max(1, CountBits(mask));
-            var clean = BrushingMath.Clean01(team + _bonus, _settings.pulsesPerPlayer * participants);
+            var required = _settings.pulsesPerPlayer * participants;
+            var clean = BrushingMath.Clean01(team + _bonus, required);
+            State[SRequired] = required;
+            UpdatePreview(clean);
             State[SClean] = clean;
             State[SPlayers] = mask;
             State[STeam] = team + _bonus;
@@ -261,6 +286,27 @@ namespace MS2026.Fortress
             }
 
             State[SStage] = (float)Stage;
+        }
+
+        // みがいている間: 今やめたら、どれだけもらえるか（画面の「いま HP +120」）。
+        private void UpdatePreview(float clean)
+        {
+            if (_rewarded)
+            {
+                return;
+            }
+
+            var core = FindFirstObjectByType<CoreCrystalController>();
+            if (core == null)
+            {
+                return;
+            }
+
+            BrushingMath.Reward(clean, core.maxHealth, core.CurrentHealth, _settings.healFraction, _settings.coatingFraction, out var heal, out var coating);
+            State[SPreviewHeal] = heal;
+            State[SPreviewCoating] = coating;
+            BrushingMath.Reward(1f, core.maxHealth, core.CurrentHealth, _settings.healFraction, _settings.coatingFraction, out var fullHeal, out var fullCoating);
+            State[SFullReward] = fullHeal + fullCoating;
         }
 
         private void Reward(float clean)

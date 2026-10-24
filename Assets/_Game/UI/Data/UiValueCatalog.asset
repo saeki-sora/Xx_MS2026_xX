@@ -1343,3 +1343,543 @@ MonoBehaviour:
     sampleText: 
     sampleColor: {r: 1, g: 1, b: 1, a: 1}
     category: "\u307B\u304B\u306E\u4EBA"
+  - key: wave.active
+    label: "\u30A6\u30A7\u30FC\u30D6\u3067\u904A\u3093\u3067\u3044\u308B"
+    description: "\u30B9\u30C6\u30FC\u30B8\u306B\u30A6\u30A7\u30FC\u30D6\u306E\u8A08\u753B\u304C\u3042\u308A\u3001\u8A66\u5408\u4E2D\u306E\u3068\u304DON\uFF08\u7121\u3044\u30B9\u30C6\u30FC\u30B8\u3067\u306F
+      WAVE \u306E\u672D\u3092\u96A0\u3059\uFF09\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 1
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.number
+    label: "\u4ECA\u306E\u30A6\u30A7\u30FC\u30D6"
+    description: "1 \u304B\u3089\u3002"
+    kind: 1
+    range: {x: 1, y: 5}
+    sampleNumber: 2
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.count
+    label: "\u30A6\u30A7\u30FC\u30D6\u306E\u6570"
+    description: "\u6700\u5F8C\u306E\u30A6\u30A7\u30FC\u30D6\u306E\u756A\u53F7\u3002"
+    kind: 1
+    range: {x: 1, y: 9}
+    sampleNumber: 5
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.numberText
+    label: "\u30A6\u30A7\u30FC\u30D6\uFF082/5 \u306E\u5F62\uFF09"
+    description: "\u4F8B: 2/5\u3002"
+    kind: 3
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 2/5
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.isFinal
+    label: "\u6700\u7D42\u30A6\u30A7\u30FC\u30D6"
+    description: "\u6700\u5F8C\u306E\u30A6\u30A7\u30FC\u30D6\u306E\u3068\u304DON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.phase
+    label: "\u30A6\u30A7\u30FC\u30D6\u306E\u6BB5\u968E"
+    description: "0=\u306A\u3057\u30011=\u6E96\u5099\u5F85\u3061\u30012=\u767A\u8868\u30013=\u6226\u3044\u30014=\u30AF\u30EA\u30A2\uFF08\u64A4\u9000\uFF09\u30015=\u5408\u9593\u30016=\u7D42\u308F\u308A\u3002"
+    kind: 1
+    range: {x: 0, y: 6}
+    sampleNumber: 3
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.kills
+    label: "\u3053\u306E\u30A6\u30A7\u30FC\u30D6\u3067\u5012\u3057\u305F\u6570"
+    description: "\u76EE\u6A19\u3067\u6B62\u307E\u308B\u3002"
+    kind: 1
+    range: {x: 0, y: 200}
+    sampleNumber: 12
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.target
+    label: "\u3053\u306E\u30A6\u30A7\u30FC\u30D6\u306E\u76EE\u6A19\u6483\u7834\u6570"
+    description: "\u3053\u306E\u6570\u3092\u5012\u3057\u305F\u3089\u6B21\u306E\u30A6\u30A7\u30FC\u30D6\u3002"
+    kind: 1
+    range: {x: 0, y: 200}
+    sampleNumber: 35
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.remaining
+    label: "\u76EE\u6A19\u307E\u3067\u3042\u3068\u4F55\u4F53"
+    description: "\u76EE\u6A19 \u2212 \u5012\u3057\u305F\u6570\u3002"
+    kind: 1
+    range: {x: 0, y: 200}
+    sampleNumber: 23
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.progress01
+    label: "\u76EE\u6A19\u307E\u3067\u306E\u9032\u307F\u5177\u5408\uFF08\u5272\u5408\uFF09"
+    description: "0=\u59CB\u307E\u3063\u305F\u3070\u304B\u308A\u30011=\u76EE\u6A19\u306B\u5C4A\u3044\u305F\u3002"
+    kind: 1
+    range: {x: 0, y: 1}
+    sampleNumber: 0.34
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.nearGoal
+    label: "\u76EE\u6A19\u307E\u3067\u3042\u3068\u5C11\u3057"
+    description: "\u6226\u3063\u3066\u3044\u308B\u9593\u3001\u3042\u30685\u4F53\u4EE5\u4E0B\u306B\u306A\u3063\u305F\u3089ON\uFF08\u300C\u3042\u30685\u4F53\uFF01\u300D\u306E\u76DB\u308A\u4E0A\u3052\uFF09\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.hasTimeLimit
+    label: "\u5236\u9650\u6642\u9593\u304C\u3042\u308B"
+    description: "\u8A08\u753B\u306B\u5236\u9650\u6642\u9593\u304C\u3042\u308B\u3068\u304DON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 1
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.timeLeft
+    label: "\u8A66\u5408\u306E\u6B8B\u308A\u6642\u9593\uFF08\u79D2\uFF09"
+    description: "\u5236\u9650\u6642\u9593\u304C\u7121\u3051\u308C\u3070 \u22121\u3002"
+    kind: 1
+    range: {x: -1, y: 600}
+    sampleNumber: 168
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.timeText
+    label: "\u8A66\u5408\u306E\u6B8B\u308A\u6642\u9593\uFF0802:48 \u306E\u5F62\uFF09"
+    description: "\u5236\u9650\u6642\u9593\u304C\u7121\u3051\u308C\u3070\u300C--:--\u300D\u3002"
+    kind: 3
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 02:48
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.timeWarning
+    label: "\u6B8B\u308A\u6642\u9593\u304C\u5C11\u306A\u3044"
+    description: "\u6642\u8A08\u304C\u52D5\u3044\u3066\u3044\u3066\u3001\u6B8B\u308A10\u79D2\u4EE5\u4E0B\u306E\u3068\u304DON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.announcing
+    label: "\u767A\u8868\u4E2D"
+    description: "\u300CWAVE n\uFF01\u76EE\u6A19\u6483\u7834\u6570 m\uFF01\u300D\u3092\u51FA\u3057\u3066\u3044\u308B\u9593ON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 1
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.announceTitle
+    label: "\u767A\u8868\u306E\u5927\u304D\u306A\u6587\u5B57"
+    description: "\u4F8B: WAVE 2 / FINAL WAVE\u3002"
+    kind: 3
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: WAVE 2
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.announceGoal
+    label: "\u767A\u8868\u306E\u76EE\u6A19\u306E\u6587\u5B57"
+    description: "\u4F8B: \u76EE\u6A19\u6483\u7834\u6570 60\uFF01"
+    kind: 3
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: "\u76EE\u6A19\u6483\u7834\u6570 60\uFF01"
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.announceText
+    label: "\u767A\u8868\u306E\u4E00\u8A00"
+    description: "\u8A08\u753B\u306B\u66F8\u3044\u305F\u4E00\u8A00\uFF08\u7121\u3051\u308C\u3070\u7A7A\uFF09\u3002"
+    kind: 3
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: "\u6A2A\u304B\u3089\u3082\u6765\u308B\u305E\uFF01"
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.countdown
+    label: "3\u30FB2\u30FB1"
+    description: "\u767A\u8868\u306E\u6700\u5F8C\u306E 3\u30FB2\u30FB1\u3002\u51FA\u3057\u3066\u3044\u306A\u3044\u3068\u304D\u306F
+      0\u3002"
+    kind: 1
+    range: {x: 0, y: 3}
+    sampleNumber: 2
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.go
+    label: GO!
+    description: "\u30A6\u30A7\u30FC\u30D6\u304C\u59CB\u307E\u3063\u3066\u304B\u3089\u5C11\u3057\u306E\u9593ON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.clearShowing
+    label: "WAVE CLEAR! \u4E2D"
+    description: "\u76EE\u6A19\u3092\u5012\u3057\u3066\u3001\u6575\u304C\u9003\u3052\u3066\u3044\u308B\u9593ON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.clearText
+    label: "\u30AF\u30EA\u30A2\u306E\u6587\u5B57"
+    description: "\u4F8B: WAVE 2 CLEAR!"
+    kind: 3
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: WAVE 2 CLEAR!
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.break
+    label: "\u5408\u9593\u4E2D"
+    description: "\u30A6\u30A7\u30FC\u30D6\u306E\u5408\u9593\uFF08\u6B6F\u307F\u304C\u304D\u30BF\u30A4\u30E0\u306A\u3069\uFF09\u306E\u9593ON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.timeUp
+    label: "\u6642\u9593\u5207\u308C"
+    description: "\u8A66\u5408\u306E\u5236\u9650\u6642\u9593\u304C\u6765\u305F\u3068\u304DON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.firstHint
+    label: "\u6700\u521D\u306E\u30D2\u30F3\u30C8\u3092\u51FA\u3059"
+    description: "\u8A66\u5408\u306E\u6700\u521D\uFF08\u5168\u54E1\u3092\u5F85\u3063\u3066\u3044\u308B\u9593\u3068
+      WAVE 1 \u306E\u767A\u8868\u306E\u9593\uFF09ON\u3002\u63E1\u308A\u65B9\u306E\u30D2\u30F3\u30C8\u30FB\u3042\u306A\u305F\u306E\u7832\u53F0\u306E\u77E2\u5370\u7528\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 1
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: result.reason
+    label: "\u8A66\u5408\u304C\u7D42\u308F\u3063\u305F\u7406\u7531"
+    description: "0=\u306A\u3057\u30011=\u6483\u7834\u6570\u30012=\u5168\u90E8\u306E\u30A6\u30A7\u30FC\u30D6\u3092\u30AF\u30EA\u30A2\u30013=\u30B3\u30A2\u304C\u58CA\u308C\u305F\u30014=\u6642\u9593\u5207\u308C\u3002"
+    kind: 1
+    range: {x: 0, y: 4}
+    sampleNumber: 4
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: result.reachedWave
+    label: "\u884C\u3051\u305F\u30A6\u30A7\u30FC\u30D6"
+    description: "\u3069\u306E\u30A6\u30A7\u30FC\u30D6\u307E\u3067\u884C\u3051\u305F\u304B\uFF081
+      \u304B\u3089\u3002\u8A08\u753B\u304C\u7121\u3051\u308C\u3070 0\uFF09\u3002"
+    kind: 1
+    range: {x: 0, y: 5}
+    sampleNumber: 3
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: result.subtitle
+    label: "\u30EA\u30B6\u30EB\u30C8\u306E\u4E00\u8A00"
+    description: "\u4F8B: \u6642\u9593\u5207\u308C\u2026 WAVE 3 \u307E\u3067\u884C\u3051\u305F\uFF01
+      / \u30B3\u30A2\u304C\u58CA\u3055\u308C\u3066\u3057\u307E\u3063\u305F\u2026"
+    kind: 3
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: "\u6642\u9593\u5207\u308C\u2026 WAVE 3 \u307E\u3067\u884C\u3051\u305F\uFF01"
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30EA\u30B6\u30EB\u30C8"
+  - key: brush.active
+    label: "\u6B6F\u307F\u304C\u304D\u30BF\u30A4\u30E0\u4E2D"
+    description: "\u30A6\u30A7\u30FC\u30D6\u306E\u5408\u9593\u306E\u6B6F\u307F\u304C\u304D\u30BF\u30A4\u30E0\u306E\u9593ON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 1
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"
+  - key: brush.stage
+    label: "\u6B6F\u307F\u304C\u304D\u306E\u6BB5\u968E"
+    description: "0=\u306F\u3058\u3081\u306E\u8AAC\u660E\u30011=\u307F\u304C\u3044\u3066\u3044\u308B\u30012=\u7D50\u679C\u3002"
+    kind: 1
+    range: {x: 0, y: 2}
+    sampleNumber: 1
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"
+  - key: brush.intro
+    label: "\u306F\u3058\u3081\u306E\u8AAC\u660E\u4E2D"
+    description: "\u300C\u6B6F\u307F\u304C\u304D\u30BF\u30A4\u30E0\uFF01\u300D\u3068\u624B\u306E\u30A2\u30CB\u30E1\u3092\u51FA\u3057\u3066\u3044\u308B\u9593ON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"
+  - key: brush.brushing
+    label: "\u307F\u304C\u3044\u3066\u3044\u308B"
+    description: "\u306B\u304E\u306B\u304E\u3092\u6570\u3048\u3066\u3044\u308B\u9593ON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 1
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"
+  - key: brush.result
+    label: "\u7D50\u679C\u3092\u51FA\u3057\u3066\u3044\u308B"
+    description: "HP +12 \u306A\u3069\u3092\u51FA\u3057\u3066\u3044\u308B\u9593ON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"
+  - key: brush.clean01
+    label: "\u304D\u308C\u3044\u5EA6\uFF08\u5272\u5408\uFF09"
+    description: "\u5168\u54E1\u306E\u306B\u304E\u306B\u304E\u3067 0\u21921\u3002"
+    kind: 1
+    range: {x: 0, y: 1}
+    sampleNumber: 0.62
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"
+  - key: brush.timeLeft
+    label: "\u307F\u304C\u304F\u6B8B\u308A\u79D2"
+    description: "\u5207\u308A\u4E0A\u3052\u305F\u79D2\u6570\u3002"
+    kind: 1
+    range: {x: 0, y: 10}
+    sampleNumber: 5
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"
+  - key: brush.pulses
+    label: "\u81EA\u5206\u306E\u306B\u304E\u306B\u304E\u306E\u56DE\u6570"
+    description: "\u3053\u306E\u5408\u9593\u306B\u81EA\u5206\u304C\u63E1\u3063\u305F\u56DE\u6570\uFF081\u56DE\u3054\u3068\u306B\u306F\u305A\u3080\u52D5\u304D\u7528\uFF09\u3002"
+    kind: 1
+    range: {x: 0, y: 40}
+    sampleNumber: 11
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"
+  - key: brush.syncCount
+    label: "\u30B7\u30F3\u30AF\u30ED\u306E\u56DE\u6570"
+    description: "\u5168\u54E1\u304C\u305D\u308D\u3063\u3066\u63E1\u308C\u305F\u56DE\u6570\u3002"
+    kind: 1
+    range: {x: 0, y: 10}
+    sampleNumber: 2
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"
+  - key: brush.syncShowing
+    label: "\u30B7\u30F3\u30AF\u30ED\uFF01\u3092\u51FA\u3057\u3066\u3044\u308B"
+    description: "\u30B7\u30F3\u30AF\u30ED\u3057\u305F\u76F4\u5F8C\u306E\u5C11\u3057\u306E\u9593ON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"
+  - key: brush.resultText
+    label: "\u6B6F\u307F\u304C\u304D\u306E\u7D50\u679C\u306E\u6587\u5B57"
+    description: "\u4F8B: HP +12\u3000\u30B3\u30FC\u30C6\u30A3\u30F3\u30B0 +5"
+    kind: 3
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: "\u30B5\u30F3\u30D7\u30EB"
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"
+  - key: core.coating
+    label: "\u30B3\u30A2\u306E\u30B3\u30FC\u30C6\u30A3\u30F3\u30B0"
+    description: "\u30C0\u30E1\u30FC\u30B8\u3092\u5148\u306B\u53D7\u3051\u3066\u304F\u308C\u308B\u76FE\u306E\u91CF\uFF08\u6B6F\u307F\u304C\u304D\u306E\u3054\u307B\u3046\u3073\u3002\u6B21\u306E1\u30A6\u30A7\u30FC\u30D6\u3060\u3051\uFF09\u3002"
+    kind: 1
+    range: {x: 0, y: 30}
+    sampleNumber: 8
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30B3\u30A2"
+  - key: core.coating01
+    label: "\u30B3\u30A2\u306E\u30B3\u30FC\u30C6\u30A3\u30F3\u30B0\uFF08\u5272\u5408\uFF09"
+    description: "\u30B3\u30FC\u30C6\u30A3\u30F3\u30B0 \xF7 \u30B3\u30A2\u306E\u6700\u5927HP\u3002"
+    kind: 1
+    range: {x: 0, y: 1}
+    sampleNumber: 0.08
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30B3\u30A2"
+  - key: core.hasCoating
+    label: "\u30B3\u30FC\u30C6\u30A3\u30F3\u30B0\u304C\u3042\u308B"
+    description: "\u30B3\u30FC\u30C6\u30A3\u30F3\u30B0\u304C\u5C11\u3057\u3067\u3082\u6B8B\u3063\u3066\u3044\u308B\u3068\u304DON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 1
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30B3\u30A2"
+  - key: brush.player.1.share01
+    label: "P1\u306E\u6B6F\u307F\u304C\u304D\u306E\u9811\u5F35\u308A\uFF08\u5272\u5408\uFF09"
+    description: "1\u4EBA\u5206\u306E\u76EE\u6A19\u306B\u5BFE\u3057\u3066\u3001\u4F55\u5272\u306B\u304E\u306B\u304E\u3057\u305F\u304B\u3002"
+    kind: 1
+    range: {x: 0, y: 1}
+    sampleNumber: 0.3
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"
+  - key: brush.player.1.in
+    label: "P1\u304C\u6B6F\u307F\u304C\u304D\u306B\u53C2\u52A0"
+    description: "\u305D\u306E\u4EBA\u304C\u8A66\u5408\u306B\u3044\u308B\u3068\u304DON\uFF08\u30AA\u30D5\u30E9\u30A4\u30F3\u3067\u306F\u63E1\u3063\u305F\u4EBA\uFF09\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 1
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"
+  - key: brush.player.2.share01
+    label: "P2\u306E\u6B6F\u307F\u304C\u304D\u306E\u9811\u5F35\u308A\uFF08\u5272\u5408\uFF09"
+    description: "1\u4EBA\u5206\u306E\u76EE\u6A19\u306B\u5BFE\u3057\u3066\u3001\u4F55\u5272\u306B\u304E\u306B\u304E\u3057\u305F\u304B\u3002"
+    kind: 1
+    range: {x: 0, y: 1}
+    sampleNumber: 0.5
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"
+  - key: brush.player.2.in
+    label: "P2\u304C\u6B6F\u307F\u304C\u304D\u306B\u53C2\u52A0"
+    description: "\u305D\u306E\u4EBA\u304C\u8A66\u5408\u306B\u3044\u308B\u3068\u304DON\uFF08\u30AA\u30D5\u30E9\u30A4\u30F3\u3067\u306F\u63E1\u3063\u305F\u4EBA\uFF09\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 1
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"
+  - key: brush.player.3.share01
+    label: "P3\u306E\u6B6F\u307F\u304C\u304D\u306E\u9811\u5F35\u308A\uFF08\u5272\u5408\uFF09"
+    description: "1\u4EBA\u5206\u306E\u76EE\u6A19\u306B\u5BFE\u3057\u3066\u3001\u4F55\u5272\u306B\u304E\u306B\u304E\u3057\u305F\u304B\u3002"
+    kind: 1
+    range: {x: 0, y: 1}
+    sampleNumber: 0.70000005
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"
+  - key: brush.player.3.in
+    label: "P3\u304C\u6B6F\u307F\u304C\u304D\u306B\u53C2\u52A0"
+    description: "\u305D\u306E\u4EBA\u304C\u8A66\u5408\u306B\u3044\u308B\u3068\u304DON\uFF08\u30AA\u30D5\u30E9\u30A4\u30F3\u3067\u306F\u63E1\u3063\u305F\u4EBA\uFF09\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 1
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"
+  - key: brush.player.4.share01
+    label: "P4\u306E\u6B6F\u307F\u304C\u304D\u306E\u9811\u5F35\u308A\uFF08\u5272\u5408\uFF09"
+    description: "1\u4EBA\u5206\u306E\u76EE\u6A19\u306B\u5BFE\u3057\u3066\u3001\u4F55\u5272\u306B\u304E\u306B\u304E\u3057\u305F\u304B\u3002"
+    kind: 1
+    range: {x: 0, y: 1}
+    sampleNumber: 0.90000004
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"
+  - key: brush.player.4.in
+    label: "P4\u304C\u6B6F\u307F\u304C\u304D\u306B\u53C2\u52A0"
+    description: "\u305D\u306E\u4EBA\u304C\u8A66\u5408\u306B\u3044\u308B\u3068\u304DON\uFF08\u30AA\u30D5\u30E9\u30A4\u30F3\u3067\u306F\u63E1\u3063\u305F\u4EBA\uFF09\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"
+  - key: wave.showBanner
+    label: "\u300CWAVE n\uFF0F\u76EE\u6A19\u300D\u3092\u51FA\u3059"
+    description: "\u767A\u8868\u306E\u4E2D\u3067\u3001\u8868\u793A\u306E\u8A2D\u5B9A\u306E\u79D2\u6570\u304C\u305F\u3063\u305F\u5F8C
+      ON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 1
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.showNewEnemies
+    label: "NEW ENEMY \u3092\u51FA\u3059"
+    description: "\u767A\u8868\u306E\u4E2D\u3067\u3001\u8868\u793A\u306E\u8A2D\u5B9A\u306E\u79D2\u6570\u304C\u305F\u3063\u305F\u5F8C
+      ON\uFF08\u521D\u3081\u3066\u51FA\u3066\u304F\u308B\u6575\u304C\u3044\u308C\u3070\u3001\u30AB\u30FC\u30C9\u304C\u51FA\u308B\uFF09\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 1
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.showRouteHint
+    label: "\u300C\u8D64\u3044\u7DDA\uFF1D\u6575\u306E\u901A\u308A\u9053\u300D\u3092\u51FA\u3059"
+    description: "\u767A\u8868\u306E\u9593\u3001\u8868\u793A\u306E\u8A2D\u5B9A\u3067
+      ON \u306E\u3068\u304D\u3060\u3051 ON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: brush.resultTitle
+    label: "\u6B6F\u307F\u304C\u304D\u306E\u7D50\u679C\u306E\u898B\u51FA\u3057"
+    description: "\u30D4\u30AB\u30D4\u30AB\uFF01 / \u304D\u308C\u3044\u306B\u306A\u3063\u305F\uFF01
+      / \u3082\u3046\u5C11\u3057\u2026\uFF08\u304D\u308C\u3044\u5EA6\u3067\u5909\u308F\u308B\uFF09\u3002"
+    kind: 3
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: "\u30B5\u30F3\u30D7\u30EB"
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"
+  - key: brush.remaining
+    label: "100% \u307E\u3067\u3042\u3068\u4F55\u56DE"
+    description: "\u5168\u54E1\u5206\u306E\u300C\u306B\u304E\u306B\u304E\u300D\u306E\u6B8B\u308A\u306E\u56DE\u6570\u3002"
+    kind: 1
+    range: {x: 0, y: 72}
+    sampleNumber: 12
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"
+  - key: brush.time01
+    label: "\u307F\u304C\u304F\u6B8B\u308A\u6642\u9593\uFF08\u5272\u5408\uFF09"
+    description: "1=\u59CB\u307E\u3063\u305F\u3070\u304B\u308A\u30010=\u6642\u9593\u5207\u308C\uFF08\u6B8B\u308A\u6642\u9593\u306E\u8F2A\uFF09\u3002"
+    kind: 1
+    range: {x: 0, y: 1}
+    sampleNumber: 0.6
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"
+  - key: brush.previewText
+    label: "\u4ECA\u3082\u3089\u3048\u308B\u3054\u307B\u3046\u3073"
+    description: "\u4F8B: \u3044\u307E HP +120\uFF08\u307F\u304C\u3044\u3066\u3044\u308B\u9593\u3001\u304D\u308C\u3044\u5EA6\u3067\u5897\u3048\u308B\uFF09\u3002"
+    kind: 3
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: "\u30B5\u30F3\u30D7\u30EB"
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"
+  - key: brush.fullText
+    label: "100% \u306E\u3054\u307B\u3046\u3073"
+    description: "\u4F8B: 100% \u3067 +250"
+    kind: 3
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: "\u30B5\u30F3\u30D7\u30EB"
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u6B6F\u307F\u304C\u304D"

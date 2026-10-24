@@ -17,6 +17,11 @@ namespace MS2026.UI.Game
         public const string BrushSyncCount = "brush.syncCount";
         public const string BrushSyncShowing = "brush.syncShowing";
         public const string BrushResultText = "brush.resultText";
+        public const string BrushResultTitle = "brush.resultTitle";
+        public const string BrushRemaining = "brush.remaining";
+        public const string BrushTime01 = "brush.time01";
+        public const string BrushPreviewText = "brush.previewText";
+        public const string BrushFullText = "brush.fullText";
 
         public const string CoreCoating = "core.coating";
         public const string CoreCoating01 = "core.coating01";
@@ -41,6 +46,11 @@ namespace MS2026.UI.Game
                 (BrushSyncCount, "シンクロの回数", "全員がそろって握れた回数。", UiValueKind.Number, c, new Vector2(0, 10), 2),
                 (BrushSyncShowing, "シンクロ！を出している", "シンクロした直後の少しの間ON。", UiValueKind.Bool, c, Vector2.up, 0),
                 (BrushResultText, "歯みがきの結果の文字", "例: HP +12　コーティング +5", UiValueKind.Text, c, Vector2.up, 0),
+                (BrushResultTitle, "歯みがきの結果の見出し", "ピカピカ！ / きれいになった！ / もう少し…（きれい度で変わる）。", UiValueKind.Text, c, Vector2.up, 0),
+                (BrushRemaining, "100% まであと何回", "全員分の「にぎにぎ」の残りの回数。", UiValueKind.Number, c, new Vector2(0, 72), 12),
+                (BrushTime01, "みがく残り時間（割合）", "1=始まったばかり、0=時間切れ（残り時間の輪）。", UiValueKind.Number, c, Vector2.up, 0.6f),
+                (BrushPreviewText, "今もらえるごほうび", "例: いま HP +120（みがいている間、きれい度で増える）。", UiValueKind.Text, c, Vector2.up, 0),
+                (BrushFullText, "100% のごほうび", "例: 100% で +250", UiValueKind.Text, c, Vector2.up, 0),
                 (CoreCoating, "コアのコーティング", "ダメージを先に受けてくれる盾の量（歯みがきのごほうび。次の1ウェーブだけ）。", UiValueKind.Number, "コア", new Vector2(0, 30), 8),
                 (CoreCoating01, "コアのコーティング（割合）", "コーティング ÷ コアの最大HP。", UiValueKind.Number, "コア", Vector2.up, 0.08f),
                 (CoreHasCoating, "コーティングがある", "コーティングが少しでも残っているときON。", UiValueKind.Bool, "コア", Vector2.up, 1)

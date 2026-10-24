@@ -80,6 +80,31 @@ namespace MS2026.UI.Game
             return string.Join("　", parts);
         }
 
+        /// <summary>みがいている間の「今もらえる量」（「いま HP +120」。満タンであふれる分はコーティング）。</summary>
+        public static string BrushPreviewText(float heal, float coating)
+        {
+            var h = Mathf.RoundToInt(heal);
+            var c = Mathf.RoundToInt(coating);
+            if (h <= 0 && c <= 0)
+            {
+                return "いま +0";
+            }
+
+            if (c <= 0)
+            {
+                return $"いま HP +{h}";
+            }
+
+            return h > 0 ? $"いま HP +{h}　コーティング +{c}" : $"いま コーティング +{c}";
+        }
+
+        /// <summary>100% のときのごほうび（「100% で +250」）。</summary>
+        public static string BrushFullText(float full) => full > 0f ? $"100% で +{Mathf.RoundToInt(full)}" : "";
+
+        /// <summary>歯みがきの結果の見出し（きれい度で変わる）。</summary>
+        public static string BrushResultTitle(float clean01) =>
+            clean01 >= 0.999f ? "ピカピカ！" : clean01 >= 0.5f ? "きれいになった！" : "もう少し…";
+
         /// <summary>リザルトの一言（終わった理由と、行けたウェーブ）。</summary>
         public static string ResultSubtitle(MatchEndReason reason, int reachedWave, int waveCount)
         {

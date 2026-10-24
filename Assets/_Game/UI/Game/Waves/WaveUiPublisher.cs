@@ -126,6 +126,11 @@ namespace MS2026.UI.Game
             UiValues.Set(FortressUiKeys.BrushSyncCount, sync);
             UiValues.Set(FortressUiKeys.BrushSyncShowing, UnityEngine.Time.unscaledTime - _syncShownAt < WaveDisplayTiming.Current.syncShowSeconds);
             UiValues.Set(FortressUiKeys.BrushResultText, WaveHudLogic.BrushResultText(runner.HealAmount, runner.CoatingAmount, runner.Clean01));
+            UiValues.Set(FortressUiKeys.BrushResultTitle, WaveHudLogic.BrushResultTitle(runner.Clean01));
+            UiValues.Set(FortressUiKeys.BrushRemaining, runner.Remaining);
+            UiValues.Set(FortressUiKeys.BrushTime01, runner.BrushDuration > 0f ? runner.BrushTimeLeft / runner.BrushDuration : 0f);
+            UiValues.Set(FortressUiKeys.BrushPreviewText, WaveHudLogic.BrushPreviewText(runner.PreviewHeal, runner.PreviewCoating));
+            UiValues.Set(FortressUiKeys.BrushFullText, WaveHudLogic.BrushFullText(runner.FullReward));
         }
     }
 }

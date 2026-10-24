@@ -71,7 +71,7 @@ namespace MS2026.Fortress
     public abstract class WaveIntervalRunner : MonoBehaviour
     {
         /// <summary>全員へ届ける様子の数の最大個数。</summary>
-        public const int MaxStateValues = 12;
+        public const int MaxStateValues = 16;
 
         /// <summary>今の様子（Host が書く。Client は届いた値）。</summary>
         public readonly float[] State = new float[MaxStateValues];
