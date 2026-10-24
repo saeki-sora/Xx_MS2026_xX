@@ -40,6 +40,14 @@ namespace MS2026.Fortress.EditorTools
             DrawRules(element, wave);
             EditorGUILayout.Space(4);
             DrawEstimate(wave);
+            WaveRouteSceneOverlay.Target(plan, index, director);
+            var routes = EditorGUILayout.ToggleLeft(
+                new GUIContent("Scene ビューに、このウェーブの敵のルートを表示（赤い線）", "ゲームの発表で見せる赤い線と同じ計算です。湧き位置や障害物を動かすと線も変わります。オレンジの線はコアまで行けない道。"),
+                WaveRouteSceneOverlay.Enabled);
+            if (routes != WaveRouteSceneOverlay.Enabled)
+            {
+                WaveRouteSceneOverlay.Enabled = routes;
+            }
             EditorGUILayout.Space(6);
 
             var target = new WaveEntriesTarget(plan, serialized, element.propertyPath + ".spawnEntries", wave.spawnEntries, wave.DisplayLabel(index + 1));

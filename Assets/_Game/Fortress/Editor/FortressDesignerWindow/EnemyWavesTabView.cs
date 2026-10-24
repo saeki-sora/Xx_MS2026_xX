@@ -82,6 +82,7 @@ namespace MS2026.Fortress.EditorTools
 
             if (plan == null)
             {
+                WaveRouteSceneOverlay.Clear();
                 DrawNoPlan(director);
                 return;
             }
@@ -129,6 +130,11 @@ namespace MS2026.Fortress.EditorTools
             page = DrawPageBar(plan, issues, page);
             Page = page;
             EditorGUILayout.Space(4);
+
+            if (page < 0 || page >= plan.Count)
+            {
+                WaveRouteSceneOverlay.Clear();
+            }
 
             if (page == OverviewPage)
             {
