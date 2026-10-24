@@ -73,6 +73,10 @@ namespace MS2026.UI.EditorTools
                 StudioUi.Button("プレイヤーのパネルとコアのバー（歯）を入れる", () => HudPanelsBuilder.Build(true), "画面 Hud に、チームの絵で、コアの体力（上の中央・歯のアイコン）・自分のパネル（左下・しまのゲージ＝熱）・ほかの3人の丸いアイコン（その上）を入れます。前の水晶のコアの札と左上の4人の熱は隠します。", small: true),
                 StudioUi.Button("リザルト画面を作る", () => ResultScreenBuilder.Build(true), "試合が終わったとき（1000体でクリア／コアが壊れてゲームオーバー）に自動で開くリザルト画面（画面 Result）を作ります。", small: true)));
 
+            root.Add(StudioUi.Section("ウェーブ（WAVE 1〜5・目標撃破数・制限時間）", "コアのバーの左の WAVE の札、「WAVE n／目標撃破数」の発表・3・2・1・GO!・WAVE CLEAR!・TIME UP!、歯みがきタイム、初めての人向けのヒントをゲーム中HUDに入れます。"));
+            root.Add(StudioUi.Row(
+                StudioUi.Button("ウェーブの表示を入れる", () => HudWaveBuilder.Build(true), "画面 Hud にウェーブの表示を入れます（何度押しても作り直すだけ。手で直した分は戻ります）。リザルトの GAME OVER の一言も、終わった理由（時間切れ・行けたウェーブ）にします。", primary: true, small: true)));
+
             root.Add(StudioUi.Section("用語"));
             var words = StudioUi.Card();
             words.Add(StudioUi.Styled(new Label(

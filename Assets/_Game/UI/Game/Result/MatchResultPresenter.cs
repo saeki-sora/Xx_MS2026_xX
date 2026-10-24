@@ -62,6 +62,9 @@ namespace MS2026.UI.Game
             _showing = true;
             ClearValues();
             UiValues.Set(FortressUiKeys.ResultClear, _clear);
+            UiValues.Set(FortressUiKeys.ResultReason, (int)result.reason);
+            UiValues.Set(FortressUiKeys.ResultReachedWave, result.reachedWave);
+            UiValues.Set(FortressUiKeys.ResultSubtitle, WaveHudLogic.ResultSubtitle(result.reason, result.reachedWave, result.waveCount));
 
             var root = UiRoot.Active;
             if (root == null || !root.Open(ResultScreenId))

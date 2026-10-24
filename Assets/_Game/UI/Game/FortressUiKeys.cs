@@ -6,7 +6,7 @@ namespace MS2026.UI.Game
     /// ゲーム（要塞）が画面に渡す値の名前と説明。<see cref="FortressUiValues"/> が毎フレーム書き込む。
     /// プレイヤー番号は人に合わせて 1〜4（P1〜P4）。UIスタジオの「値」ページの「ゲームの値を一覧に登録」で一覧に入る。
     /// </summary>
-    public static class FortressUiKeys
+    public static partial class FortressUiKeys
     {
         public const string LocalPlayer = "local.player";
         public const string LocalPlayerLabel = "local.playerLabel";
@@ -213,6 +213,7 @@ namespace MS2026.UI.Game
                 list.Add((OtherConnected(s), $"{name}がつながっている", "その人が参加しているときON（ホストでも参加側でも、ロビーから来たときは正しい）。", UiValueKind.Bool, "ほかの人", Vector2.up, s < 2 ? 1 : 0));
             }
 
+            list.AddRange(DescribeWaves());
             return list.ToArray();
         }
     }

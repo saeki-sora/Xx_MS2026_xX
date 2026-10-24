@@ -317,6 +317,23 @@ namespace MS2026.UI.EditorTools
             H.Bind(comment, FortressUiKeys.ResultRankComment, "{0}", 0f);
         }
 
+        /// <summary>
+        /// ゲームオーバーの一言を、終わった理由（コアが壊れた／時間切れ・行けたウェーブ）の値 result.subtitle にする。
+        /// 値が空（ウェーブの計画が無いステージの古い試合など）なら、今までどおり「コアが壊されてしまった…」。
+        /// </summary>
+        internal static void BindSubtitle(Text message)
+        {
+            if (message.GetComponent<UiBindText>() != null)
+            {
+                return;
+            }
+
+            var bind = message.gameObject.AddComponent<UiBindText>();
+            bind.key = FortressUiKeys.ResultSubtitle;
+            bind.format = "{0}";
+            bind.whenEmpty = "コアが壊されてしまった…";
+        }
+
         // ───────── ゲームオーバー（仮） ─────────
 
         private static void BuildGameOver(RectTransform parent)
@@ -328,6 +345,7 @@ namespace MS2026.UI.EditorTools
 
             var message = H.Label(parent, "Message", "コアが壊されてしまった…", 44, Color.white, TextAnchor.MiddleCenter);
             H.Center(message.rectTransform, new Vector2(0f, 20f), new Vector2(1200f, 70f));
+            BindSubtitle(message);
 
             var panel = Group(parent, "Panel", FortressUiKeys.ResultStep, UiVisibleCondition.WhenGreater, ResultRules.StepPanel - 0.5f);
             H.Center(panel, new Vector2(0f, -110f), new Vector2(1200f, 120f));

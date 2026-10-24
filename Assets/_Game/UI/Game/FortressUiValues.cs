@@ -69,6 +69,7 @@ namespace MS2026.UI.Game
             PublishPlayers(local);
             PublishCore();
             PublishEnemies();
+            WaveUiPublisher.Publish();
             PublishKills(local);
             PublishNet(local);
             PublishOthers(local);

@@ -119,6 +119,13 @@ namespace MS2026.UI.EditorTools
                 FortressUiKeys.MessageTitle => "部屋との接続が切れました",
                 FortressUiKeys.MessageBody => "ホストが部屋を閉じたか、通信が途切れました。",
                 FortressUiKeys.ToastText => "はなこ（P2）が入りました",
+                FortressUiKeys.WaveNumberText => "2/5",
+                FortressUiKeys.WaveTimeText => "02:48",
+                FortressUiKeys.WaveAnnounceTitle => "WAVE 2",
+                FortressUiKeys.WaveAnnounceGoal => "目標撃破数 60！",
+                FortressUiKeys.WaveAnnounceText => "横からも来るぞ！",
+                FortressUiKeys.WaveClearText => "WAVE 2 CLEAR!",
+                FortressUiKeys.ResultSubtitle => "時間切れ… WAVE 3 まで行けた！",
                 _ => "サンプル"
             };
         }
