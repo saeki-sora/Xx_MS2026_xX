@@ -346,6 +346,12 @@ namespace MS2026.Fortress
 
         private void TickReplica(float dt)
         {
+            // 試合が終わった（コアが壊れた等）ら、Host と同じく時計を止める。
+            if (FortressMatch.HasEnded)
+            {
+                return;
+            }
+
             FortressWaves.PhaseElapsed += dt;
             FortressWaves.PhaseRemaining = Mathf.Max(0f, FortressWaves.PhaseRemaining - dt);
             if (FortressWaves.ClockRunning && FortressWaves.TimeLeft > 0f)
