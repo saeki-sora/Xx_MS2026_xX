@@ -212,9 +212,10 @@ namespace MS2026.UI.Game
             }
         }
 
-        // その人の頑張りが増えたら（＝にぎにぎした）、その人の歯ブラシを歯に向かってこする。
+        // その人の頑張りが増えたら（＝にぎにぎした）、その人の歯ブラシを歯に向かってこする。結果の間は、見出しにかぶらないようにしまう。
         private void UpdateBrushes(BrushingRunner runner, float dt)
         {
+            var showing = runner.Stage != BrushingStage.Result;
             for (var p = 0; p < brushes.Length && p < 4; p++)
             {
                 var brush = brushes[p];
@@ -222,6 +223,8 @@ namespace MS2026.UI.Game
                 {
                     continue;
                 }
+
+                brush.gameObject.SetActive(showing);
 
                 var share = runner.Share01(p);
                 if (share > _lastShare[p] + 1e-4f)
