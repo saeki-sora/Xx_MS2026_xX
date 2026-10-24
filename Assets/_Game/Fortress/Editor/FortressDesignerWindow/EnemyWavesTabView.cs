@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using MS2026.Fortress;
 using UnityEditor;
-using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -20,7 +19,7 @@ namespace MS2026.Fortress.EditorTools
 
         private EnemyWaveConfig _cachedWave;
         private SerializedObject _serializedWave;
-        private ReorderableList _entriesList;
+        private readonly WaveEntryListPanel _entryList = new WaveEntryListPanel();
         private readonly WaveEntryToolbar _entryToolbar = new WaveEntryToolbar();
 
         public EnemyWavesTabView()
@@ -93,12 +92,13 @@ namespace MS2026.Fortress.EditorTools
 
         private float? SelectedEntryTime(EnemyWaveConfig wave)
         {
-            if (wave == null || _entriesList == null || _cachedWave != wave || _entriesList.index < 0 || _entriesList.index >= wave.spawnEntries.Count)
+            var index = _entryList.SelectedIndex;
+            if (wave == null || _cachedWave != wave || index < 0 || index >= wave.spawnEntries.Count)
             {
                 return null;
             }
 
-            return wave.spawnEntries[_entriesList.index]?.triggerTime;
+            return wave.spawnEntries[index]?.triggerTime;
         }
 
         private static EnemyWaveConfig CreateNewWaveAsset()
@@ -123,78 +123,35 @@ namespace MS2026.Fortress.EditorTools
             {
                 _cachedWave = wave;
                 _serializedWave = new SerializedObject(wave);
-                BuildEntriesList(_serializedWave);
             }
 
             _serializedWave.Update();
+            var target = new WaveEntriesTarget(wave, _serializedWave, "spawnEntries", wave.spawnEntries, wave.waveName);
 
             EditorGUILayout.PropertyField(_serializedWave.FindProperty("waveName"), new GUIContent("ウェーブ名"));
 
             EditorGUILayout.Space(6);
-            _timeline.Draw(wave, director, KnownSpawnPointIds(), _entriesList.index, index => _entriesList.index = index);
+            var repeat = wave.loop ? $" ・ そのあと {wave.loopInterval:0.#}秒 待って最初から繰り返す" : " ・ 1回で終わり";
+            float? playhead = Application.isPlaying && director != null && director.IsPlaying ? director.ElapsedTime : (float?)null;
+            _timeline.Draw(wave.spawnEntries, repeat, playhead, KnownSpawnPointIds(), _entryList.SelectedIndex, index => _entryList.SelectedIndex = index);
             EditorGUILayout.Space(6);
 
-            _entriesList.DoLayoutList();
-            _entryToolbar.Draw(wave, _serializedWave, _entriesList);
+            _entryList.Draw(target);
+            _entryToolbar.Draw(target, _entryList);
             EditorGUILayout.Space(4);
 
             var loopProp = _serializedWave.FindProperty("loop");
-            EditorGUILayout.PropertyField(loopProp, new GUIContent("ループ再生", "最後のエントリの後、最初から繰り返す。"));
+            EditorGUILayout.PropertyField(loopProp, new GUIContent("ループ再生", "最後の1体が出た後、待ってから最初から繰り返す。"));
             if (loopProp.boolValue)
             {
                 EditorGUILayout.PropertyField(
                     _serializedWave.FindProperty("loopInterval"),
-                    new GUIContent("ループ間隔(秒)"));
+                    new GUIContent("ループ間隔(秒)", "最後の1体が出てから、次の周を始めるまでの秒数。"));
             }
 
             _serializedWave.ApplyModifiedProperties();
 
             DrawValidationSummary(wave);
-        }
-
-        private void BuildEntriesList(SerializedObject serializedWave)
-        {
-            var entriesProperty = serializedWave.FindProperty("spawnEntries");
-            _entriesList = new ReorderableList(serializedWave, entriesProperty, true, true, true, true)
-            {
-                drawHeaderCallback = rect => EditorGUI.LabelField(rect, "湧きエントリ（発生時刻順に自動再生されます）"),
-                elementHeightCallback = _ => EditorGUIUtility.singleLineHeight * 6f + 18f,
-                drawElementCallback = (rect, index, active, focused) =>
-                {
-                    var element = entriesProperty.GetArrayElementAtIndex(index);
-                    rect.y += 2f;
-                    var lineHeight = EditorGUIUtility.singleLineHeight;
-                    var lineSpacing = lineHeight + 2f;
-
-                    // 行の中身を1行で（「12.0秒｜Spawn_0｜スライム ×20（0.3秒おき・6.0秒かけて）」）。
-                    var entry = index < _cachedWave.spawnEntries.Count ? _cachedWave.spawnEntries[index] : null;
-                    if (entry != null)
-                    {
-                        EditorGUI.LabelField(new Rect(rect.x, rect.y, rect.width, lineHeight), WaveEntryToolbar.Summary(entry), EditorStyles.miniBoldLabel);
-                    }
-
-                    rect.y += lineSpacing;
-                    var triggerTimeRect = new Rect(rect.x, rect.y, rect.width, lineHeight);
-                    EditorGUI.PropertyField(triggerTimeRect, element.FindPropertyRelative("triggerTime"),
-                        new GUIContent("発生時刻(秒)"));
-
-                    var spawnPointRect = new Rect(rect.x, rect.y + lineSpacing, rect.width, lineHeight);
-                    EditorGUI.PropertyField(spawnPointRect, element.FindPropertyRelative("spawnPointId"),
-                        new GUIContent("湧き位置"));
-
-                    var enemyTypeRect = new Rect(rect.x, rect.y + lineSpacing * 2f, rect.width, lineHeight);
-                    EditorGUI.PropertyField(enemyTypeRect, element.FindPropertyRelative("enemyType"),
-                        new GUIContent("敵の種類"));
-
-                    var halfWidth = rect.width * 0.5f - 4f;
-                    var countRect = new Rect(rect.x, rect.y + lineSpacing * 3f, halfWidth, lineHeight);
-                    EditorGUI.PropertyField(countRect, element.FindPropertyRelative("count"), new GUIContent("数"));
-
-                    var intervalRect = new Rect(rect.x + halfWidth + 8f, rect.y + lineSpacing * 3f, halfWidth, lineHeight);
-                    EditorGUI.PropertyField(intervalRect, element.FindPropertyRelative("intervalBetweenSpawns"),
-                        new GUIContent("間隔(秒)"));
-                }
-            };
         }
 
         private static HashSet<string> KnownSpawnPointIds() =>

@@ -62,10 +62,10 @@ namespace MS2026.Fortress
 
         public List<EnemySpawnEntry> spawnEntries = new List<EnemySpawnEntry>();
 
-        [Tooltip("最後のエントリの発生後、最初からループして再生し続けるか。")]
+        [Tooltip("最後の1体が出た後、最初からループして再生し続けるか。")]
         public bool loop;
 
-        [Tooltip("ループする場合、最後のエントリからの待機時間(秒)。")]
+        [Tooltip("ループする場合、最後の1体が出てから次の周までの待機時間(秒)。")]
         [Min(0f)]
         public float loopInterval = 5f;
     }

@@ -28,23 +28,25 @@ namespace MS2026.Fortress.EditorTools
 
         private GUIStyle _barLabel;
 
+        /// <param name="entries">湧きの行。</param>
+        /// <param name="repeatText">1行目の最後に付ける、くり返しの説明（「・1回で終わり」など）。</param>
+        /// <param name="playhead">再生中なら今の秒数（この行の並びが再生されていなければ null）。</param>
         /// <param name="selectedIndex">下の表で選んでいる行（無ければ −1）。</param>
         /// <param name="onSelect">棒をクリックしたときに、その行の番号で呼ばれる。</param>
-        public void Draw(EnemyWaveConfig wave, EnemySpawnDirector director, HashSet<string> knownIds, int selectedIndex, Action<int> onSelect)
+        public void Draw(IReadOnlyList<EnemySpawnEntry> entries, string repeatText, float? playhead, HashSet<string> knownIds, int selectedIndex, Action<int> onSelect)
         {
-            var entries = wave.spawnEntries;
-            DrawSummary(wave);
+            DrawSummary(entries, repeatText);
             if (entries == null || entries.Count == 0)
             {
                 EditorGUILayout.HelpBox("まだ湧きの行がありません。下の表の「＋」で足すと、ここに時間の流れが出ます。", MessageType.Info);
                 return;
             }
 
-            var playing = Application.isPlaying && director != null && director.IsPlaying;
-            var playhead = playing ? director.ElapsedTime : -1f;
+            var playing = playhead.HasValue;
+            var now = playhead ?? -1f;
             var lanes = EnemyWaveStats.Lanes(entries);
             var last = EnemyWaveStats.LastSpawnTime(entries);
-            var duration = Mathf.Max(5f, Mathf.Max(last, playhead) * 1.08f + 0.5f);
+            var duration = Mathf.Max(5f, Mathf.Max(last, now) * 1.08f + 0.5f);
 
             var rect = GUILayoutUtility.GetRect(10f, RulerHeight + lanes.Count * LaneHeight + 4f, GUILayout.ExpandWidth(true));
             var timeLeft = rect.x + LabelWidth;
@@ -124,23 +126,21 @@ namespace MS2026.Fortress.EditorTools
 
             if (playing && e.type == EventType.Repaint)
             {
-                var x = X(playhead);
+                var x = X(now);
                 EditorGUI.DrawRect(new Rect(x - 1f, rect.y, 2f, rect.height), PlayheadColor);
             }
 
             var footer = hover ?? (playing
-                ? $"再生中 {playhead:0.0}秒 ・ ここまでに約 {EnemyWaveStats.SpawnedBy(entries, playhead)}体（赤い線が今）"
+                ? $"再生中 {now:0.0}秒 ・ この周で約 {EnemyWaveStats.SpawnedBy(entries, now)}体（赤い線が今）"
                 : "棒をクリックすると下の表のその行を選びます。棒の長さ＝湧き始めから湧き終わりまで、色＝敵の種類、数字＝数。");
             EditorGUILayout.LabelField(footer, EditorStyles.miniLabel);
         }
 
-        private static void DrawSummary(EnemyWaveConfig wave)
+        private static void DrawSummary(IReadOnlyList<EnemySpawnEntry> entries, string repeatText)
         {
-            var entries = wave.spawnEntries;
             var total = EnemyWaveStats.TotalEnemies(entries);
             var last = EnemyWaveStats.LastSpawnTime(entries);
-            var loop = wave.loop ? $" ・ そのあと {wave.loopInterval:0.#}秒 待って最初から繰り返す" : " ・ 1回で終わり";
-            EditorGUILayout.LabelField($"合計 {total}体 ・ {entries?.Count ?? 0}行 ・ 最後の湧き {last:0.0}秒{loop}", EditorStyles.miniBoldLabel);
+            EditorGUILayout.LabelField($"合計 {total}体 ・ {entries?.Count ?? 0}行 ・ 最後の湧き {last:0.0}秒{repeatText}", EditorStyles.miniBoldLabel);
 
             if (entries == null || entries.Count == 0)
             {
@@ -174,15 +174,14 @@ namespace MS2026.Fortress.EditorTools
             EditorGUI.DrawRect(new Rect(r.xMax - 1f, r.y - 1f, 2f, r.height + 2f), color);
         }
 
-        /// <summary>1行の説明（「12.0〜18.0秒｜Spawn_0｜スライム ×20（0.3秒おき）」）。</summary>
+        /// <summary>1行の説明（「12.0〜18.0秒｜Spawn_0｜スライム ×20（6.0秒かけて＝0.3秒おき）」）。</summary>
         public static string Describe(EnemySpawnEntry entry)
         {
             var start = EnemyWaveStats.StartTime(entry);
             var end = EnemyWaveStats.EndTime(entry);
             var time = end - start < 0.05f ? $"{start:0.0}秒" : $"{start:0.0}〜{end:0.0}秒";
             var place = string.IsNullOrEmpty(entry.spawnPointId) ? "湧き位置なし" : entry.spawnPointId;
-            var pace = entry.count > 1 ? (entry.intervalBetweenSpawns > 0f ? $"（{entry.intervalBetweenSpawns:0.##}秒おき）" : "（同時）") : "";
-            return $"{time}｜{place}｜{TypeName(entry.enemyType)} ×{entry.count}{pace}";
+            return $"{time}｜{place}｜{TypeName(entry.enemyType)} ×{entry.count}{WaveEntryToolbar.Pace(entry)}";
         }
 
         public static string TypeName(EnemyTypeDefinition type)
