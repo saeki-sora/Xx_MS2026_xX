@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75a74b67afdb4f99a6e107faee4e47e4, type: 3}
+  m_Name: TurretPortraits
+  m_EditorClassIdentifier: MS2026.RedSkill.Runtime::MS2026.Skills.TurretPortraitTable
+  entries:
+  - label: "赤（アルファ）"
+    normalSprite: {fileID: 21300000, guid: fa2e8e67fa5a40c4b858989c9d8d20f7, type: 3}
+    activeSprite: {fileID: 21300000, guid: 02f28b6016e4432ba46005de1126d56b, type: 3}
+    characterId: alpha
+    withoutCharacterSelect: 1
+    rotateWithTurret: 1
+    hideTurretParts: 1
+    offset: {x: 0, y: 0}
+    rotationOffset: 180
+    height: 3.06
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    swapPop: 0.22
+    popSeconds: 0.45
+    activeTremble: 0.03
+    trembleFrequency: 16
+  - label: "青（ベータ）"
+    normalSprite: {fileID: 21300000, guid: 7d2c0edc7be24292bfb493e159393537, type: 3}
+    activeSprite: {fileID: 0}
+    characterId: beta
+    withoutCharacterSelect: 2
+    rotateWithTurret: 1
+    hideTurretParts: 1
+    offset: {x: 0, y: 0}
+    rotationOffset: 180
+    height: 3.06
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    swapPop: 0.22
+    popSeconds: 0.45
+    activeTremble: 0.03
+    trembleFrequency: 16
+  - label: "緑（ガンマ）"
+    normalSprite: {fileID: 21300000, guid: 8d0736060f254003b5a6e3f49a6c7a80, type: 3}
+    activeSprite: {fileID: 0}
+    characterId: gamma
+    withoutCharacterSelect: 4
+    rotateWithTurret: 1
+    hideTurretParts: 1
+    offset: {x: 0, y: 0}
+    rotationOffset: 180
+    height: 3.06
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    swapPop: 0.22
+    popSeconds: 0.45
+    activeTremble: 0.03
+    trembleFrequency: 16
+  - label: "黄色（デルタ）"
+    normalSprite: {fileID: 21300000, guid: 6aa24f14fbd3406da88a30093706356e, type: 3}
+    activeSprite: {fileID: 0}
+    characterId: delta
+    withoutCharacterSelect: 8
+    rotateWithTurret: 1
+    hideTurretParts: 1
+    offset: {x: 0, y: 0}
+    rotationOffset: 180
+    height: 3.06
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    swapPop: 0.22
+    popSeconds: 0.45
+    activeTremble: 0.03
+    trembleFrequency: 16

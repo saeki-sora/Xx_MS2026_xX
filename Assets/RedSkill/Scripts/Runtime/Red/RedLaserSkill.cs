@@ -443,9 +443,10 @@ namespace MS2026.Skills.Red
     [Serializable]
     public sealed class RedLaserTubeFx
     {
-        [Tooltip("ONなら、スキルを使える間・撃っている間、砲台の上に歯磨き粉を出し、レーザーをその口から出す。OFFなら砲台の発射口から出す。")]
+        [Tooltip("ONなら、スキルを使える間・撃っている間、砲台の上に歯磨き粉を出し、レーザーをその口から出す。OFFなら砲台の発射口から出す。\n" +
+                 "2026-10-22 から OFF（キャラの SD の絵が歯磨き粉を構えるようになったため。ユーザー指定）。")]
         [SkillLabel("歯磨き粉を出す")]
-        public bool enabled = true;
+        public bool enabled = false;
 
         [Tooltip("歯磨き粉の絵（口が上を向いた絵）。空ならコードで描いた仮の絵（赤いチューブ）を使う。差し替えるときは絵を入れるだけでよい。")]
         [SkillLabel("歯磨き粉の絵（口が上向き）")]

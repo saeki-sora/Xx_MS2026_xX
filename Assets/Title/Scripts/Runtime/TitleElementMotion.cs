@@ -148,29 +148,30 @@ namespace MS2026.Title
             for (var i = 0; i < sprites.Length; i++) baseAlphas[i] = sprites[i].color.a;
             effectTargets = GetComponentsInChildren<EffectTarget>(true);
             enterFrom = moveFrom;
-            CaptureRestCorners();
         }
 
+        // 最終位置での外枠の角を求める。今どんな姿勢でも同じ結果になるよう、子の絵・モデル自身の大きさ（localBounds）から計算する
+        // （登場の直前に呼ぶので、キャラの絵を入れ替えた後の大きさになる）。
         private void CaptureRestCorners()
         {
-            var has = false;
-            var bounds = new Bounds();
+            var parentMatrix = transform.parent != null ? transform.parent.localToWorldMatrix : Matrix4x4.identity;
+            var rest = parentMatrix * Matrix4x4.TRS(basePosition, baseRotation, baseScale);
+            var origin = rest.MultiplyPoint3x4(Vector3.zero);
+            var worldToSelf = transform.worldToLocalMatrix;
+            var corners = new System.Collections.Generic.List<Vector3>();
             foreach (var r in renderers)
             {
                 if (r == null || r is ParticleSystemRenderer) continue;
-                if (!has) bounds = r.bounds;
-                else bounds.Encapsulate(r.bounds);
-                has = true;
+                var b = r.localBounds;
+                if (b.size == Vector3.zero) continue;
+                var toSelf = worldToSelf * r.transform.localToWorldMatrix;
+                for (var i = 0; i < 8; i++)
+                {
+                    var c = new Vector3((i & 1) == 0 ? b.min.x : b.max.x, (i & 2) == 0 ? b.min.y : b.max.y, (i & 4) == 0 ? b.min.z : b.max.z);
+                    corners.Add(rest.MultiplyPoint3x4(toSelf.MultiplyPoint3x4(c)) - origin);
+                }
             }
-            if (!has || bounds.size == Vector3.zero) return;
-
-            var min = bounds.min - transform.position;
-            var max = bounds.max - transform.position;
-            restCorners = new[]
-            {
-                new Vector3(min.x, min.y, min.z), new Vector3(max.x, min.y, min.z), new Vector3(min.x, max.y, min.z), new Vector3(max.x, max.y, min.z),
-                new Vector3(min.x, min.y, max.z), new Vector3(max.x, min.y, max.z), new Vector3(min.x, max.y, max.z), new Vector3(max.x, max.y, max.z),
-            };
+            restCorners = corners.ToArray();
         }
 
         // 動き始め（向き rotateFrom・大きさ scaleFrom）の外枠が、カメラに映る範囲の外に出きるまで moveFrom をのばす。
@@ -225,6 +226,7 @@ namespace MS2026.Title
         public void PlayEnter()
         {
             Capture();
+            CaptureRestCorners();
             enterFrom = OffscreenMoveFrom();
             // 待っている間は隠したまま（動き始めの位置が画面にかかっても見えないように）。動き始めで見せる。
             SetVisible(false);
