@@ -363,6 +363,11 @@ namespace MS2026.Fortress
 
         private WaveFlowSignal Enter(WavePhase phase, float duration, WaveFlowSignal signal)
         {
+            if (phase == WavePhase.Announce)
+            {
+                KillsInWave = 0; // 次のウェーブの発表では「あと○体」を目標そのままにする（前のウェーブの数を持ち越さない）
+            }
+
             PreviousPhase = Phase;
             Phase = phase;
             PhaseTime = 0f;

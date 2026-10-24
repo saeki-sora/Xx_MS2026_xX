@@ -106,6 +106,7 @@ namespace MS2026.Fortress.Tests.EditMode
             var signal = flow.Tick(0.2f, Kills(10));
             Assert.AreEqual(WavePhase.Announce, flow.Phase);
             Assert.AreEqual(1, flow.WaveIndex);
+            Assert.AreEqual(0, flow.KillsInWave, "次のウェーブの発表では、倒した数は 0 から");
             Assert.IsTrue((signal & WaveFlowSignal.EndBreak) != 0);
 
             flow.Tick(3f, Kills(10));
