@@ -198,6 +198,13 @@ namespace MS2026.Fortress
         private void TickAuthority(bool brushing)
         {
             var now = Elapsed;
+            if (_rewarded)
+            {
+                // 結果が出た後は、きれい度もごほうびも変えない（遅れて届いた回数で、結果の見出しと中身がずれないように）。
+                State[SStage] = (float)Stage;
+                return;
+            }
+
             var mask = Mathf.RoundToInt(State[SPlayers]);
             var offline = !FortressNet.IsNetworked;
             for (var p = 0; p < Players; p++)
