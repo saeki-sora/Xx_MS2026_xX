@@ -147,6 +147,7 @@ namespace MS2026.UI.Game
             UiValues.Set(FortressUiKeys.CoreHp, _core.CurrentHealth);
             UiValues.Set(FortressUiKeys.CoreHp01, Mathf.Clamp01(_core.CurrentHealth / max));
             UiValues.Set(FortressUiKeys.CoreDestroyed, _core.CurrentHealth <= 0f);
+            WaveUiPublisher.PublishCoating(_core);
         }
 
         private void PublishEnemies()

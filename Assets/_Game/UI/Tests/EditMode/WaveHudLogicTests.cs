@@ -40,6 +40,14 @@ namespace MS2026.UI.Tests.EditMode
         }
 
         [Test]
+        public void BrushResultListsHealAndCoating()
+        {
+            Assert.AreEqual("HP +12　コーティング +5", WaveHudLogic.BrushResultText(12.2f, 4.6f, 1f));
+            Assert.AreEqual("HP +3", WaveHudLogic.BrushResultText(3f, 0f, 0.3f));
+            Assert.AreEqual("みがけなかった…", WaveHudLogic.BrushResultText(0f, 0f, 0f));
+        }
+
+        [Test]
         public void ResultSubtitleTellsWhy()
         {
             StringAssert.Contains("WAVE 3", WaveHudLogic.ResultSubtitle(MatchEndReason.TimeUp, 3, 5));

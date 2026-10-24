@@ -99,7 +99,7 @@ namespace MS2026.Fortress
     {
         public const int DefaultClearKills = 1000;
 
-        /// <summary>Host → 全員: byte 状態, float コアのHP, float コアの最大HP。終わっていれば続けて float 秒数, int 合計, int×4 撃破数, int×4 最大コンボ, byte 理由, byte 行けたウェーブ, byte ウェーブの数。</summary>
+        /// <summary>Host → 全員: byte 状態, float コアのHP, float コアの最大HP, float コーティング。終わっていれば続けて float 秒数, int 合計, int×4 撃破数, int×4 最大コンボ, byte 理由, byte 行けたウェーブ, byte ウェーブの数。</summary>
         public const string MessageName = "MS2026.Fortress.Match";
 
         public static MatchOutcome Outcome { get; private set; }
@@ -186,6 +186,7 @@ namespace MS2026.Fortress
         private float _startTime;
         private NetworkManager _registered;
         private float _sentHealth = -1f;
+        private float _sentCoating;
         private MatchOutcome _sentOutcome;
         private float _nextSend;
         private float _nextHeartbeat;
@@ -433,23 +434,26 @@ namespace MS2026.Fortress
 
             var now = Time.unscaledTime;
             var health = _core != null ? _core.CurrentHealth : -1f;
-            var changed = Mathf.Abs(health - _sentHealth) > 0.001f || FortressMatch.Outcome != _sentOutcome;
+            var coating = _core != null ? _core.Coating : 0f;
+            var changed = Mathf.Abs(health - _sentHealth) > 0.001f || Mathf.Abs(coating - _sentCoating) > 0.001f || FortressMatch.Outcome != _sentOutcome;
             if (!(changed && now >= _nextSend) && now < _nextHeartbeat)
             {
                 return;
             }
 
             _sentHealth = health;
+            _sentCoating = coating;
             _sentOutcome = FortressMatch.Outcome;
             _nextSend = now + SendInterval;
             _nextHeartbeat = now + HeartbeatInterval;
 
             var ended = FortressMatch.HasEnded;
-            var size = 1 + sizeof(float) * 2 + (ended ? sizeof(float) + sizeof(int) * (1 + Players * 2) + 3 : 0);
+            var size = 1 + sizeof(float) * 3 + (ended ? sizeof(float) + sizeof(int) * (1 + Players * 2) + 3 : 0);
             using var writer = new FastBufferWriter(size, Allocator.Temp);
             writer.WriteValueSafe((byte)FortressMatch.Outcome);
             writer.WriteValueSafe(health);
             writer.WriteValueSafe(_core != null ? _core.maxHealth : 0f);
+            writer.WriteValueSafe(coating);
             if (ended)
             {
                 var result = FortressMatch.Result;
@@ -483,6 +487,7 @@ namespace MS2026.Fortress
             reader.ReadValueSafe(out byte outcomeByte);
             reader.ReadValueSafe(out float health);
             reader.ReadValueSafe(out float maxHealth);
+            reader.ReadValueSafe(out float coating);
             if (_core == null)
             {
                 _core = FindFirstObjectByType<CoreCrystalController>();
@@ -497,6 +502,7 @@ namespace MS2026.Fortress
             if (_core != null && health >= 0f)
             {
                 _core.ApplyReplicatedHealth(health);
+                _core.SetCoating(coating);
             }
 
             var outcome = (MatchOutcome)outcomeByte;

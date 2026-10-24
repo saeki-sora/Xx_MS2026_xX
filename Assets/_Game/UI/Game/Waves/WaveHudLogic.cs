@@ -60,6 +60,30 @@ namespace MS2026.UI.Game
 
         public static string ClearText(int number, bool isFinal) => isFinal ? "ALL CLEAR!" : $"WAVE {number} CLEAR!";
 
+        /// <summary>歯みがきの結果の文字（「HP +12　コーティング +5」。どちらも 0 なら、きれい度で一言）。</summary>
+        public static string BrushResultText(float heal, float coating, float clean01)
+        {
+            var healText = Mathf.RoundToInt(heal);
+            var coatingText = Mathf.RoundToInt(coating);
+            if (healText <= 0 && coatingText <= 0)
+            {
+                return clean01 > 0f ? "もう少しみがこう！" : "みがけなかった…";
+            }
+
+            var parts = new System.Collections.Generic.List<string>();
+            if (healText > 0)
+            {
+                parts.Add($"HP +{healText}");
+            }
+
+            if (coatingText > 0)
+            {
+                parts.Add($"コーティング +{coatingText}");
+            }
+
+            return string.Join("　", parts);
+        }
+
         /// <summary>リザルトの一言（終わった理由と、行けたウェーブ）。</summary>
         public static string ResultSubtitle(MatchEndReason reason, int reachedWave, int waveCount)
         {

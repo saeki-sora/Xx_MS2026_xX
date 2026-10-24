@@ -40,9 +40,16 @@ namespace MS2026.Fortress.EditorTools
 
             var plan = ScriptableObject.CreateInstance<WavePlan>();
             plan.waves = new List<WaveDefinition>();
+            var brushing = DefaultIntervalEvent();
             for (var i = 0; i < WavePlan.DefaultWaveCount; i++)
             {
-                plan.waves.Add(MakeWave(from, i));
+                var wave = MakeWave(from, i);
+                if (i < WavePlan.DefaultWaveCount - 1)
+                {
+                    wave.intervalEvent = brushing; // 合間は歯みがきタイム（最後のウェーブの後は無し）
+                }
+
+                plan.waves.Add(wave);
             }
 
             plan.memo = from != null ? $"時間割「{from.name}」から作った（数 ×{string.Join("/", DefaultScales)}）。" : "";
@@ -50,6 +57,21 @@ namespace MS2026.Fortress.EditorTools
             AssetDatabase.SaveAssets();
             Assign(director, plan);
             return plan;
+        }
+
+        /// <summary>合間のイベントの既定（プロジェクトにある歯みがきタイムの設定。無ければ null＝休むだけ）。</summary>
+        public static WaveIntervalEvent DefaultIntervalEvent()
+        {
+            foreach (var guid in AssetDatabase.FindAssets("t:BrushingEvent"))
+            {
+                var found = AssetDatabase.LoadAssetAtPath<BrushingEvent>(AssetDatabase.GUIDToAssetPath(guid));
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>ディレクターに計画を入れる（Ctrl+Z で戻せる。シーンに保存の印）。</summary>

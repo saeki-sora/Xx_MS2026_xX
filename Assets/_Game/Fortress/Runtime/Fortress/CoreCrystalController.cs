@@ -34,6 +34,55 @@ namespace MS2026.Fortress
 
         public float CurrentHealth { get; private set; }
 
+        /// <summary>
+        /// コーティング（2026-10-24、歯みがきタイムのごほうび）: ダメージを先に受けてくれる盾の量。0 になるまで HP は減らない。
+        /// 決めるのは Host（オフラインでは自分）。Client には試合の同期で届く。
+        /// </summary>
+        public float Coating { get; private set; }
+
+        /// <summary>コーティングの量が変わった（今の量）。</summary>
+        public event Action<float> OnCoatingChanged;
+
+        /// <summary>HP を回復する（最大まで）。実際に増えた量を返す。壊れたコアは回復しない。結果を決めるPCで呼ぶ。</summary>
+        public float Heal(float amount)
+        {
+            if (amount <= 0f || CurrentHealth <= 0f)
+            {
+                return 0f;
+            }
+
+            var before = CurrentHealth;
+            CurrentHealth = Mathf.Min(maxHealth, CurrentHealth + amount);
+            if (CurrentHealth > before)
+            {
+                OnHealthChanged?.Invoke(CurrentHealth, maxHealth);
+            }
+
+            return CurrentHealth - before;
+        }
+
+        /// <summary>コーティングを足す（結果を決めるPCで呼ぶ）。</summary>
+        public void AddCoating(float amount)
+        {
+            if (amount > 0f)
+            {
+                SetCoating(Coating + amount);
+            }
+        }
+
+        /// <summary>コーティングをこの量にする（Client は Host から届いた値を入れる）。</summary>
+        public void SetCoating(float amount)
+        {
+            amount = Mathf.Max(0f, amount);
+            if (Mathf.Abs(amount - Coating) < 0.0001f)
+            {
+                return;
+            }
+
+            Coating = amount;
+            OnCoatingChanged?.Invoke(Coating);
+        }
+
         /// <summary>最大HPを変える（試合の始めに使う。refill なら満タンにする）。</summary>
         public void SetMaxHealth(float max, bool refill)
         {
@@ -83,6 +132,18 @@ namespace MS2026.Fortress
             if (CurrentHealth <= 0f || amount <= 0f)
             {
                 return;
+            }
+
+            // コーティングが先に受ける。
+            if (Coating > 0f)
+            {
+                var absorbed = Mathf.Min(Coating, amount);
+                SetCoating(Coating - absorbed);
+                amount -= absorbed;
+                if (amount <= 0f)
+                {
+                    return;
+                }
             }
 
             CurrentHealth = Mathf.Max(0f, CurrentHealth - amount);

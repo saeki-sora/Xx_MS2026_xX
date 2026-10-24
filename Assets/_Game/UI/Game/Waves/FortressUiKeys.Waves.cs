@@ -39,7 +39,7 @@ namespace MS2026.UI.Game
         private static IEnumerable<(string, string, string, UiValueKind, string, Vector2, float)> DescribeWaves()
         {
             const string c = "ウェーブ";
-            return new List<(string, string, string, UiValueKind, string, Vector2, float)>
+            var list = new List<(string, string, string, UiValueKind, string, Vector2, float)>
             {
                 (WaveActive, "ウェーブで遊んでいる", "ステージにウェーブの計画があり、試合中のときON（無いステージでは WAVE の札を隠す）。", UiValueKind.Bool, c, Vector2.up, 1),
                 (WaveNumber, "今のウェーブ", "1 から。", UiValueKind.Number, c, new Vector2(1, 5), 2),
@@ -70,6 +70,8 @@ namespace MS2026.UI.Game
                 (ResultReachedWave, "行けたウェーブ", "どのウェーブまで行けたか（1 から。計画が無ければ 0）。", UiValueKind.Number, "リザルト", new Vector2(0, 5), 3),
                 (ResultSubtitle, "リザルトの一言", "例: 時間切れ… WAVE 3 まで行けた！ / コアが壊されてしまった…", UiValueKind.Text, "リザルト", Vector2.up, 0)
             };
+            list.AddRange(DescribeBrushing());
+            return list;
         }
     }
 }

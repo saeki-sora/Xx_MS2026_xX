@@ -8,8 +8,14 @@ namespace MS2026.UI.Game
     /// </summary>
     internal static class WaveUiPublisher
     {
+        private const float SyncShowSeconds = 0.9f;
+
+        private static int _lastSyncCount;
+        private static float _syncShownAt = float.NegativeInfinity;
+
         public static void Publish()
         {
+            PublishBrushing(FortressWaves.BreakRunner as BrushingRunner);
             var active = FortressWaves.IsActive;
             UiValues.Set(FortressUiKeys.WaveActive, active);
             if (!active)
@@ -62,6 +68,55 @@ namespace MS2026.UI.Game
             UiValues.Set(FortressUiKeys.WaveClearText, WaveHudLogic.ClearText(number, isFinal));
             UiValues.Set(FortressUiKeys.WaveBreak, phase == WavePhase.Break);
             UiValues.Set(FortressUiKeys.WaveTimeUp, phase == WavePhase.Finished && FortressWaves.EndKind == WaveEndKind.TimeUp);
+        }
+
+        /// <summary>コアのコーティング（歯みがきのごほうび）。<see cref="FortressUiValues"/> がコアの値と一緒に呼ぶ。</summary>
+        public static void PublishCoating(CoreCrystalController core)
+        {
+            var coating = core != null ? core.Coating : 0f;
+            UiValues.Set(FortressUiKeys.CoreCoating, coating);
+            UiValues.Set(FortressUiKeys.CoreCoating01, core != null ? coating / UnityEngine.Mathf.Max(1f, core.maxHealth) : 0f);
+            UiValues.Set(FortressUiKeys.CoreHasCoating, coating > 0.05f);
+        }
+
+        private static void PublishBrushing(BrushingRunner runner)
+        {
+            var active = runner != null;
+            UiValues.Set(FortressUiKeys.BrushActive, active);
+            if (!active)
+            {
+                _lastSyncCount = 0;
+                UiValues.Set(FortressUiKeys.BrushIntro, false);
+                UiValues.Set(FortressUiKeys.BrushBrushing, false);
+                UiValues.Set(FortressUiKeys.BrushResult, false);
+                UiValues.Set(FortressUiKeys.BrushSyncShowing, false);
+                return;
+            }
+
+            var stage = runner.Stage;
+            UiValues.Set(FortressUiKeys.BrushStage, (int)stage);
+            UiValues.Set(FortressUiKeys.BrushIntro, stage == BrushingStage.Intro);
+            UiValues.Set(FortressUiKeys.BrushBrushing, stage == BrushingStage.Brushing);
+            UiValues.Set(FortressUiKeys.BrushResult, stage == BrushingStage.Result);
+            UiValues.Set(FortressUiKeys.BrushClean01, runner.Clean01);
+            UiValues.Set(FortressUiKeys.BrushTimeLeft, UnityEngine.Mathf.Ceil(runner.BrushTimeLeft));
+            UiValues.Set(FortressUiKeys.BrushPulses, runner.LocalPulses);
+            for (var p = 0; p < FortressWaves.PlayerCount; p++)
+            {
+                UiValues.Set(FortressUiKeys.BrushShare(p), runner.Share01(p));
+                UiValues.Set(FortressUiKeys.BrushIn(p), runner.Participates(p));
+            }
+
+            var sync = runner.SyncCount;
+            if (sync > _lastSyncCount)
+            {
+                _syncShownAt = UnityEngine.Time.unscaledTime;
+            }
+
+            _lastSyncCount = sync;
+            UiValues.Set(FortressUiKeys.BrushSyncCount, sync);
+            UiValues.Set(FortressUiKeys.BrushSyncShowing, UnityEngine.Time.unscaledTime - _syncShownAt < SyncShowSeconds);
+            UiValues.Set(FortressUiKeys.BrushResultText, WaveHudLogic.BrushResultText(runner.HealAmount, runner.CoatingAmount, runner.Clean01));
         }
     }
 }

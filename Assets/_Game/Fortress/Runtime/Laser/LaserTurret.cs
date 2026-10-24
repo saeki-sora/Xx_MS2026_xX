@@ -76,6 +76,18 @@ namespace MS2026.Fortress
         public ITurretGripSource GripSourceOverride { get; set; }
 
         /// <summary>
+        /// true の間、全部の砲台が「握っていない」扱いになり、回転も止まる（ウェーブの合間＝歯みがきタイムなど。2026-10-24）。
+        /// 撃てないので熱は冷える。全員のPCで同じ値にする（Host の砲台の状態が Client に届くので、Client で外れていても見た目は合う）。
+        /// </summary>
+        public static bool InputLocked { get; set; }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetInputLock()
+        {
+            InputLocked = false;
+        }
+
+        /// <summary>
         /// trueの間は自分で計算せず、<see cref="ApplySnapshot"/>で受け取った状態をそのまま見せる(ネット対戦のClient側)。
         /// </summary>
         public bool IsReplica { get; private set; }
@@ -215,6 +227,12 @@ namespace MS2026.Fortress
                 grip = provider.GetGripValue(playerIndex);
             }
 
+            if (InputLocked)
+            {
+                isGripping = false;
+                grip = 0f;
+            }
+
             if (!isGripping)
             {
                 Heat = Mathf.Max(0f, Heat - tuning.heatCoolingPerSecond * dt);
@@ -270,7 +288,7 @@ namespace MS2026.Fortress
         /// <summary>状態と、射出中のレーザーの強さに応じた倍率へ滑らかに追従しながら、砲台を回転させる。</summary>
         private void UpdateRotation(float dt)
         {
-            var targetMultiplier = autoRotate ? ResolveTargetRotationMultiplier() : 0f;
+            var targetMultiplier = autoRotate && !InputLocked ? ResolveTargetRotationMultiplier() : 0f;
             var blend = tuning.rotationResponse <= 0f ? 1f : 1f - Mathf.Exp(-tuning.rotationResponse * dt);
             CurrentRotationMultiplier = Mathf.Lerp(CurrentRotationMultiplier, targetMultiplier, blend);
             CurrentRotationSpeed = tuning.rotationSpeedDegPerSec * rotationSpeedScale * CurrentRotationMultiplier;

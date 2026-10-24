@@ -167,6 +167,7 @@ namespace MS2026.Fortress
         private void StopMatch()
         {
             EndBreakRunner();
+            LaserTurret.InputLocked = false;
             if (FortressWaves.IsActive)
             {
                 WaveRetreat.Reset();
@@ -377,9 +378,21 @@ namespace MS2026.Fortress
 
             if (next == WavePhase.Break)
             {
+                // コーティングは「次の1ウェーブだけ」。合間に入ったら前のぶんは消す（歯みがきの結果で、また付く）。
+                if (FortressNet.HasSimulationAuthority)
+                {
+                    var core = FindFirstObjectByType<CoreCrystalController>();
+                    if (core != null)
+                    {
+                        core.SetCoating(0f);
+                    }
+                }
+
                 BeginBreakRunner();
             }
 
+            // 合間（歯みがきタイムなど）の間は撃てない・回らない（握るのはイベントのため）。
+            LaserTurret.InputLocked = next == WavePhase.Break;
             WaveRetreat.SetRetreatLook(next == WavePhase.Retreat);
             _lastCountdownTick = -1;
             PlayPhaseEffect(next);

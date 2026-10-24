@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 777ef41f9c574a3a8a1e5fe15a964fcb, type: 3}
+  m_Name: Brushing_Default
+  m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.BrushingEvent
+  displayName: "歯みがきタイム"
+  introSeconds: 1.5
+  brushSeconds: 8
+  resultSeconds: 2
+  pulsesPerPlayer: 18
+  pressThreshold: 0.55
+  releaseThreshold: 0.35
+  healFraction: 0.25
+  coatingFraction: 0.2
+  syncWindowSeconds: 0.3
+  syncBonusPulses: 2
+  syncCooldownSeconds: 0.5
+  onStart:
+    vfx:
+      value: 0
+      type: 0
+    se:
+      value: 0
+      type: 0
+    tintWithPlayerColor: 0
+    colorParam: Color
+  onPulse:
+    vfx:
+      value: 0
+      type: 0
+    se:
+      value: 0
+      type: 0
+    tintWithPlayerColor: 1
+    colorParam: Color
+  onSync:
+    vfx:
+      value: 0
+      type: 0
+    se:
+      value: 0
+      type: 0
+    tintWithPlayerColor: 0
+    colorParam: Color
+  onResult:
+    vfx:
+      value: 0
+      type: 0
+    se:
+      value: 0
+      type: 0
+    tintWithPlayerColor: 0
+    colorParam: Color
