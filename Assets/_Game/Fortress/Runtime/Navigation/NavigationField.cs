@@ -138,6 +138,16 @@ namespace MS2026.Fortress
             return result;
         }
 
+        /// <summary>
+        /// コアではなく、好きな目的地（いくつでも。いちばん近い所へ向かう）への経路を計算する（覚えない。毎回計算する）。
+        /// ウェーブの撤退（画面の外へ逃げる道）に使う。目的地のまわりの壁は空けない。
+        /// </summary>
+        public FlowFieldResult SolveTo(IReadOnlyList<Vector2> goals, NavigationProfile profile = null)
+        {
+            EnsureBuilt();
+            return FlowFieldSolver.Solve(Data, ResolveProfile(profile).ToSettings(), goals, 0);
+        }
+
         public Vector2 GetDirection(Vector2 position, NavigationProfile profile)
         {
             return GetResult(profile).SampleDirection(position);

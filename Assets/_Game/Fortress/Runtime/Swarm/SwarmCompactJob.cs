@@ -37,6 +37,9 @@ namespace MS2026.Fortress
         public int arrivalMode;
         public int replicaMode;
 
+        /// <summary>1 なら撤退中: コアに着いても何もしない（ダメージ・張り付きなし）。張り付いていた敵も離れる。Host では removeIds の敵を「消えた」で消す。</summary>
+        public int retreatMode;
+
         public NativeArray<int> keepList;
         public NativeArray<int> counters;
         public NativeArray<float> goalDamage;
@@ -110,7 +113,11 @@ namespace MS2026.Fortress
                         continue;
                     }
 
-                    if (state[read] == 0 && goal >= 0 && arrivalMode == (int)SwarmArrivalMode.LingerAndAttack
+                    if (retreatMode != 0)
+                    {
+                        state[read] = 0;
+                    }
+                    else if (state[read] == 0 && goal >= 0 && arrivalMode == (int)SwarmArrivalMode.LingerAndAttack
                         && types[type].explodeAtCore == 0)
                     {
                         state[read] = 1;
@@ -118,6 +125,13 @@ namespace MS2026.Fortress
                 }
                 else
                 {
+                    // 撤退で画面の外へ出た敵など、Host が「消す」と決めた敵（撃破数には入らない）。
+                    if (removeIds.Contains(id))
+                    {
+                        Record(id, EnemyRemovalReason.Removed);
+                        continue;
+                    }
+
                     if (hp[read] <= 0f)
                     {
                         counters[1] = counters[1] + 1;
@@ -138,7 +152,11 @@ namespace MS2026.Fortress
                         continue;
                     }
 
-                    if (state[read] == 0 && goal >= 0)
+                    if (retreatMode != 0)
+                    {
+                        state[read] = 0;
+                    }
+                    else if (state[read] == 0 && goal >= 0)
                     {
                         counters[2] = counters[2] + 1;
                         var selfDestruct = types[type].explodeAtCore != 0;

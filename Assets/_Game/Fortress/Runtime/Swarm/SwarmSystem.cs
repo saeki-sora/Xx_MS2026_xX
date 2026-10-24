@@ -452,6 +452,7 @@ namespace MS2026.Fortress
             }
 
             PrepareNetJobInputs();
+            PrepareRetreatJobInputs();
             PrepareBombJobInputs();
             PrepareBlasts();
 
@@ -572,7 +573,9 @@ namespace MS2026.Fortress
             }.Schedule(handle);
             Mark(ref handle, 0);
 
-            if (_beamCount > 0 || _blastCount > 0)
+            // 撤退中（ウェーブの目標を倒した後）はビームが当たらない（逃げる敵を倒しても数えないので、当たらないことにする）。
+            var beamCount = Retreating ? 0 : _beamCount;
+            if (beamCount > 0 || _blastCount > 0)
             {
                 handle = new SwarmLaserJob
                 {
@@ -583,7 +586,7 @@ namespace MS2026.Fortress
                     typeIdx = Storage.typeIdx,
                     types = _typeParams,
                     beams = _beamsJob,
-                    beamCount = _beamCount,
+                    beamCount = beamCount,
                     recordOwnerWithoutDamage = IsReplica ? 1 : 0,
                     blasts = _blastsJob,
                     blastCount = _blastCount,
@@ -663,7 +666,11 @@ namespace MS2026.Fortress
                 densityReference = _settings.densityReferenceCount,
                 densitySlowdown = _settings.densitySlowdown,
                 minSpeedFactor = _settings.minSpeedFactor,
-                maxNeighbors = _settings.maxNeighborsChecked
+                maxNeighbors = _settings.maxNeighborsChecked,
+                retreat = Retreating ? 1 : 0,
+                retreatSpeed = _retreatSpeed,
+                retreatDirs = _retreatDirs,
+                retreatHasField = _retreatHasField
             }.Schedule(count, 128, handle);
             Mark(ref handle, 2);
 
@@ -753,6 +760,7 @@ namespace MS2026.Fortress
                 count = count,
                 arrivalMode = (int)_settings.arrivalMode,
                 replicaMode = IsReplica ? 1 : 0,
+                retreatMode = Retreating ? 1 : 0,
                 removedIds = _removedIds,
                 removedReasons = _removedReasons,
                 keepList = _keepList,
@@ -1115,6 +1123,7 @@ namespace MS2026.Fortress
             DisposeBombs();
             DisposeDeaths();
             DisposeNet();
+            DisposeRetreat();
         }
 
         private static void DisposeArray<T>(ref NativeArray<T> array) where T : struct

@@ -43,6 +43,16 @@ namespace MS2026.Fortress
         public int hashW;
         public int hashH;
 
+        /// <summary>1 なら撤退中（ウェーブの目標を倒した後）: コアではなく retreatDirs の道で、画面の外へ速く逃げる。張り付いていた敵も動く。</summary>
+        public int retreat;
+
+        public float retreatSpeed;
+
+        /// <summary>逃げる道（経路のマップと同じマス目。1つ分）。retreatHasField が 0 ならコアの反対へまっすぐ。</summary>
+        [ReadOnly] public NativeArray<float2> retreatDirs;
+
+        public int retreatHasField;
+
         public float dt;
         public float densityRadiusSq;
         public float densityReference;
@@ -56,7 +66,20 @@ namespace MS2026.Fortress
             var tp = types[typeIdx[i]];
             var desired = float2.zero;
 
-            if (state[i] == 0)
+            if (retreat != 0)
+            {
+                var away = retreatHasField != 0
+                    ? SwarmMath.SampleDirection(retreatDirs, 0, p, navOrigin, navCell, navW, navH)
+                    : float2.zero;
+                if (math.lengthsq(away) < 1e-6f)
+                {
+                    away = -NearestGoalDirection(p);
+                }
+
+                var terrainR = speedMul[SwarmMath.NearestIndex(p, navOrigin, navCell, navW, navH)];
+                desired = away * (tp.maxSpeed * speedScale[i] * terrainR * retreatSpeed);
+            }
+            else if (state[i] == 0)
             {
                 var flow = SwarmMath.SampleDirection(
                     flowDirs, tp.profileIndex * navCellCount, p, navOrigin, navCell, navW, navH);
