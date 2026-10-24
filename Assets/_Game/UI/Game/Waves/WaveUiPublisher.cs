@@ -28,6 +28,7 @@ namespace MS2026.UI.Game
                 UiValues.Set(FortressUiKeys.WaveNearGoal, false);
                 UiValues.Set(FortressUiKeys.WaveTimeWarning, false);
                 UiValues.Set(FortressUiKeys.WaveTimeUp, false);
+                UiValues.Set(FortressUiKeys.WaveFirstHint, false);
                 return;
             }
 
@@ -68,6 +69,7 @@ namespace MS2026.UI.Game
             UiValues.Set(FortressUiKeys.WaveClearText, WaveHudLogic.ClearText(number, isFinal));
             UiValues.Set(FortressUiKeys.WaveBreak, phase == WavePhase.Break);
             UiValues.Set(FortressUiKeys.WaveTimeUp, phase == WavePhase.Finished && FortressWaves.EndKind == WaveEndKind.TimeUp);
+            UiValues.Set(FortressUiKeys.WaveFirstHint, FortressWaves.WaveIndex == 0 && (phase == WavePhase.WaitingForPlayers || phase == WavePhase.Announce));
         }
 
         /// <summary>コアのコーティング（歯みがきのごほうび）。<see cref="FortressUiValues"/> がコアの値と一緒に呼ぶ。</summary>

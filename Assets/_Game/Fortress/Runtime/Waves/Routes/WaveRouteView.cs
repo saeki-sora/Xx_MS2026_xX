@@ -20,6 +20,7 @@ namespace MS2026.Fortress
         private const float ShowSeconds = 0.3f;
         private const float FadeSeconds = 2f;
         private const int RenderQueue = 2980; // 群衆の敵（2990）より下
+        private const float RebuildInterval = 1f; // 発表の間に道が変わる（橋が崩れてコアが落ちる等）ことがあるので、ときどき引き直す
 
         private static readonly Color LineColor = new Color(1f, 0.16f, 0.22f, 0.62f);
         private static readonly Color EdgeColor = new Color(0.25f, 0f, 0.04f, 0.45f);
@@ -43,6 +44,7 @@ namespace MS2026.Fortress
         private float _target;
         private float _speed;
         private float _time;
+        private float _nextRebuild;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Install()
@@ -117,6 +119,7 @@ namespace MS2026.Fortress
             _target = 1f;
             _speed = 1f / ShowSeconds;
             _time = 0f;
+            _nextRebuild = RebuildInterval;
             Rebuild();
         }
 
@@ -190,6 +193,13 @@ namespace MS2026.Fortress
             }
 
             _time += Time.deltaTime;
+            if (_target > 0f && _time >= _nextRebuild && FortressWaves.Phase == WavePhase.Announce && FortressWaves.Plan != null)
+            {
+                _nextRebuild = _time + RebuildInterval;
+                WaveRoutes.Build(FortressWaves.Plan, FortressWaves.WaveIndex, FindDirector(FortressWaves.Plan));
+                Rebuild();
+            }
+
             var routes = WaveRoutes.Routes;
             for (var i = 0; i < routes.Count && i < _lines.Count; i++)
             {

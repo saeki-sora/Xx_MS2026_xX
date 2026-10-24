@@ -61,7 +61,9 @@ namespace MS2026.Fortress
         /// <summary>計画の index のウェーブのルートを作って、見せる用に覚える（ゲーム中）。</summary>
         public static void Build(WavePlan plan, int index, EnemySpawnDirector director)
         {
+            var alpha = Alpha; // 引き直しても、見せている濃さは変えない
             Clear();
+            Alpha = alpha;
             if (Compute(plan, index, director, EnemyNavigation.Current as NavigationField, RouteList, SpawnList))
             {
                 WaveIndex = index;

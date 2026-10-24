@@ -18,9 +18,12 @@ namespace MS2026.UI.EditorTools
         internal const string EdgeName = "WaveEdgeMarkers";
         internal const string BrushName = "BrushTime";
         internal const string CoatingName = "WaveCoatingBadge";
+        internal const string NewEnemiesName = "WaveNewEnemies";
+        internal const string YouName = "WaveYouMarker";
+        internal const string HintName = "WaveFirstHint";
 
         /// <summary>このビルダーが作る部品の名前（作り直すときに消す）。</summary>
-        internal static readonly string[] OwnedNames = { EdgeName, BrushName, CoatingName };
+        internal static readonly string[] OwnedNames = { EdgeName, BrushName, CoatingName, NewEnemiesName, YouName, HintName };
 
         private static readonly Color Navy = new Color(0.06f, 0.08f, 0.2f);
         private static readonly Color StainColor = new Color(0.78f, 0.62f, 0.24f, 0.92f);
@@ -29,8 +32,97 @@ namespace MS2026.UI.EditorTools
         {
             W.Remove(screen, OwnedNames);
             BuildEdgeMarkers(screen);
+            BuildYouMarker(screen);
             BuildCoatingBadge(screen);
+            BuildFirstHint(screen);
+            BuildNewEnemies(screen);
             BuildBrushTime(screen);
+        }
+
+        // ───────── 初めての人向け ─────────
+
+        // 試合の最初だけ、自分の砲台の上に「YOU」の矢印（場所は各PCのカメラで計算）。
+        private static void BuildYouMarker(Transform screen)
+        {
+            var root = B.Rect(screen, YouName);
+            B.Stretch(root);
+            var marker = B.Rect(root, "Marker");
+            marker.anchorMin = marker.anchorMax = new Vector2(0.5f, 0.5f);
+            marker.sizeDelta = new Vector2(160f, 150f);
+            var arrow = H.Picture(marker, "Arrow", "Wave_Arrow.png", Color.white);
+            H.Center(arrow.rectTransform, new Vector2(0f, -30f), new Vector2(80f, 80f));
+            arrow.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 180f); // 下向き（砲台を指す）
+            var label = H.Number(marker, "Label", 52, Color.white, TextAnchor.MiddleCenter, Navy, 4f, 0f);
+            label.text = "YOU";
+            H.Center(label.rectTransform, new Vector2(0f, 40f), new Vector2(200f, 64f));
+            var you = root.gameObject.AddComponent<WaveYouMarker>();
+            you.marker = marker;
+            you.tinted = new Graphic[] { arrow, label };
+            marker.gameObject.SetActive(false);
+        }
+
+        // 試合の最初だけ、画面の下に握り方のヒント。
+        private static void BuildFirstHint(Transform screen)
+        {
+            var root = B.Rect(screen, HintName);
+            B.Place(root, new Vector2(0.5f, 0f), new Vector2(0f, 150f), new Vector2(1100f, 120f));
+            W.Visible(root, FortressUiKeys.WaveFirstHint, UiVisibleCondition.WhenOn, 0.5f);
+            B.AddMotion(root.gameObject, UiMotionTrigger.OnShow, UiPreset.SlideFadeInBottom, 0.4f);
+            var back = B.Rect(root, "Back").gameObject.AddComponent<Image>();
+            B.Stretch(back.rectTransform);
+            back.sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{H.ArtFolder}/Wave_Bar.png");
+            back.type = Image.Type.Sliced;
+            back.color = new Color(Navy.r, Navy.g, Navy.b, 0.82f);
+            back.raycastTarget = false;
+            var hand = B.Rect(root, "Hand").gameObject.AddComponent<RawImage>();
+            hand.texture = AssetDatabase.LoadAssetAtPath<Texture2D>($"{H.ArtFolder}/Wave_Hand.png");
+            hand.uvRect = new Rect(0.5f, 0f, 0.5f, 1f); // 握った手
+            hand.raycastTarget = false;
+            H.Center(hand.rectTransform, new Vector2(-470f, 0f), new Vector2(110f, 110f));
+            B.AddMotion(hand.gameObject, UiMotionTrigger.Loop, UiPreset.HeartBeat, 0.8f);
+            var line1 = H.Label(root, "Line1", "握ると ビーム！ 強く握るほど 太くなる", 40, Color.white, TextAnchor.MiddleLeft);
+            H.Center(line1.rectTransform, new Vector2(-400f, 22f), new Vector2(900f, 54f), new Vector2(0f, 0.5f));
+            var line2 = H.Label(root, "Line2", "握りっぱなしは 熱くなって しばらく撃てない（オーバーヒート）", 28, H.Cyan, TextAnchor.MiddleLeft);
+            H.Center(line2.rectTransform, new Vector2(-400f, -26f), new Vector2(900f, 40f), new Vector2(0f, 0.5f));
+        }
+
+        // 発表のとき、初めて出てくる敵のカード（最大3枚、画面の右）。中身は WaveNewEnemyCards が入れる。
+        private static void BuildNewEnemies(Transform screen)
+        {
+            var root = B.Rect(screen, NewEnemiesName);
+            B.Place(root, new Vector2(1f, 0.5f), new Vector2(-40f, -40f), new Vector2(420f, 520f));
+            W.Visible(root, FortressUiKeys.WaveAnnouncing, UiVisibleCondition.WhenOn, 0.5f);
+            B.AddMotion(root.gameObject, UiMotionTrigger.OnShow, UiPreset.SlideFadeInRight, 0.4f, 0.3f);
+            var cards = new WaveNewEnemyCards.Card[3];
+            for (var i = 0; i < cards.Length; i++)
+            {
+                var card = B.Rect(root, $"Card{i + 1}");
+                H.Center(card, new Vector2(0f, 170f - 170f * i), new Vector2(420f, 156f));
+                var back = card.gameObject.AddComponent<Image>();
+                back.sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{H.ArtFolder}/Wave_Bar.png");
+                back.type = Image.Type.Sliced;
+                back.color = new Color(Navy.r, Navy.g, Navy.b, 0.88f);
+                back.raycastTarget = false;
+                var tag = H.Number(card, "Tag", 26, new Color(1f, 0.86f, 0.4f), TextAnchor.MiddleLeft, Navy, 2f, 0f);
+                tag.text = "NEW ENEMY!";
+                H.Center(tag.rectTransform, new Vector2(-60f, 54f), new Vector2(220f, 36f), new Vector2(0f, 0.5f));
+                var fallback = H.Picture(card, "Dot", "Wave_Ring.png", Color.white);
+                H.Center(fallback.rectTransform, new Vector2(-145f, -6f), new Vector2(96f, 96f));
+                var picture = B.Rect(card, "Picture").gameObject.AddComponent<RawImage>();
+                picture.raycastTarget = false;
+                H.Center(picture.rectTransform, new Vector2(-145f, -6f), new Vector2(116f, 116f));
+                B.AddMotion(picture.gameObject, UiMotionTrigger.Loop, UiPreset.Float, 1.6f);
+                var title = H.Label(card, "Name", "", 34, Color.white, TextAnchor.MiddleLeft);
+                H.Center(title.rectTransform, new Vector2(-75f, 14f), new Vector2(280f, 44f), new Vector2(0f, 0.5f));
+                var body = B.Text(card, "Text", "", 24, new Color(0.85f, 0.95f, 1f), TextAnchor.UpperLeft);
+                body.horizontalOverflow = HorizontalWrapMode.Wrap;
+                body.verticalOverflow = VerticalWrapMode.Truncate;
+                H.Center(body.rectTransform, new Vector2(-75f, -40f), new Vector2(280f, 64f), new Vector2(0f, 0.5f));
+                cards[i] = new WaveNewEnemyCards.Card { root = card.gameObject, picture = picture, fallback = fallback, title = title, body = body };
+                card.gameObject.SetActive(false);
+            }
+
+            root.gameObject.AddComponent<WaveNewEnemyCards>().cards = cards;
         }
 
         // 画面の外から来る敵の矢印（赤い線と同じ間だけ、画面のふちに出る）。

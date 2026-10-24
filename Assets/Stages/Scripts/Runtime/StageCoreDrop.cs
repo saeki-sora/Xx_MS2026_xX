@@ -22,6 +22,10 @@ namespace MS2026.Stages
         [Tooltip("コアが落ちる先の目印（位置だけ使う）。")]
         public Transform dropTarget;
 
+        [Tooltip("ウェーブの計画があるとき、この番号のウェーブの発表が始まった時点でまだ橋が残っていたら、自動で崩す（0 なら崩さない）。崩すのは Host（オフラインでは自分）。")]
+        [Min(0)]
+        public int collapseAtWave = 3;
+
         [Header("落ち方")]
         [Tooltip("落ち始めてから着地するまでの秒数。")]
         [Min(0.05f)]
@@ -67,6 +71,8 @@ namespace MS2026.Stages
             {
                 bridge.Destroyed += OnBridgeDestroyed;
             }
+
+            FortressWaves.WaveAnnounced += OnWaveAnnounced;
         }
 
         private void OnDisable()
@@ -75,6 +81,20 @@ namespace MS2026.Stages
             {
                 bridge.Destroyed -= OnBridgeDestroyed;
             }
+
+            FortressWaves.WaveAnnounced -= OnWaveAnnounced;
+        }
+
+        // 決めたウェーブ（既定 WAVE 3）の発表が始まったとき、橋が残っていたら崩す（壊れたことは今の通信で全員に届く）。
+        private void OnWaveAnnounced(int waveIndex)
+        {
+            if (collapseAtWave <= 0 || waveIndex + 1 < collapseAtWave || bridge == null || bridge.IsDestroyed ||
+                !MS2026.Fortress.Net.FortressNet.HasSimulationAuthority)
+            {
+                return;
+            }
+
+            bridge.DestroyNow();
         }
 
         private void Start()

@@ -102,5 +102,12 @@ namespace MS2026.Fortress
 
         [Tooltip("プレースホルダー（仮絵）の色。Swarmの自動生成スプライトにも使われる。")]
         public Color placeholderColor = Color.magenta;
+
+        [Header("初登場の紹介（ウェーブの発表で「NEW ENEMY」のカードに出す）")]
+        [Tooltip("初めて出てくるウェーブの発表で見せる一言（例: 「倒すと爆発！まわりの敵も巻き込む」）。空ならカードを出さない。")]
+        public string introText = "";
+
+        [Tooltip("カードの絵（空なら、群衆の絵の1コマ目。それも無ければ仮絵の色の丸）。")]
+        public Sprite introIcon;
     }
 }

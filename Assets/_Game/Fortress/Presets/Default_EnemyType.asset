@@ -31,3 +31,5 @@ MonoBehaviour:
     animationFps: 8
   visualPrefab: {fileID: 0}
   placeholderColor: {r: 1, g: 0, b: 1, a: 1}
+  introText: "\u6b6f\uff08\u30b3\u30a2\uff09\u3092\u3081\u3056\u3057\u3066\u307e\u3063\u3059\u3050\u6765\u308b\u3002\u30d3\u30fc\u30e0\u3067\u5012\u305d\u3046\uff01"
+  introIcon: {fileID: 0}
