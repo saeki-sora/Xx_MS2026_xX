@@ -290,16 +290,11 @@ namespace MS2026.Fortress.Net
         {
             foreach (var director in FindObjectsByType<EnemySpawnDirector>(FindObjectsSortMode.None))
             {
-                if (director.wave == null || director.wave.spawnEntries == null)
+                foreach (var type in director.AllEnemyTypes())
                 {
-                    continue;
-                }
-
-                foreach (var entry in director.wave.spawnEntries)
-                {
-                    if (entry != null && entry.enemyType != null && entry.enemyType.simulationMode == EnemySimulationMode.Swarm)
+                    if (type.simulationMode == EnemySimulationMode.Swarm)
                     {
-                        return entry.enemyType;
+                        return type;
                     }
                 }
             }

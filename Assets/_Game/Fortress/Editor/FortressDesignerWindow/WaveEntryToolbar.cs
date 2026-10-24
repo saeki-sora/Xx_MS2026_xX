@@ -113,7 +113,7 @@ namespace MS2026.Fortress.EditorTools
                 .ToList();
             if (ids.Count == 0)
             {
-                EditorUtility.DisplayDialog("湧き位置がありません", "シーンに湧き位置がありません。上の「沸き位置の編集」で作ってください。", "OK");
+                EditorUtility.DisplayDialog("湧き位置がありません", "シーンに湧き位置がありません。上の「湧き位置の編集」で作ってください。", "OK");
                 return;
             }
 

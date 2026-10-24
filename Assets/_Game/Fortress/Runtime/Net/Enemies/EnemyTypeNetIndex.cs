@@ -24,17 +24,10 @@ namespace MS2026.Fortress.Net
             var unique = new HashSet<EnemyTypeDefinition>();
             foreach (var director in Object.FindObjectsByType<EnemySpawnDirector>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
-                if (director.wave == null || director.wave.spawnEntries == null)
+                // 時間割1本だけでなく、ウェーブの計画の全部のウェーブの種類も入れる（後のウェーブにしか出ない種類も同期できるように）。
+                foreach (var type in director.AllEnemyTypes())
                 {
-                    continue;
-                }
-
-                foreach (var entry in director.wave.spawnEntries)
-                {
-                    if (entry != null && entry.enemyType != null)
-                    {
-                        unique.Add(entry.enemyType);
-                    }
+                    unique.Add(type);
                 }
             }
 

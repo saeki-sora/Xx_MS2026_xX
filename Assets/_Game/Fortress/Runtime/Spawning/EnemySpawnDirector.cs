@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using MS2026.Fortress.Net;
@@ -10,6 +9,7 @@ namespace MS2026.Fortress
     /// EnemyWaveConfigを再生し、指定した位置・数・タイミングで敵を生成する。
     /// 「敵の沸く位置や数、タイミング」を全てデータ(EnemyWaveConfig)側に追い出しているため、
     /// このクラス自体を編集しなくても敵配置を自由に調整できる。
+    /// 時間の進め方は <see cref="WaveSpawnClock"/>（1フレームに何体でも出せる・くり返しが重ならない）。
     /// </summary>
     public sealed class EnemySpawnDirector : MonoBehaviour
     {
@@ -24,12 +24,21 @@ namespace MS2026.Fortress
         [Tooltip("Play開始時に自動でウェーブを再生するか。オフの場合はInspectorや要塞デザイナーの「ウェーブ開始」ボタンで手動再生する。")]
         public bool autoStartOnPlay = true;
 
-        public bool IsPlaying { get; private set; }
-        public float ElapsedTime { get; private set; }
+        /// <summary>湧かせている途中か（くり返しの待ち時間の間も true）。</summary>
+        public bool IsPlaying => _clock.IsRunning;
 
-        private readonly List<EnemySpawnEntry> _pendingEntries = new List<EnemySpawnEntry>();
+        /// <summary>今の周が始まってからの秒数（要塞デザイナーのタイムラインの赤い線）。</summary>
+        public float ElapsedTime => _clock.CycleTime;
+
+        /// <summary>今の再生で出した合計の数。</summary>
+        public int SpawnedCount => _clock.TotalSpawned;
+
+        private readonly WaveSpawnClock _clock = new WaveSpawnClock();
+        private readonly List<EnemySpawnEntry> _due = new List<EnemySpawnEntry>();
+        private readonly HashSet<string> _missingPointsLogged = new HashSet<string>();
         private Dictionary<string, EnemySpawnPoint> _spawnPointsById;
         private bool _swarmMissingLogged;
+        private bool _noTypeLogged;
 
         private void Awake()
         {
@@ -57,6 +66,41 @@ namespace MS2026.Fortress
                 .ToDictionary(g => g.Key, g => g.First());
         }
 
+        /// <summary>湧き位置の名前から、その位置（無ければ false）。</summary>
+        public bool TryGetSpawnPoint(string id, out EnemySpawnPoint point)
+        {
+            if (_spawnPointsById == null)
+            {
+                RefreshSpawnPoints();
+            }
+
+            point = null;
+            return id != null && _spawnPointsById != null && _spawnPointsById.TryGetValue(id, out point) && point != null;
+        }
+
+        /// <summary>
+        /// このステージで使う全部の湧きの行（時間割 <see cref="wave"/>。計画があれば全部のウェーブの行も）。
+        /// 敵の種類のネット番号・経路のチェック・テストなど「どの敵が出るか」を知りたい所は、必ずここから読む
+        /// （1本の時間割だけを見ると、後のウェーブにしか出ない種類が漏れる）。
+        /// </summary>
+        public IEnumerable<EnemySpawnEntry> AllEntries()
+        {
+            if (wave != null && wave.spawnEntries != null)
+            {
+                foreach (var entry in wave.spawnEntries)
+                {
+                    if (entry != null)
+                    {
+                        yield return entry;
+                    }
+                }
+            }
+        }
+
+        /// <summary>このステージで出る全部の敵の種類（重なりなし、null なし）。</summary>
+        public IEnumerable<EnemyTypeDefinition> AllEnemyTypes() =>
+            AllEntries().Select(e => e.enemyType).Where(t => t != null).Distinct();
+
         /// <summary>ウェーブの再生を最初から開始する。</summary>
         public void StartWave()
         {
@@ -66,7 +110,6 @@ namespace MS2026.Fortress
         /// <summary>
         /// ウェーブを startTime 秒の時点から再生する（それより前に湧き始める行は飛ばす）。
         /// 要塞デザイナーの「この行から試す」用。0 なら最初から。
-        /// （名前を StartWave と分けているのは、ループの Invoke(nameof(StartWave)) が引数なしの方を確実に呼ぶため。）
         /// </summary>
         public void StartWaveFrom(float startTime)
         {
@@ -76,78 +119,64 @@ namespace MS2026.Fortress
                 return;
             }
 
+            PlayEntries(wave.spawnEntries, wave.loop, wave.loopInterval, startTime);
+        }
+
+        /// <summary>
+        /// 好きな行の並びを再生する（ウェーブの計画の係が、ウェーブごとの行を渡す）。
+        /// loop なら、最後の1体が出てから loopGap 秒後に最初からくり返す。
+        /// </summary>
+        public void PlayEntries(IReadOnlyList<EnemySpawnEntry> entries, bool loop, float loopGap, float startTime = 0f)
+        {
             if (_spawnPointsById == null)
             {
                 RefreshSpawnPoints();
             }
 
-            startTime = Mathf.Max(0f, startTime);
-            _pendingEntries.Clear();
-            _pendingEntries.AddRange(wave.spawnEntries.Where(e => e.triggerTime >= startTime - 1e-4f).OrderBy(e => e.triggerTime));
-            ElapsedTime = startTime;
-            IsPlaying = true;
+            _clock.Begin(entries, loop, loopGap, startTime);
         }
 
         public void StopWave()
         {
-            IsPlaying = false;
-            CancelInvoke(nameof(StartWave));
-            // 「数」が2以上の行が1体ずつ湧いている途中なら、それも止める（止めたのに湧き続けないように）。
-            StopAllCoroutines();
-            _pendingEntries.Clear();
+            _clock.Stop();
         }
 
         private void Update()
         {
-            if (!IsPlaying)
+            if (!_clock.IsRunning)
             {
                 return;
             }
 
-            ElapsedTime += Time.deltaTime;
-
-            while (_pendingEntries.Count > 0 && _pendingEntries[0].triggerTime <= ElapsedTime)
-            {
-                var entry = _pendingEntries[0];
-                _pendingEntries.RemoveAt(0);
-                StartCoroutine(SpawnEntryRoutine(entry));
-            }
-
-            if (_pendingEntries.Count == 0)
-            {
-                IsPlaying = false;
-
-                if (wave.loop)
-                {
-                    Invoke(nameof(StartWave), wave.loopInterval);
-                }
-            }
-        }
-
-        private IEnumerator SpawnEntryRoutine(EnemySpawnEntry entry)
-        {
-            for (var i = 0; i < entry.count; i++)
+            _due.Clear();
+            _clock.Advance(Time.deltaTime, _due);
+            foreach (var entry in _due)
             {
                 SpawnOne(entry);
-
-                if (i < entry.count - 1 && entry.intervalBetweenSpawns > 0f)
-                {
-                    yield return new WaitForSeconds(entry.intervalBetweenSpawns);
-                }
             }
         }
 
         private void SpawnOne(EnemySpawnEntry entry)
         {
-            if (_spawnPointsById == null || !_spawnPointsById.TryGetValue(entry.spawnPointId, out var spawnPoint))
+            if (!TryGetSpawnPoint(entry.spawnPointId, out var spawnPoint))
             {
-                Debug.LogWarning($"[EnemySpawnDirector] spawnPointId '{entry.spawnPointId}' が見つかりません。", this);
+                // 同じ名前の警告は1回だけ（1体ごとに出すと Console が埋まる）。
+                if (_missingPointsLogged.Add(entry.spawnPointId ?? ""))
+                {
+                    Debug.LogWarning($"[EnemySpawnDirector] spawnPointId '{entry.spawnPointId}' が見つかりません（この名前の行は湧きません）。", this);
+                }
+
                 return;
             }
 
             if (entry.enemyType == null)
             {
-                Debug.LogWarning("[EnemySpawnDirector] enemyTypeが未設定のエントリがあります。", this);
+                if (!_noTypeLogged)
+                {
+                    _noTypeLogged = true;
+                    Debug.LogWarning("[EnemySpawnDirector] enemyTypeが未設定のエントリがあります。", this);
+                }
+
                 return;
             }
 
@@ -170,7 +199,6 @@ namespace MS2026.Fortress
             }
 
             // ネット対戦のClientでは、Actorの敵はHostが湧かせて届けるので自分では湧かせない。
-            // (群衆はPhase 4で同期するまでの間、各PCで湧かせる)
             if (!FortressNet.HasSimulationAuthority)
             {
                 return;

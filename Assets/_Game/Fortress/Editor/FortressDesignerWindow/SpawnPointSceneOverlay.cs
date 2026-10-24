@@ -5,7 +5,7 @@ using UnityEngine;
 namespace MS2026.Fortress.EditorTools
 {
     /// <summary>
-    /// Sceneビュー上に沸き位置のIDラベルと移動ハンドルを描画する。
+    /// Sceneビュー上に湧き位置のIDラベルと移動ハンドルを描画する。
     /// 表示/編集のON・OFFやスナップ幅はSpawnPointsPanelから切り替える。
     /// </summary>
     [InitializeOnLoad]

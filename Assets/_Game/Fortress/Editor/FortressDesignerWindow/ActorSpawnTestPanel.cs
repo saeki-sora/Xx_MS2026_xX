@@ -77,16 +77,7 @@ namespace MS2026.Fortress.EditorTools
 
         private static List<EnemyTypeDefinition> WaveTypes(EnemySpawnDirector director)
         {
-            if (director.wave == null || director.wave.spawnEntries == null)
-            {
-                return new List<EnemyTypeDefinition>();
-            }
-
-            return director.wave.spawnEntries
-                .Where(e => e != null && e.enemyType != null)
-                .Select(e => e.enemyType)
-                .Distinct()
-                .ToList();
+            return director.AllEnemyTypes().ToList();
         }
     }
 }

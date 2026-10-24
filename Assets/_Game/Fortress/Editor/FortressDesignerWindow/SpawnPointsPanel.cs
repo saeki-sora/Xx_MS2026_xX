@@ -7,7 +7,7 @@ using UnityEngine;
 namespace MS2026.Fortress.EditorTools
 {
     /// <summary>
-    /// 「敵ウェーブ」タブ内の沸き位置エディタ。位置の数値編集、追加/複製/削除、ID変更（ウェーブ参照も追従）、
+    /// 「敵ウェーブ」タブ内の湧き位置エディタ。位置の数値編集、追加/複製/削除、ID変更（ウェーブ参照も追従）、
     /// リング状の自動配置、グリッドスナップ、Sceneビュー上でのドラッグ編集をまとめて提供する。
     /// </summary>
     public sealed class SpawnPointsPanel
@@ -31,7 +31,7 @@ namespace MS2026.Fortress.EditorTools
         {
             var points = FindAllPoints();
 
-            _foldout = EditorGUILayout.BeginFoldoutHeaderGroup(_foldout, $"沸き位置の編集（{points.Length}箇所）");
+            _foldout = EditorGUILayout.BeginFoldoutHeaderGroup(_foldout, $"湧き位置の編集（{points.Length}箇所）");
             if (_foldout)
             {
                 DrawContents(director, wave, points);
@@ -62,12 +62,12 @@ namespace MS2026.Fortress.EditorTools
 
             if (points.Length == 0)
             {
-                EditorGUILayout.HelpBox("沸き位置がありません。「＋ 追加」か「リング状に配置」で作成してください。", MessageType.Warning);
+                EditorGUILayout.HelpBox("湧き位置がありません。「＋ 追加」か「リング状に配置」で作成してください。", MessageType.Warning);
             }
 
             if (duplicatedIds.Count > 0)
             {
-                EditorGUILayout.HelpBox($"IDが重複している沸き位置があります: {string.Join(", ", duplicatedIds)}", MessageType.Warning);
+                EditorGUILayout.HelpBox($"IDが重複している湧き位置があります: {string.Join(", ", duplicatedIds)}", MessageType.Warning);
             }
 
             EditorGUILayout.Space(4);
@@ -195,7 +195,7 @@ namespace MS2026.Fortress.EditorTools
                     enemyCount > 0 ? $"{enemyCount}体" : "未使用",
                     EditorStyles.miniLabel, GUILayout.Width(44));
 
-                if (GUILayout.Button(new GUIContent("選択", "Sceneビューでこの沸き位置を選択して表示します。"), GUILayout.Width(40)))
+                if (GUILayout.Button(new GUIContent("選択", "Sceneビューでこの湧き位置を選択して表示します。"), GUILayout.Width(40)))
                 {
                     Selection.activeGameObject = point.gameObject;
                     SceneView.lastActiveSceneView?.FrameSelected();
@@ -206,7 +206,7 @@ namespace MS2026.Fortress.EditorTools
                     CreatePoint(director, (Vector2)point.transform.position + Vector2.right, id);
                 }
 
-                if (GUILayout.Button(new GUIContent("削除", "この沸き位置を削除します。"), GUILayout.Width(40)))
+                if (GUILayout.Button(new GUIContent("削除", "この湧き位置を削除します。"), GUILayout.Width(40)))
                 {
                     DeletePoint(director, point, enemyCount);
                 }
@@ -219,7 +219,7 @@ namespace MS2026.Fortress.EditorTools
         {
             using (new EditorGUILayout.HorizontalScope())
             {
-                if (GUILayout.Button(new GUIContent("＋ 追加", "Sceneビューの中心に新しい沸き位置を作ります。")))
+                if (GUILayout.Button(new GUIContent("＋ 追加", "Sceneビューの中心に新しい湧き位置を作ります。")))
                 {
                     var pivot = SceneView.lastActiveSceneView != null
                         ? (Vector2)SceneView.lastActiveSceneView.pivot
@@ -230,7 +230,7 @@ namespace MS2026.Fortress.EditorTools
 
                 using (new EditorGUI.DisabledScope(points.Length == 0))
                 {
-                    if (GUILayout.Button(new GUIContent("全てグリッドに揃える", "全ての沸き位置を、指定したグリッド幅に丸めます。")))
+                    if (GUILayout.Button(new GUIContent("全てグリッドに揃える", "全ての湧き位置を、指定したグリッド幅に丸めます。")))
                     {
                         foreach (var point in points)
                         {
@@ -256,7 +256,7 @@ namespace MS2026.Fortress.EditorTools
             _ringStartAngle = EditorGUILayout.FloatField(
                 new GUIContent("開始角度(度)", "0度が真上(+Y)。時計回りに並べます。"), _ringStartAngle);
             _ringReplaceExisting = EditorGUILayout.ToggleLeft(
-                new GUIContent("既存の沸き位置を置き換える（ID: Spawn_0, Spawn_1... を再利用）"), _ringReplaceExisting);
+                new GUIContent("既存の湧き位置を置き換える（ID: Spawn_0, Spawn_1... を再利用）"), _ringReplaceExisting);
 
             if (!GUILayout.Button("リングを生成"))
             {
@@ -265,7 +265,7 @@ namespace MS2026.Fortress.EditorTools
 
             if (_ringReplaceExisting && points.Length > 0 &&
                 !EditorUtility.DisplayDialog(
-                    "既存の沸き位置を置き換えます",
+                    "既存の湧き位置を置き換えます",
                     $"現在の{points.Length}箇所を削除して作り直します。よろしいですか？（Ctrl+Zで元に戻せます）",
                     "置き換える", "キャンセル"))
             {
@@ -320,7 +320,7 @@ namespace MS2026.Fortress.EditorTools
         private static void DeletePoint(EnemySpawnDirector director, EnemySpawnPoint point, int enemyCount)
         {
             if (enemyCount > 0 && !EditorUtility.DisplayDialog(
-                    "沸き位置を削除",
+                    "湧き位置を削除",
                     $"'{point.ResolvedId}' はウェーブで使われています（{enemyCount}体分）。削除すると該当エントリは湧かなくなります。削除しますか？",
                     "削除", "キャンセル"))
             {

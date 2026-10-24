@@ -12,9 +12,42 @@ namespace MS2026.Fortress
         /// <summary>1行が湧き始める時刻。</summary>
         public static float StartTime(EnemySpawnEntry entry) => Mathf.Max(0f, entry.triggerTime);
 
+        /// <summary>1体ずつの間隔（秒）。「秒数で決める」行は 秒数 ÷ (数−1)（1体だけなら 0）。</summary>
+        public static float Interval(EnemySpawnEntry entry)
+        {
+            if (entry == null)
+            {
+                return 0f;
+            }
+
+            if (entry.timing == EnemySpawnTiming.Duration)
+            {
+                return entry.count > 1 ? Mathf.Max(0f, entry.durationSeconds) / (entry.count - 1) : 0f;
+            }
+
+            return Mathf.Max(0f, entry.intervalBetweenSpawns);
+        }
+
+        /// <summary>最初の1体から最後の1体までの秒数（「秒数で決める」行はその秒数、間隔の行は 間隔 × (数−1)）。</summary>
+        public static float Duration(EnemySpawnEntry entry) =>
+            entry == null ? 0f : Mathf.Max(0, entry.count - 1) * Interval(entry);
+
         /// <summary>1行の最後の1体が湧く時刻（数 −1 回ぶん間隔を空ける）。</summary>
-        public static float EndTime(EnemySpawnEntry entry) =>
-            StartTime(entry) + Mathf.Max(0, entry.count - 1) * Mathf.Max(0f, entry.intervalBetweenSpawns);
+        public static float EndTime(EnemySpawnEntry entry) => StartTime(entry) + Duration(entry);
+
+        /// <summary>1行のうち、湧き始めから elapsed 秒までに湧いているはずの数（0〜数）。</summary>
+        public static int SpawnedByEntry(EnemySpawnEntry entry, float time)
+        {
+            if (entry == null || entry.count <= 0 || time < StartTime(entry) - 1e-5f)
+            {
+                return 0;
+            }
+
+            var interval = Interval(entry);
+            return interval <= 0f
+                ? entry.count
+                : Mathf.Min(entry.count, 1 + Mathf.FloorToInt((time - StartTime(entry)) / interval + 1e-4f));
+        }
 
         /// <summary>全部の行の合計の数。</summary>
         public static int TotalEnemies(IReadOnlyList<EnemySpawnEntry> entries)
@@ -67,15 +100,7 @@ namespace MS2026.Fortress
 
             foreach (var entry in entries)
             {
-                if (entry == null || entry.count <= 0 || time < StartTime(entry))
-                {
-                    continue;
-                }
-
-                var interval = Mathf.Max(0f, entry.intervalBetweenSpawns);
-                total += interval <= 0f
-                    ? entry.count
-                    : Mathf.Min(entry.count, 1 + Mathf.FloorToInt((time - StartTime(entry)) / interval + 1e-4f));
+                total += SpawnedByEntry(entry, time);
             }
 
             return total;

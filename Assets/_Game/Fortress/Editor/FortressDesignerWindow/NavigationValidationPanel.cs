@@ -45,7 +45,7 @@ namespace MS2026.Fortress.EditorTools
 
             if (spawnPoints.Length == 0)
             {
-                EditorGUILayout.HelpBox("チェック対象の沸き位置がありません。", MessageType.Info);
+                EditorGUILayout.HelpBox("チェック対象の湧き位置がありません。", MessageType.Info);
                 return;
             }
 
@@ -147,14 +147,14 @@ namespace MS2026.Fortress.EditorTools
             var profiles = new List<NavigationProfile> { null };
 
             var director = Object.FindFirstObjectByType<EnemySpawnDirector>();
-            if (director == null || director.wave == null)
+            if (director == null)
             {
                 return profiles;
             }
 
-            foreach (var entry in director.wave.spawnEntries)
+            foreach (var type in director.AllEnemyTypes())
             {
-                var profile = entry.enemyType != null ? entry.enemyType.navigationProfile : null;
+                var profile = type.navigationProfile;
                 if (!profiles.Contains(profile))
                 {
                     profiles.Add(profile);
