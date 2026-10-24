@@ -13,7 +13,11 @@ namespace MS2026.Fortress
     /// </summary>
     public sealed class EnemySpawnDirector : MonoBehaviour
     {
+        [Tooltip("ウェーブの時間割（1本をくり返す、今までの遊び方）。下の「ウェーブの計画」があればそちらを使い、これは使わない。")]
         public EnemyWaveConfig wave;
+
+        [Tooltip("ウェーブの計画（WAVE 1〜5・目標撃破数・制限時間）。入れると、ウェーブの係が計画どおりに湧かせる（Play したらすぐ再生する、は使わない）。空なら上の時間割1本。")]
+        public WavePlan wavePlan;
 
         [Tooltip("未設定なら子オブジェクトからEnemySpawnPointを自動収集する。")]
         public EnemySpawnPoint[] spawnPoints;
@@ -47,7 +51,8 @@ namespace MS2026.Fortress
 
         private void Start()
         {
-            if (autoStartOnPlay)
+            // ウェーブの計画があれば、湧かせ始めるのはウェーブの係（FortressWaves）。
+            if (autoStartOnPlay && wavePlan == null)
             {
                 StartWave();
             }
@@ -85,6 +90,14 @@ namespace MS2026.Fortress
         /// </summary>
         public IEnumerable<EnemySpawnEntry> AllEntries()
         {
+            if (wavePlan != null)
+            {
+                foreach (var entry in wavePlan.AllEntries())
+                {
+                    yield return entry;
+                }
+            }
+
             if (wave != null && wave.spawnEntries != null)
             {
                 foreach (var entry in wave.spawnEntries)

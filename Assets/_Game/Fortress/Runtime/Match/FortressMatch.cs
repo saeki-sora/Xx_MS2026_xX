@@ -19,10 +19,37 @@ namespace MS2026.Fortress
         GameOver = 2
     }
 
+    /// <summary>試合が終わった理由。通信で byte として送るので、足すときは最後に足す。</summary>
+    public enum MatchEndReason : byte
+    {
+        None = 0,
+
+        /// <summary>全員の撃破数が決まった数に届いた（ウェーブの計画が無いステージ）。</summary>
+        KillGoal = 1,
+
+        /// <summary>最後のウェーブの目標を倒した。</summary>
+        AllWavesCleared = 2,
+
+        /// <summary>コアが壊れた。</summary>
+        CoreDestroyed = 3,
+
+        /// <summary>試合の制限時間が来た。</summary>
+        TimeUp = 4
+    }
+
     /// <summary>試合が終わったときの結果（リザルト画面が読む）。全員のPCで同じ値。</summary>
     public struct MatchResult
     {
         public MatchOutcome outcome;
+
+        /// <summary>終わった理由。</summary>
+        public MatchEndReason reason;
+
+        /// <summary>どのウェーブまで行けたか（1 から。ウェーブの計画が無ければ 0）。</summary>
+        public int reachedWave;
+
+        /// <summary>ウェーブの数（計画が無ければ 0）。</summary>
+        public int waveCount;
 
         /// <summary>試合が始まってから終わるまでの秒数。</summary>
         public float durationSeconds;
@@ -61,6 +88,8 @@ namespace MS2026.Fortress
     /// <summary>
     /// 試合の始まりと終わり（2026-10-13）。
     /// ・終わりを決めるのは Host（オフラインでは自分）: 全員の撃破数が <see cref="ClearKills"/>（既定 1000）に届いたらクリア、コアのHPが0ならゲームオーバー
+    /// ・ステージにウェーブの計画（<see cref="WavePlan"/>）があれば、撃破数ではなく「最後のウェーブの目標を倒した」でクリア、
+    ///   制限時間が来たら計画の <see cref="WavePlan.timeUpRule"/> どおり（2026-10-24）
     /// ・終わった瞬間に敵の出現を止め、残りの敵を消す（消した敵は撃破数に入れない）。結果を名前つきメッセージ <see cref="MessageName"/> で全員に配る
     /// ・コアのHPも Host が配る（今まで Host でしか減らなかった。Client のコアの見た目・HUD もこれで正しくなる）
     /// ・新しい試合（ゲームのシーンを読み込み、群衆の計算が新しくなったとき）に「試合中」に戻る
@@ -70,7 +99,7 @@ namespace MS2026.Fortress
     {
         public const int DefaultClearKills = 1000;
 
-        /// <summary>Host → 全員: byte 状態, float コアのHP, float コアの最大HP。終わっていれば続けて float 秒数, int 合計, int×4 撃破数, int×4 最大コンボ。</summary>
+        /// <summary>Host → 全員: byte 状態, float コアのHP, float コアの最大HP。終わっていれば続けて float 秒数, int 合計, int×4 撃破数, int×4 最大コンボ, byte 理由, byte 行けたウェーブ, byte ウェーブの数。</summary>
         public const string MessageName = "MS2026.Fortress.Match";
 
         public static MatchOutcome Outcome { get; private set; }
@@ -241,16 +270,7 @@ namespace MS2026.Fortress
                 _core = FindFirstObjectByType<CoreCrystalController>();
             }
 
-            MatchOutcome outcome;
-            if (EnemyKillCounter.Total >= FortressMatch.ClearKills)
-            {
-                outcome = MatchOutcome.Clear;
-            }
-            else if (_core != null && _core.CurrentHealth <= 0f)
-            {
-                outcome = MatchOutcome.GameOver;
-            }
-            else
+            if (!TryDecideEnd(out var outcome, out var reason))
             {
                 return;
             }
@@ -258,6 +278,9 @@ namespace MS2026.Fortress
             var result = new MatchResult
             {
                 outcome = outcome,
+                reason = reason,
+                reachedWave = FortressWaves.IsActive ? FortressWaves.ReachedWave : 0,
+                waveCount = FortressWaves.IsActive ? FortressWaves.WaveCount : 0,
                 durationSeconds = Time.unscaledTime - _startTime,
                 coreHealth01 = _core != null ? Mathf.Clamp01(_core.CurrentHealth / Mathf.Max(1f, _core.maxHealth)) : 1f,
                 totalKills = EnemyKillCounter.Total,
@@ -276,6 +299,43 @@ namespace MS2026.Fortress
             }
 
             Finish(result);
+        }
+
+        // ウェーブの計画があれば、その終わり（全部クリア・時間切れ）で決める。無ければ撃破数。コアが壊れたらどちらでもゲームオーバー。
+        private bool TryDecideEnd(out MatchOutcome outcome, out MatchEndReason reason)
+        {
+            if (FortressWaves.IsActive)
+            {
+                switch (FortressWaves.EndKind)
+                {
+                    case WaveEndKind.AllWavesCleared:
+                        outcome = MatchOutcome.Clear;
+                        reason = MatchEndReason.AllWavesCleared;
+                        return true;
+                    case WaveEndKind.TimeUp:
+                        var rule = FortressWaves.Plan != null ? FortressWaves.Plan.timeUpRule : WaveTimeUpRule.GameOver;
+                        outcome = rule == WaveTimeUpRule.ClearWithReachedWave ? MatchOutcome.Clear : MatchOutcome.GameOver;
+                        reason = MatchEndReason.TimeUp;
+                        return true;
+                }
+            }
+            else if (EnemyKillCounter.Total >= FortressMatch.ClearKills)
+            {
+                outcome = MatchOutcome.Clear;
+                reason = MatchEndReason.KillGoal;
+                return true;
+            }
+
+            if (_core != null && _core.CurrentHealth <= 0f)
+            {
+                outcome = MatchOutcome.GameOver;
+                reason = MatchEndReason.CoreDestroyed;
+                return true;
+            }
+
+            outcome = MatchOutcome.Playing;
+            reason = MatchEndReason.None;
+            return false;
         }
 
         // 出現を止め、残りの敵を消す（体力を減らさずに消すので、撃破数には入らない）。
@@ -301,7 +361,8 @@ namespace MS2026.Fortress
         {
             FortressMatch.End(result);
             PlayEndEffect(result.outcome);
-            Debug.Log($"[FortressMatch] 試合終了: {result.outcome}（{result.durationSeconds:0.0}秒、撃破 {result.totalKills}、コア {result.coreHealth01:P0}）");
+            var wave = result.waveCount > 0 ? $"、ウェーブ {result.reachedWave}/{result.waveCount}" : "";
+            Debug.Log($"[FortressMatch] 試合終了: {result.outcome}・{result.reason}（{result.durationSeconds:0.0}秒、撃破 {result.totalKills}、コア {result.coreHealth01:P0}{wave}）");
         }
 
         private void PlayEndEffect(MatchOutcome outcome)
@@ -384,7 +445,7 @@ namespace MS2026.Fortress
             _nextHeartbeat = now + HeartbeatInterval;
 
             var ended = FortressMatch.HasEnded;
-            var size = 1 + sizeof(float) * 2 + (ended ? sizeof(float) + sizeof(int) * (1 + Players * 2) : 0);
+            var size = 1 + sizeof(float) * 2 + (ended ? sizeof(float) + sizeof(int) * (1 + Players * 2) + 3 : 0);
             using var writer = new FastBufferWriter(size, Allocator.Temp);
             writer.WriteValueSafe((byte)FortressMatch.Outcome);
             writer.WriteValueSafe(health);
@@ -403,6 +464,10 @@ namespace MS2026.Fortress
                 {
                     writer.WriteValueSafe(result.maxCombos[p]);
                 }
+
+                writer.WriteValueSafe((byte)result.reason);
+                writer.WriteValueSafe((byte)Mathf.Clamp(result.reachedWave, 0, 255));
+                writer.WriteValueSafe((byte)Mathf.Clamp(result.waveCount, 0, 255));
             }
 
             manager.CustomMessagingManager.SendNamedMessageToAll(FortressMatch.MessageName, writer, NetworkDelivery.ReliableSequenced);
@@ -460,6 +525,13 @@ namespace MS2026.Fortress
                 reader.ReadValueSafe(out int combo);
                 result.maxCombos[p] = combo;
             }
+
+            reader.ReadValueSafe(out byte reason);
+            reader.ReadValueSafe(out byte reachedWave);
+            reader.ReadValueSafe(out byte waveCount);
+            result.reason = (MatchEndReason)reason;
+            result.reachedWave = reachedWave;
+            result.waveCount = waveCount;
 
             Finish(result);
         }

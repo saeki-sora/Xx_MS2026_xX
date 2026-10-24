@@ -55,6 +55,8 @@ namespace MS2026.Fortress.Net
 
             // 3万体を投入するとすぐコアが壊れてゲームオーバーになり、敵が消えて計測にならないので、計測中は試合を終わらせない。
             FortressMatch.EndChecksSuspended = args.SuspendMatchEnd;
+            // ウェーブの計画も進めない（湧かせない）。計測は自分で群衆を投入するため。
+            FortressWaves.Suspended = args.StopWaves || args.SuspendMatchEnd;
             if (!args.AnyBenchmark)
             {
                 return;

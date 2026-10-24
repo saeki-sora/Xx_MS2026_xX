@@ -56,6 +56,8 @@ namespace MS2026.CharacterSelect
             // ロビーがキャラ選択に入るとき・キャラ選択からゲームへ進むとき、この幕を使ってもらう。
             GameSession.CharacterSelectCurtain = Play;
             GameSession.GameStartCurtain = TryPlayGameStart;
+            // 幕が画面を覆っている間は、ウェーブ（WAVE 1 の発表）を始めない。
+            MS2026.Fortress.FortressWaves.AddReadyBlocker(() => IsCovering);
         }
 
         /// <summary>「GO!」のあとゲームへ進むときも、この幕で切り替えるか（設定の useForGameStart）。</summary>
