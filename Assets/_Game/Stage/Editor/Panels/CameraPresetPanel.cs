@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using MS2026.Fortress.Cameras;
+using MS2026.Fortress.EditorTools;
 using MS2026.StudioKit;
 using UnityEditor;
 using UnityEngine;
@@ -94,6 +95,16 @@ namespace MS2026.Stage.EditorTools
 
         private void Apply(CameraViewPreset preset)
         {
+            // ステージの仕組み（共通の Game＋ステージのシーン）では、視点はステージのシーンの「配置の目印」（StageLayout）が持つ。
+            // そちらに入れ、ステージ（StageSet）には記録しない（二か所に持つと、どちらが使われるか分からなくなる）。
+            var binding = CameraStageBinding.Current;
+            var openStage = !Application.isPlaying && binding != null ? binding.FindOpenStage() : null;
+            if (openStage != null)
+            {
+                binding.AssignPreset(openStage, preset);
+                return;
+            }
+
             var stage = _context.Stage;
             if (stage != null)
             {

@@ -317,7 +317,7 @@ namespace MS2026.CharacterSelect
                     if (PasteCurtain.UseForGameStart)
                     {
                         // 歯磨き粉の幕で上から覆ってから切り替え、次のシーンが始まったら流れ落ちる（幕はシーンをまたいで残る）。
-                        PasteCurtain.Play(() => SceneManager.LoadScene(next), () => SceneManager.GetActiveScene().name == next);
+                        PasteCurtain.Play(() => SceneManager.LoadScene(next), () => SceneManager.GetSceneByName(next).isLoaded);
                     }
                     else
                     {

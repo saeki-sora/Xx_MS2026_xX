@@ -147,15 +147,7 @@ namespace MS2026.Fortress.EditorTools
             });
             AssetDatabase.SaveAssetIfDirty(oblique);
 
-            if (Application.isPlaying)
-            {
-                context.Rig.SetPreset(oblique, 0.8f);
-                return;
-            }
-
-            Undo.RecordObject(context.Rig, "Assign Camera Preset");
-            context.Rig.preset = oblique;
-            EditorUtility.SetDirty(context.Rig);
+            context.UsePreset(oblique, 0.8f);
         }
 
         private static bool HasAnyTilt(CameraViewPreset preset)

@@ -364,8 +364,10 @@ namespace MS2026.UI.Game
                 return;
             }
 
-            // 光・空・新しく作る物の置き場所をゲームのシーンに合わせる。
-            SceneManager.SetActiveScene(scene);
+            // 光・空・新しく作る物の置き場所を、ステージのシーン（無ければゲームのシーン）に合わせる。
+            // 環境光・霧・空はアクティブなシーンの物が使われるので、ステージごとの見た目が出るようにステージを主役にする（2026-10-24。StageLayout も同じことをする）。
+            var stage = Stages != null ? Stages.FindLoadedStageScene() : default;
+            SceneManager.SetActiveScene(stage.IsValid() && stage.isLoaded ? stage : scene);
             ShowLobbyLook(false);
             var root = UiRoot.Active;
             if (root != null)

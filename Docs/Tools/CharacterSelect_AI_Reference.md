@@ -220,7 +220,7 @@ Vector3 CharacterPosition(int character) => Vector3.zero;
 6. Hold gauges are local-only (other players' charging is not synced).
 7. Characters are only visible through the cursors (there is no list of all characters on screen); the roster order is the cursor order. With many characters a player may need many short presses.
 8. Long skill texts wrap inside `SkillText` (505×70 px, overflow visible) — beyond ~3 lines they spill out of the box.
-9. `offlineNextScene` loads in Single mode; it is never used when a `GameSession` exists.
+9. `offlineNextScene` loads in Single mode; it is never used when a `GameSession` exists. The curtain's ready check is `SceneManager.GetSceneByName(next).isLoaded` (2026-10-24; was `GetActiveScene().name == next`, which stays false once `StageLayout` makes the stage scene active after `Game` loads it — `Stages_AI_Reference.md` §4d).
 10. Board messages carry `cursor` as a byte → max 255 characters.
 
 ## 7. Related

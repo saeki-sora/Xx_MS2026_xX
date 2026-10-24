@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-## ツールのドキュメント（必読・必ず更新）
+## ツールのドキュメント（作業前に読む・更新はしない）
 
 このゲーム（「握れ、灼ける前に」）に入っているツールには、それぞれ **人間向けガイド（HTML）** と **AI 向けリファレンス（.md）** が `Docs/Tools/` にある。
 
@@ -20,11 +20,9 @@
 | ステージ切り替え・ステージ抽選ルーレット（作業中） | `Docs/Tools/Stages_AI_Reference.md` | `Stages_ガイド.html` | `Assets/Stages/`, `Assets/Scenes/Stages/`（分けた後）, `Assets/_Game/UI/Game/Session/GameSession.Stage.cs`, `FortressNetworkBootstrap.AutoStartGate` |
 | 緑スキル（ミント・サテライト・作業中） | `Docs/Tools/GreenSkill_AI_Reference.md` | `GreenSkill_ガイド.html` | `Assets/RedSkill/Scripts/Runtime/Green/`, `Assets/RedSkill/Shaders/GreenSkill*.shader`, `Assets/RedSkill/Scripts/Editor/GreenSkillMenu.cs`, `Assets/_Game/UI/Game/HudCoreHealFx.cs`（HUD のコアのバーの回復演出） |
 
-1. **読む**: 上のツールに関わる作業では、ソースを読み始める前に該当する `*_AI_Reference.md` を読むこと。ソースを開くのは、そこに書いていないことを確かめるときだけにする。
-2. **更新する**: ツールのコード・挙動・UI の文言・メニュー・既定値・パス・公開 API を変更／追加したら、**同じ作業の中で**そのツールの `*_ガイド.html` と `*_AI_Reference.md` を両方更新する（後回しにしない）。D-Drive は版の更新、ID の追加・変更、呼び出し箇所や設定の変更が対象。
-3. **新しいツールを作ったら**: 両方のドキュメントを新規作成し、`Docs/Tools/index.html` と上の表と `Docs/Tools/DOCS_GUIDE.md` の表に追加する。
-4. 書き方・構成・確認手順は `Docs/Tools/DOCS_GUIDE.md` に従う（HTML はプランナーが初見で使えるレベル、.md は前提知識ゼロの AI が読む前提）。
-5. `Packages/manifest.json` の D-Drive の版が `DDrive_AI_Reference.md` に書かれた版（v1.2.1）と違うときは、内容が古い可能性がある。使う部分をソースで確かめ、リファレンスの更新をユーザーに提案すること。
+1. **読む**: 上のツールに関わる作業では、最初に該当する `*_AI_Reference.md` を読んで全体をつかむ。ただし下の 2 のとおり資料はもう更新していないので、2026-10-24 より後の変更は載っていない。作業で使う所は必ずソースで確かめる（資料とソースが違えば、ソースが正しい）。
+2. **資料は更新しない**（ユーザー決定 2026-10-24。それまでの「同じ作業の中で必ず更新する」決まりはやめた）: ツールのコード・挙動・UI の文言などを変えても、`*_ガイド.html`・`*_AI_Reference.md`・`Docs/Tools/index.html`・`Docs/Tools/DOCS_GUIDE.md` は更新しなくてよい。新しいツールを作っても資料は作らない。ユーザーに頼まれたときだけ更新・作成し、そのときは `Docs/Tools/DOCS_GUIDE.md` の書き方に従う。
+3. `Packages/manifest.json` の D-Drive の版が `DDrive_AI_Reference.md` に書かれた版（v1.2.1）と違うときは、内容が古い可能性がある。使う部分をソースで確かめること。
 
 ## 演出（エフェクト・効果音）の共通ルール
 
@@ -32,7 +30,7 @@
 
 ## マルチプレイ化（作業中）
 
-4人対戦（LAN・Host権威）の作業状況・ユーザーが決めた方針・残りの宿題（2台のPCでのテスト、性能改善の続き、Phase 5/6）は `Docs/Multiplayer/MultiplayerProgress.md` にまとめてある。マルチプレイ・通信・群衆の同期に関わる作業では、最初にこれを読み、進んだら同じ作業の中で更新すること。群衆の同期は「写真方式」（Hostが全員の位置を1秒30回、差分圧縮した写真で配り、Clientは先読みして表示）。人間向けの解説とネットワークの基礎は `Docs/Multiplayer/群衆同期_写真方式_解説.html`、実装の詳細は `Docs/Tools/FortressDesigner_AI_Reference.md` の Net 節。方式・既定値・ファイル構成を変えたら、この解説HTMLも同じ作業の中で更新する。
+4人対戦（LAN・Host権威）の作業状況・ユーザーが決めた方針・残りの宿題（2台のPCでのテスト、性能改善の続き、Phase 5/6）は `Docs/Multiplayer/MultiplayerProgress.md` にまとめてある。マルチプレイ・通信・群衆の同期に関わる作業では、最初にこれを読む（2026-10-24 から更新はしていないので、ソースでも確かめる。更新はユーザーに頼まれたときだけ）。群衆の同期は「写真方式」（Hostが全員の位置を1秒30回、差分圧縮した写真で配り、Clientは先読みして表示）。人間向けの解説とネットワークの基礎は `Docs/Multiplayer/群衆同期_写真方式_解説.html`、実装の詳細は `Docs/Tools/FortressDesigner_AI_Reference.md` の Net 節（この解説 HTML も、頼まれたとき以外は更新しない）。
 
 ## UI デザインの参考サイト
 

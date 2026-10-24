@@ -21,26 +21,29 @@ namespace MS2026.Fortress.EditorTools
                 return;
             }
 
-            var rig = context.Rig;
             var preset = context.Preset;
 
+            // ステージが開いていれば、ここで選んだ物がそのステージの視点になる（ステージのシーンに保存される）。
+            var fieldLabel = context.Stage != null && !Application.isPlaying
+                ? new GUIContent($"{context.Stage.Label}の視点", "このステージの「配置の目印」（StageLayout）に入ります。ステージのシーンを保存すると残ります。")
+                : new GUIContent("使用中のプリセット");
             EditorGUI.BeginChangeCheck();
-            var picked = (CameraViewPreset)EditorGUILayout.ObjectField("使用中のプリセット", preset, typeof(CameraViewPreset), false);
+            var picked = (CameraViewPreset)EditorGUILayout.ObjectField(fieldLabel, preset, typeof(CameraViewPreset), false);
             if (EditorGUI.EndChangeCheck() && picked != null)
             {
-                Use(rig, picked, 0f);
+                Use(context, picked, 0f);
             }
 
             using (new EditorGUILayout.HorizontalScope())
             {
                 if (GUILayout.Button("新規作成"))
                 {
-                    Use(rig, CameraPresetEditing.CreatePresetAsset("CameraViewPreset_New"), 0f);
+                    Use(context, CameraPresetEditing.CreatePresetAsset("CameraViewPreset_New"), 0f);
                 }
 
                 if (GUILayout.Button(new GUIContent("複製して編集", "今のプリセットを複製し、複製の方をリグに割り当てます。元は残るので比較できます。")))
                 {
-                    Use(rig, CameraPresetEditing.CreatePresetAsset(preset.DisplayName + " (コピー)", preset), 0f);
+                    Use(context, CameraPresetEditing.CreatePresetAsset(preset.DisplayName + " (コピー)", preset), 0f);
                 }
 
                 if (GUILayout.Button("アセットを表示"))
@@ -50,7 +53,7 @@ namespace MS2026.Fortress.EditorTools
             }
 
             DrawPresetFields(preset);
-            DrawProjectPresets(rig, preset);
+            DrawProjectPresets(context, preset);
         }
 
         private static void DrawPresetFields(CameraViewPreset preset)
@@ -72,7 +75,7 @@ namespace MS2026.Fortress.EditorTools
             }
         }
 
-        private void DrawProjectPresets(FortressCameraRig rig, CameraViewPreset current)
+        private void DrawProjectPresets(CameraTabContext context, CameraViewPreset current)
         {
             var presets = GetProjectPresets();
             if (presets.Count <= 1)
@@ -104,7 +107,7 @@ namespace MS2026.Fortress.EditorTools
                     {
                         if (GUILayout.Button(Application.isPlaying ? "なめらかに切替" : "使う", GUILayout.Width(110)))
                         {
-                            Use(rig, preset, Application.isPlaying ? _switchBlendSeconds : 0f);
+                            Use(context, preset, Application.isPlaying ? _switchBlendSeconds : 0f);
                         }
                     }
                 }
@@ -132,23 +135,10 @@ namespace MS2026.Fortress.EditorTools
             return _projectPresets;
         }
 
-        private void Use(FortressCameraRig rig, CameraViewPreset preset, float blendSeconds)
+        private void Use(CameraTabContext context, CameraViewPreset preset, float blendSeconds)
         {
             _projectPresets = null;
-            if (rig == null || preset == null)
-            {
-                return;
-            }
-
-            if (Application.isPlaying)
-            {
-                rig.SetPreset(preset, blendSeconds);
-                return;
-            }
-
-            Undo.RecordObject(rig, "Assign Camera Preset");
-            rig.preset = preset;
-            EditorUtility.SetDirty(rig);
+            context.UsePreset(preset, blendSeconds);
         }
     }
 }

@@ -325,6 +325,7 @@
 - **テスト用の bat（Game だけで起動）**: Game の「ステージを読み込む係」（`StageBootstrap`）がステージを自分で読み込み、読み終わるまで `-fortress-start` の通信開始を待たせる（`FortressNetworkBootstrap.AutoStartGate`）。参加側は、自分で読み込んだステージを NGO にもう一度読み込ませないよう断る（`VerifySceneBeforeLoading`）。ステージは `-fortress-stage Stage2` で選べる（ホストと参加側に同じ値を付けること）。bat 自体は変更なし。
 - 通信: 部屋の状態のメッセージ（`MS2026.Lobby.State`）にステージ番号（2 バイト）を追加。**ホストと参加側は同じビルドで**（違うと読めない）。NetworkObject は増やしていない。ステージのシーンに NetworkObject は置かない約束（`Tools/ステージ/チェック` で確かめる）。
 - **宿題（未確認）**: Unity で `Tools/ステージ/今の Game を共通と Stage1 に分ける（1回だけ）` を押してから、①Game だけで Play（Stage1 が重なる）、②Title からキャラ選択 → ルーレット → ゲーム（1 台）、③bat の 2 人・4 人（`-fortress-stage` なし／あり）、④2 台以上で、参加側にも同じステージ・同じルーレットの結果が出るか、途中参加、全員でロビーに戻る → 次の試合で別のステージ。
+- **2026-10-24（Unity で未確認）**: 試合中は、ステージのシーンを「アクティブなシーン」にする（全員の PC が、Game が届いた時点でそれぞれ切り替える。`StageLayout.TryApply`・`GameSession.HandleSceneLoaded`）。光・霧をステージごとに持つため（ユーザー決定）。通信の量は変わらない。Play 中に作られる物（ホストが出す NetworkObject を含む）はステージのシーンに入る。Game を外した直後にステージも外すので、試合の後には残らない想定。2 台の PC でのテストのときに、試合の終わり・途中参加で、物が残ったり消えたりしないかを見ること（詳しくは `Docs/Tools/Stages_AI_Reference.md` §4d）。
 
 ## 5j. 展示: 1台の Arduino の4人分の握力を LAN で配る（2026-10-22・Unity・実機で未確認）
 

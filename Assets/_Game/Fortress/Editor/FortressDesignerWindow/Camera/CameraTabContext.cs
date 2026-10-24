@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using MS2026.Fortress.Cameras;
+using UnityEditor;
 using UnityEngine;
 
 namespace MS2026.Fortress.EditorTools
@@ -18,6 +20,12 @@ namespace MS2026.Fortress.EditorTools
         public CameraFeedbackDirector Director { get; private set; }
         public BillboardDirector Billboards { get; private set; }
 
+        /// <summary>開いているステージ（ステージのシーンが開いていなければ null）。視点はこのステージの物を編集する。</summary>
+        public CameraStageInfo Stage { get; private set; }
+
+        /// <summary>ステージのシーンに置かれてしまったカメラリグ（Play では使われない。消すこと）。</summary>
+        public IReadOnlyList<FortressCameraRig> StrayRigs { get; private set; }
+
         public CameraViewPreset Preset => Rig != null ? Rig.preset : null;
         public CameraFeedbackConfig FeedbackConfig => Director != null ? Director.config : null;
         public CameraGuideSettings Guides => Rig != null && Rig.guides != null ? Rig.guides : FallbackGuides;
@@ -33,15 +41,56 @@ namespace MS2026.Fortress.EditorTools
         public static CameraTabContext Capture()
         {
             var rigs = Object.FindObjectsByType<FortressCameraRig>(FindObjectsSortMode.None);
-            var rig = FortressCameraRig.Active != null ? FortressCameraRig.Active : (rigs.Length > 0 ? rigs[0] : null);
+
+            // ステージのシーンに紛れ込んだリグは使わない（Play では共通の Game のリグが動き、ステージの視点はそちらに当てはめられる）。
+            var usable = new List<FortressCameraRig>();
+            var stray = new List<FortressCameraRig>();
+            foreach (var candidate in rigs)
+            {
+                (CameraStageBinding.IsInStageScene(candidate) ? stray : usable).Add(candidate);
+            }
+
+            var rig = FortressCameraRig.Active != null && usable.Contains(FortressCameraRig.Active)
+                ? FortressCameraRig.Active
+                : (usable.Count > 0 ? usable[0] : null);
 
             return new CameraTabContext
             {
                 Rig = rig,
-                RigCount = rigs.Length,
+                RigCount = usable.Count,
+                StrayRigs = stray,
+                Stage = CameraStageBinding.Current?.FindOpenStage(),
                 Director = FindNearRig<CameraFeedbackDirector>(rig),
                 Billboards = FindNearRig<BillboardDirector>(rig)
             };
+        }
+
+        /// <summary>
+        /// 視点プリセットを切り替える。Play 中はリグだけ（その場限り）。Play 外でステージが開いていれば、そのステージの視点として
+        /// ステージのシーンに入れる（Game のリグには見せるだけ）。ステージが無ければ今までどおりリグに入れる。
+        /// </summary>
+        public void UsePreset(CameraViewPreset preset, float blendSeconds)
+        {
+            if (Rig == null || preset == null)
+            {
+                return;
+            }
+
+            if (Application.isPlaying)
+            {
+                Rig.SetPreset(preset, blendSeconds);
+                return;
+            }
+
+            if (Stage != null && CameraStageBinding.Current != null)
+            {
+                CameraStageBinding.Current.AssignPreset(Stage, preset);
+                return;
+            }
+
+            Undo.RecordObject(Rig, "Assign Camera Preset");
+            Rig.preset = preset;
+            EditorUtility.SetDirty(Rig);
         }
 
         private static T FindNearRig<T>(FortressCameraRig rig) where T : Component

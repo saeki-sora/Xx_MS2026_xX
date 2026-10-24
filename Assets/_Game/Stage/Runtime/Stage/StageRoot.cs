@@ -4,6 +4,7 @@ using DDrive.Runtime.Loop;
 using MS2026.Fortress.Cameras;
 using MS2026.Fortress.Net;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace MS2026.Stage
 {
@@ -44,10 +45,15 @@ namespace MS2026.Stage
             StageLookProfile.Current.ApplyGlobals();
             // 光の集中度はシェーダーの全体の値なので、開いた直後（編集中も）からステージの設定にしておく。
             current?.lighting.ApplyShaderGlobals();
+            if (Application.isPlaying)
+            {
+                SceneManager.activeSceneChanged += HandleActiveSceneChanged;
+            }
         }
 
         private void OnDisable()
         {
+            SceneManager.activeSceneChanged -= HandleActiveSceneChanged;
             if (Active == this)
             {
                 Active = null;
@@ -68,6 +74,18 @@ namespace MS2026.Stage
             if (playBgmOnStart && current.bgm.IsValid)
             {
                 StartCoroutine(PlayBgmWhenReady(current));
+            }
+        }
+
+        /// <summary>
+        /// 環境光・霧はアクティブなシーンの設定なので、このシーンが主役（アクティブ）になったら光をもう一度当てる。
+        /// 本番ではステージが Game より先に読み込まれ（Start の時点ではまだ主役でない）、Game がそろったときに主役になる。
+        /// </summary>
+        private void HandleActiveSceneChanged(Scene previous, Scene next)
+        {
+            if (current != null && next == gameObject.scene)
+            {
+                ApplyEnvironment(applyCamera: false);
             }
         }
 

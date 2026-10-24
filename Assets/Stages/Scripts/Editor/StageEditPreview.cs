@@ -44,6 +44,8 @@ namespace MS2026.Stages.EditorTools
             EditorSceneManager.sceneClosing += OnSceneClosing;
             EditorSceneManager.sceneSaving += OnSceneSaving;
             EditorSceneManager.sceneSaved += OnSceneSaved;
+            // カメラタブでステージの視点を変えた後に Undo したとき、Game のカメラの見せ方もそろえ直す。
+            Undo.undoRedoPerformed += PlaceLoaded;
         }
 
         private static void OnSceneOpened(Scene scene, OpenSceneMode mode)
@@ -155,7 +157,9 @@ namespace MS2026.Stages.EditorTools
                 moved++;
             }
 
-            var rig = Object.FindObjectsByType<FortressCameraRig>(FindObjectsInactive.Include, FindObjectsSortMode.None).FirstOrDefault();
+            // ステージのシーンに紛れ込んだリグ（Play では使われない）ではなく、Game のリグに見せる。
+            var rig = Object.FindObjectsByType<FortressCameraRig>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                .FirstOrDefault(r => !HasLayout(r.gameObject.scene));
             if (rig != null && layout.cameraPreset != null && rig.preset != layout.cameraPreset)
             {
                 RememberRig(originals, rig);

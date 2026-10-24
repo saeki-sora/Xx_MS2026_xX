@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.SceneManagement;
 
 namespace MS2026.Stage
 {
@@ -92,7 +93,10 @@ namespace MS2026.Stage
             return volume;
         }
 
-        /// <summary>同じシーンのカメラの後処理を ON にする（OFF のままだと Volume が効かない）。</summary>
+        /// <summary>
+        /// カメラの後処理を ON にする（OFF のままだと Volume が効かない）。Play 中は読み込まれている全部のシーンのカメラ
+        /// （ステージを分けた後、カメラは共通の Game にある）。編集中は同じシーンのカメラだけ（ほかのシーンのファイルを変えないため）。
+        /// </summary>
         private static void EnablePostProcessing(StageRoot root)
         {
             if (!root.gameObject.scene.IsValid())
@@ -100,7 +104,20 @@ namespace MS2026.Stage
                 return;
             }
 
-            foreach (var top in root.gameObject.scene.GetRootGameObjects())
+            var count = Application.isPlaying ? SceneManager.sceneCount : 1;
+            for (var i = 0; i < count; i++)
+            {
+                var scene = Application.isPlaying ? SceneManager.GetSceneAt(i) : root.gameObject.scene;
+                if (scene.isLoaded)
+                {
+                    EnablePostProcessing(scene);
+                }
+            }
+        }
+
+        private static void EnablePostProcessing(Scene scene)
+        {
+            foreach (var top in scene.GetRootGameObjects())
             {
                 foreach (var camera in top.GetComponentsInChildren<Camera>(true))
                 {

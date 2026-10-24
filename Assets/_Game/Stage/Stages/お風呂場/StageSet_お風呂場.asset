@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d07e8bc55efcb964482a5536719ef216, type: 3}
+  m_Name: "StageSet_\u304A\u98A8\u5442\u5834"
+  m_EditorClassIdentifier: MS2026.Stage.Runtime::MS2026.Stage.StageSet
+  displayName: "\u304A\u98A8\u5442\u5834"
+  memo: "Stage2_Bath\uFF08\u30B9\u30C6\u30FC\u30B82\u300C\u304A\u98A8\u5442\u5834\u300D\uFF09\u7528\u30022026-10-24 \u4F5C\u6210\u3002\u5149\u306F\u30B9\u30C6\u30FC\u30B81\uFF08\u305D\u308C\u307E\u3067\u306E Game\uFF09\u3068\u540C\u3058\u5024\u304B\u3089\u59CB\u3081\u305F\u3002"
+  thumbnail: {fileID: 0}
+  stagePrefab: {fileID: 7412093350000000001, guid: 700eaaeda48249f793691326f8cac72c, type: 3}
+  cameraPreset: {fileID: 0}
+  lookProfile: {fileID: 11400000, guid: d5923a60eb563e5498332b52919dcb8b, type: 2}
+  lighting:
+    apply: 1
+    sunColor: {r: 1, g: 0.96, b: 0.9, a: 1}
+    sunIntensity: 0.13
+    sunDirection: -46
+    sunElevation: 45
+    shadowStrength: 0.846
+    highlightFocus: 0.773
+    skyColor: {r: 0.62, g: 0.68, b: 0.78, a: 1}
+    equatorColor: {r: 0.5, g: 0.5, b: 0.52, a: 1}
+    groundColor: {r: 0.32, g: 0.3, b: 0.28, a: 1}
+    fog: 0
+    fogColor: {r: 0.75, g: 0.8, b: 0.85, a: 1}
+    fogStart: 20
+    fogEnd: 60
+    toneMapping: 0
+    exposure: 0
+  bgm:
+    value: 0
+    type: 0

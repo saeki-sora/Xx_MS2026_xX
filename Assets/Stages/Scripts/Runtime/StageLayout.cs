@@ -55,6 +55,11 @@ namespace MS2026.Stages
 
         private void Awake()
         {
+            if (Application.isPlaying)
+            {
+                DisableCameraRigsInThisScene();
+            }
+
             // ロビー経由ではステージを Game より先に読み込む。Game が来るまで中身を止めておき、そろったら動かす（TryApply）。
             // この部品は中身より先に動く（DefaultExecutionOrder -900）ので、止めた中身の Awake（群衆の準備など）はまだ呼ばれていない。
             if (Application.isPlaying && content != null && content.activeSelf && !IsCommonScenePresent())
@@ -138,6 +143,10 @@ namespace MS2026.Stages
                 content.SetActive(true);
             }
 
+            // ステージのシーンを「アクティブなシーン」（主役）にする。環境光・霧・空はアクティブなシーンの物が使われ、Play 中に作られる物もそこに入る。
+            // 見た目の設定はステージごとに持ち、共通の Game は触らない（ユーザー決定 2026-10-24）。本番・Game だけ・ステージだけ、どの流れでも同じになる。
+            MakeStageSceneActive();
+
             // コアの位置が変わったので、敵の経路を作り直す。
             if (EnemyNavigation.Current is NavigationField field)
             {
@@ -167,12 +176,7 @@ namespace MS2026.Stages
                 return;
             }
 
-            var rig = FortressCameraRig.Active;
-            if (rig == null)
-            {
-                rig = FindFirstObjectByType<FortressCameraRig>();
-            }
-
+            var rig = FindCommonCameraRig();
             if (rig == null || rig.preset == cameraPreset)
             {
                 return;
@@ -180,6 +184,52 @@ namespace MS2026.Stages
 
             rig.SetPreset(cameraPreset, 0f);
             rig.SnapToTarget();
+        }
+
+        private void MakeStageSceneActive()
+        {
+            var scene = gameObject.scene;
+            if (scene.IsValid() && scene.isLoaded && SceneManager.GetActiveScene() != scene)
+            {
+                SceneManager.SetActiveScene(scene);
+            }
+        }
+
+        /// <summary>共通のシーン（Game）のカメラリグ。ステージのシーンに紛れ込んだリグは使わない。</summary>
+        private FortressCameraRig FindCommonCameraRig()
+        {
+            var active = FortressCameraRig.Active;
+            if (active != null && active.gameObject.scene != gameObject.scene)
+            {
+                return active;
+            }
+
+            foreach (var rig in FindObjectsByType<FortressCameraRig>(FindObjectsSortMode.None))
+            {
+                if (rig.gameObject.scene != gameObject.scene)
+                {
+                    return rig;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// ステージのシーンに置かれたカメラリグを止める。カメラは Game にだけ置く約束（2 つ動くと、どちらの視点になるか決まらない）。
+        /// 要塞デザイナーでステージだけを開いて「カメラリグをセットアップ」を押すと、ここに入ってしまう（2026-10-24 に Stage2_Bath で起きた）。
+        /// </summary>
+        private void DisableCameraRigsInThisScene()
+        {
+            foreach (var root in gameObject.scene.GetRootGameObjects())
+            {
+                foreach (var rig in root.GetComponentsInChildren<FortressCameraRig>(true))
+                {
+                    Debug.LogWarning($"[Stage] ステージのシーン「{gameObject.scene.name}」にカメラリグ「{rig.name}」があります。使わずに止めます" +
+                                     "（カメラは Game にだけ置き、ステージの視点は「配置の目印」の cameraPreset に入れること。要塞デザイナー › カメラで消せます）。", rig);
+                    rig.gameObject.SetActive(false);
+                }
+            }
         }
 
         private static Vector3 Flat(Vector3 position, float z) => new Vector3(position.x, position.y, z);

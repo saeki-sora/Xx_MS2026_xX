@@ -33,7 +33,7 @@
   <ol id="toc"></ol>
   <div class="foot">
     <button class="themebtn" id="themeBtn" type="button"><span aria-hidden="true">◐</span><span data-label>ライト表示</span></button>
-    <div class="meta mono">Assets/_Game/Stage<br>2026-10-07 時点</div>
+    <div class="meta mono">Assets/_Game/Stage<br>2026-10-24 時点</div>
   </div>
 </nav>
 
@@ -156,7 +156,7 @@
     </div></div>
   </div>
   <div class="callout warn rv"><span class="ci">!</span><div><b>今の状況の注意（2026-10-07）</b>：コードの組み立て（コンパイル）と計算部分の自動テストは通っています。2026-10-07 に追加した <b>配置</b> ページ（ゲーム画面の中でつかむ・ホイール・右の欄・4人並べる）とシーンビューの配置ツール・目線の固定は、Unity の中で動くことを確かめました。<b>それ以外の画面・シェーダー・実際のFBXの取り込みの細かい確認はまだ</b>です。見た目が崩れる・ボタンが効かないなどがあれば、開発者（Claude）に伝えてください。</div></div>
-  <div class="callout info rv"><span class="ci">i</span><div><b>ステージ切り替え（2026-10-21）の後は、背景（<code>[Stage]</code>）はステージごとのシーン（<code>Assets/Scenes/Stages/Stage1</code> など）にあります。</b><span class="mp">Tools<i>›</i>ステージ<i>›</i>選んだステージを Game と一緒に開く（編集用）</span> で開いてから使ってください（<a href="Stages_ガイド.html">ステージ切り替え</a>）。<br><b>今の Game シーンにそのまま足せます。</b>ステージに入るのは背景オブジェクトだけなので、砲台・コア・湧き位置・敵・経路・今ある障害物はそのまま残ります。ステージを出すと、そのステージの光（まわりの明るさと <b>[Stage] Sun</b>）が当たります。シーンに元からある Directional Light と二重で明るすぎるときは、どちらかを OFF にするか、光ページの <b>光を当てる</b> を OFF に。</div></div>
+  <div class="callout info rv"><span class="ci">i</span><div><b>ステージ切り替え（2026-10-21）の後は、背景（<code>[Stage]</code>）はステージごとのシーン（<code>Assets/Scenes/Stages/Stage1</code> など）にあります。</b><span class="mp">Tools<i>›</i>ステージ<i>›</i>選んだステージを Game と一緒に開く（編集用）</span> で開いてから使ってください（<a href="Stages_ガイド.html">ステージ切り替え</a>）。<b>2026-10-24 から、試合中はどの流れでもステージのシーンが主役（アクティブなシーン）になり、光ページの光がそのまま本番に出ます。光・霧はステージごとにこのツールで調整し、Game のシーンは触りません。</b>カメラの見え方のカードを押すと、そのステージの「配置の目印」の視点になります（要塞デザイナーのカメラタブと同じ所）。<br><b>今の Game シーンにそのまま足せます。</b>ステージに入るのは背景オブジェクトだけなので、砲台・コア・湧き位置・敵・経路・今ある障害物はそのまま残ります。ステージを出すと、そのステージの光（まわりの明るさと <b>[Stage] Sun</b>）が当たります。シーンに元からある Directional Light と二重で明るすぎるときは、どちらかを OFF にするか、光ページの <b>光を当てる</b> を OFF に。</div></div>
 </section>
 
 <section id="recipes" data-nav="やりたいこと逆引き">
@@ -191,7 +191,7 @@
     <details class="recipe" id="rc-light-sunpad" data-tags="look"><summary><span class="q">太陽がどこから照らすか（影の向き・長さ）を見ながら決めたい</span><span class="who">光 › 太陽の円</span></summary><div class="a"><p>光ページの太陽の欄の下にある <b>円</b> の、太陽の点をドラッグします。円はゲーム画面を真上から見た形で、<b>上＝画面の上</b>。点を中央に寄せるほど真上から照らし（影が短い）、ふちに寄せるほど低い所から照らします（影が長い）。黒い線が影の伸びる向き、太陽の色の線が光の進む向きです。円の下に今の <b>照らす向き</b> と <b>高さ</b> の数字が出ます。</p><p class="small muted">数値の欄で変えても円は追いかけます。1回のドラッグは <kbd>Ctrl</kbd>+<kbd>Z</kbd> 1回で戻せます。</p></div></details>
     <details class="recipe" id="rc-stage-silhouette" data-tags="look"><summary><span class="q">裏に隠れた敵の影の色を変えたい・消したい</span><span class="who">反応の共通設定</span></summary><div class="a"><p>見え方ページの反応の共通設定の <b>影の色（アルファ＝濃さ）</b>。全体で消すなら <b>隠れた敵を影で見せる</b> をOFF、物ごとに消すなら <b>裏に隠れた敵を影で見せる</b> をOFFにして <b>専用シェーダーに切り替え</b> を押し直します。</p></div></details>
     <details class="recipe" id="rc-light-presets" data-tags="look"><summary><span class="q">光の雰囲気（昼・夕方・夜など）をすぐ試したい／光を初めの値に戻したい</span><span class="who">光 › おすすめの光</span></summary><div class="a"><p>光ページの上の <b>おすすめの光</b> のボタン（<b>昼（標準）</b>・<b>ひかえめ</b>・<b>曇り（やわらか）</b>・<b>夕方</b>・<b>夜</b>・<b>くっきり</b>）を押すと、太陽とまわりの明るさがまとめて入ります。霧などほかの項目はそのままで、<b>光を当てる</b> も ON になります。気に入らなければ <kbd>Ctrl</kbd>+<kbd>Z</kbd>。<b>既定値に戻す</b> は光の設定を全部、初めて作ったときの値に戻します（確認あり、BGM はそのまま）。</p><p class="small muted">まぶしいと感じたら、まず <b>ひかえめ</b> から試すのがおすすめです。</p></div></details>
-    <details class="recipe" id="rc-stage-light" data-tags="look"><summary><span class="q">ステージの明るさ・影の向きを変えたい</span><span class="who">光</span></summary><div class="a"><p>光ページで太陽の <b>色</b>・<b>明るさ</b>・<b>照らす向き</b>・<b>高さ</b>・<b>影の濃さ</b>、まわりの明るさ、霧を変えます。動かすとすぐ反映。同じページで <b>このステージのBGM</b> も選べます（D-Driveの番号札）。</p></div></details>
+    <details class="recipe" id="rc-stage-light" data-tags="look"><summary><span class="q">ステージの明るさ・影の向きを変えたい</span><span class="who">光</span></summary><div class="a"><p>光ページで太陽の <b>色</b>・<b>明るさ</b>・<b>照らす向き</b>・<b>高さ</b>・<b>影の濃さ</b>、まわりの明るさ、霧を変えます。動かすとすぐ反映。同じページで <b>このステージのBGM</b> も選べます（D-Driveの番号札）。</p><p class="small">ステージを分けた後は、ステージのシーンを Game と一緒に開いて調整し、ステージのシーンを保存します。Unity の Lighting ウィンドウで直接変えた値は、Play の始めにこのページの値で上書きされます（<b>光を当てる</b> が OFF のときを除く）。</p></div></details>
     <details class="recipe" id="rc-light-focus" data-tags="look"><summary><span class="q">床などに映る白い光が一点に集まりすぎ・まぶしい</span><span class="who">光 › つや（光の集まり方）</span></summary><div class="a"><p>光ページの <b>光の集中度</b> を下げます（初期値 <b>1</b>＝材質のまま、0〜2）。下げるほど白く光る所が広くやわらかく、上げるほど小さく鋭くなります。ステージの背景（専用シェーダーの物）全部にまとめて効き、材質そのものは書き換えないので、ほかのステージには影響しません。Play 中に動かしてもすぐ反映され、止めた後も値は残ります。</p><p class="small muted">「光を当てる」が OFF のときは効きません（材質のままになります）。白い光そのものの強さは太陽の <b>明るさ</b> で変わります。</p></div></details>
     <details class="recipe" id="rc-stage-break" data-tags="break"><summary><span class="q">レーザーで壊して道が開く壁にしたい</span><span class="who">役割 › 壊せる壁</span></summary><div class="a"><p>役割を <b>◩ 壊せる壁</b> に。<b>耐久・再生</b>、<b>演出（エフェクト・効果音）</b>、<b>耐久ゲージ・壊れた後</b>（瓦礫を残すか）が出ます。壊れると溶けるように消えて通れるようになり、再生すると溶けた状態から現れます。▶ Play 中は <b>壊してみる</b> / <b>直す</b> で試せます。ネット対戦でも壊れ方は全員に同期されます。</p></div></details>
     <details class="recipe" id="rc-light-copy" data-tags="look"><summary><span class="q">ほかのステージで作った光を、このステージにも使いたい</span><span class="who">光 › ほかのステージから光をコピー</span></summary><div class="a"><p>光ページのいちばん下の <b>ほかのステージから光をコピー</b> で、<b>コピー元</b> のステージを選び <b>この光をコピー</b> を押します（確認あり）。太陽・まわりの明るさ・霧など光の設定がまるごと上書きされます。BGM はそのまま。<kbd>Ctrl</kbd>+<kbd>Z</kbd> で戻せます。</p></div></details>
@@ -348,7 +348,7 @@ StageLookProfile.Current.ApplyGlobals();  // 透け・影・熱の色を反映</
     <a class="lk rv" href="UIStudio_ガイド.html"><span class="ti">UIスタジオ</span><span class="ds">同じ見た目・操作感の、画面（UI）を作るツール。</span></a>
     <a class="lk rv" href="index.html"><span class="ti">ツール一覧</span><span class="ds">このプロジェクトの全ツール。</span></a>
   </div>
-  <footer><span>Stage Studio Guide · Xx_MS2026_xX</span><span>2026-10-07 時点のコードに基づく</span></footer>
+  <footer><span>Stage Studio Guide · Xx_MS2026_xX</span><span>2026-10-24 時点のコードに基づく</span></footer>
 </section>
 </main>
 </div>

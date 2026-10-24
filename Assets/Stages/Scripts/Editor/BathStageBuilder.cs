@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using MS2026.Fortress;
 using MS2026.Fortress.Cameras;
+using MS2026.Stage;
+using MS2026.Stage.EditorTools;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -13,8 +15,9 @@ namespace MS2026.Stages.EditorTools
     /// <summary>
     /// ステージ2「お風呂場」のシーン（<see cref="SceneName"/>）を新しく作る道具（ステージ案② / 実装計画 2026-10-22）。
     /// 画面の上が壁（タイル）、真ん中がバスタブ（ふち 2 本・すき間 1 つ・橋）、下が床。仮の箱で作り、絵は後で差し替える。
-    /// 群衆・経路・敵を出す係・試合の決まり・日の光は Stage1 の物を写して設定を引き継ぎ、障害物・湧き位置・目印は下の配置で作り直す。
-    /// 前のステージ2（Stage1 を左右反対にした Stage2.unity）は消さずに残し、ステージの設定 Stage_2 の行き先だけこのシーンに替える。
+    /// 群衆・経路・敵を出す係・試合の決まりは Stage1 の物を写して設定を引き継ぎ、障害物・湧き位置・目印は下の配置で作り直す。
+    /// 光（太陽・環境光・霧）はステージ背景スタジオの置き場所（[Stage]）とお風呂場用のステージ（<see cref="StageSetPath"/>）に持たせ、
+    /// 初めて作るときは Stage1 の光（＝分ける前の Game の光）を写す。調整は背景スタジオの「光」ページで行う（ユーザー決定 2026-10-24）。
     /// </summary>
     internal static class BathStageBuilder
     {
@@ -24,6 +27,8 @@ namespace MS2026.Stages.EditorTools
         public const string CameraPresetPath = "Assets/_Game/Fortress/Presets/Camera/CameraViewPreset_Stage2.asset";
         private const string CameraSourcePath = "Assets/_Game/Fortress/Presets/Camera/CameraViewPreset_CoreBottom.asset";
         private const string PresetFolder = "Assets/_Game/Fortress/Presets";
+        public const string StageSetName = "お風呂場";
+        public const string StageSetPath = "Assets/_Game/Stage/Stages/お風呂場/StageSet_お風呂場.asset";
 
         // ── 配置（目安。画面はおよそ横 50m × 縦 28m。数値は Unity で見ながら直してよい） ──
         // カメラの中心。プランナー案（2026-10-22）で、画面の中のステージ全体を少し上げるため -0.5 → -3.5（画面の下は HUD で隠れる）。
@@ -75,8 +80,9 @@ namespace MS2026.Stages.EditorTools
                   "・上の壁に湧き位置 2、バスタブの横に湧き位置 2\n" +
                   "・バスタブのふち 2 本（敵は止める・ビームは通す）とバスタブの左右の壁\n" +
                   "・コアが乗る橋（ビームで壊れる・再生しない）\n" +
-                  "・コア・砲台 4 台の目印と、全員同じ向きのカメラの視点\n\n" +
-                  "前の Stage2.unity は残し、ルーレットのステージ2をこのシーンに替えます。";
+                  "・コア・砲台 4 台の目印と、全員同じ向きのカメラの視点\n" +
+                  "・ステージ背景スタジオの置き場所と太陽（光は Stage1 と同じ値から始める）\n\n" +
+                  "ルーレットのステージ2がこのシーンになります。";
             if (!EditorUtility.DisplayDialog("お風呂場（ステージ2）", message, exists ? "作り直す" : "作る", "やめる"))
             {
                 return;
@@ -125,7 +131,7 @@ namespace MS2026.Stages.EditorTools
             var field = CopyFrom<NavigationField>(source, scene, content.transform, "NavigationField", report);
             var director = CopyFrom<EnemySpawnDirector>(source, scene, content.transform, "EnemySpawnDirector", report);
             CopyFrom<FortressMatchRules>(source, scene, null, "[Fortress] Match Rules", report);
-            CopyLight(source, scene, report);
+            SetUpStageRoot(source, report);
             var destructibleSource = FindIn<DestructibleObstacle>(source).FirstOrDefault(d => d.GetComponent<SmashBallModule>() == null);
 
             if (field != null)
@@ -281,18 +287,33 @@ namespace MS2026.Stages.EditorTools
             return component;
         }
 
-        private static void CopyLight(Scene source, Scene scene, List<string> report)
+        /// <summary>
+        /// ステージ背景スタジオの置き場所（[Stage]）を今のシーン（作っているシーン）に作り、お風呂場用のステージを出す。
+        /// ステージ（StageSet）が無ければ作り、光と反応の共通設定を Stage1 のステージから写す（あれば今の物をそのまま使う）。
+        /// 出すと、太陽（[Stage] Sun）と環境光・霧がステージの光の値になる（背景スタジオの「シーンに出す」と同じ）。
+        /// </summary>
+        private static void SetUpStageRoot(Scene source, List<string> report)
         {
-            var sun = source.GetRootGameObjects().FirstOrDefault(r => r.GetComponent<Light>() != null);
-            if (sun == null)
+            var set = AssetDatabase.LoadAssetAtPath<StageSet>(StageSetPath);
+            if (set == null)
             {
-                return;
+                set = StageAssetFactory.CreateStage(StageSetName);
+                var from = FindIn<StageRoot>(source).Select(r => r.current).FirstOrDefault(c => c != null);
+                if (from != null)
+                {
+                    JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(from.lighting), set.lighting);
+                    set.lookProfile = from.lookProfile != null ? from.lookProfile : set.lookProfile;
+                }
+
+                set.memo = $"{SceneName}（ステージ2「お風呂場」）用。光は Stage1 の「{(from != null ? from.Label : "既定値")}」から写した。";
+                EditorUtility.SetDirty(set);
+                AssetDatabase.SaveAssets();
+                report.Add($"ステージ背景スタジオのステージ {AssetDatabase.GetAssetPath(set)} を作った（光は Stage1 から写した）。");
             }
 
-            var copy = Object.Instantiate(sun);
-            copy.name = sun.name;
-            SceneManager.MoveGameObjectToScene(copy, scene);
-            report.Add($"Stage1 から写した: {sun.name}");
+            var root = new GameObject(StageSceneService.RootName).AddComponent<StageRoot>();
+            StageSceneService.PlaceStage(root, set);
+            report.Add($"ステージ背景スタジオの置き場所 {StageSceneService.RootName} と太陽を置いた（光の調整は背景スタジオの「光」ページ）。");
         }
 
         /// <summary>壊れない壁（仮の四角）。passBeams なら当たり判定をトリガーにして、ビームだけ通す（敵の経路では壁のまま）。</summary>
