@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5882cb83d70d4fcca2393146a40c1b1f, type: 3}
+  m_Name: WaveDisplay_Default
+  m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.WaveDisplaySettings
+  timing:
+    goSeconds: 0.9
+    nearGoalKills: 5
+    timeWarningSeconds: 10
+    routeShowSeconds: 0.3
+    routeFadeSeconds: 2
+    routeArrowSpacing: 1.6
+    routeArrowSpeed: 3.2
+    routeRebuildSeconds: 1
+    showEdgeMarkers: 1
+    firstHintWaves: 1
+    showYouMarker: 1
+    showGripHint: 1
+    showNewEnemyCards: 1
+    syncShowSeconds: 0.9

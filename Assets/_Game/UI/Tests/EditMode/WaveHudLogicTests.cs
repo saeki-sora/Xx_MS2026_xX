@@ -32,11 +32,16 @@ namespace MS2026.UI.Tests.EditMode
             Assert.AreEqual("FINAL WAVE", WaveHudLogic.AnnounceTitle(5, true, null));
             Assert.AreEqual("ボス", WaveHudLogic.AnnounceTitle(5, true, "ボス"));
             Assert.AreEqual("WAVE 1", WaveHudLogic.AnnounceTitle(1, true, ""), "1つしかない計画では FINAL にしない");
-            Assert.IsTrue(WaveHudLogic.NearGoal(WavePhase.Combat, 5));
-            Assert.IsFalse(WaveHudLogic.NearGoal(WavePhase.Combat, 6));
-            Assert.IsFalse(WaveHudLogic.NearGoal(WavePhase.Combat, 0));
-            Assert.IsTrue(WaveHudLogic.ShowGo(WavePhase.Combat, 0.2f));
-            Assert.IsFalse(WaveHudLogic.ShowGo(WavePhase.Combat, 2f));
+            Assert.IsTrue(WaveHudLogic.NearGoal(WavePhase.Combat, 5, 5));
+            Assert.IsFalse(WaveHudLogic.NearGoal(WavePhase.Combat, 6, 5));
+            Assert.IsFalse(WaveHudLogic.NearGoal(WavePhase.Combat, 0, 5));
+            Assert.IsFalse(WaveHudLogic.NearGoal(WavePhase.Combat, 3, 0), "0 なら出さない");
+            Assert.IsTrue(WaveHudLogic.ShowGo(WavePhase.Combat, 0.2f, 0.9f));
+            Assert.IsFalse(WaveHudLogic.ShowGo(WavePhase.Combat, 2f, 0.9f));
+            Assert.IsFalse(WaveHudLogic.ShowGo(WavePhase.Combat, 0f, 0f), "0 秒なら出さない");
+            Assert.IsTrue(WaveHudLogic.TimeWarning(true, 9f, 10f));
+            Assert.IsFalse(WaveHudLogic.TimeWarning(true, 9f, 0f));
+            Assert.IsFalse(WaveHudLogic.TimeWarning(false, 9f, 10f), "時計が止まっていれば出さない");
         }
 
         [Test]

@@ -31,7 +31,7 @@ namespace MS2026.UI.Game
 
         private void Update()
         {
-            var announcing = FortressWaves.IsActive && FortressWaves.Phase == WavePhase.Announce;
+            var announcing = FortressWaves.IsActive && FortressWaves.Phase == WavePhase.Announce && WaveDisplayTiming.Current.showNewEnemyCards;
             var plan = FortressWaves.Plan;
             var wave = announcing ? FortressWaves.WaveIndex : -1;
             if (wave == _shownWave && plan == _shownPlan)

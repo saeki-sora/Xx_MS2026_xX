@@ -160,7 +160,7 @@ namespace MS2026.Fortress.EditorTools
                 }
                 else if (wave.intervalEvent != null)
                 {
-                    EditorGUILayout.LabelField($"「{wave.intervalEvent.DisplayName}」 {wave.intervalEvent.DurationSeconds:0.#}秒（イベントの設定はそのファイルで変えます）", EditorStyles.miniLabel);
+                    EditorGUILayout.LabelField($"「{wave.intervalEvent.DisplayName}」 {wave.intervalEvent.DurationSeconds:0.#}秒（秒数・回数・ごほうびは「全体」ページの「合間のイベント」で変えます）", EditorStyles.wordWrappedMiniLabel);
                 }
             }
         }

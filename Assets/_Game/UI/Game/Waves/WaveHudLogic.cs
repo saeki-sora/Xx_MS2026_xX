@@ -6,15 +6,6 @@ namespace MS2026.UI.Game
     /// <summary>ウェーブの表示の決まり（Unity の画面に頼らない計算。テストあり）。</summary>
     public static class WaveHudLogic
     {
-        /// <summary>「GO!」を出す秒数。</summary>
-        public const float GoSeconds = 0.9f;
-
-        /// <summary>「あと○体！」で盛り上げ始める残りの数。</summary>
-        public const int NearGoalKills = 5;
-
-        /// <summary>残り時間の警告を出し始める秒数。</summary>
-        public const float WarningSeconds = 10f;
-
         /// <summary>残り秒数を「02:48」の形に（切り上げ。−なら「--:--」）。</summary>
         public static string Clock(float seconds)
         {
@@ -39,11 +30,16 @@ namespace MS2026.UI.Game
             return Mathf.CeilToInt(phaseRemaining - 1e-4f);
         }
 
-        public static bool ShowGo(WavePhase phase, float phaseElapsed) => phase == WavePhase.Combat && phaseElapsed < GoSeconds;
+        /// <summary>「GO!」を出すか（ウェーブが始まって goSeconds 秒の間）。</summary>
+        public static bool ShowGo(WavePhase phase, float phaseElapsed, float goSeconds) => phase == WavePhase.Combat && phaseElapsed < goSeconds;
 
-        public static bool NearGoal(WavePhase phase, int remaining) => phase == WavePhase.Combat && remaining > 0 && remaining <= NearGoalKills;
+        /// <summary>「あと少し！」を出すか（戦っている間、残り threshold 体以下。0 なら出さない）。</summary>
+        public static bool NearGoal(WavePhase phase, int remaining, int threshold) =>
+            phase == WavePhase.Combat && remaining > 0 && remaining <= threshold;
 
-        public static bool TimeWarning(bool clockRunning, float timeLeft) => clockRunning && timeLeft >= 0f && timeLeft <= WarningSeconds;
+        /// <summary>残り時間の警告を出すか（時計が動いていて、残り warningSeconds 秒以下。0 なら出さない）。</summary>
+        public static bool TimeWarning(bool clockRunning, float timeLeft, float warningSeconds) =>
+            clockRunning && warningSeconds > 0f && timeLeft >= 0f && timeLeft <= warningSeconds;
 
         /// <summary>発表の大きな文字（最終ウェーブで名前が空なら「FINAL WAVE」）。</summary>
         public static string AnnounceTitle(int number, bool isFinal, string label)

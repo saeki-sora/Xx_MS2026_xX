@@ -15,12 +15,8 @@ namespace MS2026.Fortress
     public sealed class WaveRouteView : MonoBehaviour
     {
         private const float ZOffset = -0.03f;
-        private const float ArrowSpacing = 1.6f;
-        private const float ArrowSpeed = 3.2f;
-        private const float ShowSeconds = 0.3f;
-        private const float FadeSeconds = 2f;
         private const int RenderQueue = 2980; // 群衆の敵（2990）より下
-        private const float RebuildInterval = 1f; // 発表の間に道が変わる（橋が崩れてコアが落ちる等）ことがあるので、ときどき引き直す
+        // 秒数・矢印の間隔などは表示の設定（WaveDisplayTiming。要塞デザイナー › 敵ウェーブ › 全体）から読む。
 
         private static readonly Color LineColor = new Color(1f, 0.16f, 0.22f, 0.62f);
         private static readonly Color EdgeColor = new Color(0.25f, 0f, 0.04f, 0.45f);
@@ -116,17 +112,19 @@ namespace MS2026.Fortress
         private void Show()
         {
             gameObject.SetActive(true);
+            var timing = WaveDisplayTiming.Current;
             _target = 1f;
-            _speed = 1f / ShowSeconds;
+            _speed = 1f / Mathf.Max(0.01f, timing.routeShowSeconds);
             _time = 0f;
-            _nextRebuild = RebuildInterval;
+            _nextRebuild = timing.routeRebuildSeconds;
             Rebuild();
         }
 
         private void FadeOut()
         {
+            var fade = WaveDisplayTiming.Current.routeFadeSeconds;
             _target = 0f;
-            _speed = 1f / FadeSeconds;
+            _speed = fade > 0f ? 1f / fade : 1000f;
         }
 
         private void HideNow()
@@ -158,9 +156,10 @@ namespace MS2026.Fortress
             }
 
             var arrowCount = 0;
+            var spacing = Mathf.Max(0.3f, WaveDisplayTiming.Current.routeArrowSpacing);
             foreach (var route in routes)
             {
-                arrowCount += Mathf.CeilToInt(route.length / ArrowSpacing) + 1;
+                arrowCount += Mathf.CeilToInt(route.length / spacing) + 1;
             }
 
             GrowSprites(_arrows, arrowCount, "Arrow", ArrowSprite);
@@ -195,7 +194,7 @@ namespace MS2026.Fortress
             _time += Time.deltaTime;
             if (_target > 0f && _time >= _nextRebuild && FortressWaves.Phase == WavePhase.Announce && FortressWaves.Plan != null)
             {
-                _nextRebuild = _time + RebuildInterval;
+                _nextRebuild = _time + WaveDisplayTiming.Current.routeRebuildSeconds;
                 WaveRoutes.Build(FortressWaves.Plan, FortressWaves.WaveIndex, FindDirector(FortressWaves.Plan));
                 Rebuild();
             }
@@ -215,10 +214,12 @@ namespace MS2026.Fortress
         private void UpdateArrows(IReadOnlyList<WaveRoute> routes)
         {
             var index = 0;
-            var offset = Mathf.Repeat(_time * ArrowSpeed, ArrowSpacing);
+            var timing = WaveDisplayTiming.Current;
+            var spacing = Mathf.Max(0.3f, timing.routeArrowSpacing);
+            var offset = Mathf.Repeat(_time * timing.routeArrowSpeed, spacing);
             foreach (var route in routes)
             {
-                for (var d = offset; d < route.length && index < _arrows.Count; d += ArrowSpacing)
+                for (var d = offset; d < route.length && index < _arrows.Count; d += spacing)
                 {
                     var arrow = _arrows[index++];
                     var point = WaveRouteShapes.PointAt(route.points, d, out var direction);

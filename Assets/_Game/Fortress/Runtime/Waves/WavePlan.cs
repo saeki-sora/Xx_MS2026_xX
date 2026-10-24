@@ -114,6 +114,9 @@ namespace MS2026.Fortress
         [Tooltip("ON: 発表の間、次のウェーブの敵のルートを赤い線で見せる。")]
         public bool showRoutes = true;
 
+        [Tooltip("表示のタイミング（GO! の秒数・赤い線の出方・初めての人向けの表示など）。全部のステージで同じファイルを使ってよい。空なら既定の値。")]
+        public WaveDisplaySettings display;
+
         [Header("ウェーブクリア → 撤退")]
         [Tooltip("「WAVE CLEAR!」を見せる最短の秒数（敵がすぐいなくなっても、この間は次へ進まない）。")]
         [Min(0f)]

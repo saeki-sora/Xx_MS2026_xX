@@ -23,7 +23,6 @@ namespace MS2026.Fortress
         private const float HeartbeatInterval = 1f;
         private const float ReadyResendInterval = 0.5f;
         private const float InputSendInterval = 0.05f;
-        private const float TimeWarningSeconds = 10f;
 
         private readonly HashSet<ulong> _readyClients = new HashSet<ulong>();
         private readonly float[] _stateBuffer = new float[WaveIntervalRunner.MaxStateValues];
@@ -461,7 +460,8 @@ namespace MS2026.Fortress
                 }
             }
 
-            if (FortressWaves.ClockRunning && FortressWaves.TimeLeft > 0f && FortressWaves.TimeLeft <= TimeWarningSeconds)
+            var warning = WaveDisplayTiming.Current.timeWarningSeconds;
+            if (warning > 0f && FortressWaves.ClockRunning && FortressWaves.TimeLeft > 0f && FortressWaves.TimeLeft <= warning)
             {
                 var second = Mathf.CeilToInt(FortressWaves.TimeLeft);
                 if (second != _lastWarningSecond)

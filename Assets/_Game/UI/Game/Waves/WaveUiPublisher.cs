@@ -8,8 +8,6 @@ namespace MS2026.UI.Game
     /// </summary>
     internal static class WaveUiPublisher
     {
-        private const float SyncShowSeconds = 0.9f;
-
         private static int _lastSyncCount;
         private static float _syncShownAt = float.NegativeInfinity;
 
@@ -40,6 +38,7 @@ namespace MS2026.UI.Game
             var kills = FortressWaves.KillsInWave;
             var plan = FortressWaves.Plan;
             var wave = FortressWaves.CurrentWave;
+            var timing = WaveDisplayTiming.Current;
 
             UiValues.Set(FortressUiKeys.WaveNumber, number);
             UiValues.Set(FortressUiKeys.WaveCount, count);
@@ -50,13 +49,13 @@ namespace MS2026.UI.Game
             UiValues.Set(FortressUiKeys.WaveTarget, target);
             UiValues.Set(FortressUiKeys.WaveRemaining, FortressWaves.KillsRemaining);
             UiValues.Set(FortressUiKeys.WaveProgress01, target > 0 ? (float)kills / target : 0f);
-            UiValues.Set(FortressUiKeys.WaveNearGoal, WaveHudLogic.NearGoal(phase, FortressWaves.KillsRemaining));
+            UiValues.Set(FortressUiKeys.WaveNearGoal, WaveHudLogic.NearGoal(phase, FortressWaves.KillsRemaining, timing.nearGoalKills));
 
             var hasLimit = FortressWaves.TimeLeft >= 0f;
             UiValues.Set(FortressUiKeys.WaveHasTimeLimit, hasLimit);
             UiValues.Set(FortressUiKeys.WaveTimeLeft, FortressWaves.TimeLeft);
             UiValues.Set(FortressUiKeys.WaveTimeText, WaveHudLogic.Clock(FortressWaves.TimeLeft));
-            UiValues.Set(FortressUiKeys.WaveTimeWarning, WaveHudLogic.TimeWarning(FortressWaves.ClockRunning, FortressWaves.TimeLeft));
+            UiValues.Set(FortressUiKeys.WaveTimeWarning, WaveHudLogic.TimeWarning(FortressWaves.ClockRunning, FortressWaves.TimeLeft, timing.timeWarningSeconds));
 
             var announcing = phase == WavePhase.Announce;
             UiValues.Set(FortressUiKeys.WaveAnnouncing, announcing);
@@ -64,12 +63,12 @@ namespace MS2026.UI.Game
             UiValues.Set(FortressUiKeys.WaveAnnounceGoal, WaveHudLogic.AnnounceGoal(target));
             UiValues.Set(FortressUiKeys.WaveAnnounceText, wave?.announceText ?? "");
             UiValues.Set(FortressUiKeys.WaveCountdown, WaveHudLogic.Countdown(phase, FortressWaves.PhaseRemaining, plan != null ? plan.countdownSeconds : 0f));
-            UiValues.Set(FortressUiKeys.WaveGo, WaveHudLogic.ShowGo(phase, FortressWaves.PhaseElapsed));
+            UiValues.Set(FortressUiKeys.WaveGo, WaveHudLogic.ShowGo(phase, FortressWaves.PhaseElapsed, timing.goSeconds));
             UiValues.Set(FortressUiKeys.WaveClearShowing, phase == WavePhase.Retreat);
             UiValues.Set(FortressUiKeys.WaveClearText, WaveHudLogic.ClearText(number, isFinal));
             UiValues.Set(FortressUiKeys.WaveBreak, phase == WavePhase.Break);
             UiValues.Set(FortressUiKeys.WaveTimeUp, phase == WavePhase.Finished && FortressWaves.EndKind == WaveEndKind.TimeUp);
-            UiValues.Set(FortressUiKeys.WaveFirstHint, FortressWaves.WaveIndex == 0 && (phase == WavePhase.WaitingForPlayers || phase == WavePhase.Announce));
+            UiValues.Set(FortressUiKeys.WaveFirstHint, timing.showGripHint && timing.ShowFirstHint(phase, FortressWaves.WaveIndex));
         }
 
         /// <summary>コアのコーティング（歯みがきのごほうび）。<see cref="FortressUiValues"/> がコアの値と一緒に呼ぶ。</summary>
@@ -117,7 +116,7 @@ namespace MS2026.UI.Game
 
             _lastSyncCount = sync;
             UiValues.Set(FortressUiKeys.BrushSyncCount, sync);
-            UiValues.Set(FortressUiKeys.BrushSyncShowing, UnityEngine.Time.unscaledTime - _syncShownAt < SyncShowSeconds);
+            UiValues.Set(FortressUiKeys.BrushSyncShowing, UnityEngine.Time.unscaledTime - _syncShownAt < WaveDisplayTiming.Current.syncShowSeconds);
             UiValues.Set(FortressUiKeys.BrushResultText, WaveHudLogic.BrushResultText(runner.HealAmount, runner.CoatingAmount, runner.Clean01));
         }
     }

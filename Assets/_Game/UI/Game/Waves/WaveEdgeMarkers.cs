@@ -46,7 +46,7 @@ namespace MS2026.UI.Game
 
         private void LateUpdate()
         {
-            var alpha = WaveRoutes.Alpha;
+            var alpha = WaveDisplayTiming.Current.showEdgeMarkers ? WaveRoutes.Alpha : 0f;
             var spawns = WaveRoutes.Spawns;
             var rig = FortressCameraRig.Active;
             var camera = rig != null && rig.targetCamera != null ? rig.targetCamera : Camera.main;

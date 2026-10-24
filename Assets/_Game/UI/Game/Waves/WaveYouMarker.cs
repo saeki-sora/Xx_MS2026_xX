@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace MS2026.UI.Game
 {
     /// <summary>
-    /// 試合の最初（全員を待っている間と WAVE 1 の発表の間）に、このPCのプレイヤーの砲台の上に「YOU」の矢印を出す（2026-10-24、初めての人向け）。
+    /// 試合の最初（全員を待っている間と WAVE 1 の発表の間。何ウェーブまで出すかは表示の設定）に、このPCのプレイヤーの砲台の上に「YOU」の矢印を出す（2026-10-24、初めての人向け）。
     /// 視点がPCごとに違う（回っている人もいる）ので、「自分の砲台はどれか」をはっきり見せる。各PCが自分のカメラで場所を計算する。
     /// UIスタジオの「ウェーブの表示を入れる」が作る「WaveYouMarker」（画面いっぱいの枠）に付く。
     /// </summary>
@@ -40,8 +40,8 @@ namespace MS2026.UI.Game
                 return;
             }
 
-            var show = FortressWaves.IsActive && FortressWaves.WaveIndex == 0 &&
-                       (FortressWaves.Phase == WavePhase.WaitingForPlayers || FortressWaves.Phase == WavePhase.Announce);
+            var timing = WaveDisplayTiming.Current;
+            var show = FortressWaves.IsActive && timing.showYouMarker && timing.ShowFirstHint(FortressWaves.Phase, FortressWaves.WaveIndex);
             var player = LocalPlayer();
             var turret = show ? FindTurret(player) : null;
             var rig = FortressCameraRig.Active;

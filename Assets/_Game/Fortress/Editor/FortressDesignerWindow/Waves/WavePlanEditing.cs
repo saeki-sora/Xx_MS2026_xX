@@ -52,6 +52,7 @@ namespace MS2026.Fortress.EditorTools
                 plan.waves.Add(wave);
             }
 
+            plan.display = WaveDisplayPanel.LoadOrCreateDefault();
             plan.memo = from != null ? $"時間割「{from.name}」から作った（数 ×{string.Join("/", DefaultScales)}）。" : "";
             AssetDatabase.CreateAsset(plan, path);
             AssetDatabase.SaveAssets();

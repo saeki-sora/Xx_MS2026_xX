@@ -18,6 +18,7 @@ namespace MS2026.Fortress.EditorTools
         private static readonly Color WaveColor = new Color(0.95f, 0.6f, 0.35f, 0.85f);
 
         private bool _effectsFoldout;
+        private readonly WaveDisplayPanel _display = new WaveDisplayPanel();
 
         /// <param name="onSelectWave">帯のウェーブを押したとき（そのタブへ）。</param>
         public void Draw(WavePlan plan, SerializedObject serialized, List<WavePlanIssue> issues, System.Action<int> onSelectWave)
@@ -29,6 +30,8 @@ namespace MS2026.Fortress.EditorTools
             DrawIssues(issues);
             EditorGUILayout.Space(6);
             DrawRules(serialized);
+            EditorGUILayout.Space(4);
+            _display.Draw(plan, serialized);
             EditorGUILayout.Space(4);
             _effectsFoldout = EditorGUILayout.Foldout(_effectsFoldout, "演出（発表・GO・クリア・3・2・1・残り時間の警告）", true);
             if (_effectsFoldout)

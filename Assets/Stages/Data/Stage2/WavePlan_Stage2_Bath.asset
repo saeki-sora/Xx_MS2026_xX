@@ -356,6 +356,7 @@ MonoBehaviour:
   announceSeconds: 4
   countdownSeconds: 2
   showRoutes: 1
+  display: {fileID: 11400000, guid: 216f6f7c18b945f995221f1127805434, type: 2}
   clearBannerSeconds: 1.6
   retreatMaxSeconds: 5
   retreatSpeedMultiplier: 2.4
