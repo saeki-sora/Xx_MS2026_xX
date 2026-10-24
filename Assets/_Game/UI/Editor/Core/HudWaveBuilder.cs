@@ -42,13 +42,26 @@ namespace MS2026.UI.EditorTools
 
         private static readonly Color Navy = new Color(0.06f, 0.08f, 0.2f);
         private static readonly Color DeepPink = new Color(0.86f, 0.18f, 0.55f);
-        private static readonly Color Gold = new Color(1f, 0.82f, 0.36f);
         private static readonly Color Red = new Color(1f, 0.3f, 0.4f);
 
         internal static readonly string[] ArtFiles =
         {
-            "Wave_Plate.png", "Wave_Bar.png", "Wave_Banner.png", "Wave_Ring.png", "Wave_Hand.png", "Wave_Brush.png", "Wave_Stain.png", "Wave_Arrow.png"
+            "Wave_Plate.png", "Wave_Bar.png", "Wave_Banner.png", "Wave_Ring.png", "Wave_Arrow.png", "Wave_Panel.png",
+            "Brush_Title.png", "Brush_Card.png", "Brush_Chip.png", "Brush_Stage.png", "Brush_Tooth.png", "Brush_Brush.png", "Brush_BrushStripe.png",
+            "Brush_Hand.png", "Brush_TimerBack.png", "Brush_TimerFill.png", "Brush_Burst.png", "Brush_Bubble.png", "Brush_Sparkle.png"
         };
+
+        // 9 スライスで伸ばす絵の枠（px）。
+        private static Vector4 BorderOf(string file)
+        {
+            switch (file)
+            {
+                case "Wave_Bar.png": return new Vector4(10f, 9f, 10f, 9f);
+                case "Wave_Panel.png": return new Vector4(44f, 44f, 44f, 44f);
+                case "Brush_Chip.png": return new Vector4(44f, 40f, 44f, 40f);
+                default: return Vector4.zero;
+            }
+        }
 
         [MenuItem(MenuPath)]
         private static void BuildFromMenu()
@@ -213,11 +226,11 @@ namespace MS2026.UI.EditorTools
             B.Stretch(finalBand.rectTransform);
             B.AddMotion(finalBand.gameObject, UiMotionTrigger.Loop, UiPreset.Breathe, 0.9f);
 
-            var title = H.Number(body, "Title", 128, Navy, TextAnchor.MiddleCenter, Color.white, 4f, 5f);
+            var title = H.Number(body, "Title", 128, Color.white, TextAnchor.MiddleCenter, Navy, 6f, 6f);
             H.Center(title.rectTransform, new Vector2(0f, 40f), new Vector2(1300f, 150f));
             H.Bind(title, FortressUiKeys.WaveAnnounceTitle, "{0}", 0f);
 
-            var goal = H.Number(body, "Goal", 60, DeepPink, TextAnchor.MiddleCenter, Color.white, 3f, 0f);
+            var goal = H.Number(body, "Goal", 60, Color.white, TextAnchor.MiddleCenter, DeepPink, 4f, 3f);
             H.Center(goal.rectTransform, new Vector2(0f, -70f), new Vector2(1300f, 80f));
             H.Bind(goal, FortressUiKeys.WaveAnnounceGoal, "{0}", 0f);
             B.AddMotion(goal.gameObject, UiMotionTrigger.OnShow, UiPreset.PopIn, 0.35f, 0.25f);
@@ -284,9 +297,9 @@ namespace MS2026.UI.EditorTools
             H.Center(body, new Vector2(0f, 150f), new Vector2(1300f, 230f));
             B.AddMotion(body.gameObject, UiMotionTrigger.OnShow, UiPreset.BounceIn, 0.5f);
             B.AddMotion(body.gameObject, UiMotionTrigger.OnHide, UiPreset.FadeOut, 0.3f);
-            var band = H.Picture(body, "Band", "Wave_Banner.png", Gold);
+            var band = H.Picture(body, "Band", "Wave_Banner.png", Color.white);
             B.Stretch(band.rectTransform);
-            var text = H.Number(body, "Label", 116, Navy, TextAnchor.MiddleCenter, Color.white, 4f, 5f);
+            var text = H.Number(body, "Label", 116, Color.white, TextAnchor.MiddleCenter, Navy, 6f, 6f);
             H.Center(text.rectTransform, new Vector2(0f, 10f), new Vector2(1250f, 150f));
             H.Bind(text, FortressUiKeys.WaveClearText, "{0}", 0f);
 
@@ -353,6 +366,27 @@ namespace MS2026.UI.EditorTools
             }
         }
 
+        /// <summary>文字に、左へ赤紫・右へ水色の影（タイトルロゴと同じ色ずれ）を付ける。</summary>
+        internal static Text Glitch(Text text, float split)
+        {
+            var a = text.gameObject.AddComponent<Shadow>();
+            a.effectColor = new Color(1f, 0.16f, 0.78f, 0.85f);
+            a.effectDistance = new Vector2(-split, 0f);
+            var b = text.gameObject.AddComponent<Shadow>();
+            b.effectColor = new Color(0f, 0.86f, 1f, 0.85f);
+            b.effectDistance = new Vector2(split, 0f);
+            return text;
+        }
+
+        /// <summary>文字に縁取りを付ける。</summary>
+        internal static Text Outline(Text text, Color color, float width)
+        {
+            var outline = text.gameObject.AddComponent<Outline>();
+            outline.effectColor = color;
+            outline.effectDistance = new Vector2(width, -width);
+            return text;
+        }
+
         /// <summary>値で出し入れする（CanvasGroup ＋ UiBindVisible）。</summary>
         internal static UiBindVisible Visible(RectTransform rect, string key, UiVisibleCondition condition, float threshold)
         {
@@ -379,14 +413,17 @@ namespace MS2026.UI.EditorTools
                     continue;
                 }
 
-                var border = file == "Wave_Bar.png" ? new Vector4(10f, 9f, 10f, 9f) : Vector4.zero;
+                var border = BorderOf(file);
+                // 設定ファイル（.meta）が最小限だと、Unity が「立方体のテクスチャ」として読み込み、画面で白い四角になる（2026-10-25 に起きた）。
                 if (importer.textureType == TextureImporterType.Sprite && importer.spriteImportMode == SpriteImportMode.Single &&
+                    importer.textureShape == TextureImporterShape.Texture2D &&
                     !importer.mipmapEnabled && importer.alphaIsTransparency && importer.npotScale == TextureImporterNPOTScale.None &&
                     importer.spriteBorder == border)
                 {
                     continue;
                 }
 
+                importer.textureShape = TextureImporterShape.Texture2D;
                 importer.textureType = TextureImporterType.Sprite;
                 importer.spriteImportMode = SpriteImportMode.Single;
                 importer.mipmapEnabled = false;

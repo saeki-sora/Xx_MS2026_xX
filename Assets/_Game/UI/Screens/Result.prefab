@@ -3238,6 +3238,7 @@ GameObject:
   - component: {fileID: 6994647823901784895}
   - component: {fileID: 8120260068682539154}
   - component: {fileID: 232655457921780659}
+  - component: {fileID: 5668176770551293396}
   m_Layer: 0
   m_Name: Message
   m_TagString: Untagged
@@ -3306,6 +3307,22 @@ MonoBehaviour:
     m_VerticalOverflow: 1
     m_LineSpacing: 1
   m_Text: "\u30B3\u30A2\u304C\u58CA\u3055\u308C\u3066\u3057\u307E\u3063\u305F\u2026"
+--- !u!114 &5668176770551293396
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3681541066074491500}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6333f13e47e9f44892e50d3a51d5594, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MS2026.UI.Runtime::MS2026.UI.UiBindText
+  key: result.subtitle
+  format: '{0}'
+  countUpSeconds: 0
+  whenEmpty: "\u30B3\u30A2\u304C\u58CA\u3055\u308C\u3066\u3057\u307E\u3063\u305F\u2026"
 --- !u!1 &3833587430384001521
 GameObject:
   m_ObjectHideFlags: 0

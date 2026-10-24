@@ -24,6 +24,15 @@ namespace MS2026.UI.Game
         [Tooltip("砲台から画面の上へ離す量（HUD の基準 1920×1080 での px）。")]
         public float offset = 110f;
 
+        [Tooltip("矢印（砲台を指す）。砲台が画面の上の方にあるときは、YOU を砲台の下に出して矢印を上向きにする。")]
+        public RectTransform arrow;
+
+        [Tooltip("「YOU」の札。")]
+        public RectTransform tag;
+
+        [Tooltip("画面の上からこの px の帯（WAVE の札・コアのバーがある所）には重ねない。")]
+        public float topReserved = 230f;
+
         private RectTransform _rect;
         private LaserTurret _turret;
         private int _turretPlayer = -1;
@@ -61,7 +70,15 @@ namespace MS2026.UI.Game
 
             marker.gameObject.SetActive(true);
             var bob = Mathf.Abs(Mathf.Sin(Time.unscaledTime * 4f)) * 18f;
-            marker.anchoredPosition = local + new Vector2(0f, offset + bob);
+            // 上に出すと画面の上の札（WAVE・コアのバー）に重なるときは、砲台の下に出して上を指す。
+            var below = local.y + offset + marker.sizeDelta.y * 0.5f > _rect.rect.height * 0.5f - topReserved;
+            marker.anchoredPosition = local + new Vector2(0f, below ? -(offset + bob) : offset + bob);
+            if (arrow != null && tag != null)
+            {
+                arrow.anchoredPosition = new Vector2(0f, below ? 36f : -36f);
+                arrow.localRotation = Quaternion.Euler(0f, 0f, below ? 0f : 180f);
+                tag.anchoredPosition = new Vector2(0f, below ? -42f : 42f);
+            }
             var color = FortressColors.PlayerColor(player);
             foreach (var graphic in tinted)
             {
