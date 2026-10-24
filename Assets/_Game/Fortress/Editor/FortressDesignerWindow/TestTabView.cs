@@ -109,17 +109,8 @@ namespace MS2026.Fortress.EditorTools
             }
         }
 
-        private static void DrawWaveControls()
+        private static void DrawTimetableControls(EnemySpawnDirector director)
         {
-            EditorGUILayout.LabelField("敵ウェーブ再生", EditorStyles.boldLabel);
-
-            var director = Object.FindFirstObjectByType<EnemySpawnDirector>();
-            if (director == null)
-            {
-                EditorGUILayout.HelpBox("シーンにEnemySpawnDirectorが見つかりません。", MessageType.Warning);
-                return;
-            }
-
             var waveLabel = director.wave != null ? director.wave.waveName : "(ウェーブ未割り当て)";
             EditorGUILayout.LabelField("対象ウェーブ", waveLabel);
             EditorGUILayout.LabelField("状態", director.IsPlaying
@@ -143,6 +134,29 @@ namespace MS2026.Fortress.EditorTools
                         director.StopWave();
                     }
                 }
+            }
+        }
+
+        private static void DrawWaveControls()
+        {
+            EditorGUILayout.LabelField("敵ウェーブ再生", EditorStyles.boldLabel);
+
+            var director = Object.FindFirstObjectByType<EnemySpawnDirector>();
+            if (director == null)
+            {
+                EditorGUILayout.HelpBox("シーンにEnemySpawnDirectorが見つかりません。", MessageType.Warning);
+                return;
+            }
+
+            if (director.wavePlan != null)
+            {
+                // ウェーブの計画があるステージは、計画の係が湧かせる（ここで時間割を直接始めると、計画とずれる）。
+                EditorGUILayout.LabelField("ウェーブの計画", director.wavePlan.name);
+                new WavePlayControls().DrawPlan(director.wavePlan, FortressWaves.IsActive ? FortressWaves.WaveIndex : 0);
+            }
+            else
+            {
+                DrawTimetableControls(director);
             }
 
             var core = Object.FindFirstObjectByType<CoreCrystalController>();

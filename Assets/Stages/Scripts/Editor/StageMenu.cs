@@ -91,6 +91,13 @@ namespace MS2026.Stages.EditorTools
                 EditorUtility.SetDirty(layout);
             }
 
+            // ウェーブの計画も写しもとと共用にしない（1 つを直すと両方のステージが変わってしまう）。
+            foreach (var director in Object.FindObjectsByType<EnemySpawnDirector>(FindObjectsInactive.Include, FindObjectsSortMode.None).Where(d => d.gameObject.scene == scene))
+            {
+                director.wavePlan = CopyWavePlan(director.wavePlan, sceneName, Path.GetFileNameWithoutExtension(source));
+                EditorUtility.SetDirty(director);
+            }
+
             // 背景（ステージ背景スタジオの Prefab）と光の設定（StageSet）も写しもとと共用にしない（ユーザー決定 2026-10-24）。
             foreach (var root in Object.FindObjectsByType<StageRoot>(FindObjectsInactive.Include, FindObjectsSortMode.None).Where(r => r.gameObject.scene == scene))
             {
@@ -189,6 +196,34 @@ namespace MS2026.Stages.EditorTools
             return copy;
         }
 
+        /// <summary>写しもとのステージのウェーブの計画を複製して、新しいステージ専用にする（もとが空なら空のまま）。</summary>
+        internal static WavePlan CopyWavePlan(WavePlan source, string sceneName, string sourceSceneName)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            var folder = $"{StageAssets.DataFolder}/{sceneName}";
+            if (!AssetDatabase.IsValidFolder(folder))
+            {
+                AssetDatabase.CreateFolder(StageAssets.DataFolder, sceneName);
+            }
+
+            var path = AssetDatabase.GenerateUniqueAssetPath($"{folder}/WavePlan_{sceneName}.asset");
+            if (!AssetDatabase.CopyAsset(AssetDatabase.GetAssetPath(source), path))
+            {
+                Debug.LogWarning($"[Stage] ウェーブの計画「{source.name}」を写せませんでした。新しいステージは写しもとと共用のままです。");
+                return source;
+            }
+
+            var copy = AssetDatabase.LoadAssetAtPath<WavePlan>(path);
+            copy.memo = $"{sourceSceneName} の計画（{source.name}）を写した物。" + (string.IsNullOrEmpty(copy.memo) ? "" : " / " + copy.memo);
+            EditorUtility.SetDirty(copy);
+            AssetDatabase.SaveAssetIfDirty(copy);
+            return copy;
+        }
+
         [MenuItem("Tools/ステージ/新しいステージを作る（選んだステージを写す）", true)]
         private static bool CreateStageValidate() => !EditorApplication.isPlayingOrWillChangePlaymode;
 
@@ -281,6 +316,7 @@ namespace MS2026.Stages.EditorTools
                 }
 
                 var presetUsers = new Dictionary<CameraViewPreset, List<string>>();
+                var planUsers = new Dictionary<WavePlan, List<string>>();
                 var backgroundUsers = new Dictionary<StageSet, List<string>>();
 
                 for (var i = 0; i < catalog.Count; i++)
@@ -340,6 +376,27 @@ namespace MS2026.Stages.EditorTools
                         users.Add($"「{stage.DisplayName}」");
                     }
 
+                    var director = roots.Select(r => r.GetComponentInChildren<EnemySpawnDirector>(true)).FirstOrDefault(d => d != null);
+                    if (director != null && director.wavePlan == null)
+                    {
+                        issues.Add($"「{stage.DisplayName}」: ウェーブの計画（WAVE 1〜5）がありません。時間割1本をくり返し、撃破数でクリアになります（要塞デザイナー › 敵ウェーブで作れます）。");
+                    }
+                    else if (director != null)
+                    {
+                        var planIssues = WavePlanChecks.Check(director.wavePlan);
+                        foreach (var issue in planIssues.Where(x => x.Level == WavePlanIssueLevel.Error))
+                        {
+                            issues.Add($"「{stage.DisplayName}」のウェーブの計画: {(issue.Wave >= 0 ? $"WAVE {issue.Wave + 1}: " : "")}{issue.Message}");
+                        }
+
+                        if (!planUsers.TryGetValue(director.wavePlan, out var users))
+                        {
+                            planUsers[director.wavePlan] = users = new List<string>();
+                        }
+
+                        users.Add($"「{stage.DisplayName}」");
+                    }
+
                     var stageRoot = roots.Select(r => r.GetComponentInChildren<StageRoot>(true)).FirstOrDefault(r => r != null);
                     if (stageRoot == null || stageRoot.current == null)
                     {
@@ -361,6 +418,11 @@ namespace MS2026.Stages.EditorTools
                 foreach (var pair in backgroundUsers.Where(p => p.Value.Count > 1))
                 {
                     issues.Add($"背景と光の設定「{pair.Key.name}」を {string.Join("・", pair.Value)} が共用しています。1 つを直すとほかも変わります。");
+                }
+
+                foreach (var pair in planUsers.Where(p => p.Value.Count > 1))
+                {
+                    issues.Add($"ウェーブの計画「{pair.Key.name}」を {string.Join("・", pair.Value)} が共用しています。1 つを直すとほかも変わります。");
                 }
 
                 foreach (var pair in presetUsers.Where(p => p.Value.Count > 1))

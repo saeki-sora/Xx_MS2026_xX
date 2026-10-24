@@ -10,6 +10,71 @@ namespace MS2026.Fortress.EditorTools
     /// </summary>
     public sealed class WavePlayControls
     {
+        /// <summary>
+        /// ウェーブの計画があるときの欄。Play 中は今の段階・倒した数・残り時間と、テスト用のボタン
+        /// （選んでいるウェーブから・今の段階を飛ばす）。Host／オフラインだけ効く。
+        /// </summary>
+        /// <param name="selectedWave">開いているタブのウェーブ（全体なら −1）。</param>
+        public void DrawPlan(WavePlan plan, int selectedWave)
+        {
+            if (!Application.isPlaying)
+            {
+                EditorGUILayout.LabelField(
+                    "Play すると、全員の準備（幕が開く）がそろってから WAVE 1 の発表が始まります。計画の中身は Play 中に変えても残ります（次に始めたウェーブから反映）。",
+                    EditorStyles.wordWrappedMiniLabel);
+                return;
+            }
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                if (!FortressWaves.IsActive)
+                {
+                    EditorGUILayout.LabelField("ウェーブ（Play 中）: 動いていません（試合の外、またはこのステージに計画がありません）", EditorStyles.boldLabel);
+                    return;
+                }
+
+                var time = FortressWaves.TimeLeft >= 0f ? $" ・ 残り {WavePlanOverviewPanel.Clock(FortressWaves.TimeLeft)}" : "";
+                EditorGUILayout.LabelField(
+                    $"ウェーブ（Play 中）: {PhaseName(FortressWaves.Phase)} ・ WAVE {FortressWaves.WaveNumber}/{FortressWaves.WaveCount} ・ 倒した {FortressWaves.KillsInWave}/{FortressWaves.TargetKills}{time}",
+                    EditorStyles.boldLabel);
+                var canControl = Net.FortressNet.HasSimulationAuthority;
+                using (new EditorGUI.DisabledScope(!canControl))
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    var target = Mathf.Clamp(selectedWave, 0, Mathf.Max(0, plan.Count - 1));
+                    if (GUILayout.Button(new GUIContent($"▶ WAVE {target + 1} の発表から", "開いているタブのウェーブから始め直します（全体タブなら WAVE 1）。今いる敵はそのまま。残り時間は戻りません。")))
+                    {
+                        FortressWaves.DebugJumpTo(target);
+                    }
+
+                    var skip = FortressWaves.Phase == WavePhase.Combat ? "目標を倒したことにする" : "今の段階を飛ばす";
+                    if (GUILayout.Button(new GUIContent(skip, "発表・撤退・合間をすぐ終わらせます。戦っている間なら、目標を倒したことにして次へ進みます。")))
+                    {
+                        FortressWaves.DebugSkip();
+                    }
+                }
+
+                if (!canControl)
+                {
+                    EditorGUILayout.LabelField("ネット対戦の Client では動かせません（Host で押してください）。", EditorStyles.miniLabel);
+                }
+            }
+        }
+
+        public static string PhaseName(WavePhase phase)
+        {
+            switch (phase)
+            {
+                case WavePhase.WaitingForPlayers: return "全員の準備を待っている";
+                case WavePhase.Announce: return "発表中";
+                case WavePhase.Combat: return "戦っている";
+                case WavePhase.Retreat: return "クリア・敵が逃げている";
+                case WavePhase.Break: return "合間";
+                case WavePhase.Finished: return "終わり";
+                default: return "—";
+            }
+        }
+
         /// <param name="selectedTime">表で選んでいる行の発生時刻（選んでいなければ null）。</param>
         public void Draw(EnemySpawnDirector director, EnemyWaveConfig wave, float? selectedTime)
         {

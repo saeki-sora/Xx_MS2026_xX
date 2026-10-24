@@ -27,37 +27,37 @@ namespace MS2026.Fortress.EditorTools
         private float _ringStartAngle;
         private bool _ringReplaceExisting = true;
 
-        public void Draw(EnemySpawnDirector director, EnemyWaveConfig wave)
+        public void Draw(EnemySpawnDirector director)
         {
             var points = FindAllPoints();
 
             _foldout = EditorGUILayout.BeginFoldoutHeaderGroup(_foldout, $"湧き位置の編集（{points.Length}箇所）");
             if (_foldout)
             {
-                DrawContents(director, wave, points);
+                DrawContents(director, points);
             }
 
             EditorGUILayout.EndFoldoutHeaderGroup();
         }
 
-        private void DrawContents(EnemySpawnDirector director, EnemyWaveConfig wave, EnemySpawnPoint[] points)
+        private void DrawContents(EnemySpawnDirector director, EnemySpawnPoint[] points)
         {
             EditorGUILayout.HelpBox(
-                "敵が湧く地点そのものの位置とIDを編集します。IDを変えると、このウェーブの参照も自動で追従します。" +
+                "敵が湧く地点そのものの位置とIDを編集します。IDを変えると、ウェーブ（全部のウェーブ・時間割）の参照も自動で追従します。" +
                 "「ドラッグ編集」をONにするとSceneビュー上で直接動かせます。",
                 MessageType.None);
 
             DrawSceneToggles();
             EditorGUILayout.Space(4);
 
-            var usage = CountEnemiesPerPoint(wave);
+            var usage = CountEnemiesPerPoint(director);
             SpawnPointSceneOverlay.EnemiesById = usage;
-            DrawMissingPoints(director, wave, points);
+            DrawMissingPoints(director, points);
             var duplicatedIds = points.GroupBy(p => p.ResolvedId).Where(g => g.Count() > 1).Select(g => g.Key).ToHashSet();
 
             foreach (var point in points)
             {
-                DrawRow(director, wave, point, usage, duplicatedIds);
+                DrawRow(director, point, usage, duplicatedIds);
             }
 
             if (points.Length == 0)
@@ -76,7 +76,7 @@ namespace MS2026.Fortress.EditorTools
             _ringFoldout = EditorGUILayout.Foldout(_ringFoldout, "リング状に自動配置（コアのまわりに等間隔で作り直す）", true);
             if (_ringFoldout)
             {
-                DrawRingGenerator(director, wave, points);
+                DrawRingGenerator(director, points);
             }
 
             EditorGUILayout.Space(8);
@@ -114,15 +114,10 @@ namespace MS2026.Fortress.EditorTools
         }
 
         /// <summary>ウェーブでは使っているのにシーンに無い湧き位置を知らせ、ボタン1つで作れるようにする。</summary>
-        private static void DrawMissingPoints(EnemySpawnDirector director, EnemyWaveConfig wave, EnemySpawnPoint[] points)
+        private static void DrawMissingPoints(EnemySpawnDirector director, EnemySpawnPoint[] points)
         {
-            if (wave == null)
-            {
-                return;
-            }
-
             var known = points.Select(p => p.ResolvedId).ToHashSet();
-            var missing = wave.spawnEntries
+            var missing = director.AllEntries()
                 .Where(e => e != null && !string.IsNullOrEmpty(e.spawnPointId) && !known.Contains(e.spawnPointId))
                 .Select(e => e.spawnPointId)
                 .Distinct()
@@ -154,7 +149,6 @@ namespace MS2026.Fortress.EditorTools
 
         private void DrawRow(
             EnemySpawnDirector director,
-            EnemyWaveConfig wave,
             EnemySpawnPoint point,
             Dictionary<string, int> usage,
             HashSet<string> duplicatedIds)
@@ -176,7 +170,7 @@ namespace MS2026.Fortress.EditorTools
                 var newId = EditorGUILayout.DelayedTextField(id, GUILayout.MinWidth(80));
                 if (EditorGUI.EndChangeCheck())
                 {
-                    RenamePoint(point, newId, wave);
+                    RenamePoint(point, newId, director);
                 }
 
                 var position = (Vector2)point.transform.position;
@@ -247,7 +241,7 @@ namespace MS2026.Fortress.EditorTools
             }
         }
 
-        private void DrawRingGenerator(EnemySpawnDirector director, EnemyWaveConfig wave, EnemySpawnPoint[] points)
+        private void DrawRingGenerator(EnemySpawnDirector director, EnemySpawnPoint[] points)
         {
             EditorGUILayout.LabelField("リング状に自動配置", EditorStyles.miniBoldLabel);
             _ringCount = Mathf.Clamp(EditorGUILayout.IntField(new GUIContent("個数"), _ringCount), 1, 64);
@@ -331,7 +325,7 @@ namespace MS2026.Fortress.EditorTools
             SyncDirector(director);
         }
 
-        private static void RenamePoint(EnemySpawnPoint point, string newId, EnemyWaveConfig wave)
+        private static void RenamePoint(EnemySpawnPoint point, string newId, EnemySpawnDirector director)
         {
             if (string.IsNullOrWhiteSpace(newId))
             {
@@ -349,18 +343,23 @@ namespace MS2026.Fortress.EditorTools
             point.spawnPointId = newId;
             point.gameObject.name = newId;
 
-            if (wave == null)
+            // 計画（全部のウェーブ）と時間割の両方の行を追従させる。
+            var owners = new Object[] { director.wavePlan, director.wave }.Where(o => o != null).ToArray();
+            if (owners.Length == 0)
             {
                 return;
             }
 
-            Undo.RecordObject(wave, "Rename Spawn Point");
-            foreach (var entry in wave.spawnEntries.Where(e => e.spawnPointId == oldId))
+            Undo.RecordObjects(owners, "Rename Spawn Point");
+            foreach (var entry in director.AllEntries().Where(e => e.spawnPointId == oldId))
             {
                 entry.spawnPointId = newId;
             }
 
-            EditorUtility.SetDirty(wave);
+            foreach (var owner in owners)
+            {
+                EditorUtility.SetDirty(owner);
+            }
         }
 
         /// <summary>Directorの参照配列を、シーン上の全EnemySpawnPointに合わせる。</summary>
@@ -393,15 +392,10 @@ namespace MS2026.Fortress.EditorTools
             }
         }
 
-        private static Dictionary<string, int> CountEnemiesPerPoint(EnemyWaveConfig wave)
+        private static Dictionary<string, int> CountEnemiesPerPoint(EnemySpawnDirector director)
         {
             var result = new Dictionary<string, int>();
-            if (wave == null)
-            {
-                return result;
-            }
-
-            foreach (var entry in wave.spawnEntries)
+            foreach (var entry in director.AllEntries())
             {
                 if (string.IsNullOrEmpty(entry.spawnPointId))
                 {
