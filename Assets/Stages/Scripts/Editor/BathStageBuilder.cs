@@ -24,6 +24,7 @@ namespace MS2026.Stages.EditorTools
         public const string SceneName = "Stage2_Bath";
         public const string DataFolder = "Assets/Stages/Data/Stage2";
         public const string WavePath = DataFolder + "/Stage2_Wave1.asset";
+        public const string BathWavePlanPath = DataFolder + "/WavePlan_Stage2_Bath.asset";
         public const string CameraPresetPath = "Assets/_Game/Fortress/Presets/Camera/CameraViewPreset_Stage2.asset";
         private const string CameraSourcePath = "Assets/_Game/Fortress/Presets/Camera/CameraViewPreset_CoreBottom.asset";
         private const string PresetFolder = "Assets/_Game/Fortress/Presets";
@@ -154,6 +155,12 @@ namespace MS2026.Stages.EditorTools
             {
                 director.wave = wave;
                 director.spawnPoints = points.ToArray();
+                // ステージ1から写したディレクターはステージ1の計画を持っているので、お風呂場の計画（あれば）に替える（共用しない）。
+                director.wavePlan = AssetDatabase.LoadAssetAtPath<WavePlan>(BathWavePlanPath);
+                if (director.wavePlan == null)
+                {
+                    report.Add($"ウェーブの計画 {BathWavePlanPath} が無いので、時間割1本で動きます（要塞デザイナー › 敵ウェーブで作れます）。");
+                }
             }
 
             report.Add($"湧き位置: {string.Join(" / ", SpawnPoints.Select(s => s.id))}");

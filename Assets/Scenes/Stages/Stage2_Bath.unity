@@ -705,6 +705,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.EnemySpawnDirector
   wave: {fileID: 11400000, guid: ccdba83559ac20a4eaff9c56b82faad2, type: 2}
+  wavePlan: {fileID: 11400000, guid: 9c2b5981acc54afda92e28d4ea73799c, type: 2}
   spawnPoints:
   - {fileID: 811514834}
   - {fileID: 919441925}
