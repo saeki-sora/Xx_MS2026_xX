@@ -61,7 +61,7 @@ namespace MS2026.Fortress
         [Min(0f)]
         public float syncCooldownSeconds = 0.5f;
 
-        [Header("演出（各PCで鳴らす。位置はコア）")]
+        // 演出（各PCで鳴らす。位置はコア）。要塞デザイナーでは折りたたみの中に出す。
         [Tooltip("歯みがきタイムが始まったとき。")]
         public FortressEffect onStart = new FortressEffect { tintWithPlayerColor = false };
 

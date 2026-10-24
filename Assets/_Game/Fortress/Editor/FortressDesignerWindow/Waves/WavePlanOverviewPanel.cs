@@ -33,9 +33,10 @@ namespace MS2026.Fortress.EditorTools
             EditorGUILayout.Space(4);
             _display.Draw(plan, serialized);
             EditorGUILayout.Space(4);
-            _effectsFoldout = EditorGUILayout.Foldout(_effectsFoldout, "演出（発表・GO・クリア・3・2・1・残り時間の警告）", true);
+            _effectsFoldout = EditorGUILayout.Foldout(_effectsFoldout, "演出（D-Drive の番号札。各PCで鳴らす。空なら鳴らさない）", true);
             if (_effectsFoldout)
             {
+                using (new WaveLabelWidth())
                 using (new EditorGUI.IndentLevelScope())
                 {
                     Prop(serialized, "onAnnounce", "発表");
@@ -60,14 +61,16 @@ namespace MS2026.Fortress.EditorTools
                 return;
             }
 
-            // ウェーブの箱と合間の箱を交互に並べる（合間は細め）。
-            var units = count * 3f + (count - 1) * 1.6f;
+            // ウェーブの箱と合間の箱を交互に並べる（合間は少し細め）。
+            const float waveUnits = 2f;
+            const float breakUnits = 1.4f;
+            var units = count * waveUnits + (count - 1) * breakUnits;
             var unit = rect.width / units;
             var x = rect.x;
             for (var i = 0; i < count; i++)
             {
                 var wave = plan.waves[i];
-                var box = new Rect(x, rect.y, unit * 3f - 2f, rect.height);
+                var box = new Rect(x, rect.y, unit * waveUnits - 2f, rect.height);
                 if (Event.current.type == EventType.Repaint)
                 {
                     EditorGUI.DrawRect(box, i == count - 1 ? new Color(0.95f, 0.35f, 0.4f, 0.85f) : WaveColor);
@@ -79,13 +82,13 @@ namespace MS2026.Fortress.EditorTools
                     onSelectWave?.Invoke(i);
                 }
 
-                x += unit * 3f;
+                x += unit * waveUnits;
                 if (i == count - 1)
                 {
                     break;
                 }
 
-                var gap = new Rect(x, rect.y + 6f, unit * 1.6f - 2f, rect.height - 12f);
+                var gap = new Rect(x, rect.y + 3f, unit * breakUnits - 2f, rect.height - 6f);
                 var ev = wave?.intervalEvent;
                 var seconds = ev != null ? ev.DurationSeconds : wave?.restSeconds ?? 0f;
                 if (Event.current.type == EventType.Repaint)
@@ -93,8 +96,9 @@ namespace MS2026.Fortress.EditorTools
                     EditorGUI.DrawRect(gap, BreakColor);
                 }
 
-                GUI.Label(gap, new GUIContent(ev != null ? $"{ShortName(ev)}\n{seconds:0}秒" : $"休む\n{seconds:0}秒", "このウェーブの後の合間"), CenteredLabel);
-                x += unit * 1.6f;
+                var tip = ev != null ? $"WAVE {i + 1} の後: {ev.DisplayName} {seconds:0.#}秒" : $"WAVE {i + 1} の後: 休む {seconds:0.#}秒";
+                GUI.Label(gap, new GUIContent(ev != null ? $"{ShortName(ev)}\n{seconds:0}秒" : $"休む\n{seconds:0}秒", tip), CenteredLabel);
+                x += unit * breakUnits;
             }
 
             var limit = plan.timeLimitSeconds > 0f ? $"制限時間 {Clock(plan.timeLimitSeconds)}（{(plan.clockRunsDuringBreaks ? "合間も減る" : "戦っている間だけ減る")}）" : "制限時間なし";
@@ -105,8 +109,9 @@ namespace MS2026.Fortress.EditorTools
 
         private static string ShortName(WaveIntervalEvent ev)
         {
+            // 細い箱に収まるよう4文字まで（「歯みがきタイム」→「歯みがき」）。全部の名前は箱の上にマウスを乗せると出る。
             var name = ev.DisplayName;
-            return name.Length > 6 ? name.Substring(0, 6) : name;
+            return name.Length > 4 ? name.Substring(0, 4) : name;
         }
 
         // ウェーブごとの「目標」（赤）と「1秒に出る数」（青）を棒で並べる。難しさの上がり方を見る。
@@ -158,17 +163,18 @@ namespace MS2026.Fortress.EditorTools
 
         private static void DrawRules(SerializedObject serialized)
         {
+            // 箱の見出し（試合全体・始まり・発表・ウェーブクリア → 撤退）は、データの見出しがそのまま出る（ここで書くと二重になる）。
+            using (new WaveLabelWidth())
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.LabelField("試合全体", EditorStyles.miniBoldLabel);
                 Prop(serialized, "timeLimitSeconds", "制限時間(秒・0でなし)");
                 Prop(serialized, "timeUpRule", "時間切れのとき");
                 Prop(serialized, "clockRunsDuringBreaks", "合間の間も時間を減らす");
             }
 
+            using (new WaveLabelWidth())
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.LabelField("始まり・発表", EditorStyles.miniBoldLabel);
                 Prop(serialized, "startDelaySeconds", "全員そろってから最初の発表まで(秒)");
                 Prop(serialized, "maxWaitForPlayersSeconds", "全員を待つ最長(秒)");
                 Prop(serialized, "announceSeconds", "発表の長さ(秒)");
@@ -176,9 +182,9 @@ namespace MS2026.Fortress.EditorTools
                 Prop(serialized, "showRoutes", "発表の間、敵のルートを赤い線で見せる");
             }
 
+            using (new WaveLabelWidth())
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.LabelField("ウェーブクリア → 撤退", EditorStyles.miniBoldLabel);
                 Prop(serialized, "clearBannerSeconds", "「WAVE CLEAR!」の最短(秒)");
                 Prop(serialized, "retreatMaxSeconds", "逃げ切るのを待つ最長(秒)");
                 Prop(serialized, "retreatSpeedMultiplier", "逃げる速さの倍率");
@@ -206,7 +212,8 @@ namespace MS2026.Fortress.EditorTools
         private static GUIStyle CenteredLabel => _centered ??= new GUIStyle(EditorStyles.miniBoldLabel)
         {
             alignment = TextAnchor.MiddleCenter,
-            wordWrap = true,
+            wordWrap = false,
+            clipping = TextClipping.Clip,
             normal = { textColor = Color.black }
         };
 

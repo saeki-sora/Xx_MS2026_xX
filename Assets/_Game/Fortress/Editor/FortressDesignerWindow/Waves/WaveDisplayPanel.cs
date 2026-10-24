@@ -16,21 +16,19 @@ namespace MS2026.Fortress.EditorTools
     {
         private const string DefaultDisplayPath = "Assets/_Game/Fortress/Presets/Waves/WaveDisplay_Default.asset";
 
-        // 見出し（null の path）と欄。上から「試合の始まり → 発表の中の順番 → GO → 戦い → 赤い線 → 歯みがき」の順。
+        // 欄はデータの並び順（見出しはデータ側の [Header] がそのまま出る。ここで書くと二重になる）。
+        // 上から「試合の始まり → 発表の中の順番 → GO → 戦い → 赤い線 → 歯みがき」。
         private static readonly (string path, string label)[] TimingFields =
         {
-            (null, "試合の始まり（WAVE 1 の発表の前）"),
             ("hintSeconds", "握り方のヒントだけを出す秒数（0 ですぐ発表）"),
-            ("showGripHint", "握り方のヒントを出す"),
             ("showYouMarker", "「YOU」の矢印を出す"),
-            (null, "発表の中の出る順番（発表が始まってから何秒後か）"),
+            ("showGripHint", "握り方のヒントを出す"),
             ("bannerDelay", "「WAVE n／目標撃破数」"),
             ("routeDelay", "敵のルート（赤い線・「！」・ふちの矢印）"),
             ("newEnemyDelay", "「NEW ENEMY」カード"),
             ("showNewEnemyCards", "「NEW ENEMY」カードを出す"),
             ("showAnnounceText", "発表の一言（「ボス出現！」など）を出す"),
             ("showRouteHint", "「赤い線 ＝ 敵の通り道」を出す"),
-            (null, "ウェーブの始まり・戦っている間"),
             ("goSeconds", "「GO!」を出す秒数（0 で出さない）"),
             ("nearGoalKills", "「あと少し！」を出す残りの数（0 で出さない）"),
             ("timeWarningSeconds", "残り時間の警告を出す秒数（0 で出さない）"),
@@ -42,7 +40,6 @@ namespace MS2026.Fortress.EditorTools
             ("routeRebuildSeconds", "発表の間に道を引き直す間隔(秒)"),
             ("showEdgeMarkers", "画面の外から来る敵を、ふちの矢印で知らせる"),
             ("showEdgeMarkerCounts", "ふちの矢印の横に、来る数（×40 など）を出す"),
-            (null, "歯みがきタイム"),
             ("syncShowSeconds", "「シンクロ！」を出しておく秒数"),
         };
 
@@ -126,19 +123,15 @@ namespace MS2026.Fortress.EditorTools
                 var so = Serialized(plan.display);
                 so.Update();
                 var timing = so.FindProperty("timing");
-                foreach (var (path, label) in TimingFields)
+                using (new WaveLabelWidth())
                 {
-                    if (path == null)
+                    foreach (var (path, label) in TimingFields)
                     {
-                        EditorGUILayout.Space(2);
-                        EditorGUILayout.LabelField(label, EditorStyles.miniBoldLabel);
-                        continue;
-                    }
-
-                    var property = timing.FindPropertyRelative(path);
-                    if (property != null)
-                    {
-                        EditorGUILayout.PropertyField(property, new GUIContent(label, property.tooltip));
+                        var property = timing.FindPropertyRelative(path);
+                        if (property != null)
+                        {
+                            EditorGUILayout.PropertyField(property, new GUIContent(label, property.tooltip));
+                        }
                     }
                 }
 
@@ -215,6 +208,7 @@ namespace MS2026.Fortress.EditorTools
 
                     var so = Serialized(ev);
                     so.Update();
+                    using var width = new WaveLabelWidth();
                     if (ev is BrushingEvent)
                     {
                         foreach (var (path, label) in BrushingFields)
@@ -226,7 +220,7 @@ namespace MS2026.Fortress.EditorTools
                             }
                         }
 
-                        _effectsFoldout = EditorGUILayout.Foldout(_effectsFoldout, "演出（始まり・にぎにぎ・シンクロ・結果）", true);
+                        _effectsFoldout = EditorGUILayout.Foldout(_effectsFoldout, "演出（各PCで鳴らす。位置はコア）", true);
                         if (_effectsFoldout)
                         {
                             using (new EditorGUI.IndentLevelScope())

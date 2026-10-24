@@ -130,7 +130,7 @@ namespace MS2026.Fortress
         [Min(0.1f)]
         public float retreatSpeedMultiplier = 2.4f;
 
-        [Header("演出（D-Drive の番号札。各PCで鳴らす。空なら鳴らさない）")]
+        // 演出（D-Drive の番号札。各PCで鳴らす。空なら鳴らさない）。要塞デザイナーでは折りたたみの中に出す。
         [Tooltip("発表が始まったとき（最終ウェーブ以外）。")]
         public FortressEffect onAnnounce = new FortressEffect { tintWithPlayerColor = false };
 
