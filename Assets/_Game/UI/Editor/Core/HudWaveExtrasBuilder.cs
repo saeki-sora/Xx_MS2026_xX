@@ -91,8 +91,8 @@ namespace MS2026.UI.EditorTools
         {
             var root = B.Rect(screen, NewEnemiesName);
             B.Place(root, new Vector2(1f, 0.5f), new Vector2(-40f, -40f), new Vector2(420f, 520f));
-            W.Visible(root, FortressUiKeys.WaveAnnouncing, UiVisibleCondition.WhenOn, 0.5f);
-            B.AddMotion(root.gameObject, UiMotionTrigger.OnShow, UiPreset.SlideFadeInRight, 0.4f, 0.3f);
+            W.Visible(root, FortressUiKeys.WaveShowNewEnemies, UiVisibleCondition.WhenOn, 0.5f);
+            B.AddMotion(root.gameObject, UiMotionTrigger.OnShow, UiPreset.SlideFadeInRight, 0.4f);
             var cards = new WaveNewEnemyCards.Card[3];
             for (var i = 0; i < cards.Length; i++)
             {
@@ -113,11 +113,19 @@ namespace MS2026.UI.EditorTools
                 H.Center(picture.rectTransform, new Vector2(-145f, -6f), new Vector2(116f, 116f));
                 B.AddMotion(picture.gameObject, UiMotionTrigger.Loop, UiPreset.Float, 1.6f);
                 var title = H.Label(card, "Name", "", 34, Color.white, TextAnchor.MiddleLeft);
-                H.Center(title.rectTransform, new Vector2(-75f, 14f), new Vector2(280f, 44f), new Vector2(0f, 0.5f));
+                title.horizontalOverflow = HorizontalWrapMode.Wrap;
+                title.resizeTextForBestFit = true;
+                title.resizeTextMinSize = 20;
+                title.resizeTextMaxSize = 34;
+                H.Center(title.rectTransform, new Vector2(-75f, 14f), new Vector2(285f, 44f), new Vector2(0f, 0.5f));
+                // 紹介文は30文字まで（EnemyTypeDefinition.IntroTextMaxLength）。枠に収まるよう文字を小さくする。
                 var body = B.Text(card, "Text", "", 24, new Color(0.85f, 0.95f, 1f), TextAnchor.UpperLeft);
                 body.horizontalOverflow = HorizontalWrapMode.Wrap;
                 body.verticalOverflow = VerticalWrapMode.Truncate;
-                H.Center(body.rectTransform, new Vector2(-75f, -40f), new Vector2(280f, 64f), new Vector2(0f, 0.5f));
+                body.resizeTextForBestFit = true;
+                body.resizeTextMinSize = 14;
+                body.resizeTextMaxSize = 24;
+                H.Center(body.rectTransform, new Vector2(-75f, -42f), new Vector2(285f, 68f), new Vector2(0f, 0.5f));
                 cards[i] = new WaveNewEnemyCards.Card { root = card.gameObject, picture = picture, fallback = fallback, title = title, body = body };
                 card.gameObject.SetActive(false);
             }

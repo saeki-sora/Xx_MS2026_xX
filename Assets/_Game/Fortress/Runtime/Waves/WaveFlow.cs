@@ -25,7 +25,10 @@ namespace MS2026.Fortress
         Break = 5,
 
         /// <summary>全部のウェーブを終えた、または時間切れ。</summary>
-        Finished = 6
+        Finished = 6,
+
+        /// <summary>試合の始まりの「握り方のヒント」（全員の準備ができた後、WAVE 1 の発表の前。敵は来ない）。</summary>
+        Hint = 7
     }
 
     /// <summary>ウェーブの計画が終わった理由。</summary>
@@ -83,6 +86,10 @@ namespace MS2026.Fortress
 
         public float startDelaySeconds = 0.8f;
         public float maxWaitForPlayersSeconds = 10f;
+
+        /// <summary>全員の準備ができた後、WAVE 1 の発表の前に「握り方のヒント」を出す秒数（0 なら無し）。</summary>
+        public float hintSeconds;
+
         public float announceSeconds = 4f;
         public float clearBannerSeconds = 1.6f;
         public float retreatMaxSeconds = 5f;
@@ -118,6 +125,7 @@ namespace MS2026.Fortress
             }
 
             config.startDelaySeconds = plan.startDelaySeconds;
+            config.hintSeconds = plan.display != null && plan.display.timing != null ? plan.display.timing.hintSeconds : WaveDisplayTiming.Default.hintSeconds;
             config.maxWaitForPlayersSeconds = plan.maxWaitForPlayersSeconds;
             config.announceSeconds = plan.announceSeconds;
             config.clearBannerSeconds = plan.clearBannerSeconds;
@@ -146,7 +154,7 @@ namespace MS2026.Fortress
 
     /// <summary>
     /// ウェーブの進め方（Unity に頼らない状態機械。テストあり）。決めるのは Host（オフラインでは自分）だけ。
-    /// 待つ → 発表 → 戦う →（目標）→ 撤退 → 合間 → 発表 … → 最後のウェーブの目標でクリア。制限時間が来たら時間切れ。
+    /// 待つ →（握り方のヒント）→ 発表 → 戦う →（目標）→ 撤退 → 合間 → 発表 … → 最後のウェーブの目標でクリア。制限時間が来たら時間切れ。
     /// </summary>
     public sealed class WaveFlow
     {
@@ -225,7 +233,7 @@ namespace MS2026.Fortress
                 }
             }
 
-            if (TimeLeft >= 0f && (Phase == WavePhase.Combat || _config.clockRunsDuringBreaks) && Phase != WavePhase.WaitingForPlayers)
+            if (TimeLeft >= 0f && (Phase == WavePhase.Combat || _config.clockRunsDuringBreaks) && Phase != WavePhase.WaitingForPlayers && Phase != WavePhase.Hint)
             {
                 TimeLeft = Mathf.Max(0f, TimeLeft - dt);
                 if (TimeLeft <= 0f)
@@ -238,6 +246,13 @@ namespace MS2026.Fortress
             {
                 case WavePhase.WaitingForPlayers:
                     if ((input.playersReady && PhaseTime >= _config.startDelaySeconds) || PhaseTime >= _config.maxWaitForPlayersSeconds)
+                    {
+                        signal |= AfterWaiting();
+                    }
+
+                    break;
+                case WavePhase.Hint:
+                    if (PhaseTime >= _config.hintSeconds)
                     {
                         signal |= Enter(WavePhase.Announce, _config.announceSeconds, WaveFlowSignal.None);
                     }
@@ -279,6 +294,8 @@ namespace MS2026.Fortress
             switch (Phase)
             {
                 case WavePhase.WaitingForPlayers:
+                    return AfterWaiting();
+                case WavePhase.Hint:
                     return Enter(WavePhase.Announce, _config.announceSeconds, WaveFlowSignal.None);
                 case WavePhase.Announce:
                     return StartCombat(totalKills);
@@ -310,6 +327,12 @@ namespace MS2026.Fortress
             EndKind = WaveEndKind.None;
             return stop | endBreak | endRetreat | Enter(WavePhase.Announce, _config.announceSeconds, WaveFlowSignal.None);
         }
+
+        // 全員そろったら、握り方のヒント（あれば）→ WAVE 1 の発表。
+        private WaveFlowSignal AfterWaiting() =>
+            _config.hintSeconds > 0f
+                ? Enter(WavePhase.Hint, _config.hintSeconds, WaveFlowSignal.None)
+                : Enter(WavePhase.Announce, _config.announceSeconds, WaveFlowSignal.None);
 
         private float BreakSeconds(int wave) =>
             wave >= 0 && wave < _config.breakSeconds.Length ? Mathf.Max(0f, _config.breakSeconds[wave]) : 0f;

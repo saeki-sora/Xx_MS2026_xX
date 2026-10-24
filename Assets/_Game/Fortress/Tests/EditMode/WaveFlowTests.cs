@@ -48,6 +48,23 @@ namespace MS2026.Fortress.Tests.EditMode
         }
 
         [Test]
+        public void HintComesBeforeTheFirstAnnounceAndStopsTheClock()
+        {
+            var config = Config(timeLimit: 60f, clockInBreaks: true);
+            config.hintSeconds = 3f;
+            var flow = new WaveFlow(config);
+            flow.Begin();
+            flow.Tick(1f, Kills(0));
+            Assert.AreEqual(WavePhase.Hint, flow.Phase, "全員そろったら、まず握り方のヒント");
+            flow.Tick(2.9f, Kills(0));
+            Assert.AreEqual(WavePhase.Hint, flow.Phase);
+            Assert.AreEqual(60f, flow.TimeLeft, 1e-4f, "ヒントの間は時間が減らない");
+            flow.Tick(0.2f, Kills(0));
+            Assert.AreEqual(WavePhase.Announce, flow.Phase);
+            Assert.AreEqual(0, flow.WaveIndex);
+        }
+
+        [Test]
         public void KillsCountFromTheStartOfTheWave()
         {
             var flow = StartedFlow(Config(), kills: 7);
@@ -165,8 +182,12 @@ namespace MS2026.Fortress.Tests.EditMode
         [Test]
         public void SkipAdvancesEveryPhase()
         {
-            var flow = new WaveFlow(Config());
+            var config = Config();
+            config.hintSeconds = 2f;
+            var flow = new WaveFlow(config);
             flow.Begin();
+            flow.Skip(0);
+            Assert.AreEqual(WavePhase.Hint, flow.Phase);
             flow.Skip(0);
             Assert.AreEqual(WavePhase.Announce, flow.Phase);
             flow.Skip(4);

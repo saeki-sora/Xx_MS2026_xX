@@ -31,6 +31,7 @@ namespace MS2026.UI.Game
 
         private void Update()
         {
+            // 出し入れ（何秒後に出すか）は値 wave.showNewEnemies で。中身は発表が始まった時点で入れておく。
             var announcing = FortressWaves.IsActive && FortressWaves.Phase == WavePhase.Announce && WaveDisplayTiming.Current.showNewEnemyCards;
             var plan = FortressWaves.Plan;
             var wave = announcing ? FortressWaves.WaveIndex : -1;
@@ -59,16 +60,33 @@ namespace MS2026.UI.Game
             }
         }
 
+        private static void FitText(Text text, int minSize)
+        {
+            if (text.resizeTextForBestFit)
+            {
+                return;
+            }
+
+            text.resizeTextMaxSize = text.fontSize;
+            text.resizeTextMinSize = Mathf.Min(minSize, text.fontSize);
+            text.resizeTextForBestFit = true;
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Truncate;
+        }
+
         private static void Fill(Card card, EnemyTypeDefinition type)
         {
+            // 長い名前・紹介文でも枠からはみ出さないよう、文字を小さくして収める（紹介文は上限を超えた分を「…」に）。
             if (card.title != null)
             {
+                FitText(card.title, 20);
                 card.title.text = string.IsNullOrEmpty(type.displayName) ? type.name : type.displayName;
             }
 
             if (card.body != null)
             {
-                card.body.text = type.introText;
+                FitText(card.body, 14);
+                card.body.text = type.IntroTextForCard;
             }
 
             Texture texture = null;

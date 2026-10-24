@@ -109,7 +109,7 @@ namespace MS2026.UI.Game
             rect.localScale = Vector3.one * pulse;
 
             var label = _labels[index];
-            label.enabled = enemies > 0;
+            label.enabled = enemies > 0 && WaveDisplayTiming.Current.showEdgeMarkerCounts;
             label.text = $"×{enemies}";
             label.color = new Color(1f, 1f, 1f, alpha);
             label.rectTransform.anchoredPosition = position - direction * (size * 0.95f);

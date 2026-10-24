@@ -32,6 +32,9 @@ namespace MS2026.UI.Game
         public const string WaveBreak = "wave.break";
         public const string WaveTimeUp = "wave.timeUp";
         public const string WaveFirstHint = "wave.firstHint";
+        public const string WaveShowBanner = "wave.showBanner";
+        public const string WaveShowNewEnemies = "wave.showNewEnemies";
+        public const string WaveShowRouteHint = "wave.showRouteHint";
 
         public const string ResultReason = "result.reason";
         public const string ResultReachedWave = "result.reachedWave";
@@ -67,7 +70,10 @@ namespace MS2026.UI.Game
                 (WaveClearText, "クリアの文字", "例: WAVE 2 CLEAR!", UiValueKind.Text, c, Vector2.up, 0),
                 (WaveBreak, "合間中", "ウェーブの合間（歯みがきタイムなど）の間ON。", UiValueKind.Bool, c, Vector2.up, 0),
                 (WaveTimeUp, "時間切れ", "試合の制限時間が来たときON。", UiValueKind.Bool, c, Vector2.up, 0),
-                (WaveFirstHint, "最初のヒントを出す", "試合の最初（全員を待っている間と WAVE 1 の発表の間）ON。握り方のヒント・あなたの砲台の矢印用。", UiValueKind.Bool, c, Vector2.up, 1),
+                (WaveFirstHint, "握り方のヒントを出す", "試合の始まり（全員を待っている間と、WAVE 1 の発表の前のヒントの段階）ON。", UiValueKind.Bool, c, Vector2.up, 0),
+                (WaveShowBanner, "「WAVE n／目標」を出す", "発表の中で、表示の設定の秒数がたった後 ON。", UiValueKind.Bool, c, Vector2.up, 1),
+                (WaveShowNewEnemies, "NEW ENEMY を出す", "発表の中で、表示の設定の秒数がたった後 ON（初めて出てくる敵がいれば、カードが出る）。", UiValueKind.Bool, c, Vector2.up, 1),
+                (WaveShowRouteHint, "「赤い線＝敵の通り道」を出す", "発表の間、表示の設定で ON のときだけ ON。", UiValueKind.Bool, c, Vector2.up, 0),
                 (ResultReason, "試合が終わった理由", "0=なし、1=撃破数、2=全部のウェーブをクリア、3=コアが壊れた、4=時間切れ。", UiValueKind.Number, "リザルト", new Vector2(0, 4), 4),
                 (ResultReachedWave, "行けたウェーブ", "どのウェーブまで行けたか（1 から。計画が無ければ 0）。", UiValueKind.Number, "リザルト", new Vector2(0, 5), 3),
                 (ResultSubtitle, "リザルトの一言", "例: 時間切れ… WAVE 3 まで行けた！ / コアが壊されてしまった…", UiValueKind.Text, "リザルト", Vector2.up, 0)

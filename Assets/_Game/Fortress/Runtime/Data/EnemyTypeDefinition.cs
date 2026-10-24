@@ -103,11 +103,20 @@ namespace MS2026.Fortress
         [Tooltip("プレースホルダー（仮絵）の色。Swarmの自動生成スプライトにも使われる。")]
         public Color placeholderColor = Color.magenta;
 
+        /// <summary>紹介文の長さの上限（文字）。カードに収まる長さ。超えた分は「…」になる。</summary>
+        public const int IntroTextMaxLength = 30;
+
         [Header("初登場の紹介（ウェーブの発表で「NEW ENEMY」のカードに出す）")]
-        [Tooltip("初めて出てくるウェーブの発表で見せる一言（例: 「倒すと爆発！まわりの敵も巻き込む」）。空ならカードを出さない。")]
+        [Tooltip("初めて出てくるウェーブの発表で見せる一言（例: 「倒すと爆発！まわりの敵も巻き込む」）。30 文字まで（超えた分は「…」）。空ならカードを出さない。")]
         public string introText = "";
 
         [Tooltip("カードの絵（空なら、群衆の絵の1コマ目。それも無ければ仮絵の色の丸）。")]
         public Sprite introIcon;
+
+        /// <summary>カードに出す紹介文（上限を超えた分は「…」）。</summary>
+        public string IntroTextForCard =>
+            string.IsNullOrEmpty(introText) || introText.Length <= IntroTextMaxLength
+                ? introText ?? ""
+                : introText.Substring(0, IntroTextMaxLength - 1) + "…";
     }
 }

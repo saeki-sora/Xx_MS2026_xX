@@ -27,6 +27,9 @@ namespace MS2026.UI.Game
                 UiValues.Set(FortressUiKeys.WaveTimeWarning, false);
                 UiValues.Set(FortressUiKeys.WaveTimeUp, false);
                 UiValues.Set(FortressUiKeys.WaveFirstHint, false);
+                UiValues.Set(FortressUiKeys.WaveShowBanner, false);
+                UiValues.Set(FortressUiKeys.WaveShowNewEnemies, false);
+                UiValues.Set(FortressUiKeys.WaveShowRouteHint, false);
                 return;
             }
 
@@ -61,14 +64,19 @@ namespace MS2026.UI.Game
             UiValues.Set(FortressUiKeys.WaveAnnouncing, announcing);
             UiValues.Set(FortressUiKeys.WaveAnnounceTitle, WaveHudLogic.AnnounceTitle(number, isFinal, wave?.label));
             UiValues.Set(FortressUiKeys.WaveAnnounceGoal, WaveHudLogic.AnnounceGoal(target));
-            UiValues.Set(FortressUiKeys.WaveAnnounceText, wave?.announceText ?? "");
+            UiValues.Set(FortressUiKeys.WaveAnnounceText, timing.showAnnounceText ? wave?.announceText ?? "" : "");
+            UiValues.Set(FortressUiKeys.WaveShowBanner, WaveDisplayTiming.ShowInAnnounce(phase, FortressWaves.PhaseElapsed, timing.bannerDelay));
+            UiValues.Set(FortressUiKeys.WaveShowNewEnemies,
+                timing.showNewEnemyCards && WaveDisplayTiming.ShowInAnnounce(phase, FortressWaves.PhaseElapsed, timing.newEnemyDelay));
+            UiValues.Set(FortressUiKeys.WaveShowRouteHint,
+                timing.showRouteHint && WaveDisplayTiming.ShowInAnnounce(phase, FortressWaves.PhaseElapsed, timing.routeDelay));
             UiValues.Set(FortressUiKeys.WaveCountdown, WaveHudLogic.Countdown(phase, FortressWaves.PhaseRemaining, plan != null ? plan.countdownSeconds : 0f));
             UiValues.Set(FortressUiKeys.WaveGo, WaveHudLogic.ShowGo(phase, FortressWaves.PhaseElapsed, timing.goSeconds));
             UiValues.Set(FortressUiKeys.WaveClearShowing, phase == WavePhase.Retreat);
             UiValues.Set(FortressUiKeys.WaveClearText, WaveHudLogic.ClearText(number, isFinal));
             UiValues.Set(FortressUiKeys.WaveBreak, phase == WavePhase.Break);
             UiValues.Set(FortressUiKeys.WaveTimeUp, phase == WavePhase.Finished && FortressWaves.EndKind == WaveEndKind.TimeUp);
-            UiValues.Set(FortressUiKeys.WaveFirstHint, timing.showGripHint && timing.ShowFirstHint(phase, FortressWaves.WaveIndex));
+            UiValues.Set(FortressUiKeys.WaveFirstHint, timing.showGripHint && WaveDisplayTiming.IsHintPhase(phase));
         }
 
         /// <summary>コアのコーティング（歯みがきのごほうび）。<see cref="FortressUiValues"/> がコアの値と一緒に呼ぶ。</summary>

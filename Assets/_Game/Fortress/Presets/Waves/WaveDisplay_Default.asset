@@ -13,6 +13,15 @@ MonoBehaviour:
   m_Name: WaveDisplay_Default
   m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.WaveDisplaySettings
   timing:
+    hintSeconds: 4
+    showYouMarker: 1
+    showGripHint: 1
+    bannerDelay: 0
+    routeDelay: 0.4
+    newEnemyDelay: 1
+    showNewEnemyCards: 1
+    showAnnounceText: 0
+    showRouteHint: 0
     goSeconds: 0.9
     nearGoalKills: 5
     timeWarningSeconds: 10
@@ -22,8 +31,5 @@ MonoBehaviour:
     routeArrowSpeed: 3.2
     routeRebuildSeconds: 1
     showEdgeMarkers: 1
-    firstHintWaves: 1
-    showYouMarker: 1
-    showGripHint: 1
-    showNewEnemyCards: 1
+    showEdgeMarkerCounts: 0
     syncShowSeconds: 0.9

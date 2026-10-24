@@ -16,21 +16,33 @@ namespace MS2026.Fortress.EditorTools
     {
         private const string DefaultDisplayPath = "Assets/_Game/Fortress/Presets/Waves/WaveDisplay_Default.asset";
 
+        // 見出し（null の path）と欄。上から「試合の始まり → 発表の中の順番 → GO → 戦い → 赤い線 → 歯みがき」の順。
         private static readonly (string path, string label)[] TimingFields =
         {
+            (null, "試合の始まり（WAVE 1 の発表の前）"),
+            ("hintSeconds", "握り方のヒントだけを出す秒数（0 ですぐ発表）"),
+            ("showGripHint", "握り方のヒントを出す"),
+            ("showYouMarker", "「YOU」の矢印を出す"),
+            (null, "発表の中の出る順番（発表が始まってから何秒後か）"),
+            ("bannerDelay", "「WAVE n／目標撃破数」"),
+            ("routeDelay", "敵のルート（赤い線・「！」・ふちの矢印）"),
+            ("newEnemyDelay", "「NEW ENEMY」カード"),
+            ("showNewEnemyCards", "「NEW ENEMY」カードを出す"),
+            ("showAnnounceText", "発表の一言（「ボス出現！」など）を出す"),
+            ("showRouteHint", "「赤い線 ＝ 敵の通り道」を出す"),
+            (null, "ウェーブの始まり・戦っている間"),
             ("goSeconds", "「GO!」を出す秒数（0 で出さない）"),
             ("nearGoalKills", "「あと少し！」を出す残りの数（0 で出さない）"),
             ("timeWarningSeconds", "残り時間の警告を出す秒数（0 で出さない）"),
+            (null, "敵のルート（赤い線）"),
             ("routeShowSeconds", "赤い線が出てくる秒数"),
             ("routeFadeSeconds", "ウェーブが始まってから赤い線が消える秒数"),
             ("routeArrowSpacing", "線の上の矢印の間隔(m)"),
             ("routeArrowSpeed", "線の上の矢印の速さ(m/秒)"),
             ("routeRebuildSeconds", "発表の間に道を引き直す間隔(秒)"),
             ("showEdgeMarkers", "画面の外から来る敵を、ふちの矢印で知らせる"),
-            ("firstHintWaves", "初めての人向けの表示を出すウェーブ数（1 = WAVE 1 だけ）"),
-            ("showYouMarker", "「YOU」の矢印を出す"),
-            ("showGripHint", "握り方のヒントを出す"),
-            ("showNewEnemyCards", "「NEW ENEMY」カードを出す"),
+            ("showEdgeMarkerCounts", "ふちの矢印の横に、来る数（×40 など）を出す"),
+            (null, "歯みがきタイム"),
             ("syncShowSeconds", "「シンクロ！」を出しておく秒数"),
         };
 
@@ -80,8 +92,7 @@ namespace MS2026.Fortress.EditorTools
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 EditorGUILayout.LabelField(
-                    "出る順番は「発表（WAVE n・目標・赤い線・NEW ENEMY）→ 最後に 3・2・1 → GO! → 戦い → WAVE CLEAR!（敵が逃げる）→ 合間 → 次の発表」。" +
-                    "発表の長さ・3・2・1・WAVE CLEAR! の秒数は上の「始まり・発表」「ウェーブクリア → 撤退」で、ここではそれ以外を変えます。" +
+                    "発表の長さ・最後の 3・2・1・WAVE CLEAR! の秒数は上の「始まり・発表」「ウェーブクリア → 撤退」で、ここではそれ以外を変えます。" +
                     "出てくる動き（フェード・弾み）の長さや位置は UIスタジオで Hud を直します（「ウェーブの表示を入れる」を押し直すと戻ります）。",
                     EditorStyles.wordWrappedMiniLabel);
 
@@ -111,11 +122,19 @@ namespace MS2026.Fortress.EditorTools
                     EditorGUILayout.LabelField($"このファイル（{plan.display.name}）は {string.Join("・", users)} で共有しています。直すと全部に効きます。", EditorStyles.wordWrappedMiniLabel);
                 }
 
+                DrawOrder(plan, plan.display.timing);
                 var so = Serialized(plan.display);
                 so.Update();
                 var timing = so.FindProperty("timing");
                 foreach (var (path, label) in TimingFields)
                 {
+                    if (path == null)
+                    {
+                        EditorGUILayout.Space(2);
+                        EditorGUILayout.LabelField(label, EditorStyles.miniBoldLabel);
+                        continue;
+                    }
+
                     var property = timing.FindPropertyRelative(path);
                     if (property != null)
                     {
@@ -125,6 +144,39 @@ namespace MS2026.Fortress.EditorTools
 
                 so.ApplyModifiedProperties();
             }
+        }
+
+        // 今の設定での出る順番を、時間の順に1行ずつ見せる（数字を変えるとすぐ並びが変わる）。
+        private static void DrawOrder(WavePlan plan, WaveDisplayTiming t)
+        {
+            var steps = new List<(float time, string text)>();
+            var announce = Mathf.Max(0.5f, plan.announceSeconds);
+            if (t.bannerDelay < announce)
+            {
+                steps.Add((t.bannerDelay, "WAVE n／目標撃破数" + (t.showAnnounceText ? "＋一言" : "")));
+            }
+
+            if (plan.showRoutes && t.routeDelay < announce)
+            {
+                steps.Add((t.routeDelay, "赤い線" + (t.showRouteHint ? "＋「赤い線＝敵の通り道」" : "")));
+            }
+
+            if (t.showNewEnemyCards && t.newEnemyDelay < announce)
+            {
+                steps.Add((t.newEnemyDelay, "NEW ENEMY（初めて出る敵がいるとき）"));
+            }
+
+            if (plan.countdownSeconds > 0f)
+            {
+                steps.Add((Mathf.Max(0f, announce - plan.countdownSeconds), "3・2・1"));
+            }
+
+            var line = string.Join(" → ", steps.OrderBy(x => x.time).Select(x => $"{x.time:0.#}秒 {x.text}"));
+            var start = t.hintSeconds > 0f && (t.showGripHint || t.showYouMarker) ? $"握り方のヒント {t.hintSeconds:0.#}秒 → " : "";
+            EditorGUILayout.HelpBox(
+                $"出る順番（今の設定）: 準備待ち → {start}発表 {announce:0.#}秒［{line}］→ GO!{(t.goSeconds > 0f ? $" {t.goSeconds:0.#}秒" : "（出さない）")} → 戦い → WAVE CLEAR!（敵が逃げる）→ 合間 → 次の発表\n" +
+                "握り方のヒントは試合の始まりだけ（WAVE 2 からは発表から）。",
+                MessageType.None);
         }
 
         // ───────── 合間のイベント（歯みがきタイム） ─────────

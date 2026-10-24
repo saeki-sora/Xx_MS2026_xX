@@ -41,6 +41,7 @@ namespace MS2026.Fortress
         private float _speed;
         private float _time;
         private float _nextRebuild;
+        private float _delay;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Install()
@@ -117,6 +118,8 @@ namespace MS2026.Fortress
             _speed = 1f / Mathf.Max(0.01f, timing.routeShowSeconds);
             _time = 0f;
             _nextRebuild = timing.routeRebuildSeconds;
+            _delay = timing.routeDelay; // 発表の中で、WAVE n の表示より少し後に出す（表示の設定）
+            _alpha = 0f;
             Rebuild();
         }
 
@@ -183,7 +186,15 @@ namespace MS2026.Fortress
 
         private void LateUpdate()
         {
-            _alpha = Mathf.MoveTowards(_alpha, _target, _speed * Time.deltaTime);
+            if (_delay > 0f && _target > 0f)
+            {
+                _delay -= Time.deltaTime;
+            }
+            else
+            {
+                _alpha = Mathf.MoveTowards(_alpha, _target, _speed * Time.deltaTime);
+            }
+
             WaveRoutes.Alpha = _alpha;
             if (_alpha <= 0f && _target <= 0f)
             {

@@ -227,7 +227,8 @@ namespace MS2026.Fortress
             FortressWaves.TimeLeft = _flow.TimeLeft;
             FortressWaves.ClockRunning = _flow.TimeLeft >= 0f &&
                                          (_flow.Phase == WavePhase.Combat ||
-                                          (_flow.Config.clockRunsDuringBreaks && _flow.Phase != WavePhase.WaitingForPlayers && _flow.Phase != WavePhase.Finished));
+                                          (_flow.Config.clockRunsDuringBreaks && _flow.Phase != WavePhase.WaitingForPlayers && _flow.Phase != WavePhase.Hint &&
+                                           _flow.Phase != WavePhase.Finished));
             FortressWaves.EndKind = _flow.EndKind;
             FortressWaves.PlayerMask = ComputePlayerMask();
         }

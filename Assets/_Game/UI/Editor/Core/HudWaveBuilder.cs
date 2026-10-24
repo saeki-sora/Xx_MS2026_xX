@@ -195,7 +195,7 @@ namespace MS2026.UI.EditorTools
         {
             var root = B.Rect(screen, AnnounceName);
             B.Stretch(root);
-            Visible(root, FortressUiKeys.WaveAnnouncing, UiVisibleCondition.WhenOn, 0.5f);
+            Visible(root, FortressUiKeys.WaveShowBanner, UiVisibleCondition.WhenOn, 0.5f);
 
             var body = B.Rect(root, "Body");
             H.Center(body, new Vector2(0f, 170f), new Vector2(1400f, 260f));
@@ -229,8 +229,11 @@ namespace MS2026.UI.EditorTools
             lineOutline.effectDistance = new Vector2(3f, -3f);
             H.Bind(line, FortressUiKeys.WaveAnnounceText, "{0}", 0f);
 
-            // 初めての人向け: 赤い線が何かを言葉で添える。
-            var hint = H.Label(root, "RouteHint", "赤い線 ＝ 敵の通り道", 30, new Color(1f, 0.75f, 0.75f), TextAnchor.MiddleCenter);
+            // 初めての人向け: 赤い線が何かを言葉で添える（表示の設定で ON のときだけ）。
+            var hintRoot = B.Rect(root, "RouteHint");
+            B.Stretch(hintRoot);
+            Visible(hintRoot, FortressUiKeys.WaveShowRouteHint, UiVisibleCondition.WhenOn, 0.5f);
+            var hint = H.Label(hintRoot, "Label", "赤い線 ＝ 敵の通り道", 30, new Color(1f, 0.75f, 0.75f), TextAnchor.MiddleCenter);
             H.Center(hint.rectTransform, new Vector2(0f, -40f), new Vector2(900f, 44f));
             var hintOutline = hint.gameObject.AddComponent<Outline>();
             hintOutline.effectColor = Navy;
