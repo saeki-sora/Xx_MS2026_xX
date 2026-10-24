@@ -3045,6 +3045,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4810275033187310003, guid: ce190b7f940a45ce82309ec66407dda6, type: 3}
+      propertyPath: defaultSkill
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 4810275033187310003, guid: ce190b7f940a45ce82309ec66407dda6, type: 3}
+      propertyPath: 'perPlayerSkills.Array.data[0]'
+      value: 
+      objectReference: {fileID: 11400000, guid: d9e05d694c934ed48916c489e2893976, type: 2}
+    - target: {fileID: 4810275033187310003, guid: ce190b7f940a45ce82309ec66407dda6, type: 3}
+      propertyPath: 'perPlayerSkills.Array.data[1]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 61fd9c7b77354750a9444f3c2e5dac11, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

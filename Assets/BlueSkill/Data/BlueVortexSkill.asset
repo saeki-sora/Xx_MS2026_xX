@@ -1,0 +1,308 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b02c3eaeb2fb4cfbb3305b32738c3086, type: 3}
+  m_Name: BlueVortexSkill
+  m_EditorClassIdentifier: MS2026.BlueSkill.Runtime::MS2026.Skills.Blue.BlueVortexSkill
+  skillId: blue_vortex
+  displayName: "\u3046\u304C\u3044\u85AC\u306E\u6E26"
+  description: "\u4F7F\u3048\u308B\u72B6\u614B\u306E\u9593\u306F\u9752\u3044\u3046\u304C\u3044\u85AC\u306E\u30DC\u30C8\u30EB\u3092\u6301\u3061\u3001\u6B21\u306E\u653B\u6483\u3067\u5411\u3044\u3066\u3044\u308B\u65B9\u5411\u3078\u6295\u3052\u308B\u3002\u843D\u3061\u305F\u5834\u6240\u3067\u7834\u88C2\u3057\u3066\u6C34\u306E\u6E26\uFF08\u30C7\u30D0\u30D5\u30A8\u30EA\u30A2\uFF09\u3092\u5E83\u3052\u3001\u4E2D\u306E\u6575\u3092\u305D\u306E\u5834\u306B\u3068\u3069\u3081\u3066\u3050\u308B\u3050\u308B\u5DFB\u304D\u8FBC\u307F\u3001\u53D7\u3051\u308B\u30C0\u30E1\u30FC\u30B8\u3092\u5897\u3084\u3057\u3001\u5C11\u3057\u305A\u3064\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u308B\u3002"
+  themeColor: {r: 0.2, g: 0.55, b: 1, a: 1}
+  chargeBySmashBall: 1
+  ignoreChargeWhileActive: 1
+  replacesNormalLaser: 1
+  hideNormalLaserUntilRelease: 1
+  timing:
+    windupSeconds: 0.35
+    flightSeconds: 0.55
+    arcHeight: 2.4
+    spinTurns: 1.75
+    rotationSpeedScale: 0.3
+  target:
+    distance: 7
+    sideOffset: 0
+    measureFromMuzzle: 1
+    stopAtWalls: 0
+    wallPadding: 0.5
+    wallLayers:
+      serializedVersion: 2
+      m_Bits: 4294967295
+    showMarker: 1
+    markerColor: {r: 0.35, g: 0.85, b: 1.6, a: 0.55}
+    markerDots: 14
+  multi:
+    mode: 2
+    count: 3
+    spreadAngle: 65
+    outerDistanceScale: 0.85
+    staggerSeconds: 0.06
+    radiusScale: 0.75
+    extraShakeScale: 0.35
+  area:
+    radius: 5
+    durationSeconds: 5
+    expandSeconds: 0.45
+    expandCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 4.5
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 0.6
+        value: 1.12
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    collapseSeconds: 0.6
+    warnSeconds: 1
+    affectWhileExpanding: 1
+  debuff:
+    holdStrength: 1
+    edgeSoftness: 0.2
+    swirlSpeed: 1.4
+    clockwise: 0
+    pullSpeed: 0.7
+    pullInnerRadius: 0.3
+    damageTakenMultiplier: 1.5
+    tickDamage: 0
+    tickInterval: 0.5
+    tickFlash: 1
+    lingerSeconds: 0.4
+    affectActors: 1
+  look:
+    radialGradient:
+      serializedVersion: 2
+      key0: {r: 0.01, g: 0.02, b: 0.12, a: 0.95}
+      key1: {r: 0.08, g: 0.12, b: 0.55, a: 0.9}
+      key2: {r: 0.12, g: 0.35, b: 1.1, a: 0.75}
+      key3: {r: 0.25, g: 0.75, b: 1.6, a: 0}
+      key4: {r: 0.5, g: 1.1, b: 2, a: 0}
+      key5: {r: 0, g: 0, b: 0, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 14418
+      ctime2: 36044
+      ctime3: 55705
+      ctime4: 65535
+      ctime5: 0
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 32768
+      atime2: 55705
+      atime3: 65535
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_ColorSpace: -1
+      m_NumColorKeys: 5
+      m_NumAlphaKeys: 4
+    foamColor: {r: 0.75, g: 1.25, b: 1.9, a: 1}
+    rimColor: {r: 0.35, g: 1.1, b: 2.4, a: 1}
+    eyeRingColor: {r: 1.6, g: 1.9, b: 2.6, a: 1}
+    arms: 4
+    twist: 4.5
+    spinSpeed: 0.55
+    armSharpness: 2.6
+    turbulence: 0.45
+    eyeSize: 0.17
+    opacity: 0.85
+    intensity: 1.2
+    counterLayer: 1
+    spiralDropletRate: 55
+    bubbleRate: 26
+    rimSparkleRate: 40
+    rippleInterval: 0.55
+    trappedBubbleRate: 30
+    particleBrightness: 2.2
+    particleColor: {r: 0.55, g: 0.85, b: 1, a: 1}
+    floorLift: 0.03
+    vortexRenderQueue: 2980
+    overlaySortingOrder: 150
+  bottle:
+    sprite: {fileID: 0}
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    length: 1.6
+    width: 0.95
+    forwardOffset: 0.2
+    sideOffset: 0.55
+    holdHeight: 0.6
+    holdTilt: -20
+    bobAmount: 0.08
+    bobFrequency: 1.1
+    sloshAngle: 5
+    windupPullBack: 0.45
+    windupShake: 0.05
+    appearSeconds: 0.3
+    sortingOrder: 160
+    shadowOpacity: 0.4
+  charge:
+    auraColor: {r: 0.25, g: 0.8, b: 2.2, a: 1}
+    auraScale: 2.1
+    pulseFrequency: 1.6
+    pulseAmount: 0.3
+    miniVortexRadius: 1.7
+    miniVortexOpacity: 0.6
+    orbitRate: 34
+    orbitRadius: 2.2
+    bubbleRate: 14
+    rippleInterval: 0.8
+    readyBurstSize: 5
+    windupMultiplier: 3
+    particleColor: {r: 0.5, g: 0.85, b: 1, a: 1}
+    particleBrightness: 2.4
+  burst:
+    throwSplashCount: 26
+    trailRate: 110
+    trailGlowSize: 1.8
+    flashScale: 1.5
+    flashColor: {r: 1.4, g: 2.2, b: 3.2, a: 1}
+    crownSpikes: 14
+    shockwaveCount: 3
+    shockwaveScale: 1.7
+    shockwaveColor: {r: 0.5, g: 1.4, b: 3, a: 1}
+    dropletCount: 150
+    dropletSpeed: 14
+    shardCount: 14
+    bubbleCount: 40
+    collapseSplashCount: 70
+    dropletColor: {r: 0.6, g: 0.9, b: 1, a: 1}
+    shardColor: {r: 0.85, g: 0.95, b: 1, a: 1}
+    particleBrightness: 2.6
+  cameraShake:
+    ownerViewOnly: 0
+    onThrow:
+      amplitude: 0.12
+      rollAmplitude: 0.3
+      frequency: 20
+      duration: 0.2
+    throwStrength: 1
+    onBurst:
+      amplitude: 0.45
+      rollAmplitude: 1.1
+      frequency: 20
+      duration: 0.55
+    burstStrength: 1
+    whileActive:
+      amplitude: 0.04
+      rollAmplitude: 0.15
+      frequency: 14
+      duration: 0.3
+    whileActiveStrength: 1
+    whileActiveInterval: 0.25
+    onCollapse:
+      amplitude: 0.2
+      rollAmplitude: 0.5
+      frequency: 22
+      duration: 0.3
+    collapseStrength: 1
+  sounds:
+    onReady:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onWindup:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onThrow:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    whileFlying:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onBurst:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    whileVortex:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onTick:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onEnd:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+  shaders:
+    vortex: {fileID: 4800000, guid: 21231fa1621644ef9b472f939e4615c8, type: 3}
+    glow: {fileID: 4800000, guid: 5affbb20903e4d57bc5de4b50f8481d1, type: 3}
+    particle: {fileID: 4800000, guid: 0027c23211bb4c259b7ad8a763ce170f, type: 3}

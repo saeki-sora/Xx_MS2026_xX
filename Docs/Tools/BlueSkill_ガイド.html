@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>青スキル ガイド</title>
+<meta name="description" content="青キャラのスキル「うがい薬の渦」（うがい薬を投げて、落ちた場所に敵を足止めする水の渦を出す）の使い方と調整">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/guide.css">
+<style>
+:root{--acc:#3b82ff;--acc-ink:#00102a;--acc2:#4fe3ff;--acc3:#9b8cff}
+:root[data-theme="light"]{--acc:#0b4fc2;--acc-ink:#ffffff;--acc2:#00708a;--acc3:#4b3bb5}
+.vortexviz{position:relative;height:150px;border-radius:10px;background:#050b18;overflow:hidden;margin-top:18px}
+.vortexviz .turret{position:absolute;left:8%;top:50%;width:26px;height:26px;transform:translate(-50%,-50%);border-radius:50%;background:#8aa4c8;box-shadow:0 0 0 4px #1d2c48}
+.vortexviz .arc{position:absolute;left:9%;top:22%;width:58%;height:60%;border-top:3px dashed rgba(120,200,255,.7);border-radius:50% 50% 0 0}
+.vortexviz .bottle{position:absolute;left:36%;top:10%;width:16px;height:28px;border-radius:5px 5px 6px 6px;background:linear-gradient(#1e3fae 0 30%,#d8ecff 30% 42%,#2a6dff 42%);border:2px solid #0a1230;transform:rotate(28deg)}
+.vortexviz .pool{position:absolute;right:12%;top:50%;width:120px;height:120px;transform:translate(0,-50%);border-radius:50%;background:radial-gradient(circle,#02050f 0 16%,#7fe0ff 18%,#0b1f6b 22%,#1a4fd6 55%,#5fc8ff 82%,rgba(95,200,255,0) 72%);box-shadow:0 0 24px rgba(80,180,255,.6);animation:spin 3s linear infinite}
+.vortexviz .pool:before{content:"";position:absolute;inset:8%;border-radius:50%;background:conic-gradient(from 0deg,rgba(255,255,255,.0),rgba(200,240,255,.55),rgba(255,255,255,0) 25%,rgba(200,240,255,.5) 50%,rgba(255,255,255,0) 60%,rgba(200,240,255,.45) 80%,rgba(255,255,255,0));mask:radial-gradient(circle,transparent 20%,#000 22%)}
+.vortexviz .lbl{position:absolute;font-size:11px;color:#cfe6ff;font-family:var(--mono)}
+@keyframes spin{to{transform:translate(0,-50%) rotate(-360deg)}}
+@media (prefers-reduced-motion:reduce){.vortexviz .pool{animation:none}}
+.timeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:22px}
+.timeline .card{padding:14px}
+.timeline .card h4{margin:0 0 6px}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<div class="orbs" aria-hidden="true"><div class="orb a"></div><div class="orb b"></div></div>
+
+<div class="shell">
+<nav class="side" aria-label="目次">
+  <a class="back" href="index.html">← ツール一覧</a>
+  <a class="brand" href="#top"><span class="mark">BS</span><span class="t">青スキル</span></a>
+  <ol id="toc"></ol>
+  <div class="foot">
+    <button class="themebtn" id="themeBtn" type="button"><span aria-hidden="true">◐</span><span data-label>ライト表示</span></button>
+    <div class="meta mono">Assets/BlueSkill<br>2026-10-19 時点</div>
+  </div>
+</nav>
+
+<main id="top">
+<header class="hero">
+  <div class="tags">
+    <span class="pill hot">キャラのスキル</span>
+    <span class="pill">スマッシュボールで溜まる</span>
+    <span class="pill">次の攻撃で投げる</span>
+    <span class="pill">足止めの渦</span>
+    <span class="pill">値は全部インスペクターで調整</span>
+  </div>
+  <h1 class="mega" aria-label="BLUE SKILL"><span class="o">BLUE</span><span class="f">SKILL</span></h1>
+  <p class="subname">青キャラのスキル — <b>うがい薬を投げて、落ちた場所に水の渦</b></p>
+  <div class="hero-row">
+    <div>
+      <p class="oneword">スマッシュボールを割ると <span class="hl">うがい薬を持ち</span>、<br>次の攻撃でそれを投げて <span class="hl">敵を足止めする水の渦</span> を出す。</p>
+      <p class="analogy">赤スキルと同じ「ゲージ技」です。ボールを割ると、砲台の上に青いうがい薬のボトルがふわっと浮かび、足元に小さな渦、まわりを水の粒がぐるぐる回ります。次に握ると振りかぶって向いている方向へポーンと投げ、落ちた場所で「パシャーン」と破裂。そこに大きな水の渦が数秒間広がり、中の敵はその場で足止めされ、ぐるぐる巻き込まれ、ダメージを受けやすくなります。</p>
+    </div>
+    <div class="facts"><dl>
+      <dt>誰が使う</dt><dd>プランナー（強さ・広さ・時間の調整）／デザイナー（色・演出の調整）／プログラマー（キャラとの紐づけ）</dd>
+      <dt>入れ方</dt><dd><span class="mp">Tools<i>›</i>青スキル<i>›</i>開いているシーンにスキルを入れる</span> → シーンを保存</dd>
+      <dt>調整する場所</dt><dd><span class="mp">Tools<i>›</i>青スキル<i>›</i>スキルの設定ファイルを開く</span>（<code>Assets/BlueSkill/Data/BlueVortexSkill.asset</code>）</dd>
+      <dt>今の状況</dt><dd>テスト用シーン <code>blueskill_test</code> で作成中。スキル欄・配る係・キャラとの対応表は赤スキルと共通（対応表はまだ空）</dd>
+    </dl></div>
+  </div>
+  <div class="marquee" aria-hidden="true"><div class="track" id="mq" data-words="スマッシュボール|うがい薬|溜め|振りかぶる|放物線|破裂|水の渦|足止め|巻き込み|被ダメージ増加|キャラに紐づけ"></div></div>
+</header>
+
+<section id="what" data-nav="何ができる？">
+  <div class="rv">
+    <div class="eyebrow">01 — What it does</div>
+    <h2>持って、投げて、<br><em>渦で止める</em>。</h2>
+    <p class="lead">スキルは「溜まる → 持つ → 投げる → 渦」の順に進みます。投げる距離・渦の広さ・足止めの強さ・見た目は、設定ファイル 1 つで変えられます。</p>
+  </div>
+  <div class="timeline">
+    <div class="card rv"><h4>① 溜まる</h4><p class="small">自分のレーザーでスマッシュボールを割る。</p></div>
+    <div class="card rv"><h4>② 持つ</h4><p class="small">砲台の上に青いうがい薬が「ポンッ」と浮かぶ。後ろに青い光、足元に小さな渦、水の粒がまわりを回って吸い込まれ、泡と波紋が出る。落ちる場所に点線の輪と放物線の点線が出る。</p></div>
+    <div class="card rv"><h4>③ 振りかぶる</h4><p class="small">次に握った瞬間、ボトルを後ろへ引いて震わせる（0.35 秒）。砲台の回転がゆっくりになる。</p></div>
+    <div class="card rv"><h4>④ 投げる</h4><p class="small">回りながら放物線を描いて飛ぶ（0.55 秒）。水がこぼれ、床に影。</p></div>
+    <div class="card rv"><h4>⑤ 破裂・渦</h4><p class="small">光・衝撃の輪・水しぶき・ボトルのかけら・画面の揺れ。半径 3.2m の渦が 5 秒。初期値は 3 本持っているので、攻撃のたびに 1 本ずつ、3 回まで投げられる（「まとめて一気に」なら半径 2.4m の渦が一度に 3 か所）。</p></div>
+    <div class="card rv"><h4>⑥ 消える</h4><p class="small">最後の 1 秒はふちが点滅。中心へ吸い込まれるように縮み、しぶきを上げて消える。</p></div>
+  </div>
+  <div class="vortexviz rv" aria-hidden="true"><div class="turret"></div><div class="arc"></div><div class="bottle"></div><div class="pool"></div><span class="lbl" style="left:4%;bottom:8px">砲台</span><span class="lbl" style="left:34%;top:6px">放物線で飛ぶ</span><span class="lbl" style="right:4%;bottom:8px">7m 先に渦（半径 3.2m）</span></div>
+  <div class="cards">
+    <div class="card feat rv"><div class="ic">🔵</div><h3>次の攻撃がスキル</h3><p>使える状態で次にレーザーを撃ち始めた瞬間に投げる（普段のレーザーは出ない）。</p><p class="ex">例：ボールを割ったときに撃っていたレーザーは、離すまで最後まで撃てる。次に Q を押した瞬間に投げる。溜まるたびに 1 回だけ。</p></div>
+    <div class="card feat rv"><div class="ic">🧊</div><h3>足止め</h3><p>渦の中の敵はその場から進めなくなる（強さは 0〜1 で調整）。渦から出ると元の速さに戻る。</p><p class="ex">例：コアへの通り道に投げると、敵の列がそこで止まって渋滞する。</p></div>
+    <div class="card feat rv"><div class="ic">🌀</div><h3>巻き込み・引き寄せ</h3><p>中の敵を渦に沿ってぐるぐる回し、少しずつ中心へ寄せる（真ん中の 1 点には固めない）。</p></div>
+    <div class="card feat rv"><div class="ic">💧</div><h3>デバフ</h3><p>中の敵は受けるダメージが 1.5 倍。さらに 0.5 秒ごとに少しダメージ（白く光る）。倒した数は投げた人に入る。</p><p class="ex">例：渦に投げてから仲間がレーザーで撃つと、いつもより早く倒れる。</p></div>
+    <div class="card feat rv"><div class="ic">🫧</div><h3>3 本持って 1 本ずつ投げる</h3><p>ボールを 1 回割るとボトルを 3 本持ち、攻撃のたびに 1 本ずつ投げる（初期値）。持っている本数が 3 → 2 → 1 と減っていく。</p><p class="ex">例：1 本目で通り道をふさぎ、向きが変わったら 2 本目で別の場所へ。<b>投げ方</b> で「まとめて一気に投げる」「1本だけ（元の動き）」にも切り替えられる。</p></div>
+    <div class="card feat rv"><div class="ic">🎯</div><h3>落ちる場所を調整できる</h3><p>距離・左右のずれ・壁の手前で落とすか。持っている間は落ちる場所に目印が出る。設定ファイルを選ぶと Scene ビューにも全砲台の落ちる場所が出る。</p></div>
+    <div class="card feat rv"><div class="ic">🧩</div><h3>どのシーンでも・どのキャラにも</h3><p>プレハブを置くだけで全砲台に配られる。赤スキルと同じ対応表でキャラに紐づけられる。</p></div>
+  </div>
+</section>
+
+<section id="start" data-nav="はじめての 5 分">
+  <div class="rv">
+    <div class="eyebrow">02 — First 5 minutes</div>
+    <h2>メニュー 1 回で、<br><em>すぐ試せる</em>。</h2>
+  </div>
+  <div class="steps">
+    <div class="step rv"><div class="n">1</div><div>
+      <h3>シーンに入れる</h3>
+      <p>試したいシーン（例：<code>Assets/Scenes/blueskill_test.unity</code>）を開き、<span class="mp">Tools<i>›</i>青スキル<i>›</i>開いているシーンにスキルを入れる</span>。<b>[BlueSkill] Skill Installer</b> が置かれるので <kbd>Ctrl</kbd>+<kbd>S</kbd> で保存。</p>
+      <p class="small">赤スキルなど別の色と一緒に使うときは <a href="#rc-per-player">「赤スキルと青スキルを一緒に使いたい」</a>。もう赤スキルの <b>[RedSkill] Skill Installer</b> があるシーンでは、新しく置かずに「全員に配るスキルを青スキルに変えますか？」と聞かれます。<b>青スキルに変える</b> を押すと、その係が青スキルを配るようになります（係は 1 シーンに 1 つ）。</p>
+    </div></div>
+    <div class="step rv"><div class="n">2</div><div>
+      <h3>▶ Play して溜める</h3>
+      <p>本番どおりなら <kbd>Q</kbd>（P1 の握り）でスマッシュボールを割ります。すぐ試すなら、キーボードの <kbd>1</kbd>〜<kbd>4</kbd> で P1〜P4 を「使える」にできます（エディタだけ）。砲台の上に青いボトルが浮かび、足元に小さな渦が出れば OK。</p>
+    </div></div>
+    <div class="step rv"><div class="n">3</div><div>
+      <h3>握って投げる</h3>
+      <p><kbd>Q</kbd> を押すとボトルを投げ、点線の輪のところに渦が出ます。撃っている最中に溜まった場合は、一度離してからもう一度押します。</p>
+    </div></div>
+    <div class="step rv"><div class="n">4</div><div>
+      <h3>値を変える</h3>
+      <p><span class="mp">Tools<i>›</i>青スキル<i>›</i>スキルの設定ファイルを開く</span>。Play 中に変えてもすぐ反映され、Play を止めても残ります。Inspector の下の <b>今すぐ撃つ</b> ボタンで、握らずに何度でも投げられます。</p>
+      <p class="done">P2〜P4 は <kbd>W</kbd> <kbd>O</kbd> <kbd>P</kbd> で握れます。全員まとめて溜めるなら <span class="mp">Tools<i>›</i>青スキル<i>›</i>全員を使える状態にする（Play中）</span>。</p>
+    </div></div>
+  </div>
+</section>
+
+<section id="recipes" data-nav="やりたいこと逆引き">
+  <div class="rv"><div class="eyebrow">03 — Recipes</div><h2>「〜したい」から<br><em>探す</em>。</h2></div>
+  <label class="search rv"><span aria-hidden="true">🔍</span><span class="sr">やりたいことを検索</span><input id="recipeSearch" type="search" placeholder="例：遠く、広く、長く、止める、色、キャラ"></label>
+  <div class="chips rv" id="recipeChips" role="group" aria-label="カテゴリ">
+    <button class="chip" aria-pressed="true" data-f="all">すべて</button>
+    <button class="chip" aria-pressed="false" data-f="place">落ちる場所</button>
+    <button class="chip" aria-pressed="false" data-f="tune">強さ・広さ</button>
+    <button class="chip" aria-pressed="false" data-f="look">見た目・音</button>
+    <button class="chip" aria-pressed="false" data-f="setup">入れる・つなぐ</button>
+  </div>
+  <div class="recipes">
+    <details class="recipe" id="rc-distance" data-tags="place"><summary><span class="q">もっと遠く／近くに投げたい</span><span class="who">落ちる場所</span></summary><div class="a"><p><b>落ちる場所（渦を広げる場所）</b> › <b>落ちる距離（m）</b>（初期値 7）。<b>発射口から測る</b> を OFF にすると砲台の中心から測ります。設定ファイルを選んだまま Scene ビューを見ると、全ての砲台の「今投げたら落ちる場所」と渦の大きさが青い円で出ます。</p></div></details>
+    <details class="recipe" id="rc-multi" data-tags="place tune"><summary><span class="q">投げ方を変えたい（1本ずつ・まとめて一気に・元の 1 本）</span><span class="who">投げ方（1本・まとめて・1本ずつ）</span></summary><div class="a"><p>設定ファイルの <b>投げ方（1本・まとめて・1本ずつ）</b> › <b>投げ方</b> で選びます。<b>ボトルの数</b>（3）は持つ本数です。</p><ul><li><b>1本ずつ順番に投げる</b>（初期値）：ボールを 1 回割るとボトルを 3 本持ち、攻撃のたびに 1 本ずつ投げる。投げたら一度握るのを離し、もう一度握ると次の 1 本。渦は 1 つずつ（いつもの大きさ）。全部投げ終わるまでは、ボールを割っても本数は増えません。</li><li><b>まとめて一気に投げる</b>：3 本を扇形に持ち、次の攻撃で全部投げて 3 か所に渦（下の値で形を調整）。</li><li><b>1本だけ（元の動き）</b>：最初に作ったときと同じ動きに戻ります。ほかの値はそのまま残るので、いつでも切り替えられます。</li></ul><p><b>まとめて一気に投げるとき</b> の値：</p><ul><li><b>広がる角度（度）</b>（32）：となり同士の向きの差。大きいほど横に広がる。</li><li><b>外側の距離の倍率</b>（0.85）：1 より小さいと弓なり、大きいと V 字。</li><li><b>投げる間隔（秒）</b>（0.06）：真ん中から外へ順に手を離れる。0 で全部同時。</li><li><b>1つの渦の大きさの倍率</b>（0.75）：まとめて投げたときの渦 1 つの大きさ（<b>渦の半径</b> に掛ける）。</li><li><b>2つ目以降の揺れの強さ</b>（0.35）：画面の揺れが重なりすぎないように弱める。</li></ul><p>渦が重なった所の敵は、渦のダメージを重なった数だけ受けます。</p></div></details>
+    <details class="recipe" id="rc-side" data-tags="place"><summary><span class="q">向きの真正面ではなく、少し横に落としたい</span><span class="who">落ちる場所</span></summary><div class="a"><p><b>左右のずれ（m）</b>。＋で向いている方向の右、－で左。</p></div></details>
+    <details class="recipe" id="rc-wall" data-tags="place"><summary><span class="q">壁の向こうに落ちないようにしたい</span><span class="who">落ちる場所</span></summary><div class="a"><p><b>壁の手前で落ちる</b> を ON。途中に壁・障害物があると、その <b>壁から離す距離（m）</b>（0.5）手前に落ちます。OFF（初期値）だと壁を飛び越えます。</p></div></details>
+    <details class="recipe" id="rc-marker" data-tags="place look"><summary><span class="q">落ちる場所の目印を消したい・色を変えたい</span><span class="who">落ちる場所</span></summary><div class="a"><p><b>落ちる場所の目印を出す</b>（ON）・<b>目印の色</b>・<b>点線の点の数</b>（14。0 で放物線の点線なし）。</p></div></details>
+    <details class="recipe" id="rc-hold" data-tags="tune"><summary><span class="q">足止めを弱く（ゆっくり進める）したい</span><span class="who">敵への効果（デバフ）</span></summary><div class="a"><p><b>足止めの強さ（1=止まる）</b>。1 で完全に止まり、0.5 で半分の速さ、0 で足止めなし。<b>ふちのやわらかさ（割合）</b>（0.2）を上げると、ふちの方は弱く、中ほど強くかかります。</p></div></details>
+    <details class="recipe" id="rc-swirl" data-tags="tune"><summary><span class="q">ぐるぐる回す・引き寄せる強さを変えたい</span><span class="who">敵への効果（デバフ）</span></summary><div class="a"><p><b>渦に巻き込む速さ（m/秒）</b>（1.4。0 で回さない）・<b>中心へ引き寄せる速さ（m/秒）</b>（0.7）・<b>引き寄せない内側（割合）</b>（0.3）。<b>時計回り</b> で回る向き（見た目の渦も同じ向き）。敵の歩く速さの 1.6 倍より速くはなりません。</p></div></details>
+    <details class="recipe" id="rc-damage" data-tags="tune"><summary><span class="q">渦の中の敵をもっと倒しやすく／倒しにくくしたい</span><span class="who">敵への効果（デバフ）</span></summary><div class="a"><p><b>受けるダメージの倍率</b>（1.5。レーザーや爆発のダメージに上乗せ）、<b>渦のダメージ（1回）</b>（1.5）と <b>渦のダメージの間隔（秒）</b>（0.5）。普通の敵の体力は 10、ボスは 150 です。<b>ダメージのたびに光らせる</b> を OFF にすると白く光りません。</p></div></details>
+    <details class="recipe" id="rc-area" data-tags="tune"><summary><span class="q">渦を大きく／長くしたい</span><span class="who">渦の広さ・時間</span></summary><div class="a"><p><b>渦の半径（m）</b>（3.2）・<b>渦が続く時間（秒）</b>（5）。広がる・消える速さは <b>広がる時間（秒）</b>（0.45）・<b>消える時間（秒）</b>（0.6）。消える直前の点滅は <b>消える前の点滅（秒）</b>（1。0 で点滅なし）。消えたあとも少しだけ足止めを残すなら <b>消えたあとの足止めの残り（秒）</b>（0.4）。</p></div></details>
+    <details class="recipe" id="rc-throw" data-tags="tune"><summary><span class="q">投げるまで／落ちるまでを速く・ゆっくりにしたい</span><span class="who">タイミング（投げる）</span></summary><div class="a"><p><b>振りかぶる時間（秒）</b>（0.35。0 ですぐ投げる）・<b>飛んでいる時間（秒）</b>（0.55）・<b>放物線の高さ（m）</b>（2.4）・<b>飛んでいる間の回転（回）</b>（1.75）。振りかぶり中の砲台の回転は <b>振りかぶり中の砲台の回る速さ</b>（0.3。0 で止まる）。</p></div></details>
+    <details class="recipe" id="rc-color" data-tags="look"><summary><span class="q">渦の色・模様を変えたい</span><span class="who">渦の見た目</span></summary><div class="a"><ol><li><b>渦の色（中心→ふち）</b>：左が中心の暗い目、右がふち。アルファ（濃さ）を右端で 0 にしておくと、ふちがやわらかく消えます。</li><li>光る部分は <b>渦の筋の色</b>・<b>ふちの輪の色</b>・<b>中心の輪の色</b>（どれも明るさ込みの HDR 色）。</li><li>模様は <b>うず巻きの本数</b>（4）・<b>ねじれの強さ</b>（4.5）・<b>回る速さ（回/秒）</b>（0.55）・<b>筋のくっきり具合</b>・<b>水の揺らぎ</b>・<b>中心の目の大きさ</b>。</li><li>床が明るくて渦が見えにくいときは <b>濃さ（床を塗る強さ）</b>（0.85）を上げます。<b>逆回りの渦を重ねる</b> を OFF にすると 1 枚になります。</li></ol></div></details>
+    <details class="recipe" id="rc-fx" data-tags="look"><summary><span class="q">渦の演出をもっと派手に／控えめにしたい</span><span class="who">渦の見た目</span></summary><div class="a"><p><b>吸い込まれるしぶき（個/秒）</b>（55）・<b>浮かぶ泡（個/秒）</b>（26）・<b>ふちのきらめき（個/秒）</b>（40）・<b>波紋の間隔（秒）</b>（0.55）・<b>つかまった敵の泡（個/秒）</b>（30）・<b>粒の明るさ</b>（2.2）。どれも 0 で出なくなります。画面の揺れは <b>カメラの揺れ</b> › <b>渦が出ている間の揺れの強さ</b>（0 で揺れない）。</p></div></details>
+    <details class="recipe" id="rc-burst" data-tags="look"><summary><span class="q">破裂の瞬間をもっと派手に／控えめにしたい</span><span class="who">投げる・破裂の演出</span></summary><div class="a"><p><b>破裂の光の大きさ（倍）</b>・<b>水の王冠のトゲの数</b>・<b>衝撃の輪の数</b>・<b>飛び散るしぶき（個）</b>（150）・<b>しぶきの速さ（m/秒）</b>・<b>ボトルのかけら（個）</b>・<b>わき上がる泡（個）</b>。揺れは <b>カメラの揺れ</b> › <b>破裂の揺れの強さ</b>。</p></div></details>
+    <details class="recipe" id="rc-bottle" data-tags="look"><summary><span class="q">うがい薬のボトルの絵を差し替えたい・持ち方を変えたい</span><span class="who">うがい薬のボトル</span></summary><div class="a"><p><b>ボトルの絵（空なら仮の絵）</b> に、口（キャップ）が上を向いた絵（スプライト）を入れるだけで差し替わります。空のときはコードで描いた仮の青いボトル（白いラベルに水のしずく）が出ます。大きさは <b>ボトルの長さ（m）</b>・<b>ボトルの幅（m）</b>、持つ位置は <b>持つ位置（前へ m）</b>・<b>持つ位置（右へ m）</b>・<b>持つ高さ（m）</b>・<b>持つときの傾き（度）</b>。</p></div></details>
+    <details class="recipe" id="rc-charge" data-tags="look"><summary><span class="q">溜め（使える状態）の演出を変えたい</span><span class="who">溜め（使える状態）の演出</span></summary><div class="a"><p><b>ボトルの後ろの光の色</b>・<b>足元の小さな渦の半径（m）</b>（1.7。0 で出さない）・<b>まわりを回る水の粒（個/秒）</b>・<b>浮かぶ泡（個/秒）</b>・<b>足元の波紋の間隔（秒）</b>・<b>使えるようになった瞬間の輪（m）</b>。振りかぶり中はこれらが <b>振りかぶり中の強まり（倍）</b>（3）倍まで強くなります。</p></div></details>
+    <details class="recipe" id="rc-sound" data-tags="look"><summary><span class="q">効果音を付けたい</span><span class="who">効果音・追加エフェクト</span></summary><div class="a"><p><b>効果音・追加エフェクト（D-Drive）</b> の各欄（<b>使えるようになった瞬間</b>・<b>振りかぶり始め</b>・<b>投げた瞬間</b>・<b>飛んでいる間（ループ）</b>・<b>破裂した瞬間</b>・<b>渦が出ている間（ループ）</b>・<b>渦のダメージのたび</b>・<b>渦が消えた瞬間</b>）に D-Drive の SE / VFX を選びます。ゲームの他の演出欄と同じ使い方です（要塞デザイナーのガイドの「演出」）。</p></div></details>
+    <details class="recipe" id="rc-scene" data-tags="setup"><summary><span class="q">別のシーンでも使いたい</span><span class="who">メニュー</span></summary><div class="a"><p>そのシーンを開いて <span class="mp">Tools<i>›</i>青スキル<i>›</i>開いているシーンにスキルを入れる</span> → 保存。または <code>Assets/BlueSkill/Prefabs/BlueSkill_Installer.prefab</code> をシーンにドラッグ。シーンの全ての砲台に自動で配られます。スキルを配る係がもうあるシーン（赤スキル入りなど）では、新しく置かずにその係の配るスキルを変えます（係が 2 つあると取り合いになるため）。</p></div></details>
+    <details class="recipe" id="rc-character" data-tags="setup"><summary><span class="q">キャラに紐づけたい（青キャラだけがこのスキル）</span><span class="who">対応表</span></summary><div class="a"><ol><li><span class="mp">Tools<i>›</i>スキル<i>›</i>スキルの割り当て（プレイヤー・キャラ）</span> の <b>② キャラごと（キャラ選択を通ってきたときに使う）</b> に、キャラの一覧（色の四角＋ファイル名と id）が並びます。青キャラの行で <code>うがい薬の渦</code> を選ぶだけで、赤スキルと共通の対応表 <code>Assets/RedSkill/Data/CharacterSkillTable.asset</code> に書き込まれます（共通のファイルなので、触る前にチームに声をかけてください）。</li><li>キャラ選択を通ってきたときは、この表が「プレイヤーごと」「全員に配る」より優先されます。</li><li>試すときは Play 中に <b>③ Play 中に試す</b> › <b>P1 のキャラ</b> などでキャラを選び <b>このキャラで配り直す</b>。キャラ選択の画面を通らなくても、表どおりに配られるか確かめられます。</li></ol></div></details>
+    <details class="recipe" id="rc-per-player" data-tags="setup"><summary><span class="q">赤スキルと青スキルを一緒に使いたい（P1 は赤、P2 は青…）</span><span class="who">スキルの割り当て</span></summary><div class="a"><ol><li><span class="mp">Tools<i>›</i>スキル<i>›</i>スキルの割り当て（プレイヤー・キャラ）</span> を開く。</li><li><b>① プレイヤーごと（今のテスト用）</b> で <b>P1（Q で握る）</b> に赤（極太レーザー）、<b>P2（W で握る）</b> に青（うがい薬の渦）を選ぶ。空の席は <b>全員に配るスキル</b> になります。</li><li>シーンを保存（<kbd>Ctrl</kbd>+<kbd>S</kbd>）。</li></ol><p>プロジェクトの中のスキルを自動で探すので、黄・緑のスキルができたら何もしなくても一覧に出ます。<b>見つかったスキルを P1 から順に配る</b> で一度に並べることもできます。Play 中に変えるとすぐ配り直されます（Play を止めると元に戻ります）。</p></div></details>
+    <details class="recipe" data-tags="setup"><summary><span class="q">P2 だけ青スキル（または別の調整）にしたい</span><span class="who">スキルを配る係</span></summary><div class="a"><p>スキルを配る係の <b>プレイヤーごとのスキル（P1〜P4）</b> の 2 番目に <code>BlueVortexSkill</code> を入れます。別の調整にしたいときは設定ファイルを複製（<kbd>Ctrl</kbd>+<kbd>D</kbd>）して値を変えたものを入れます。</p></div></details>
+    <p class="noresult">見つかりませんでした。別の言葉で探してください。</p>
+  </div>
+  <div class="callout warn rv"><span class="ci">!</span><div><b>今の仕様の注意。</b>振りかぶり中・投げている間も、握っている間は砲台の熱が溜まります（赤スキルと同じ）。「受けるダメージの倍率」は群衆の敵だけにかかります（Actor の敵には足止め・巻き込み・渦のダメージだけ）。ネット対戦では、落ちる場所が PC ごとにほんの少しずれることがあります（敵の動きはホストの渦に合わせて全員同じに見えます）。</div></div>
+</section>
+
+<section id="screen" data-nav="画面の見かた">
+  <div class="rv"><div class="eyebrow">04 — Inspector</div><h2>見る場所は<br><em>4 つ</em>。</h2></div>
+  <div class="tabguide">
+    <div class="tg-panel rv"><h3>スキルの設定ファイル（BlueVortexSkill）</h3><p class="when">強さ・広さ・色・演出を変えるとき</p><ul class="points"><li>上から <b>スキルの情報</b>・<b>使えるようになる条件</b>・<b>通常のレーザーとの関係</b>、その下に ▶ で開くまとまり（<b>タイミング（投げる）</b>／<b>落ちる場所（渦を広げる場所）</b>／<b>投げ方（1本・まとめて・1本ずつ）</b>／<b>渦の広さ・時間</b>／<b>敵への効果（デバフ）</b>／<b>渦の見た目</b>／<b>うがい薬のボトル</b>／<b>溜め（使える状態）の演出</b>／<b>投げる・破裂の演出</b>／<b>カメラの揺れ</b>／<b>効果音・追加エフェクト（D-Drive）</b>／<b>シェーダー（通常は触らない）</b>）。</li><li>項目にマウスを乗せると説明が出ます。Play 中は一番下に、このスキルを持つ砲台の状態と <b>使えるようにする</b>・<b>今すぐ撃つ</b>・<b>止める</b> ボタン。</li><li>このファイルを選んでいる間、Scene ビューに全砲台の「落ちる場所」と渦の大きさが青い円で出ます。</li></ul></div>
+    <div class="tg-panel rv"><h3>スキルを配る係（[BlueSkill] Skill Installer）</h3><p class="when">どの席にどのスキルを配るか決めるとき</p><ul class="points"><li>赤スキルと同じ部品です：<b>全員に配るスキル</b>・<b>プレイヤーごとのスキル（P1〜P4）</b>・<b>キャラ選択の結果を使う</b>・<b>キャラとスキルの対応表</b>。</li><li>テスト用：<b>最初から全員使える（テスト）</b>、<b>数字キー1〜4で溜める（テスト）</b>（エディタだけ）。</li></ul></div>
+    <div class="tg-panel rv"><h3>スキルの割り当て（Tools › スキル）</h3><p class="when">赤・青…を席ごと・キャラごとに配るとき</p><ul class="points"><li><b>① プレイヤーごと（今のテスト用）</b>：<b>全員に配るスキル</b> と <b>P1〜P4</b> の席ごとのスキル。</li><li><b>② キャラごと（キャラ選択を通ってきたときに使う）</b>：キャラ 1 人ずつにスキルを選ぶ（共通の対応表に保存）。</li><li><b>③ Play 中に試す</b>：今の席ごとのスキルと状態、<b>使えるようにする</b>、キャラを選んだことにして <b>このキャラで配り直す</b>。</li></ul></div>
+    <div class="tg-panel rv"><h3>Play 中のシーン</h3><p class="when">渦の効き方を確かめるとき</p><ul class="points"><li>渦は <b>[BlueSkill] Vortex P1</b> などの名前で出て、消えると自動で片付きます。敵への効果をかける係 <b>[BlueSkill] Vortex Field</b> も自動で出入りします（置く必要はありません）。</li><li>Scene ビューに渦の輪と <code>つかまっている敵 N</code> が出ます。</li><li>すぐ消したいときは <span class="mp">Tools<i>›</i>青スキル<i>›</i>出ている渦を消す（Play中）</span>。</li></ul></div>
+  </div>
+</section>
+
+<section id="params" data-nav="数値の意味">
+  <div class="rv"><div class="eyebrow">05 — Numbers</div><h2>よく触る<br><em>数値</em>。</h2></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">投げる・落ちる場所・渦</div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>振りかぶる時間（秒）</td><td>握ってから投げるまで</td><td>ためが長い</td><td>すぐ投げる（0 で即）</td><td class="def">0.35</td></tr>
+    <tr><td>飛んでいる時間（秒）</td><td>投げてから落ちるまで</td><td>ふわっと飛ぶ</td><td>速く落ちる</td><td class="def">0.55</td></tr>
+    <tr><td>放物線の高さ（m）</td><td>飛ぶときの高さ</td><td>高く弧を描く</td><td>低く一直線</td><td class="def">2.4</td></tr>
+    <tr><td>落ちる距離（m）</td><td>渦の出る場所までの距離</td><td>遠く</td><td>近く（0 で足元）</td><td class="def">7</td></tr>
+    <tr><td>渦の半径（m）</td><td>効く範囲</td><td>広い</td><td>狭い</td><td class="def">3.2</td></tr>
+    <tr><td>投げ方</td><td>何本持って、どう投げるか</td><td colspan="2">1本だけ（元の動き）／まとめて一気に投げる／1本ずつ順番に投げる</td><td class="def">1本ずつ順番に</td></tr>
+    <tr><td>ボトルの数</td><td>1 本ずつ：1 回の溜めで投げられる回数／まとめて：一度に投げる数</td><td>たくさん</td><td>1 本</td><td class="def">3</td></tr>
+    <tr><td>広がる角度（度）</td><td>まとめて投げたときの横の広がり</td><td>横に広く</td><td>1 か所に固まる</td><td class="def">32</td></tr>
+    <tr><td>1つの渦の大きさの倍率</td><td>まとめて投げたときの渦 1 つの大きさ</td><td>大きい（重なる）</td><td>小さい</td><td class="def">0.75</td></tr>
+    <tr><td>渦が続く時間（秒）</td><td>渦が出ている長さ</td><td>長く止める</td><td>すぐ消える</td><td class="def">5</td></tr>
+  </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">敵への効果（デバフ）</div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>足止めの強さ（1=止まる）</td><td>中の敵の進む速さ</td><td>止まる（1）</td><td>普通に進む（0）</td><td class="def">1</td></tr>
+    <tr><td>ふちのやわらかさ（割合）</td><td>ふちでの効き方</td><td>ふちは弱く、だんだん効く</td><td>ふちからいきなり効く</td><td class="def">0.2</td></tr>
+    <tr><td>渦に巻き込む速さ（m/秒）</td><td>ぐるぐる回る速さ</td><td>速く回る</td><td>回さない（0）</td><td class="def">1.4</td></tr>
+    <tr><td>中心へ引き寄せる速さ（m/秒）</td><td>中心へ寄る速さ</td><td>すぐ集まる</td><td>寄せない（0）</td><td class="def">0.7</td></tr>
+    <tr><td>受けるダメージの倍率</td><td>レーザー・爆発のダメージ</td><td>倒れやすい</td><td>いつも通り（1）</td><td class="def">1.5</td></tr>
+    <tr><td>渦のダメージ（1回）／間隔（秒）</td><td>渦そのもののダメージ</td><td>渦だけで倒せる</td><td>弱い（0 でなし）</td><td class="def">1.5 / 0.5</td></tr>
+    <tr><td>消えたあとの足止めの残り（秒）</td><td>消えた直後の足止め</td><td>しばらく遅いまま</td><td>すぐ元通り（0）</td><td class="def">0.4</td></tr>
+  </table></div></div>
+  <div class="ptable-wrap rv"><div class="ptable-cap">見た目</div><div class="ptable-scroll"><table class="params">
+    <tr><th>項目</th><th>何が変わる</th><th>上げると</th><th>下げると</th><th>初期値</th></tr>
+    <tr><td>うず巻きの本数</td><td>渦の筋の数</td><td>細かい渦</td><td>大きな筋（1 本）</td><td class="def">4</td></tr>
+    <tr><td>ねじれの強さ</td><td>筋の巻き具合</td><td>ぐるぐる巻く</td><td>放射状</td><td class="def">4.5</td></tr>
+    <tr><td>回る速さ（回/秒）</td><td>渦の模様の回転</td><td>速く回る</td><td>止まる（0）</td><td class="def">0.55</td></tr>
+    <tr><td>濃さ（床を塗る強さ）</td><td>床を青く塗る強さ</td><td>はっきり青い</td><td>光を足すだけ</td><td class="def">0.85</td></tr>
+    <tr><td>明るさ</td><td>渦全体の光り方</td><td>明るく光る</td><td>暗く沈む</td><td class="def">1.2</td></tr>
+    <tr><td>渦の描く順番（renderQueue）</td><td>敵より下か上か</td><td>2990 より大きいと敵の上</td><td>敵が渦の上に見える</td><td class="def">2980</td></tr>
+  </table></div></div>
+</section>
+
+<section id="faq" data-nav="困ったとき">
+  <div class="rv"><div class="eyebrow">06 — Troubleshooting</div><h2>困ったときは<br><em>ここ</em>。</h2></div>
+  <div class="faq rv">
+    <details><summary>ボールを割ったのにボトルが出ない・投げない</summary><div class="a"><ol><li>シーンに <b>[BlueSkill] Skill Installer</b>（または青スキルを配る係）があるか確認。</li><li>ボールを割ったときに握っていたままではありませんか？ そのレーザーは離すまで出続けます。次に握った（Q を押した）瞬間に投げます。</li><li>オーバーヒート中は撃てないので、冷めるまで待つ。</li></ol></div></details>
+    <details><summary>渦がどぎついピンク一色（マゼンタ）・四角く見える</summary><div class="a">シェーダーが読み込めていません。Console に <code>[BlueSkill] シェーダー … が見つかりません</code> が出ていないか確認し、設定ファイルの <b>シェーダー（通常は触らない）</b> の 3 つが入っているか見てください。</div></details>
+    <details><summary>渦が見えない・敵の上に乗って敵が見えない</summary><div class="a"><b>渦の描く順番（renderQueue）</b> を確認してください。2980（初期値）なら床の上・敵の下に描かれます。床の模様にめり込むときは <b>床から浮かせる（m）</b> を少し上げます。</div></details>
+    <details><summary>敵が止まらない</summary><div class="a"><b>足止めの強さ（1=止まる）</b> が 1 か確認。ネット対戦のクライアント側では、ホストの計算結果が届くまでほんの少し遅れて止まります。Scene ビューの <code>つかまっている敵 N</code> が 0 なら、渦の位置に敵がいないか、群衆（SwarmSystem）のないシーンです。</div></details>
+    <details><summary>ネット対戦でも動く？</summary><div class="a">はい。各 PC が自分でボトルと渦を出し（通信は増えません）、敵を止める・ダメージを与えるのはホストだけです。止まった敵の位置はいつもどおり全員に届きます。</div></details>
+  </div>
+</section>
+
+<section id="glossary" data-nav="用語集">
+  <div class="rv"><div class="eyebrow">07 — Words</div><h2>分からない言葉は<br><em>ここで引く</em>。</h2></div>
+  <dl class="gloss">
+    <div class="rv"><dt>デバフ</dt><dd>敵を弱くする効果。ここでは足止め・巻き込み・受けるダメージ増加・渦のダメージ。</dd></div>
+    <div class="rv"><dt>渦（デバフエリア）</dt><dd>ボトルが落ちた場所に出る円い範囲。中の敵に効果がかかる（Blue Vortex Area）。</dd></div>
+    <div class="rv"><dt>スキル欄</dt><dd>砲台ごとに 1 つある「スキルを持つ場所」。赤スキルと共通（Player Skill Slot）。</dd></div>
+    <div class="rv"><dt>スキルを配る係</dt><dd>シーンに 1 つ置く部品。全ての砲台にスキルを配る（Player Skill Installer）。</dd></div>
+    <div class="rv"><dt>設定ファイル</dt><dd>スキルの値をまとめたファイル（ScriptableObject）。Play 中に変えても残る。</dd></div>
+    <div class="rv"><dt>群衆の敵</dt><dd>何千体も同時に動く普通の敵（SwarmSystem）。Actor の敵は 1 体ずつの GameObject の敵（今のプロジェクトにはまだいない）。</dd></div>
+    <div class="rv"><dt>D-Drive</dt><dd>このゲームの効果音・エフェクトをまとめて管理する仕組み。演出欄はすべてこれで選ぶ。</dd></div>
+  </dl>
+</section>
+
+<div class="devzone"></div>
+<section id="dev" data-nav="コードから使う" data-dev>
+  <div class="rv">
+    <div class="eyebrow">08 — For programmers</div>
+    <h2>赤スキルと同じ<br><em>スキル欄に乗る</em>。</h2>
+    <p class="lead">名前空間 <code>MS2026.Skills.Blue</code>、asmdef <code>MS2026.BlueSkill.Runtime</code>（赤スキルの <code>MS2026.RedSkill.Runtime</code> を参照）。既存のコードは変更していません（公開 API だけ使用）。</p>
+  </div>
+  <div class="tabs rv" role="tablist" aria-label="コード例">
+    <button class="tab" role="tab" aria-selected="true" aria-controls="cp-bind">キャラに紐づけ</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="cp-event">渦を使う</button>
+  </div>
+  <div class="panel" id="cp-bind" role="tabpanel">
+    <div class="codebox"><div class="cap"><span>PlayerSkillSlot</span><button class="copy" type="button">copy</button></div><pre>
+using MS2026.Skills;
+using MS2026.Skills.Blue;
+
+var slot = PlayerSkillSlot.Find(playerIndex);   // 砲台のスキル欄（配る係が付ける）
+slot.SetSkill(blueVortexSkillAsset);            // 青スキルにする（使える状態は引き継ぐ）
+slot.GrantCharge();                             // 溜める</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">配る順番</span>キャラ選択の結果＋対応表 → プレイヤーごと → 全員共通（赤スキルと共通）。</div><div class="note"><span class="lbl">落ちる場所</span><code>BlueVortexSkill.PredictLanding(turret)</code>。</div></div>
+  </div>
+  <div class="panel" id="cp-event" role="tabpanel">
+    <div class="codebox"><div class="cap"><span>BlueVortexArea</span><button class="copy" type="button">copy</button></div><pre>
+// 渦が出たとき（UI・キャラのボイスなど）
+BlueVortexSkillRunner.AnyVortexSpawned += (runner, area) =&gt; { /* runner.Turret.playerIndex, area.Center */ };
+
+// スキル以外のきっかけで渦を出す
+var area = BlueVortexArea.Spawn(blueVortexSkillAsset, floorPoint, playerIndex);
+area.Dismiss();                                  // すぐ消し始める
+int trapped = BlueVortexField.AffectedCount;     // つかまっている群衆の敵の数</pre></div>
+    <div class="notes"><div class="note"><span class="lbl">効果のかけ方</span>群衆の配列を <code>SwarmSystem.StorageReadable</code> の瞬間に Burst のジョブで書き換え（足止め = speedScale、巻き込み = 速度）。ホストだけ。</div><div class="note"><span class="lbl">詳細</span><code>Docs/Tools/BlueSkill_AI_Reference.md</code></div></div>
+  </div>
+</section>
+
+<section id="more" data-nav="関連ツール">
+  <div class="rv"><div class="eyebrow">09 — Related</div><h2>一緒に使う<br><em>ツール</em>。</h2></div>
+  <div class="links">
+    <a class="lk rv" href="RedSkill_ガイド.html"><span class="ti">赤スキル</span><span class="ds">スキル欄・配る係・対応表（共通の仕組み）。</span></a>
+    <a class="lk rv" href="FortressDesigner_ガイド.html"><span class="ti">要塞デザイナー</span><span class="ds">砲台・スマッシュボール・群衆・演出欄（効果音）の設定。</span></a>
+    <a class="lk rv" href="CharacterSelect_ガイド.html"><span class="ti">キャラクター選択</span><span class="ds">選ばれたキャラ → 対応表でスキルを決める。</span></a>
+    <a class="lk rv" href="D-Drive_ガイド.html"><span class="ti">D-Drive</span><span class="ds">効果音・エフェクトの素材の登録。</span></a>
+    <a class="lk rv" href="index.html"><span class="ti">ツール一覧</span><span class="ds">このプロジェクトの全ツール。</span></a>
+  </div>
+  <footer><span>Blue Skill Guide · Xx_MS2026_xX</span><span>2026-10-19 時点のコードに基づく</span></footer>
+</section>
+</main>
+</div>
+<script src="assets/guide.js"></script>
+</body>
+</html>
