@@ -54,6 +54,14 @@ namespace MS2026.Title
         [Tooltip("泡・ばいきんなど、最初から流すパーティクル（任意）。")]
         public ParticleSystem[] ambientParticles;
 
+        [Header("キャラ（開くたびにランダム）")]
+        [Tooltip("左右に出すキャラの一覧（キャラごとの大きさ・位置もここ）。空なら Assets/Title/Resources/TitleCharacters を使う。一覧の「ランダム」が OFF ならシーンのまま。")]
+        public TitleCharacterRoster characters;
+        [Tooltip("左のキャラの置き場所（子「Sprite」の絵を入れ替える）。空なら名前「CharacterLeft」の配置物。")]
+        public TitleElementMotion characterLeft;
+        [Tooltip("右のキャラの置き場所。空なら名前「CharacterRight」の配置物。")]
+        public TitleElementMotion characterRight;
+
         [Header("画面全体の演出")]
         public TitleScreenFader fader;
         public TitleCameraMotion cameraMotion;
@@ -97,7 +105,35 @@ namespace MS2026.Title
                 loadRequested = true;
                 enabled = false;
                 SceneManager.LoadScene(directSceneForTestLaunch);
+                return;
             }
+
+            PickCharacters();
+        }
+
+        /// <summary>今使うキャラの一覧（Inspector で空なら Resources のもの）。</summary>
+        public TitleCharacterRoster Roster =>
+            characters != null ? characters : Resources.Load<TitleCharacterRoster>(TitleCharacterRoster.ResourcePath);
+
+        /// <summary>左右のキャラの置き場所（Inspector で空なら名前で探す）。</summary>
+        public TitleElementMotion CharacterSlot(bool rightSide)
+        {
+            var slot = rightSide ? characterRight : characterLeft;
+            if (slot != null) return slot;
+            var name = rightSide ? "CharacterRight" : "CharacterLeft";
+            return (afterOpening ?? System.Array.Empty<TitleElementMotion>()).FirstOrDefault(e => e != null && e.name == name);
+        }
+
+        // 一覧から違う2人をランダムに選んで、左右の絵・大きさ・位置を入れ替える（キャラが落ちてくるより前、隠れている間に行う）。
+        private void PickCharacters()
+        {
+            var roster = Roster;
+            if (roster == null || !roster.randomize) return;
+            var usable = roster.UsableIndices();
+            var (left, right) = TitleCharacterRoster.PickPair(usable.Length, n => Random.Range(0, n));
+            if (left < 0) return;
+            TitleCharacterRoster.ApplyTo(CharacterSlot(false)?.transform, roster.characters[usable[left]], false);
+            TitleCharacterRoster.ApplyTo(CharacterSlot(true)?.transform, roster.characters[usable[right]], true);
         }
 
         // Tools/NetTest の bat は必ず -fortress-start（host/client/ui）を渡す。ほかの -fortress-… も検証用なので、どれか1つあればテスト用の起動とみなす。

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d247fd182905de459469865d2721a39, type: 3}
+  m_Name: SdArtSettings
+  m_EditorClassIdentifier: MS2026.RedSkill.Editor::MS2026.Skills.EditorTools.SdArtSettings
+  lineMaxLum: 0.15
+  lineBlueLead: 0.2
+  fillSize: 9
+  lineGrow: 2
+  lineSoft: 0.8
+  saturation: 1.2
+  contrast: 1.1
+  rim: 7
+  stickerWhite: 11
+  stickerLine: 5
+  shadowBlur: 6
+  shadowGrow: 5
+  shadowAlpha: 0.7
+  outHeight: 512
+  pad: 24
+  previewHeight: 100
+  exportedCanvasScale: 1.09375

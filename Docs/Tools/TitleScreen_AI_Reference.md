@@ -24,14 +24,17 @@
 ```
 Assets/Title/
   Scripts/Runtime/ MS2026.Title.Runtime.asmdef (ns MS2026.Title; refs MS2026.Fortress.Runtime, MS2026.ShaderFX.Runtime, DDrive.Runtime, DDrive.Foundation, Unity.InputSystem, UnityEngine.UI)
-    TitleScreenController.cs, TitleOpening.cs, TitleFrameSequence.cs (ScriptableObject: AE frames + fps + eject frame + per-frame mouths), TitleElementMotion.cs, TitleSpriteFit.cs, TitleScreenFader.cs, TitleCameraMotion.cs, TitleEase.cs, TitleEffects.cs (internal)
+    TitleScreenController.cs, TitleCharacterRoster.cs (ScriptableObject, 2026-10-22), TitleOpening.cs, TitleFrameSequence.cs (ScriptableObject: AE frames + fps + eject frame + per-frame mouths), TitleElementMotion.cs, TitleSpriteFit.cs, TitleScreenFader.cs, TitleCameraMotion.cs, TitleEase.cs, TitleEffects.cs (internal)
   Scripts/Editor/  MS2026.Title.Editor.asmdef (ns MS2026.Title.EditorTools) TitleSceneBuilder.cs, TitleValueSnapshot.cs (path-keyed value copy; keeps the target's object references and ref-array sizes),
                    TitlePlayModeKeeper.cs ([InitializeOnLoad]), TitleInspectors.cs (custom editors for Controller / Opening / ElementMotion / CameraMotion),
+                   TitleCharacterRosterEditor.cs (inspector of TitleCharacterRoster + menu `タイトルのキャラ一覧を開く`, 2026-10-22),
                    TitleFrameSequenceImporter.cs (menu `歯磨き粉の連番を取り込む` + `ApplyToOpening`, used by the builder; also the TitleFrameSequence inspector)
   Sprites/  Title_Background.png (1920x1080 pastel cyber room = after repaint; no binary digits — user removed them), Title_BackgroundBefore.png (1920x1080 same composition, dark gloomy purple, dirty basin, germ shadows, scanlines, glitch bars, vignette = before repaint), Title_Toothpaste.png (480x1300 upright tube WITHOUT cap — mouth on top, side padding for the swell), Title_ToothpasteCap.png (150x170 cap, separate so it can fly off), Title_PasteStream.png (260x1200, base at bottom), Title_PasteCurtain.png (1920x1400, vertical stripes, dripping bottom edge, no label text — user removed it), Title_Logo.png (1400x460 `TITLE LOGO（仮）`),
             Title_PressStart.png (1166x170 「握ってスタート！（Aキー）」), Title_SoftDot.png (64x64, bubbles/splash), Title_Germ.png (128x128 purple germ),
-            Title_CharaLeft.png (1142x2048, red character) / Title_CharaRight.png (1269x2048, yellow character) — team-drawn portraits (2026-10-22, from red (1).png / yellow.png 2894x4093),
-            cropped by Claude to the alpha bbox + 8 px and scaled to 2048 high (Pillow); no .meta written → Unity imports them as Default and the builder's ConfigureSpriteImports turns them into Sprites.
+            Title_Chara_Red.png (1142x2048) / Title_Chara_Yellow.png (1269x2048) / Title_Chara_Green.png (1012x2048) / Title_Chara_Blue.png (883x2048) — team-drawn portraits (2026-10-22),
+            cropped by Claude to the alpha bbox + 8 px and scaled to 2048 high (Pillow). Red/Yellow were first added as Title_CharaLeft/Right.png and renamed together with their .meta (GUIDs kept);
+            Green/Blue .meta were written by Claude as copies of the Red meta (Sprite, 100 PPU, new GUID). Originals (2894x4093 / 2978x4093) are in Assets/_Game/Characters/Portraits/Chara_{Red,Yellow,Green,Blue}_Portrait.png (unused, Default import).
+  Resources/TitleCharacters.asset   (TitleCharacterRoster, §3; 4 entries red/yellow/green/blue, all height 10.35, offsets red (0.3,1.1), yellow (0.6,0.8), green/blue (0.3,1.1) — red/yellow are the user's tuned scene values)
             ToothpasteFrames/ (AE frames, cropped by the importer: 287x877 each for the 2026-10-17 delivery, Sprite / 100 PPU / pivot centre / FullRect / no mips / Clamp) + ToothpasteFrames.asset (`TitleFrameSequence`).
             Placeholders drawn with System.Drawing (white fill, blue outline, magenta/cyan offset). The builder sets new textures in this folder to Sprite / Single / 100 PPU / no mips / Clamp.
   Materials/ Title_SpriteFX.mat (`ShaderFX/Uber Sprite`), Title_Bubble.mat / Title_Germ.mat (`Universal Render Pipeline/2D/Sprite-Unlit-Default`, mainTexture SoftDot / Germ),
@@ -57,13 +60,14 @@ Camera (`Camera.main`): orthographic, size 5.4 (view 19.2×10.8 world at 16:9), 
 | [Title] / FadeCanvas / PasteCurtain | sibling 0 (under Fade), full-screen stretch | RawImage template (texture Title_PasteCurtain, disabled); runtime children "Column i" | overlay | `curtain` |
 | Opening / BurstSplash (PS) | moved to the cap on eject | cone 25° up, r 0.2, Title_Bubble.mat | 40 | one-shot: bursts 80 @0 + 40 @0.06, speed 7–16, life 0.8–1.6, size 0.15–0.6 shrinking to 20%, gravity 1.5, drag 1.5 |
 | Logo | (0,2.4,0) | Sprite Height 3.6, FX + TitleFX_Logo | 20 | delay 0, dur 0.55, InCubic, fadeIn off, moveFrom (0,7,0), glitchIn 0.6, flashOnLand 1, shakeOnLand 0.3, squash 0.18, pulse 0.012 @0.6Hz, glint 3.5s ×0.45, glitch every ~5s ×0.6, flashOnExit 0.8, glitchOnExit 1 |
-| CharacterLeft / Sprite | parent (-6.2,-2.6,0), child (-0.6,1.1,0) | Sprite Title_CharaLeft (red), Height 7.6, Title_SpriteFX + TitleFX_Character | 10 | delay 0.45, rotateFrom (0,0,25) |
-| CharacterRight / Sprite | parent (6.2,-2.6,0), child (0.6,0.8,0) | Sprite Title_CharaRight (yellow), Height 7, Title_SpriteFX + TitleFX_Character | 10 | delay 0.7, rotateFrom (0,0,-25) |
+| CharacterLeft / Sprite | parent (-6.2,-2.6,0), child = roster entry 1 LocalPosition | roster's 1st usable entry (red), Height = entry.height, Title_SpriteFX + TitleFX_Character | 10 | delay 0.45, rotateFrom (0,0,25) |
+| CharacterRight / Sprite | parent (6.2,-2.6,0), child = roster entry 2 LocalPosition | roster's 2nd usable entry (yellow), same | 10 | delay 0.7, rotateFrom (0,0,-25) |
+| (Play) | | sprite/height/offset replaced at Awake by a random pair from the roster (`TitleScreenController.PickCharacters`) | | |
 | (fallback when a portrait PNG is missing) CharacterLeft/Right / Model | (∓6.2,-2.6,0) | Cube ×2.3, rot (-20,±35,0), Title_CubeLeft/Right + TitleFX_Character | (3D) | rotateFrom (90,±200,±60) |
 | (both characters) | | | | dur 0.5, InCubic, fadeIn off, moveFrom (0,10,0), glitchIn 0.5, flashOnLand 0.6, shakeOnLand 0.35, squash 0.22, float (0,0.08,0) @0.4Hz, flashOnExit 0.6, glitchOnExit 0.7 |
 | PressStart | (0,-1.5,0) (user: a little below centre) | Sprite Height 1.1, FX + TitleFX_Logo | 30 | delay 1.5, dur 0.5, OutBack, scaleFrom 0.6, pulse 0.03 @0.8Hz, blinkMinAlpha 0.35 @0.8Hz, exit BlinkOut 0.6s, glitchOnExit 0.8 |
 | FadeCanvas/Fade | | Overlay canvas order 1000, full-stretch Image (raycast off, disabled in edit mode) + `TitleScreenFader` | | |
-Character choice in the builder (`CreateCharacterElement`, 2026-10-22): a kept `Model` that is NOT the placeholder cube (`IsPlaceholderCube`: MeshFilter mesh "Cube" and material named `Title_Cube*` or none) is kept as before; otherwise portrait = kept sprite of the `Sprite` child (SpriteKey = parent name) or `Title_CharaLeft/Right.png` → child `Sprite` (size/offset = builder constants `CharacterLeft/RightSize/Offset`, `CharacterSortingOrder` 10 = behind Logo 20); otherwise the cube. A replaced cube is destroyed with the other leftovers, and after a "keep values" snapshot apply its `rotateFrom` is reset to (0,0,±25) (a flat sprite tumbling on X/Y would show its edge/back). Snapshot paths `CharacterX/Model` no longer exist, so their transforms are simply not applied.
+Character choice in the builder (`CreateCharacterElement`, 2026-10-22): a kept `Model` that is NOT the placeholder cube (`IsPlaceholderCube`: MeshFilter mesh "Cube" and material named `Title_Cube*` or none) is kept as before; otherwise `DefaultCharacter(rightSide, keptSprites)`: the kept sprite of the `Sprite` child (SpriteKey = parent name; its roster entry's height/offset if the roster has that sprite, else roster entry 1/2's values) or the roster's 1st (left) / 2nd (right) usable entry → child `Sprite` (`CharacterSortingOrder` 10 = behind Logo 20); otherwise the cube. The builder also sets `controller.characters` (RosterPath `Assets/Title/Resources/TitleCharacters.asset`), `characterLeft`, `characterRight`. A replaced cube is destroyed with the other leftovers, and after a "keep values" snapshot apply its `rotateFrom` is reset to (0,0,±25) (a flat sprite tumbling on X/Y would show its edge/back). Snapshot paths `CharacterX/Model` no longer exist, so their transforms are simply not applied.
 Controller wiring (opening gets `cameraMotion`; no fader any more): `opening`, `background`, `afterOpening = [Logo, CharacterLeft, CharacterRight, PressStart]`, `pressStart`, `ambientParticles = [Bubbles, Germs]`, `fader`, `cameraMotion`. Opening gets `cameraMotion` + `fader`.
 Depth: cubes (opaque, z≈0) occlude Background (z 5) / particles (z 3–4) by depth; sprites at z 0 sort by sortingOrder.
 
@@ -127,6 +131,16 @@ event Action Finished; void Play(); void Skip() /*also SetPainted(true)*/; void 
 //   coveredDrop = screenH + 0.6*(curtainH - screenH), curtainH = 1.35*screenH (screenH = curtain rect height). c in 1..2: drop adds (screenH+curtainH)*InCubic(local).
 //   Columns hidden when off-screen. Use a curtain texture whose stripes run vertically (columns offset vertically). Covered → tube, stream, pinchers deactivated.
 
+// TitleCharacterRoster : ScriptableObject [CreateAssetMenu "MS2026/タイトル/タイトルのキャラ一覧"], ResourcePath "TitleCharacters" (2026-10-22, user: random 2 characters each time the title opens)
+bool randomize = true; Entry[] characters;   // Entry { string label; Sprite sprite; float height = 10.35 [Min .1]; Vector2 offset = (0.3, 1.1) /* x = toward the screen edge, y = up */ }
+static Vector3 LocalPosition(Entry, bool rightSide) /* (right ? x : -x, y, 0) */; static Vector2 OffsetFrom(Vector3 localPos, bool rightSide);
+static (int left, int right) PickPair(int count, Func<int,int> randomRange) /* two distinct, uniform over ordered pairs; count < 2 → (-1,-1) */;
+int[] UsableIndices() /* entries with a sprite */; static bool ApplyTo(Transform slot, Entry, bool rightSide) /* slot's child "Sprite": sprite, localPosition, TitleSpriteFit Height + size + Fit(); false if no SpriteRenderer child (3D Model) */
+// TitleScreenController additions: [Header キャラ（開くたびにランダム）] TitleCharacterRoster characters (null → Resources.Load), TitleElementMotion characterLeft / characterRight
+//   (null → afterOpening element named CharacterLeft / CharacterRight). Awake (after the test-launch check) → PickCharacters(): if roster.randomize and ≥ 2 usable,
+//   PickPair with UnityEngine.Random and ApplyTo both slots. Public: Roster, CharacterSlot(bool rightSide). Title.unity was NOT edited for this (fallbacks find everything).
+//   TitleElementMotion computes its off-screen start at PlayEnter from the children's localBounds (pose independent), so the swapped sprite's size is used.
+
 // TitleFrameSequence : ScriptableObject (Assets/Title/Sprites/ToothpasteFrames.asset, made by the importer)
 Sprite[] frames; float frameRate = 30 [Min 1]; int ejectFrame = 82 [Min 0];
 Vector2[] mouths;      // per frame, tube top (mouth) relative to the sprite pivot (centre), 100px = 1 (hidden in its inspector)
@@ -136,8 +150,9 @@ int Count; bool IsUsable; float Duration; float EjectTime /*clamped ejectFrame /
 // TitleElementMotion  [DisallowMultipleComponent] — starts Dormant (child Renderers disabled) until PlayEnter/SkipToIdle
 // 2026-10-22: renderers stay hidden during Waiting (enterDelay) too and are shown when Entering starts (was: shown at PlayEnter, so a big
 //   portrait parked at moveFrom (0,10,0) poked into the screen before falling). bool startOffscreen = true (after moveFrom):
-//   Capture() stores the 8 corners of the children's combined Renderer bounds (particles excluded) relative to transform.position;
-//   PlayEnter computes enterFrom = OffscreenMoveFrom(): with Camera.main (orthographic) and the start pose (rotateFrom, scaleFrom),
+//   PlayEnter → CaptureRestCorners(): 8 corners of every child renderer's localBounds (particles excluded), mapped through the rest pose
+//   (parent matrix × TRS(basePosition, baseRotation, baseScale)) relative to the rest origin — independent of the current pose;
+//   then enterFrom = OffscreenMoveFrom(): with Camera.main (orthographic) and the start pose (rotateFrom, scaleFrom),
 //   the smallest factor along the move's x/y components that puts the whole box past the view edge; if > 1, moveFrom × factor × 1.03,
 //   else moveFrom unchanged (direction always kept). EnterPose lerps from enterFrom. Not applied: moveFrom zero, no renderers, perspective camera.
 // Enter: enterDelay 0, enterDuration 0.8, enterEase OutCubic, fadeIn true, moveFrom (0,0,0), scaleFrom 1, rotateFrom (0,0,0) (euler, lerped to 0),
@@ -171,6 +186,7 @@ void ZoomTo(float amount /*0.1 = 10% closer, holds; negative = wider*/, float se
 
 ## 4. Editor UI
 - Menu: `Tools/タイトル/握力センサーの読み取りを置く` (2026-10-12): opens Title.unity, `EnsureGripReader`, saves. Refuses in Play Mode.
+- Menu: `Tools/タイトル/タイトルのキャラ一覧を開く` (2026-10-22): selects + pings `TitleCharacters.asset`. Its inspector (`TitleCharacterRosterEditor`): help box, `開くたびにランダム`, `キャラ` list, then (needs a loaded `TitleScreenController`, else `タイトルのシーンを開く`) `今の左のキャラの大きさ・位置を覚える` / `今の右の…` (finds the entry whose sprite == slot sprite; writes TitleSpriteFit.size → height, OffsetFrom(localPosition) → offset; Undo; SaveAssetIfDirty; works in Play) and per entry `左で見る` / `右で見る` (ApplyTo the slot with Undo, marks the scene dirty in edit mode, selects the slot's `Sprite`).
 - Menu: `Tools/タイトル/キャラを立ち絵にする` (2026-10-22, `SwapCubesToPortraitsMenu` → `SwapCubesToPortraitsInTitleScene()`): no rebuild. Opens Title.unity additively if it is not loaded (closed again afterwards), runs `ConfigureSpriteImports`, and for `CharacterLeft` / `CharacterRight` whose `Model` is the placeholder cube (and no `Sprite` child yet, portrait PNG present) destroys the cube, adds the portrait `Sprite` child (`CreatePortraitChild`, same constants as the builder) and sets `rotateFrom` (0,0,±25). Everything else (positions, timings) is untouched. Saves the scene unless it was already open with unsaved changes (then only marks dirty + LogWarning). Logs `[Title] 仮のキューブ N 個を立ち絵に替えて、…`. Refuses in Play Mode; dialog with the result.
 - Menu: `Tools/タイトル/タイトルシーンを組み立てる`. Refuses in Play Mode. Also runs `EnsureGripReader` (the `Arduino` root is outside `[Title]`, so rebuilding never deletes it). Opens `Assets/Scenes/Title.unity` (asks to save the current scene). Rebuild dialog: `数値を引き継いで作り直す` / `やめる` / `初期値で作り直す` (old layout: `作り直す` / `やめる`).
 - The builder also calls `TitleFrameSequenceImporter.ApplyToOpening(opening, seq, placeLikeSource: true)` when `Assets/Title/Sprites/ToothpasteFrames.asset` exists (with "keep values", the snapshot then restores the tuned tube position/fit afterwards; `tubeSequence` is an object ref, so the fresh one is kept).
@@ -187,7 +203,7 @@ void ZoomTo(float amount /*0.1 = 10% closer, holds; negative = wider*/, float se
 ## 6. Gotchas
 1. Profiles/materials are created only if missing: to apply new builder defaults, delete `Assets/Title/Effects/*.asset` (and/or materials) and rebuild. Avoid hand-editing `Title.unity`. When changing builder defaults, tell the user to rebuild with `初期値で作り直す` (keep would re-apply their old numbers over the new defaults).
 9. Values changed during Play revert on stop unless `再生中に変えた値を残す` was pressed; positions can't be tuned in Play (motion overwrites transforms every frame).
-2. Replacing a character: portrait = overwrite `Title_CharaLeft.png` / `Title_CharaRight.png` (or swap the `Sprite` child's sprite; kept on rebuild). 3D = delete the `Sprite` child and add a child named `Model` (kept on rebuild, wins over the portrait unless it is the placeholder cube). Adding the PNGs alone does not change Title.unity: the cubes stay until `キャラを立ち絵にする` (or a rebuild) runs — this bit the user on 2026-10-22 (the scene had never been rebuilt).
+2. Replacing / adding a character: add a Sprite-type PNG to `Assets/Title/Sprites/` and an entry to the roster (`TitleCharacters.asset`); with `randomize` on, the scene's `Sprite` children are overwritten at Play start, so tune per-character values in the roster (inspector buttons `左で見る`/`右で見る` → adjust the slot's `Sprite` (TitleSpriteFit.size, localPosition) → `今の左（右）のキャラの大きさ・位置を覚える`; works in Play too and persists because the roster is an asset). Tuning the scene child alone is lost on the next random pick. 3D = delete the `Sprite` child and add a child named `Model` (kept on rebuild, wins over the portrait unless it is the placeholder cube). Adding the PNGs alone does not change Title.unity: the cubes stay until `キャラを立ち絵にする` (or a rebuild) runs — this bit the user on 2026-10-22 (the scene had never been rebuilt).
 3. `TitleSpriteFit` CoverCamera needs an orthographic camera.
 4. Particle materials use the URP 2D Sprite-Unlit shader; falls back to `Sprites/Default` if not found.
 5. `FortressEffect` slots in Title are silent until a D-Drive bootstrap exists in the Title scene (see §0).

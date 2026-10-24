@@ -52,5 +52,6 @@ MonoBehaviour:
   - {fileID: 0}
   useCharacterSelection: 1
   characterTable: {fileID: 11400000, guid: 6777678fc6cf4c38a6277ae671c4c9f8, type: 2}
+  turretPortraits: {fileID: 11400000, guid: 8b8ff4e7ee854e1091996012d4d32ab3, type: 2}
   startReady: 0
   enableTestKeys: 1

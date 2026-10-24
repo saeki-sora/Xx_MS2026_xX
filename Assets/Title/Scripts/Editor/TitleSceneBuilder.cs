@@ -27,12 +27,9 @@ namespace MS2026.Title.EditorTools
         private const string ModelName = "Model";
         // キャラの立ち絵（2026-10-22: 左 = 赤、右 = 黄色）。無ければ仮のキューブ。
         // 大きさ = 絵の高さ（画面の高さは 10.8）、ずれ = キャラの位置から絵の真ん中まで（足元が画面の下近く、ロゴにかからない所）。
-        private const string CharacterLeftFile = "Title_CharaLeft.png";
-        private const string CharacterRightFile = "Title_CharaRight.png";
-        private const float CharacterLeftSize = 7.6f;
-        private const float CharacterRightSize = 7f;
-        private static readonly Vector3 CharacterLeftOffset = new Vector3(-0.6f, 1.1f, 0f);
-        private static readonly Vector3 CharacterRightOffset = new Vector3(0.6f, 0.8f, 0f);
+        // 2026-10-22〜: どのキャラがどの大きさ・位置かは、キャラの一覧（TitleCharacters.asset）で決める。
+        // シーンに置くのは一覧の1人目（左）と2人目（右）。再生すると TitleScreenController が毎回ランダムに入れ替える。
+        internal const string RosterPath = Root + "/Resources/" + TitleCharacterRoster.ResourcePath + ".asset";
         private const int CharacterSortingOrder = 10;
         // 今の作りの目印: どろーっと垂れる歯磨き粉（Raw Image の「FadeCanvas/PasteCurtain」）がある。
         private static bool IsCurrentLayout(Transform root)
@@ -192,15 +189,15 @@ namespace MS2026.Title.EditorTools
 
             // --- キャラ: 左下・右下に落ちてきて「ドン」（画面が揺れる）。立ち絵（左 = 赤、右 = 黄色。2026-10-22）があればそれ、
             //     無ければ仮のキューブ（回転しながら落ちる）。立ち絵は平らなので、横に傾くだけにする。
-            var leftPortrait = Pick(keptSprites, "CharacterLeft", CharacterLeftFile);
+            var leftEntry = DefaultCharacter(false, keptSprites);
+            var leftPortrait = leftEntry?.sprite;
             var characterLeft = CreateCharacterElement(root.transform, "CharacterLeft", new Vector3(-6.2f, -2.6f, 0f), 35f,
-                cubeLeftMaterial, characterProfile, keptModels, leftPortrait, fxMaterial, CharacterLeftSize, CharacterLeftOffset,
-                out var leftWasCube);
+                cubeLeftMaterial, characterProfile, keptModels, leftEntry, fxMaterial, false, out var leftWasCube);
             SetupFallingCharacter(characterLeft, 0.45f, leftPortrait != null ? new Vector3(0f, 0f, 25f) : new Vector3(90f, 200f, 60f));
-            var rightPortrait = Pick(keptSprites, "CharacterRight", CharacterRightFile);
+            var rightEntry = DefaultCharacter(true, keptSprites);
+            var rightPortrait = rightEntry?.sprite;
             var characterRight = CreateCharacterElement(root.transform, "CharacterRight", new Vector3(6.2f, -2.6f, 0f), -35f,
-                cubeRightMaterial, characterProfile, keptModels, rightPortrait, fxMaterial, CharacterRightSize, CharacterRightOffset,
-                out var rightWasCube);
+                cubeRightMaterial, characterProfile, keptModels, rightEntry, fxMaterial, true, out var rightWasCube);
             SetupFallingCharacter(characterRight, 0.7f, rightPortrait != null ? new Vector3(0f, 0f, -25f) : new Vector3(90f, -200f, -60f));
 
             // --- 「〇〇でスタート！」: 真ん中より少し下に弾んで現れ、ゆっくり点滅。スタートでノイズを走らせ、速く点滅して消える
@@ -223,6 +220,9 @@ namespace MS2026.Title.EditorTools
             controller.afterOpening = new[] { logo, characterLeft, characterRight, pressStart };
             controller.pressStart = pressStart;
             controller.ambientParticles = new[] { bubbles, germs };
+            controller.characters = AssetDatabase.LoadAssetAtPath<TitleCharacterRoster>(RosterPath);
+            controller.characterLeft = characterLeft;
+            controller.characterRight = characterRight;
             controller.fader = fader;
             controller.cameraMotion = cameraMotion;
 
@@ -578,8 +578,9 @@ namespace MS2026.Title.EditorTools
         // replacedCube = 前の仮のキューブを立ち絵に替えた。
         private static TitleElementMotion CreateCharacterElement(Transform parent, string name, Vector3 position, float yaw,
             Material material, EffectProfile profile, Dictionary<string, GameObject> keptModels,
-            Sprite portrait, Material fxMaterial, float portraitSize, Vector3 portraitOffset, out bool replacedCube)
+            TitleCharacterRoster.Entry entry, Material fxMaterial, bool rightSide, out bool replacedCube)
         {
+            var portrait = entry?.sprite;
             replacedCube = false;
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
@@ -599,7 +600,7 @@ namespace MS2026.Title.EditorTools
             {
                 // 仮のキューブは、最後に「引き継げなかったモデル」として消える。
                 replacedCube = kept != null;
-                CreatePortraitChild(go.transform, portrait, fxMaterial, profile, portraitSize, portraitOffset);
+                CreatePortraitChild(go.transform, portrait, fxMaterial, profile, entry.height, TitleCharacterRoster.LocalPosition(entry, rightSide));
                 return motion;
             }
 
@@ -676,7 +677,7 @@ namespace MS2026.Title.EditorTools
             var swapped = SwapCubesToPortraitsInTitleScene();
             EditorUtility.DisplayDialog("タイトル", swapped > 0
                 ? $"仮のキューブ {swapped} 個を立ち絵に替えて、タイトルのシーンを保存しました。"
-                : $"替えるキューブはありませんでした（もう立ち絵か、立ち絵の画像 {SpriteDir}/{CharacterLeftFile} / {CharacterRightFile} がありません）。", "OK");
+                : $"替えるキューブはありませんでした（もう立ち絵か、キャラの一覧 {RosterPath} に立ち絵が入っていません）。", "OK");
         }
 
         /// <summary>
@@ -698,8 +699,9 @@ namespace MS2026.Title.EditorTools
                 ConfigureSpriteImports();
                 var fxMaterial = GetOrCreateMaterial(MaterialDir + "/Title_SpriteFX.mat", "ShaderFX/Uber Sprite", null);
                 var profile = GetOrCreateCharacterProfile();
-                if (SwapCubeToPortrait(root.transform, "CharacterLeft", CharacterLeftFile, CharacterLeftSize, CharacterLeftOffset, 25f, fxMaterial, profile)) swapped++;
-                if (SwapCubeToPortrait(root.transform, "CharacterRight", CharacterRightFile, CharacterRightSize, CharacterRightOffset, -25f, fxMaterial, profile)) swapped++;
+                var empty = new Dictionary<string, Sprite>();
+                if (SwapCubeToPortrait(root.transform, "CharacterLeft", DefaultCharacter(false, empty), false, 25f, fxMaterial, profile)) swapped++;
+                if (SwapCubeToPortrait(root.transform, "CharacterRight", DefaultCharacter(true, empty), true, -25f, fxMaterial, profile)) swapped++;
                 if (swapped > 0)
                 {
                     EditorSceneManager.MarkSceneDirty(scene);
@@ -721,17 +723,16 @@ namespace MS2026.Title.EditorTools
             return swapped;
         }
 
-        private static bool SwapCubeToPortrait(Transform root, string name, string file, float size, Vector3 offset, float tilt,
+        private static bool SwapCubeToPortrait(Transform root, string name, TitleCharacterRoster.Entry entry, bool rightSide, float tilt,
             Material fxMaterial, EffectProfile profile)
         {
             var character = root.Find(name);
             var model = character != null ? character.Find(ModelName) : null;
             if (model == null || !IsPlaceholderCube(model.gameObject) || character.Find("Sprite") != null) return false;
-            var portrait = AssetDatabase.LoadAssetAtPath<Sprite>(SpriteDir + "/" + file);
-            if (portrait == null) return false;
+            if (entry == null || entry.sprite == null) return false;
 
             Undo.DestroyObjectImmediate(model.gameObject);
-            var spriteGo = CreatePortraitChild(character, portrait, fxMaterial, profile, size, offset);
+            var spriteGo = CreatePortraitChild(character, entry.sprite, fxMaterial, profile, entry.height, TitleCharacterRoster.LocalPosition(entry, rightSide));
             Undo.RegisterCreatedObjectUndo(spriteGo, "キャラを立ち絵にする");
             var motion = character.GetComponent<TitleElementMotion>();
             if (motion != null)
@@ -740,6 +741,27 @@ namespace MS2026.Title.EditorTools
                 motion.rotateFrom = new Vector3(0f, 0f, tilt);
             }
             return true;
+        }
+
+        // シーンに置いておくキャラ（左 = 一覧で立ち絵のある1人目、右 = 2人目）。前のシーンで手で差し替えた絵があれば、その絵
+        // （一覧に同じ絵があればその大きさ・位置、無ければ一覧の1人目・2人目の大きさ・位置）。どちらも無ければ null（仮のキューブ）。
+        private static TitleCharacterRoster.Entry DefaultCharacter(bool rightSide, Dictionary<string, Sprite> keptSprites)
+        {
+            var roster = AssetDatabase.LoadAssetAtPath<TitleCharacterRoster>(RosterPath);
+            var usable = roster != null ? roster.UsableIndices() : System.Array.Empty<int>();
+            var index = rightSide ? 1 : 0;
+            var fromRoster = usable.Length > index ? roster.characters[usable[index]] : null;
+            if (!keptSprites.TryGetValue(rightSide ? "CharacterRight" : "CharacterLeft", out var kept) || kept == null) return fromRoster;
+
+            var same = usable.Select(i => roster.characters[i]).FirstOrDefault(e => e.sprite == kept);
+            if (same != null) return same;
+            return new TitleCharacterRoster.Entry
+            {
+                label = kept.name,
+                sprite = kept,
+                height = fromRoster?.height ?? 10.35f,
+                offset = fromRoster?.offset ?? new Vector2(0.3f, 1.1f),
+            };
         }
 
         // 組み立てが置いた仮のキューブか（キューブの形で、仮キューブの材質）。差し替えた 3D モデルは false。

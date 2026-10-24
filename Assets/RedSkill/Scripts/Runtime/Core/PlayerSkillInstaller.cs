@@ -36,6 +36,11 @@ namespace MS2026.Skills
         [SkillLabel("キャラとスキルの対応表")]
         public CharacterSkillTable characterTable;
 
+        [Header("砲台の見た目")]
+        [Tooltip("砲台に出すキャラの絵（SD）の一覧。合うキャラの砲台は、元の砲台の見た目の代わりにその絵になる（スキルを撃っている間は発動中の絵）。空なら元の見た目のまま。")]
+        [SkillLabel("砲台のキャラの絵の一覧")]
+        public TurretPortraitTable turretPortraits;
+
         [Header("テスト用")]
         [Tooltip("ONなら、ゲーム開始時から全員スキルを使える状態にする。")]
         [SkillLabel("最初から全員使える（テスト）")]
@@ -75,6 +80,8 @@ namespace MS2026.Skills
             }
 
             slot.SetSkill(ResolveSkill(turret.playerIndex));
+            // 砲台にキャラの絵を出す係（一覧に合うキャラが無ければ何もしない）。
+            SkillTurretPortrait.Ensure(slot, turretPortraits);
             if (startReady)
             {
                 slot.startReady = true;

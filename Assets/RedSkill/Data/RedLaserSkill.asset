@@ -275,7 +275,7 @@ MonoBehaviour:
     edgeRate: 24
     impactRate: 26
   tube:
-    enabled: 1
+    enabled: 0
     sprite: {fileID: 0}
     tint: {r: 1, g: 1, b: 1, a: 1}
     length: 5
