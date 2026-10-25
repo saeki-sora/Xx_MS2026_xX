@@ -15,12 +15,13 @@ MonoBehaviour:
   displayName: "\u30B9\u30D4\u30AD"
   simulationMode: 0
   maxHealth: 10
-  moveSpeed: 2
+  moveSpeed: 3
   damageToCore: 1
   navigationProfile: {fileID: 0}
   turnSharpness: 8
   swarm:
     radius: 0.22
+    hitRadius: 0
     mass: 1
     acceleration: 8
     speedVariance: 0.15
@@ -29,7 +30,39 @@ MonoBehaviour:
     frameCount: 7
     directionCount: 2
     animationFps: 8
+  bomb:
+    explodeOnDeath: 0
+    explosionRadius: 1.6
+    enemyDamage: 30
+    obstacleDamage: 10
+    coreDamage: 2
+    chainDelaySeconds: 0.12
+    explodeAtCore: 1
+    onExplode:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 0
+      colorParam: Color
+    showBlastRing: 1
+    blastRingColor: {r: 1, g: 0.55, b: 0.15, a: 0.9}
+    shockwave: 1
+    shockwaveStrength: 0.25
+    shockwaveSeconds: 0.45
+    flash: 1
+    flashColor: {r: 1, g: 0.85, b: 0.55, a: 1}
+    flashSize: 1
+    flashSeconds: 0.22
+    blinkColor: {r: 1, g: 0.15, b: 0.1, a: 1}
+    blinkStrength: 0.85
+    blinkPerSecond: 1.5
+    blinkSpeedUpNearCore: 4
+    blinkSpeedUpDistance: 14
+    blinkSwell: 0.15
   visualPrefab: {fileID: 0}
   placeholderColor: {r: 1, g: 0, b: 1, a: 1}
-  introText: "\u6b6f\uff08\u30b3\u30a2\uff09\u3092\u3081\u3056\u3057\u3066\u307e\u3063\u3059\u3050\u6765\u308b\u3002\u30d3\u30fc\u30e0\u3067\u5012\u305d\u3046\uff01"
+  introText: "\u6B6F\uFF08\u30B3\u30A2\uFF09\u3092\u3081\u3056\u3057\u3066\u307E\u3063\u3059\u3050\u6765\u308B\u3002\u30D3\u30FC\u30E0\u3067\u5012\u305D\u3046\uFF01"
   introIcon: {fileID: 0}

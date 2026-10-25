@@ -600,7 +600,7 @@ namespace MS2026.Title.EditorTools
             {
                 // 仮のキューブは、最後に「引き継げなかったモデル」として消える。
                 replacedCube = kept != null;
-                CreatePortraitChild(go.transform, portrait, fxMaterial, profile, entry.height, TitleCharacterRoster.LocalPosition(entry, rightSide));
+                CreatePortraitChild(go.transform, portrait, fxMaterial, profile, entry.Side(rightSide).height, TitleCharacterRoster.LocalPosition(entry, rightSide));
                 return motion;
             }
 
@@ -732,7 +732,7 @@ namespace MS2026.Title.EditorTools
             if (entry == null || entry.sprite == null) return false;
 
             Undo.DestroyObjectImmediate(model.gameObject);
-            var spriteGo = CreatePortraitChild(character, entry.sprite, fxMaterial, profile, entry.height, TitleCharacterRoster.LocalPosition(entry, rightSide));
+            var spriteGo = CreatePortraitChild(character, entry.sprite, fxMaterial, profile, entry.Side(rightSide).height, TitleCharacterRoster.LocalPosition(entry, rightSide));
             Undo.RegisterCreatedObjectUndo(spriteGo, "キャラを立ち絵にする");
             var motion = character.GetComponent<TitleElementMotion>();
             if (motion != null)
@@ -759,8 +759,8 @@ namespace MS2026.Title.EditorTools
             {
                 label = kept.name,
                 sprite = kept,
-                height = fromRoster?.height ?? 10.35f,
-                offset = fromRoster?.offset ?? new Vector2(0.3f, 1.1f),
+                left = fromRoster?.Side(false).Copy() ?? new TitleCharacterRoster.Placement(),
+                right = fromRoster?.Side(true).Copy() ?? new TitleCharacterRoster.Placement(),
             };
         }
 

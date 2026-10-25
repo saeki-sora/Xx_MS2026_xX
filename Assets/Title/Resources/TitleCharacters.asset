@@ -16,17 +16,33 @@ MonoBehaviour:
   characters:
   - label: 赤
     sprite: {fileID: 21300000, guid: 0b5ac68df36e4c848a32121ec63a5188, type: 3}
-    height: 10.35
-    offset: {x: 0.3, y: 1.1}
+    left:
+      height: 10.35
+      offset: {x: 0.3, y: 1.1}
+    right:
+      height: 10.35
+      offset: {x: 0.3, y: 1.1}
   - label: 黄色
     sprite: {fileID: 21300000, guid: 6577949816e26cc4d9e653dc61b66a5f, type: 3}
-    height: 10.35
-    offset: {x: 0.6, y: 0.8}
+    left:
+      height: 10.35
+      offset: {x: 0.6, y: 0.8}
+    right:
+      height: 10.35
+      offset: {x: 0.6, y: 0.8}
   - label: 緑
     sprite: {fileID: 21300000, guid: 21fe1f1333094c6f852d76ec447ae760, type: 3}
-    height: 10.35
-    offset: {x: 0.3, y: 1.1}
+    left:
+      height: 10.35
+      offset: {x: 0.3, y: 1.1}
+    right:
+      height: 10.35
+      offset: {x: 0.3, y: 1.1}
   - label: 青
     sprite: {fileID: 21300000, guid: 5f98628d43e54e95bb141406fbec0264, type: 3}
-    height: 10.35
-    offset: {x: 0.3, y: 1.1}
+    left:
+      height: 10.35
+      offset: {x: 0.3, y: 1.1}
+    right:
+      height: 10.35
+      offset: {x: 0.3, y: 1.1}

@@ -8,8 +8,8 @@ namespace MS2026.Title.EditorTools
     /// <summary>
     /// タイトルのキャラ一覧（<see cref="TitleCharacterRoster"/>）の Inspector。
     /// ・キャラごとに「左で見る」「右で見る」: 開いているタイトルのシーンの左右に、そのキャラを今の大きさ・位置で置いてみる（再生中でも使える）
-    /// ・「今の左（右）のキャラの大きさ・位置を覚える」: シーンで子「Sprite」の Size・Position を動かした後に押すと、そのキャラの値として一覧に保存する
-    ///   （再生中に調整して押しても残る。一覧はシーンではなくファイルなので）
+    /// ・「今の左（右）のキャラの大きさ・位置を覚える」: シーンで子「Sprite」の Size・Position を動かした後に押すと、そのキャラの左用（右用）の値として一覧に保存する
+    ///   （もう片方の側の値は変わらない。再生中に調整して押しても残る。一覧はシーンではなくファイルなので）
     /// メニュー「Tools/タイトル/タイトルのキャラ一覧を開く」。
     /// </summary>
     [CustomEditor(typeof(TitleCharacterRoster))]
@@ -33,8 +33,8 @@ namespace MS2026.Title.EditorTools
             var roster = (TitleCharacterRoster)target;
             EditorGUILayout.HelpBox(
                 "タイトルを開くたびに、立ち絵の入ったキャラから2人をランダムに選んで、左右に落としてきます。\n" +
-                "大きさ・位置はキャラごと（高さ = 絵の高さ。画面の高さは 10.8。ずれ X = 画面の端の方へ、Y = 上へ）。\n" +
-                "調整のしかた: 「左で見る」で置いてみる → シーンで CharacterLeft の子「Sprite」の Title Sprite Fit › Size と Position を動かす → 「今の左のキャラの大きさ・位置を覚える」。",
+                "大きさ・位置はキャラごとに、左に出たとき（左）・右に出たとき（右）で別々（高さ = 絵の高さ。画面の高さは 10.8。ずれ X = 画面の端の方へ、Y = 上へ）。\n" +
+                "調整のしかた: 「左で見る」で置いてみる → シーンで CharacterLeft の子「Sprite」の Title Sprite Fit › Size と Position を動かす → 「今の左のキャラの大きさ・位置を覚える」（左の値だけ変わる。右も同じ手順）。",
                 MessageType.Info);
 
             serializedObject.Update();
@@ -123,11 +123,12 @@ namespace MS2026.Title.EditorTools
             }
 
             Undo.RecordObject(roster, "キャラの大きさ・位置を覚える");
-            entry.height = fit.size;
-            entry.offset = TitleCharacterRoster.OffsetFrom(sprite.localPosition, rightSide);
+            var placement = entry.Side(rightSide);
+            placement.height = fit.size;
+            placement.offset = TitleCharacterRoster.OffsetFrom(sprite.localPosition, rightSide);
             EditorUtility.SetDirty(roster);
             AssetDatabase.SaveAssetIfDirty(roster);
-            Debug.Log($"[Title] {(string.IsNullOrEmpty(entry.label) ? renderer.sprite.name : entry.label)} の大きさ {entry.height}・ずれ {entry.offset} を一覧に覚えました（{side}で調整した値）。");
+            Debug.Log($"[Title] {(string.IsNullOrEmpty(entry.label) ? renderer.sprite.name : entry.label)} の{side}に出たときの大きさ {placement.height}・ずれ {placement.offset} を一覧に覚えました。");
         }
     }
 }
