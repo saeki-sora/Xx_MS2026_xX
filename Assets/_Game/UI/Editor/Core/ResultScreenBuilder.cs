@@ -246,6 +246,10 @@ namespace MS2026.UI.EditorTools
 
                 var tag = H.Picture(row, "Tag", "Kill_YouTag.png", FortressColors.PlayerColor(p));
                 H.Center(tag.rectTransform, new Vector2(-290f, 0f), new Vector2(150f, 60f));
+                // 札の色はゲーム中の値（キャラ選択で選んだキャラの色）で塗る。
+                var tagColor = tag.gameObject.AddComponent<UiBindColor>();
+                tagColor.key = FortressUiKeys.PlayerColor(p);
+                tagColor.target = tag;
                 var tagLabel = H.Label(tag.transform, "Label", $"{p + 1}P", 34, H.Navy, TextAnchor.MiddleCenter);
                 H.Center(tagLabel.rectTransform, Vector2.zero, new Vector2(150f, 60f));
 

@@ -298,6 +298,7 @@ namespace MS2026.UI.EditorTools
                 B.Stretch(brush.rectTransform);
                 var stripe = H.Picture(body, "Stripe", "Brush_BrushStripe.png", FortressColors.PlayerColor(p));
                 B.Stretch(stripe.rectTransform);
+                TintByPlayer(stripe, p);
                 brushes[p] = body;
             }
         }
@@ -388,7 +389,9 @@ namespace MS2026.UI.EditorTools
                 var tag = H.Label(chip, "Tag", $"{p + 1}P", 26, FortressColors.PlayerColor(p), TextAnchor.MiddleLeft);
                 W.Outline(tag, Navy, 2f);
                 H.Center(tag.rectTransform, new Vector2(-92f, 0f), new Vector2(60f, 40f), new Vector2(0f, 0.5f));
-                Bar(chip, "Bar", new Vector2(24f, 0f), new Vector2(118f, 14f), FortressColors.PlayerColor(p), FortressUiKeys.BrushShare(p), 0.1f, new Color(Navy.r, Navy.g, Navy.b, 0.18f));
+                TintByPlayer(tag, p);
+                var share = Bar(chip, "Bar", new Vector2(24f, 0f), new Vector2(118f, 14f), FortressColors.PlayerColor(p), FortressUiKeys.BrushShare(p), 0.1f, new Color(Navy.r, Navy.g, Navy.b, 0.18f));
+                TintByPlayer(share, p);
             }
 
             // コアのバーと同じ絵（チームの絵）で、きれい度。
@@ -472,7 +475,7 @@ namespace MS2026.UI.EditorTools
             rect.anchoredPosition = new Vector2(x + w * 0.5f - picture.x * 0.5f, picture.y * 0.5f - (y + h * 0.5f)) * scale;
         }
 
-        private static void Bar(RectTransform parent, string name, Vector2 position, Vector2 size, Color color, string key, float smooth, Color backColor)
+        private static Image Bar(RectTransform parent, string name, Vector2 position, Vector2 size, Color color, string key, float smooth, Color backColor)
         {
             var bar = B.Rect(parent, name);
             H.Center(bar, position, size);
@@ -485,6 +488,15 @@ namespace MS2026.UI.EditorTools
             bind.key = key;
             bind.fill = fill;
             bind.smoothSeconds = smooth;
+            return fill;
+        }
+
+        // その人の色を、ゲーム中の値（player.N.color）で塗る。キャラ選択で選んだキャラの色になるように（組み立てたときの席の色のままにしない）。
+        private static void TintByPlayer(Graphic graphic, int player)
+        {
+            var bind = graphic.gameObject.AddComponent<UiBindColor>();
+            bind.key = FortressUiKeys.PlayerColor(player);
+            bind.target = graphic;
         }
     }
 }

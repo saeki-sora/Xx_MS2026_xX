@@ -523,7 +523,7 @@ namespace MS2026.CharacterSelect.EditorTools
 
         private static PlayerPanel BuildPanel(RectTransform parent, int seat)
         {
-            var color = FortressColors.PlayerColor(seat);
+            var color = FortressColors.SeatColor(seat);
             var right = seat >= 2;
             var bottom = seat % 2 == 1;
             var go = new GameObject($"Panel {seat + 1}P", typeof(RectTransform), typeof(CanvasGroup));
@@ -763,7 +763,7 @@ namespace MS2026.CharacterSelect.EditorTools
         /// <summary>下の丸（1P〜4P）。左から 1P・2P・3P・4P を 170px 間隔で並べ、「1P」の札は 1P・2P が上、3P・4P が下（モックどおり）。</summary>
         private static PlayerCircle BuildCircle(RectTransform parent, int seat)
         {
-            var color = FortressColors.PlayerColor(seat);
+            var color = FortressColors.SeatColor(seat);
             var go = new GameObject($"Circle {seat + 1}P", typeof(RectTransform), typeof(CanvasGroup));
             var rect = (RectTransform)go.transform;
             rect.SetParent(parent, false);
@@ -800,7 +800,7 @@ namespace MS2026.CharacterSelect.EditorTools
 
         private static PlayerTag BuildLabel(RectTransform parent, int seat, Vector2 position)
         {
-            var color = FortressColors.PlayerColor(seat);
+            var color = FortressColors.SeatColor(seat);
             var rect = NewRect($"Label {seat + 1}P", parent);
             Place(rect, new Vector2(0.5f, 0.5f), position, new Vector2(78f, 36f));
             var tag = rect.gameObject.AddComponent<PlayerTag>();

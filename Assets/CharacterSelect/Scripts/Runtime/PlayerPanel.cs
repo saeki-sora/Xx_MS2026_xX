@@ -178,7 +178,7 @@ namespace MS2026.CharacterSelect
         /// <summary>状態を表示する（毎フレーム呼ばれる）。</summary>
         public void Show(int seat, bool active, bool isLocal, string playerName, CharacterDefinition character, bool confirmed, bool blocked, float hold)
         {
-            var color = FortressColors.PlayerColor(seat);
+            var color = FortressColors.SeatColor(seat);
             if (group != null)
             {
                 group.alpha = active ? 1f : inactiveAlpha;
@@ -273,7 +273,7 @@ namespace MS2026.CharacterSelect
 
             if (burst != null)
             {
-                burst.Play(FortressColors.PlayerColor(seat), 28);
+                burst.Play(FortressColors.SeatColor(seat), 28);
             }
         }
 

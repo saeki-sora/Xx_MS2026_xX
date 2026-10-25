@@ -330,7 +330,7 @@ namespace MS2026.CharacterSelect
             {
                 for (var seat = 0; seat < CharacterSelectBoard.SeatCount; seat++)
                 {
-                    centerBurst.Play(FortressColors.PlayerColor(seat), 12);
+                    centerBurst.Play(FortressColors.SeatColor(seat), 12);
                 }
             }
         }
