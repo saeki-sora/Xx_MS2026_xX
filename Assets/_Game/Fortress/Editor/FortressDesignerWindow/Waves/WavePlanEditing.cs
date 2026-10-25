@@ -128,10 +128,31 @@ namespace MS2026.Fortress.EditorTools
                 wave.announceText = "";
                 WaveEntryToolbar.ScaleCounts(wave.spawnEntries, 1.2f);
                 wave.targetKills = Mathf.RoundToInt(last.targetKills * 1.2f);
+
+                // 今までの最終ウェーブは、もう最後ではないので後に合間が来る。合間が空なら、ほかのウェーブと同じ歯みがきタイムにする
+                // （空のままだと「休む 3秒」になり、気づきにくい）。
+                if (last.intervalEvent == null)
+                {
+                    last.intervalEvent = PreviousIntervalEvent(plan) ?? DefaultIntervalEvent();
+                }
             }
 
             plan.waves.Add(wave);
             EditorUtility.SetDirty(plan);
+        }
+
+        // 最終ウェーブより前で、いちばん後ろにある合間のイベント（無ければ null）。
+        private static WaveIntervalEvent PreviousIntervalEvent(WavePlan plan)
+        {
+            for (var i = plan.Count - 2; i >= 0; i--)
+            {
+                if (plan.waves[i]?.intervalEvent != null)
+                {
+                    return plan.waves[i].intervalEvent;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>index のウェーブを消す。</summary>
