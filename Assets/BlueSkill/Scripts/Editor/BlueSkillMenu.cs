@@ -8,7 +8,8 @@ namespace MS2026.Skills.Blue.EditorTools
     /// <summary>メニュー「Tools › 青スキル」。開いているシーンにスキルを入れる・設定ファイルを開く。</summary>
     internal static class BlueSkillMenu
     {
-        public const string PrefabPath = "Assets/BlueSkill/Prefabs/BlueSkill_Installer.prefab";
+        // スキルを配る係は 4 色共通の1つ（2026-10-25 から。青専用のプレハブは「全員に配るスキル」で青を配るだけだったので使わない）。
+        public const string PrefabPath = "Assets/RedSkill/Prefabs/RedSkill_Installer.prefab";
         public const string SkillAssetPath = "Assets/BlueSkill/Data/BlueVortexSkill.asset";
         private const string Title = "青スキル";
 
@@ -21,27 +22,11 @@ namespace MS2026.Skills.Blue.EditorTools
             {
                 Selection.activeGameObject = existing.gameObject;
                 EditorGUIUtility.PingObject(existing.gameObject);
-                if (existing.defaultSkill == skill)
-                {
-                    EditorUtility.DisplayDialog(Title, "このシーンの「" + existing.name + "」はもう青スキルを配っています。", "OK");
-                    return;
-                }
-
-                var current = existing.defaultSkill != null ? existing.defaultSkill.DisplayName : "なし";
-                var change = EditorUtility.DisplayDialog(Title,
-                    "このシーンにはもうスキルを配る係（" + existing.name + "）があります（今の「全員に配るスキル」: " + current + "）。\n\n" +
-                    "「全員に配るスキル」を青スキルに変えますか？\n（キャラ選択を通ってきたときは、キャラとスキルの対応表が優先されます）",
-                    "青スキルに変える", "やめる");
-                if (!change)
-                {
-                    return;
-                }
-
-                Undo.RecordObject(existing, "青スキルを配るように変える");
-                existing.defaultSkill = skill;
-                EditorUtility.SetDirty(existing);
-                EditorSceneManager.MarkSceneDirty(existing.gameObject.scene);
-                Debug.Log("[BlueSkill] 「" + existing.name + "」の「全員に配るスキル」を青スキルにしました。シーンを保存してください（Ctrl+S）。");
+                EditorUtility.DisplayDialog(Title,
+                    "このシーンにはもうスキルを配る係（" + existing.name + "）があります。それを選択しました。\n\n" +
+                    "青スキルは、キャラ選択で青のキャラを選んだ人に配られます（キャラとスキルの対応表）。\n" +
+                    "キャラ選択を通らないときは「プレイヤーごとのスキル」の席（ふつうは P2）に配られます。",
+                    "OK");
                 return;
             }
 
@@ -53,10 +38,10 @@ namespace MS2026.Skills.Blue.EditorTools
             }
             else
             {
-                // プレハブが無い（消された）場合は、その場で同じ物を作る。
-                instance = new GameObject("[BlueSkill] Skill Installer");
+                // プレハブが無い（消された）場合は、その場で作る（青は P2）。
+                instance = new GameObject("[Skill] Skill Installer");
                 var installer = instance.AddComponent<PlayerSkillInstaller>();
-                installer.defaultSkill = skill;
+                installer.perPlayerSkills[1] = skill;
             }
 
             Undo.RegisterCreatedObjectUndo(instance, "青スキルをシーンに入れる");

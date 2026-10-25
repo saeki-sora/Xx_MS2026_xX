@@ -44,10 +44,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4fc494783ffb4881bcee8cf801abe2d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MS2026.RedSkill.Runtime::MS2026.Skills.PlayerSkillInstaller
-  defaultSkill: {fileID: 11400000, guid: d9e05d694c934ed48916c489e2893976, type: 2}
   perPlayerSkills:
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 11400000, guid: d9e05d694c934ed48916c489e2893976, type: 2}
+  - {fileID: 11400000, guid: 61fd9c7b77354750a9444f3c2e5dac11, type: 2}
   - {fileID: 11400000, guid: 57d56c6a3ce242c6a13bb3f71bc24bc8, type: 2}
   - {fileID: 11400000, guid: e493c07d159f43b4bdf2fa462978c2b9, type: 2}
   useCharacterSelection: 1

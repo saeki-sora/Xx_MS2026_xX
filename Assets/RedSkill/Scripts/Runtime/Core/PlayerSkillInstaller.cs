@@ -9,7 +9,8 @@ namespace MS2026.Skills
     /// <summary>
     /// シーンに1つ置くだけで、シーン内の全ての砲台（<see cref="LaserTurret"/>）に <see cref="PlayerSkillSlot"/> を付けてスキルを配る係。
     /// 別のシーンでスキルを使いたいときは、この部品が付いたプレハブ（Assets/RedSkill/Prefabs）をシーンに置くだけでよい。
-    /// どのスキルを配るかの優先順位: キャラ選択の結果＋対応表 → プレイヤーごとの指定 → 全員共通のスキル。
+    /// どのスキルを配るか: キャラ選択を通ってきたら、選んだキャラのスキル（対応表）だけ。通っていなければ（エディタのテストなど）席ごとの指定。
+    /// どちらでも、ほかの人のスキルが代わりに配られることはない（全員共通のスキルは 2026-10-25 に廃止）。
     /// </summary>
     [DefaultExecutionOrder(-20)]
     [DisallowMultipleComponent]
@@ -18,17 +19,13 @@ namespace MS2026.Skills
     {
         public const int PlayerCount = 4;
 
-        [Header("配るスキル")]
-        [Tooltip("全員に配るスキル（下の「プレイヤーごとのスキル」が空の席に使う）。")]
-        [SkillLabel("全員に配るスキル")]
-        public CharacterSkill defaultSkill;
-
-        [Tooltip("P1〜P4 ごとのスキル。空ならその席は「全員に配るスキル」になる。")]
+        [Header("キャラ選択を通らないときのスキル")]
+        [Tooltip("キャラ選択の画面を通らずに遊ぶとき（エディタで Game を直接 Play したときなど）の、P1〜P4 のスキル。空ならその席はスキルなし。")]
         [SkillLabel("プレイヤーごとのスキル（P1〜P4）")]
         public CharacterSkill[] perPlayerSkills = new CharacterSkill[PlayerCount];
 
         [Header("キャラとの紐づけ（キャラ選択の画面を通ってきたときだけ使う）")]
-        [Tooltip("ONなら、キャラ選択で選ばれたキャラのスキルを下の対応表から探して配る（見つからなければ上の指定を使う）。")]
+        [Tooltip("ONなら、キャラ選択で選ばれたキャラのスキルを下の対応表から探して配る（対応表に無いキャラはスキルなし。上の席ごとの指定は使わない）。")]
         [SkillLabel("キャラ選択の結果を使う")]
         public bool useCharacterSelection = true;
 
@@ -90,24 +87,16 @@ namespace MS2026.Skills
             return slot;
         }
 
-        /// <summary>その席に配るスキルを決める。</summary>
+        /// <summary>その席に配るスキルを決める（無ければ null = スキルなし）。</summary>
         public CharacterSkill ResolveSkill(int playerIndex)
         {
+            // キャラを選んできたら、そのキャラのスキルだけ（席の指定にはもどらない。ほかのキャラのスキルを撃てないように）。
             if (useCharacterSelection && characterTable != null && CharacterSelectionResult.HasResult)
             {
-                var fromCharacter = characterTable.Find(CharacterSelectionResult.Get(playerIndex));
-                if (fromCharacter != null)
-                {
-                    return fromCharacter;
-                }
+                return characterTable.Find(CharacterSelectionResult.Get(playerIndex));
             }
 
-            if (perPlayerSkills != null && playerIndex >= 0 && playerIndex < perPlayerSkills.Length && perPlayerSkills[playerIndex] != null)
-            {
-                return perPlayerSkills[playerIndex];
-            }
-
-            return defaultSkill;
+            return perPlayerSkills != null && playerIndex >= 0 && playerIndex < perPlayerSkills.Length ? perPlayerSkills[playerIndex] : null;
         }
 
         private void Update()

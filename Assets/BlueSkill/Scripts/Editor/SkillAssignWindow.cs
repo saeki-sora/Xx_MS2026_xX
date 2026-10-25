@@ -23,7 +23,6 @@ namespace MS2026.Skills.Blue.EditorTools
         private readonly List<CharacterSkill> _skills = new List<CharacterSkill>();
         private readonly List<CharacterDefinition> _characters = new List<CharacterDefinition>();
         private readonly CharacterDefinition[] _testCharacters = new CharacterDefinition[PlayerCount];
-        private string[] _skillOptionsDefault = new string[0];
         private string[] _skillOptionsNone = new string[0];
         private string[] _characterOptions = new string[0];
         private PlayerSkillInstaller _installer;
@@ -66,13 +65,10 @@ namespace MS2026.Skills.Blue.EditorTools
             LoadAssets(_skills, "t:CharacterSkill");
             LoadAssets(_characters, "t:CharacterDefinition");
 
-            _skillOptionsDefault = new string[_skills.Count + 1];
             _skillOptionsNone = new string[_skills.Count + 1];
-            _skillOptionsDefault[0] = "（全員に配るスキルを使う）";
             _skillOptionsNone[0] = "（なし）";
             for (var i = 0; i < _skills.Count; i++)
             {
-                _skillOptionsDefault[i + 1] = SkillLabel(_skills[i]);
                 _skillOptionsNone[i + 1] = SkillLabel(_skills[i]);
             }
 
@@ -129,8 +125,8 @@ namespace MS2026.Skills.Blue.EditorTools
         {
             _scroll = EditorGUILayout.BeginScrollView(_scroll);
             EditorGUILayout.HelpBox(
-                "色ごとのスキル（赤・青…）を、今は P1〜P4 の席ごとに、後でキャラごとに配るための窓です。\n" +
-                "配る順番: キャラ選択の結果＋対応表 → プレイヤーごとのスキル → 全員に配るスキル。\n" +
+                "色ごとのスキル（赤・青…）を、キャラごと（②）と、キャラ選択を通らないときの席ごと（①）に配るための窓です。\n" +
+                "キャラ選択を通ってきたら②の対応表だけを使い（対応表に無いキャラはスキルなし）、通っていなければ①を使います。\n" +
                 "スキルの設定ファイルとキャラはプロジェクトから自動で探します（黄・緑を作れば自動で選べるようになります）。",
                 MessageType.None);
 
@@ -190,9 +186,8 @@ namespace MS2026.Skills.Blue.EditorTools
 
         private void DrawPlayers()
         {
-            EditorGUILayout.LabelField("① プレイヤーごと（今のテスト用）", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("① プレイヤーごと（キャラ選択を通らないとき）", EditorStyles.boldLabel);
             var so = new SerializedObject(_installer);
-            var defaultSkill = so.FindProperty("defaultSkill");
             var perPlayer = so.FindProperty("perPlayerSkills");
             if (perPlayer.arraySize != PlayerCount)
             {
@@ -200,18 +195,11 @@ namespace MS2026.Skills.Blue.EditorTools
             }
 
             EditorGUI.BeginChangeCheck();
-            var currentDefault = IndexOf(defaultSkill.objectReferenceValue as CharacterSkill);
-            var nextDefault = EditorGUILayout.Popup("全員に配るスキル", currentDefault, _skillOptionsNone);
-            if (nextDefault != currentDefault)
-            {
-                defaultSkill.objectReferenceValue = SkillAt(nextDefault);
-            }
-
             for (var i = 0; i < PlayerCount; i++)
             {
                 var element = perPlayer.GetArrayElementAtIndex(i);
                 var current = IndexOf(element.objectReferenceValue as CharacterSkill);
-                var next = EditorGUILayout.Popup("P" + (i + 1) + "（" + PlayerKeys[i] + " で握る）", current, _skillOptionsDefault);
+                var next = EditorGUILayout.Popup("P" + (i + 1) + "（" + PlayerKeys[i] + " で握る）", current, _skillOptionsNone);
                 if (next != current)
                 {
                     element.objectReferenceValue = SkillAt(next);
@@ -220,15 +208,15 @@ namespace MS2026.Skills.Blue.EditorTools
 
             using (new EditorGUILayout.HorizontalScope())
             {
-                if (GUILayout.Button(new GUIContent("見つかったスキルを P1 から順に配る", "スキルの設定ファイルを見つかった順（フォルダ名の順）に P1, P2, … へ入れる。")))
+                if (GUILayout.Button(new GUIContent("席の色どおりに配る", "P1 赤・P2 青・P3 緑・P4 黄 の席に、その色に一番近いキャラのスキル（②の対応表）を入れる。")))
                 {
                     for (var i = 0; i < PlayerCount; i++)
                     {
-                        perPlayer.GetArrayElementAtIndex(i).objectReferenceValue = _skills.Count > 0 ? _skills[i % _skills.Count] : null;
+                        perPlayer.GetArrayElementAtIndex(i).objectReferenceValue = SkillForSeatColor(i);
                     }
                 }
 
-                if (GUILayout.Button(new GUIContent("席ごとの指定を全部消す", "P1〜P4 を「全員に配るスキルを使う」に戻す。")))
+                if (GUILayout.Button(new GUIContent("席ごとの指定を全部消す", "P1〜P4 を「なし」（スキルなし）にする。")))
                 {
                     for (var i = 0; i < PlayerCount; i++)
                     {
@@ -262,6 +250,32 @@ namespace MS2026.Skills.Blue.EditorTools
             }
         }
 
+        /// <summary>その席の色（P1 赤…）に一番近い色のキャラの、対応表のスキル。</summary>
+        private CharacterSkill SkillForSeatColor(int seat)
+        {
+            var table = _installer != null ? _installer.characterTable : null;
+            if (table == null)
+            {
+                return null;
+            }
+
+            var seatColor = MS2026.Fortress.FortressColors.SeatColor(seat);
+            CharacterDefinition best = null;
+            var bestDistance = float.MaxValue;
+            foreach (var character in _characters)
+            {
+                var c = character.themeColor;
+                var distance = (c.r - seatColor.r) * (c.r - seatColor.r) + (c.g - seatColor.g) * (c.g - seatColor.g) + (c.b - seatColor.b) * (c.b - seatColor.b);
+                if (table.Find(character) != null && distance < bestDistance)
+                {
+                    best = character;
+                    bestDistance = distance;
+                }
+            }
+
+            return table.Find(best);
+        }
+
         // ------------------------------------------------------------------
         // キャラごと
         // ------------------------------------------------------------------
@@ -273,7 +287,7 @@ namespace MS2026.Skills.Blue.EditorTools
             var useSelection = installerSo.FindProperty("useCharacterSelection");
             var tableProperty = installerSo.FindProperty("characterTable");
             EditorGUI.BeginChangeCheck();
-            EditorGUILayout.PropertyField(useSelection, new GUIContent("キャラ選択の結果を使う", "ON なら、キャラ選択で選ばれたキャラのスキルを下の対応表から探して配る（見つからなければ①の指定）。"));
+            EditorGUILayout.PropertyField(useSelection, new GUIContent("キャラ選択の結果を使う", "ON なら、キャラ選択で選ばれたキャラのスキルを下の対応表から探して配る（見つからなければスキルなし）。"));
             EditorGUILayout.PropertyField(tableProperty, new GUIContent("キャラとスキルの対応表"));
             if (EditorGUI.EndChangeCheck())
             {

@@ -31,10 +31,10 @@ namespace MS2026.Skills.EditorTools
             }
             else
             {
-                // プレハブが無い（消された）場合は、その場で同じ物を作る。
+                // プレハブが無い（消された）場合は、その場で作る（赤は P1）。
                 instance = new GameObject("[RedSkill] Skill Installer");
                 var installer = instance.AddComponent<PlayerSkillInstaller>();
-                installer.defaultSkill = AssetDatabase.LoadAssetAtPath<RedLaserSkill>(SkillAssetPath);
+                installer.perPlayerSkills[0] = AssetDatabase.LoadAssetAtPath<RedLaserSkill>(SkillAssetPath);
             }
 
             Undo.RegisterCreatedObjectUndo(instance, "赤スキルをシーンに入れる");
