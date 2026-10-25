@@ -787,7 +787,8 @@ namespace MS2026.CharacterSelect.EditorTools
             Place(circle.background.rectTransform, center, Vector2.zero, new Vector2(106f, 106f));
             circle.icon = NewImage("Face", rect, CharacterSelectArt.Load(CharacterSelectArt.CharaCube), Color.white);
             circle.icon.preserveAspect = true;
-            Place(circle.icon.rectTransform, center, Vector2.zero, new Vector2(76f, 76f));
+            // 顔＝砲台のミニキャラ（四角い絵の角は透明）。白い丸（106）からはみ出ない大きさ。
+            Place(circle.icon.rectTransform, center, Vector2.zero, new Vector2(92f, 92f));
             circle.letter = NewText("Letter", rect, "?", 54, Color.white, FontStyle.Bold);
             AddOutline(circle.letter, Shadow, 2f);
             Place(circle.letter.rectTransform, center, Vector2.zero, new Vector2(106f, 106f));
