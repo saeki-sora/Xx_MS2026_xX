@@ -31,7 +31,7 @@ code{background:var(--badge);border-radius:6px;padding:1px 6px;color:var(--mist)
 /* ── ナビ ── */
 .nav{position:sticky;top:12px;z-index:10;margin:12px auto 0;max-width:1080px;padding:0 16px}
 .nav-in{display:flex;align-items:center;gap:16px;padding:8px 8px 8px 16px;border:1px solid var(--edge);border-radius:12px;
-  background:rgba(7,8,10,.72);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+  background:rgba(7,8,10,.86);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .brand{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;white-space:nowrap}
 .brand i{width:10px;height:10px;background:var(--coral);transform:rotate(45deg);border-radius:2px;display:inline-block}
 .nav ol{display:flex;gap:4px;margin:0;padding:0;list-style:none;overflow-x:auto;scrollbar-width:none;flex:1}
@@ -745,7 +745,13 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:8px 16px}
       if (e.isIntersecting) {
         links.forEach(function(a){ a.classList.remove('on'); });
         var a = map[e.target.id];
-        if (a) { a.classList.add('on'); a.scrollIntoView({block:'nearest', inline:'nearest'}); }
+        if (a) {
+          a.classList.add('on');
+          // 目次の横スクロールだけを動かす（scrollIntoView はページごと動かしてしまい、マウスのスクロールとけんかする）。
+          var list = a.closest('ol');
+          var left = a.offsetLeft - (list.clientWidth - a.offsetWidth) / 2;
+          list.scrollTo({left: Math.max(0, left), behavior: 'smooth'});
+        }
       }
     });
   }, {rootMargin:'-45% 0px -50% 0px'});
