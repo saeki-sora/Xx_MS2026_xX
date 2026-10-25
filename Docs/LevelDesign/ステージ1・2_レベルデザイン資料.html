@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ステージ1・2 レベルデザイン資料</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --canvas:#040506; --card:#07080a; --recessed:#111214; --badge:#1b1c1e;
+  --text:#ffffff; --text-2:#9c9c9d; --text-3:#6a6b6c;
+  --line:#1b1c1e; --line-2:#2a2b2d; --edge:#363739;
+  --mist:#e6e6e6; --iron:#454647;
+  --coral:#ff6363; --ember:#452324;
+  --sky:#63a1ff; --info:#56c2ff; --ok:#59d499;
+  --sans:'Inter','Noto Sans JP',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'Geist Mono','JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+  --key:rgba(255,255,255,.05) 0 1px 0 0 inset, rgba(255,255,255,.12) 0 0 0 1px, rgba(0,0,0,.2) 0 -1px 0 0 inset;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:88px}
+body{margin:0;background:var(--canvas);color:var(--text);font-family:var(--sans);font-size:16px;line-height:1.75;letter-spacing:.01em;
+  font-feature-settings:'calt','kern','liga';-webkit-font-smoothing:antialiased}
+a{color:inherit}
+code,.mono{font-family:var(--mono);font-size:.86em;letter-spacing:.01em}
+code{background:var(--badge);border-radius:6px;padding:1px 6px;color:var(--mist);white-space:nowrap}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+
+/* ── ナビ ── */
+.nav{position:sticky;top:12px;z-index:10;margin:12px auto 0;max-width:1080px;padding:0 16px}
+.nav-in{display:flex;align-items:center;gap:16px;padding:8px 8px 8px 16px;border:1px solid var(--edge);border-radius:12px;
+  background:rgba(7,8,10,.72);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+.brand{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;white-space:nowrap}
+.brand i{width:10px;height:10px;background:var(--coral);transform:rotate(45deg);border-radius:2px;display:inline-block}
+.nav ol{display:flex;gap:4px;margin:0;padding:0;list-style:none;overflow-x:auto;scrollbar-width:none;flex:1}
+.nav ol::-webkit-scrollbar{display:none}
+.nav a{display:block;padding:6px 10px;border-radius:8px;font-size:13px;color:var(--text-2);text-decoration:none;white-space:nowrap}
+.nav a:hover,.nav a.on{color:var(--text);background:var(--badge)}
+
+/* ── ヒーロー ── */
+.hero{position:relative;overflow:hidden;margin-top:-64px;padding:168px 0 96px;border-bottom:1px solid var(--line)}
+.hero::before{content:"";position:absolute;inset:0;
+  background:radial-gradient(60% 70% at 72% 18%,rgba(4,63,150,.55),rgba(6,18,37,.15) 60%,transparent 75%)}
+.bar{position:absolute;height:120px;width:70%;border-radius:60px;filter:blur(46px);opacity:.55;transform:rotate(-24deg)}
+.bar.a{background:var(--coral);right:-18%;top:22%}
+.bar.b{background:#63a1ff;right:-30%;top:48%;opacity:.28;height:90px}
+.hero .wrap{position:relative}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);margin:0 0 16px}
+.hero h1{font-size:clamp(34px,6vw,56px);font-weight:400;line-height:1.2;letter-spacing:.01em;margin:0 0 20px}
+.hero p.lead{font-size:18px;color:var(--text-2);max-width:620px;margin:0 0 40px}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;max-width:820px}
+.fact{background:rgba(7,8,10,.7);border-radius:16px;box-shadow:var(--key);padding:16px 18px}
+.fact b{display:block;font-size:28px;font-weight:500;line-height:1.2;font-family:'Inter',var(--sans)}
+.fact span{font-size:13px;color:var(--text-2)}
+
+/* ── セクション ── */
+section{padding:88px 0 8px}
+section>.wrap>h2{font-size:clamp(26px,4vw,32px);font-weight:500;line-height:1.3;margin:0 0 12px}
+section>.wrap>p.sub{color:var(--text-2);margin:0 0 32px;max-width:720px}
+h3{font-size:20px;font-weight:500;margin:0 0 8px}
+p{margin:0 0 12px}
+.muted{color:var(--text-2)}
+.small{font-size:14px}
+strong{font-weight:700;color:var(--text)}
+
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.card{background:var(--card);border-radius:16px;box-shadow:var(--key);padding:24px}
+.card p:last-child{margin-bottom:0}
+.num{font-family:var(--mono);font-size:12px;color:var(--text-3);letter-spacing:.08em;display:block;margin-bottom:12px}
+.ask{background:linear-gradient(180deg,rgba(69,35,36,.55),rgba(7,8,10,.9) 70%);box-shadow:rgba(255,99,99,.18) 0 0 0 1px, rgba(255,255,255,.05) 0 1px 0 inset}
+.ask .num{color:var(--coral)}
+
+.tag{display:inline-block;font-size:12px;font-weight:500;line-height:20px;padding:0 8px;border-radius:6px;background:var(--badge);color:var(--mist);margin:0 4px 4px 0;white-space:nowrap}
+.tag.coral{background:var(--ember);color:#ffb3b3}
+.tag.blue{background:rgba(86,194,255,.12);color:#a8ddff}
+.tag.green{background:rgba(89,212,153,.12);color:#a6ecc8}
+
+/* ── 開閉 ── */
+details{border-radius:12px;background:var(--card);box-shadow:var(--key);margin:12px 0 0}
+details>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:14px 18px;font-weight:500;font-size:15px;border-radius:12px}
+details>summary::-webkit-details-marker{display:none}
+details>summary::before{content:"";width:8px;height:8px;border-right:1.5px solid var(--text-2);border-bottom:1.5px solid var(--text-2);transform:rotate(-45deg);transition:transform .15s;flex:none;margin:0 2px}
+details[open]>summary::before{transform:rotate(45deg)}
+details>summary .hint{margin-left:auto;font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--text-3);text-transform:uppercase}
+details>summary:hover{background:rgba(255,255,255,.02)}
+details>summary:focus-visible{outline:1px solid var(--edge);outline-offset:2px}
+.body{padding:4px 18px 18px 40px;color:var(--text-2);font-size:15px}
+.body strong{color:var(--text)}
+.body ul,.body ol{margin:4px 0 12px;padding-left:20px}
+.body li{margin:4px 0}
+.card details{background:var(--recessed);box-shadow:none;border:1px solid var(--line)}
+
+/* ── 表 ── */
+.tbl{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0 4px}
+.tbl th,.tbl td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-weight:500;color:var(--text-3);font-size:12px;letter-spacing:.04em;white-space:nowrap}
+.tbl td{color:var(--text-2)}
+.tbl td:first-child{color:var(--text);white-space:nowrap}
+.tbl .r{text-align:right;font-family:'Inter',var(--sans);font-variant-numeric:tabular-nums;color:var(--text)}
+.scroll,.body{overflow-x:auto}
+.grid>*,.st>div{min-width:0}
+
+/* ── 流れ ── */
+.flow{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;counter-reset:s}
+.step{position:relative;background:var(--card);border-radius:12px;box-shadow:var(--key);padding:14px 14px 16px}
+.step .t{font-family:var(--mono);font-size:11px;color:var(--text-3);letter-spacing:.06em}
+.step b{display:block;font-weight:500;font-size:15px;margin:6px 0 4px;line-height:1.4}
+.step span{font-size:13px;color:var(--text-2);line-height:1.6;display:block}
+.step.hot{box-shadow:rgba(255,99,99,.35) 0 0 0 1px, rgba(255,255,255,.05) 0 1px 0 inset}
+.loop{margin:12px 0 0;font-size:13px;color:var(--text-3);font-family:var(--mono)}
+
+/* ── 敵 ── */
+.enemy h3{display:flex;align-items:center;gap:10px}
+.dot{width:14px;height:14px;border-radius:50%;flex:none;background:var(--mist)}
+.dot.bomb{background:transparent;border:2px dashed var(--mist)}
+.dot.boss{width:22px;height:22px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0}
+.stats div{background:var(--recessed);border-radius:8px;padding:8px 10px}
+.stats small{display:block;font-size:11px;color:var(--text-3)}
+.stats b{font-weight:500;font-size:18px}
+
+/* ── 地図 ── */
+.map{background:var(--recessed);border-radius:12px;border:1px solid var(--line);padding:12px;margin:16px 0}
+.map svg{display:block;width:100%;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--text-3);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+
+/* ── 手順 ── */
+.steps{counter-reset:n;display:grid;gap:12px}
+.st{display:grid;grid-template-columns:44px 1fr;gap:16px;background:var(--card);border-radius:16px;box-shadow:var(--key);padding:20px 24px}
+.st::before{counter-increment:n;content:counter(n);width:36px;height:36px;border-radius:50%;background:var(--badge);display:grid;place-items:center;font-family:var(--mono);font-size:14px;color:var(--mist)}
+.st h3{margin-top:4px}
+.path{display:inline-flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:13px}
+.path span{background:var(--badge);border-radius:6px;padding:1px 8px;color:var(--mist)}
+.path em{font-style:normal;color:var(--text-3)}
+
+/* ── フォーム風 ── */
+.form{display:grid;gap:8px}
+.field{display:grid;grid-template-columns:200px 1fr;gap:16px;align-items:start;padding:12px 0;border-bottom:1px solid var(--line)}
+.field:last-child{border-bottom:0}
+.field .k{font-weight:500}
+.field .k small{display:block;font-family:var(--mono);font-size:11px;color:var(--text-3);font-weight:400}
+.field .v{color:var(--text-2);font-size:15px}
+
+.check{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.check label{display:flex;gap:12px;align-items:flex-start;background:var(--card);border-radius:12px;box-shadow:var(--key);padding:14px 16px;cursor:pointer}
+.check input{appearance:none;flex:none;width:18px;height:18px;border-radius:5px;border:1.5px solid var(--iron);margin:3px 0 0;display:grid;place-items:center;background:var(--recessed)}
+.check input:checked{background:var(--mist);border-color:var(--mist)}
+.check input:checked::after{content:"";width:5px;height:9px;border:solid var(--canvas);border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.check input:checked+span{color:var(--text-3);text-decoration:line-through}
+
+.note{border-left:2px solid var(--edge);padding:4px 0 4px 16px;color:var(--text-2);font-size:15px;margin:16px 0}
+.note.warn{border-color:var(--coral)}
+
+footer{margin-top:96px;padding:32px 0 48px;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--text-3)}
+footer .wrap{display:flex;flex-wrap:wrap;gap:8px 16px}
+
+@media (max-width:900px){
+  .flow{grid-template-columns:repeat(3,1fr)}
+  .facts{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:720px){
+  .wrap{padding:0 16px}
+  .g2,.g3{grid-template-columns:1fr}
+  .flow{grid-template-columns:repeat(2,1fr)}
+  .field{grid-template-columns:1fr;gap:4px}
+  .st{grid-template-columns:1fr;gap:8px;padding:18px}
+  .body{padding:4px 16px 16px 16px}
+  .brand b{display:none}
+  .hero{padding-top:136px}
+  section{padding-top:64px}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="目次">
+  <div class="nav-in">
+    <div class="brand"><i></i><b>レベルデザイン資料</b></div>
+    <ol>
+      <li><a href="#ask">お願い</a></li>
+      <li><a href="#game">ゲームの基本</a></li>
+      <li><a href="#flow">1試合の流れ</a></li>
+      <li><a href="#enemy">敵</a></li>
+      <li><a href="#stage">ステージ</a></li>
+      <li><a href="#now">いまの仮案</a></li>
+      <li><a href="#decide">決めること</a></li>
+      <li><a href="#howto">入れ方</a></li>
+      <li><a href="#test">試し方</a></li>
+      <li><a href="#tips">コツ</a></li>
+      <li><a href="#done">提出前</a></li>
+    </ol>
+  </div>
+</nav>
+
+<header class="hero">
+  <i class="bar a"></i><i class="bar b"></i>
+  <div class="wrap">
+    <p class="eyebrow">握れ、灼ける前に ／ プランナー向け</p>
+    <h1>ステージ1・2の<br>レベルデザインをお願いします</h1>
+    <p class="lead">敵を「いつ・どこから・何体」出すかを決めて、5つのウェーブを作ってもらう作業です。ツールに数字を入れるだけで、プログラムは触りません。</p>
+    <div class="facts">
+      <div class="fact"><b>2</b><span>ステージ</span></div>
+      <div class="fact"><b>5</b><span>ウェーブ／ステージ</span></div>
+      <div class="fact"><b>5:00</b><span>制限時間（戦っている間だけ減る）</span></div>
+      <div class="fact"><b>4人</b><span>協力プレイ</span></div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ───────── 01 お願い ───────── -->
+<section id="ask"><div class="wrap">
+  <p class="eyebrow">01 · お願いしたいこと</p>
+  <h2>やってほしいことは、この3つだけ</h2>
+  <p class="sub">いまは仮のレベルデザインが入っていて、そのまま遊べます。これを土台に、気持ちよく遊べる形へ作り直してください。</p>
+  <div class="grid g3">
+    <div class="card ask"><span class="num">STEP 1</span><h3>敵の出し方を決める</h3><p class="muted">ウェーブごとに「何秒後に・どの湧き位置から・どの敵を・何体・何秒かけて」出すかを決めます。</p></div>
+    <div class="card ask"><span class="num">STEP 2</span><h3>目標撃破数を決める</h3><p class="muted">「この数を倒したら次のウェーブへ」という数です。WAVE 5 の目標を倒したらクリアになります。</p></div>
+    <div class="card ask"><span class="num">STEP 3</span><h3>遊んで直す</h3><p class="muted">Unity で Play して確かめ、数字を直します。ツールにテスト用のボタン（ウェーブを飛ばすなど）があります。</p></div>
+  </div>
+
+  <details>
+    <summary>やらなくていいこと・触らないでほしい所<span class="hint">詳しく</span></summary>
+    <div class="body">
+      <ul>
+        <li><strong>プログラム（.cs ファイル）</strong>は触りません。全部ツールの画面で数字を入れるだけです。</li>
+        <li><strong>Game のシーン</strong>（<code>Assets/Scenes/Game.unity</code>）は触りません。カメラや HUD など、全ステージ共通の物が入っています。</li>
+        <li><strong>敵そのものの強さ</strong>（HP・速さ）や、<strong>画面の表示のタイミング</strong>は全ステージ共通です。変えたいときは相談してください（変えると両方のステージに効きます）。</li>
+        <li><strong>背景の見た目</strong>は今回の範囲外です（ステージ2の床や壁は仮の四角です）。</li>
+      </ul>
+    </div>
+  </details>
+  <details>
+    <summary>ユーザー（ディレクター）が決めていること<span class="hint">詳しく</span></summary>
+    <div class="body">
+      <ul>
+        <li><strong>ステージ1と2は難易度順ではありません。</strong>2つの間に難しさの差はいりません。どちらから遊んでも同じくらいの手応えにしてください（試合ごとにルーレットでステージが決まります）。</li>
+        <li>このゲームは「<strong>制限時間内に、どのウェーブまで行けるか</strong>」を遊ぶゲームです。WAVE 5 は今のところの<strong>仮の上限</strong>です。</li>
+        <li>時間切れは今はゲームオーバーです（リザルトには「どのウェーブまで行けたか」が出ます）。<strong>後で変わる可能性が大きい</strong>ので、そこに頼りすぎない作りにしておくと安全です。</li>
+        <li>ウェーブの合間は「歯みがきタイム」で、<strong>その間は敵が来ません</strong>。</li>
+      </ul>
+    </div>
+  </details>
+</div></section>
+
+<!-- ───────── 02 ゲームの基本 ───────── -->
+<section id="game"><div class="wrap">
+  <p class="eyebrow">02 · ゲームの基本</p>
+  <h2>1分でわかる、このゲーム</h2>
+  <p class="sub">4人が握力センサーを握って、真ん中の「歯（コア）」に押し寄せるバイキンの大群をビームで焼き払う協力ゲームです。</p>
+  <div class="grid g2">
+    <div class="card"><span class="num">PLAYER</span><h3>握るとビーム</h3><p class="muted">強く握るほどビームが太くなります。握りっぱなしだと熱がたまってオーバーヒートし、しばらく撃てません。4人はそれぞれ別の場所に砲台があり、<strong>見えている画面も1人ずつ違います</strong>。</p></div>
+    <div class="card"><span class="num">GOAL</span><h3>コアを守って、目標を倒す</h3><p class="muted">敵はコアに向かって歩いてきて、着くとコアが削れます。コアの HP が 0 になったら負け。ウェーブごとの目標撃破数を倒すと次へ進み、WAVE 5 を倒せばクリアです。</p></div>
+  </div>
+  <details>
+    <summary>覚えておくと設計に効くルール<span class="hint">詳しく</span></summary>
+    <div class="body">
+      <ul>
+        <li><strong>コアに着いた敵は撃破数に入りません。</strong>倒しきれない量を出すと、コアが削れるうえに目標も進みません。</li>
+        <li><strong>時計は戦っている間だけ減ります。</strong>発表・ウェーブクリア後・歯みがきタイムの間は止まっています。5分はまるごと「戦う時間」です。</li>
+        <li><strong>目標を倒した瞬間に、残っている敵は全員の画面の外へ逃げて消えます。</strong>余った敵が次のウェーブに持ち越されることはありません。</li>
+        <li>スキル玉（スマッシュボール）を壊すと、その人のキャラの必殺技が1回使えます。キャラは4色（赤・青・緑・黄）で、技がそれぞれ違います。</li>
+        <li>敵は数千体出ても動くように作ってあります。数そのものは気にせず、遊んで気持ちいいかで決めて大丈夫です。</li>
+      </ul>
+    </div>
+  </details>
+</div></section>
+
+<!-- ───────── 03 1試合の流れ ───────── -->
+<section id="flow"><div class="wrap">
+  <p class="eyebrow">03 · 1試合の流れ</p>
+  <h2>ウェーブ → 合間 → ウェーブ…をくり返す</h2>
+  <p class="sub">決めてもらうのは、赤い枠の「戦う」部分の中身です。それ以外の時間は自動で進みます。</p>
+  <div class="flow">
+    <div class="step"><span class="t">最初だけ ・ 4秒</span><b>握り方のヒント</b><span>「握るとビーム！」</span></div>
+    <div class="step"><span class="t">4秒</span><b>発表</b><span>WAVE n／目標撃破数、敵の通り道の赤い線、新しい敵の紹介</span></div>
+    <div class="step"><span class="t">発表の最後</span><b>3・2・1・GO!</b><span>ここから時計が動く</span></div>
+    <div class="step hot"><span class="t">目標を倒すまで</span><b>戦う</b><span>あなたが決めた湧き方で敵が出る</span></div>
+    <div class="step"><span class="t">約2〜5秒</span><b>WAVE CLEAR!</b><span>残りの敵は画面の外へ逃げる</span></div>
+    <div class="step"><span class="t">約11.5秒</span><b>歯みがきタイム</b><span>連打でコア回復。敵は来ない</span></div>
+  </div>
+  <p class="loop">↻ これを WAVE 1 → 5 までくり返し、WAVE 5 の目標を倒したらクリア（WAVE 5 の後に合間はありません）</p>
+
+  <details>
+    <summary>発表で画面に出るもの<span class="hint">詳しく</span></summary>
+    <div class="body">
+      <ul>
+        <li><strong>WAVE n ／ 目標撃破数 m！</strong> の大きな帯。</li>
+        <li><strong>敵の通り道（赤い線）</strong>：そのウェーブで使う湧き位置からコアまでの道が、矢印つきで出ます。湧き位置には「！」の印。画面の外の湧き位置は、画面のふちに矢印で出ます。</li>
+        <li><strong>NEW ENEMY カード</strong>：そのウェーブで<strong>試合中はじめて出てくる敵</strong>だけ、右側に紹介カードが出ます。新しい敵を何ウェーブ目で出すかは、そのまま「チュートリアルの順番」になります。</li>
+        <li>「発表の一言」（例: ボス出現！）という欄もありますが、<strong>今は画面に出さない設定</strong>です（ユーザー決定）。書いても見えません。</li>
+      </ul>
+    </div>
+  </details>
+  <details>
+    <summary>歯みがきタイム（合間）でやること<span class="hint">詳しく</span></summary>
+    <div class="body">
+      <p>ウェーブの合間に、全員で握力センサーを「にぎにぎ」連打して歯をみがくミニゲームです。</p>
+      <ul>
+        <li>説明 1.5秒 → <strong>みがく 8秒</strong> → 結果 2秒（合計 約11.5秒）。</li>
+        <li>1人 18回で 100%（人数分合わせて数えます）。全員がそろって握ると「シンクロ」でボーナス。</li>
+        <li>みがいた分だけコアの HP が回復。満タンを超えた分は「コーティング」（次の1ウェーブだけ、先にダメージを受けてくれる盾）になります。</li>
+        <li>レベルデザイン的には「<strong>前のウェーブで削られても、ここで立て直せる</strong>」区切りです。合間を「休むだけ（秒数指定）」に変えることもできます。</li>
+      </ul>
+    </div>
+  </details>
+  <details>
+    <summary>ステージ2だけの仕掛け：WAVE 3 で橋が崩れる<span class="hint">詳しく</span></summary>
+    <div class="body">
+      <p>お風呂場（ステージ2）では、コアは最初、浴槽の上にかかった橋の上にあります。<strong>WAVE 3 の発表で橋が崩れ、コアが下の床に落ちます。</strong>WAVE 3 からは守る場所が変わるので、敵が来る方向の組み立ても変えると効果的です（いまの仮案も WAVE 3 から下の出口を主にしています）。</p>
+      <p class="small">何ウェーブ目で崩れるかの設定はステージのシーンの中（<code>StageCoreDrop</code> の「崩れるウェーブ」）にあります。変えたいときは相談してください。</p>
+    </div>
+  </details>
+</div></section>
+
+<!-- ───────── 04 敵 ───────── -->
+<section id="enemy"><div class="wrap">
+  <p class="eyebrow">04 · 敵の種類</p>
+  <h2>いま使える敵は3種類</h2>
+  <p class="sub">湧きの行ごとに、この中から1種類を選びます。強さは全ステージ共通です。</p>
+  <div class="grid g3">
+    <div class="card enemy">
+      <h3><i class="dot"></i>スピキ</h3>
+      <p class="muted small">基本の敵。まっすぐコアへ来る。群れの主役。</p>
+      <div class="stats"><div><small>HP</small><b>10</b></div><div><small>速さ</small><b>3</b></div><div><small>コアへの<br>ダメージ</small><b>1</b></div></div>
+      <span class="tag">数で押す</span><span class="tag">ほぼ全部これ</span>
+    </div>
+    <div class="card enemy">
+      <h3><i class="dot bomb"></i>爆弾スピキ</h3>
+      <p class="muted small">倒すと爆発して、まわりの敵も巻き込む。コアに着いても爆発する。</p>
+      <div class="stats"><div><small>HP</small><b>3</b></div><div><small>速さ</small><b>1.8</b></div><div><small>コアへの<br>ダメージ</small><b>5</b></div></div>
+      <span class="tag coral">群れの中に混ぜると気持ちいい</span>
+    </div>
+    <div class="card enemy">
+      <h3><i class="dot boss"></i>ボススピキ</h3>
+      <p class="muted small">大きくて硬い。みんなのビームを集めないと倒せない。</p>
+      <div class="stats"><div><small>HP</small><b>150</b></div><div><small>速さ</small><b>1</b></div><div><small>コアへの<br>ダメージ</small><b>10</b></div></div>
+      <span class="tag">1ウェーブに数体まで</span><span class="tag">協力のきっかけ</span>
+    </div>
+  </div>
+  <details>
+    <summary>数字の見方と細かい性質<span class="hint">詳しく</span></summary>
+    <div class="body">
+      <ul>
+        <li><strong>速さ</strong>は1秒に進む距離（m）。湧き位置からコアまではどちらのステージも 25〜30m ほど（障害物をよける分もう少し長い）なので、スピキなら 10秒前後でコアに着きます。</li>
+        <li><strong>爆弾スピキ</strong>：爆発の半径 1.6m、まわりの敵に 30 ダメージ（スピキは一撃）。コアに着いたときの爆発はコアに 2 ダメージ。</li>
+        <li><strong>ボススピキ</strong>：当たり判定が大きく（半径 0.75m）、ビームが当たりやすい。</li>
+        <li>3種類とも<strong>紹介文があるので、試合ではじめて出るウェーブで NEW ENEMY カードが出ます。</strong></li>
+        <li>新しい敵の種類を増やしたいときは相談してください（強さ・見た目・紹介文を作ります）。</li>
+      </ul>
+    </div>
+  </details>
+</div></section>
+
+<!-- ───────── 05 ステージ ───────── -->
+<section id="stage"><div class="wrap">
+  <p class="eyebrow">05 · ステージ</p>
+  <h2>2つのステージの形</h2>
+  <p class="sub">真上から見た図です。<span style="color:var(--coral)">●</span> が湧き位置（敵が出てくる場所）で、ここを選んで敵を出します。</p>
+
+  <div class="grid g2">
+    <div class="card">
+      <h3>ステージ1</h3>
+      <p class="muted small">コアのまわりを4人が囲む、まるい戦場。湧き位置は8方向にぐるっと並んでいて、<strong>どの方向からでも攻められる</strong>のが特徴です。</p>
+      <div class="map">
+        <svg viewBox="-36 -36 72 72" role="img" aria-label="ステージ1の図">
+          <circle cx="0" cy="0" r="30" fill="none" stroke="#2a2b2d" stroke-width=".3" stroke-dasharray="1 1"/>
+          <rect x="6.6" y="-1.6" width="2.8" height="3.2" rx=".4" fill="#454647"/>
+          <rect x="10.6" y="-0.7" width="4" height="1.2" fill="#6a6b6c"/>
+          <rect x="-2" y="-11.9" width="4" height="2" rx=".4" fill="#454647"/>
+          <g fill="#e6e6e6" font-family="Geist Mono,monospace" font-size="2.6" text-anchor="middle">
+            <circle cx="0" cy="-6" r="1.5"/><text x="-3.4" y="-5.1" fill="#9c9c9d">P1</text>
+            <circle cx="6" cy="0" r="1.5"/><text x="6" y="4.2" fill="#9c9c9d">P2</text>
+            <circle cx="0" cy="6" r="1.5"/><text x="0" y="10" fill="#9c9c9d">P3</text>
+            <circle cx="-6" cy="0" r="1.5"/><text x="-6" y="4.2" fill="#9c9c9d">P4</text>
+          </g>
+          <circle cx="0" cy="0" r="2.4" fill="#fff"/>
+          <g fill="#ff6363" font-family="Geist Mono,monospace" font-size="2.4" text-anchor="middle">
+            <circle cx="0" cy="-30" r="1.3"/><text x="0" y="-32.6">0</text>
+            <circle cx="21.2" cy="-21.2" r="1.3"/><text x="24" y="-23">1</text>
+            <circle cx="30" cy="0" r="1.3"/><text x="33" y="0.8">2</text>
+            <circle cx="21.2" cy="21.2" r="1.3"/><text x="24" y="25">3</text>
+            <circle cx="0" cy="30" r="1.3"/><text x="0" y="34">4</text>
+            <circle cx="-21.2" cy="21.2" r="1.3"/><text x="-24" y="25">5</text>
+            <circle cx="-30" cy="0" r="1.3"/><text x="-33" y="0.8">6</text>
+            <circle cx="-21.2" cy="-21.2" r="1.3"/><text x="-24" y="-23">7</text>
+          </g>
+        </svg>
+        <div class="legend"><span><i style="background:#ff6363"></i>湧き位置 Spawn_0〜7</span><span><i style="background:#e6e6e6"></i>砲台 P1〜P4</span><span><i style="background:#fff"></i>コア</span><span><i style="background:#454647;border-radius:2px"></i>こわせる障害物</span><span><i style="background:#6a6b6c;border-radius:2px"></i>壁</span></div>
+      </div>
+      <details>
+        <summary>湧き位置の名前と方向<span class="hint">表</span></summary>
+        <div class="body">
+          <table class="tbl"><tr><th>名前</th><th>方向</th><th>名前</th><th>方向</th></tr>
+            <tr><td><code>Spawn_0</code></td><td>上</td><td><code>Spawn_4</code></td><td>下</td></tr>
+            <tr><td><code>Spawn_1</code></td><td>右上</td><td><code>Spawn_5</code></td><td>左下</td></tr>
+            <tr><td><code>Spawn_2</code></td><td>右</td><td><code>Spawn_6</code></td><td>左</td></tr>
+            <tr><td><code>Spawn_3</code></td><td>右下</td><td><code>Spawn_7</code></td><td>左上</td></tr>
+          </table>
+          <p class="small">コアから湧き位置まではどれも 30m。砲台はコアから 6m の上下左右です。図の「上」がどのプレイヤーの画面で上に見えるかは人によって違います（4人の画面は向きが違う）。</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="card">
+      <h3>ステージ2「お風呂場」</h3>
+      <p class="muted small">横長の浴槽ステージ。コアは<strong>浴槽の上の橋</strong>にあり、WAVE 3 で橋が崩れて<strong>下の床へ落ちます</strong>。湧き位置は左右の上と下の4つ。</p>
+      <div class="map">
+        <svg viewBox="-30 -20 60 40" role="img" aria-label="ステージ2の図">
+          <rect x="-25" y="-15" width="50" height="12.5" fill="#0d0e10"/>
+          <rect x="-24.5" y="-1.55" width="49" height="9.5" fill="#0a1a2a"/>
+          <rect x="-25" y="8" width="50" height="3.2" fill="#161719"/>
+          <rect x="-25" y="-2.5" width="20" height="1" fill="#454647"/><rect x="4" y="-2.5" width="21" height="1" fill="#454647"/>
+          <rect x="-25.5" y="-2.5" width="1" height="10.5" fill="#454647"/><rect x="24.5" y="-2.5" width="1" height="10.5" fill="#454647"/>
+          <rect x="-11" y="6" width="22" height="1" fill="#6a6b6c" stroke="#ff6363" stroke-width=".15" stroke-dasharray=".8 .5"/>
+          <text x="-11.8" y="7" font-size="1.6" text-anchor="end" fill="#9c9c9d" font-family="Noto Sans JP,sans-serif">橋</text>
+          <circle cx="0" cy="5" r="1.6" fill="#fff"/>
+          <circle cx="0" cy="9.5" r="1.6" fill="none" stroke="#fff" stroke-width=".25" stroke-dasharray=".6 .4"/>
+          <path d="M0 6.8 L0 7.9" stroke="#9c9c9d" stroke-width=".2" marker-end="url(#ar)"/>
+          <defs><marker id="ar" viewBox="0 0 4 4" refX="2" refY="2" markerWidth="3" markerHeight="3" orient="auto"><path d="M0 0 L4 2 L0 4z" fill="#9c9c9d"/></marker></defs>
+          <circle cx="8" cy="2" r="1" fill="none" stroke="#e6e6e6" stroke-width=".25"/>
+          <text x="8" y="4.6" font-size="1.4" text-anchor="middle" fill="#6a6b6c" font-family="Noto Sans JP,sans-serif">スキル玉</text>
+          <g fill="#e6e6e6" font-family="Geist Mono,monospace" font-size="1.8" text-anchor="middle">
+            <circle cx="-13" cy="-4" r="1.1"/><text x="-13" y="-6" fill="#9c9c9d">P1</text>
+            <circle cx="15" cy="-4" r="1.1"/><text x="15" y="-6" fill="#9c9c9d">P2</text>
+            <circle cx="-14" cy="9.5" r="1.1"/><text x="-14" y="13.3" fill="#9c9c9d">P3</text>
+            <circle cx="14" cy="9.5" r="1.1"/><text x="14" y="13.3" fill="#9c9c9d">P4</text>
+          </g>
+          <g fill="#ff6363" font-family="Geist Mono,monospace" font-size="1.7" text-anchor="middle">
+            <circle cx="-23" cy="-15" r="1"/><text x="-23" y="-16.6">TopL</text>
+            <circle cx="23" cy="-15" r="1"/><text x="23" y="-16.6">TopR</text>
+            <circle cx="-23" cy="15" r="1"/><text x="-23" y="18">SideL</text>
+            <circle cx="23" cy="15" r="1"/><text x="23" y="18">SideR</text>
+          </g>
+        </svg>
+        <div class="legend"><span><i style="background:#ff6363"></i>湧き位置 Spawn_〜</span><span><i style="background:#e6e6e6"></i>砲台</span><span><i style="background:#fff"></i>コア（点線＝WAVE 3 から）</span><span><i style="background:#6a6b6c;border-radius:2px;outline:1px dashed #ff6363"></i>橋（WAVE 3 で崩れる）</span><span><i style="background:#454647;border-radius:2px"></i>浴槽のふち・壁</span></div>
+      </div>
+      <details>
+        <summary>湧き位置の名前と役割<span class="hint">表</span></summary>
+        <div class="body">
+          <table class="tbl"><tr><th>名前</th><th>場所</th><th>向いている使い方</th></tr>
+            <tr><td><code>Spawn_TopL</code></td><td>左上（タイルの壁の上）</td><td>橋の上のコアを狙う（WAVE 1〜2 向き）</td></tr>
+            <tr><td><code>Spawn_TopR</code></td><td>右上</td><td>同上</td></tr>
+            <tr><td><code>Spawn_SideL</code></td><td>左下（床の横）</td><td>床に落ちたコアを狙う（WAVE 3〜 向き）</td></tr>
+            <tr><td><code>Spawn_SideR</code></td><td>右下</td><td>同上</td></tr>
+          </table>
+          <p class="small">湧き位置の場所は、作業中のシーンの値です（いま調整中の変更が入っています）。要塞デザイナーの「湧き位置」ページで動かしたり、増やしたりできます。</p>
+        </div>
+      </details>
+    </div>
+  </div>
+</div></section>
+
+<!-- ───────── 06 いまの仮案 ───────── -->
+<section id="now"><div class="wrap">
+  <p class="eyebrow">06 · いまの仮のレベルデザイン</p>
+  <h2>土台になる仮案（どちらも同じ難しさ）</h2>
+  <p class="sub">2ステージとも目標は 120 → 250 → 400 → 530 → 700（合計 2000体）。1秒に出る数を少しずつ増やし、WAVE 2 で爆弾、WAVE 3 でボスを初登場させています。</p>
+  <div class="grid g2">
+    <div class="card">
+      <h3>ステージ1</h3>
+      <div class="scroll"><table class="tbl">
+        <tr><th>WAVE</th><th class="r">目標</th><th class="r">1秒に</th><th>中身（1周ぶん）</th></tr>
+        <tr><td>1</td><td class="r">120</td><td class="r">7.1</td><td>スピキ 120（上 → 下 → 右 → 左 の順に3秒ずつずらして）</td></tr>
+        <tr><td>2</td><td class="r">250</td><td class="r">11.4</td><td>スピキ 140・<span class="tag coral">爆弾 8 初登場</span></td></tr>
+        <tr><td>3</td><td class="r">400</td><td class="r">12.8</td><td>8方向から一斉に・<span class="tag coral">ボス 2 初登場</span>・爆弾 8</td></tr>
+        <tr><td>4</td><td class="r">530</td><td class="r">19.8</td><td>ななめ4方向 → 上下左右の2段・爆弾 16・ボス 2</td></tr>
+        <tr><td>5</td><td class="r">700</td><td class="r">21.2</td><td>8方向の大群・ボス 4・爆弾 20</td></tr>
+      </table></div>
+    </div>
+    <div class="card">
+      <h3>ステージ2「お風呂場」</h3>
+      <div class="scroll"><table class="tbl">
+        <tr><th>WAVE</th><th class="r">目標</th><th class="r">1秒に</th><th>中身（1周ぶん）</th></tr>
+        <tr><td>1</td><td class="r">120</td><td class="r">8.0</td><td>スピキ 120（上の2か所だけ）</td></tr>
+        <tr><td>2</td><td class="r">250</td><td class="r">12.3</td><td>上＋下の出口も・<span class="tag coral">爆弾 8 初登場</span></td></tr>
+        <tr><td>3</td><td class="r">400</td><td class="r">13.8</td><td><strong>橋が崩れる</strong>。下の出口が主役・<span class="tag coral">ボス 2 初登場</span></td></tr>
+        <tr><td>4</td><td class="r">530</td><td class="r">17.1</td><td>上と下から同時・爆弾 16</td></tr>
+        <tr><td>5</td><td class="r">700</td><td class="r">19.6</td><td>4か所から大群・ボス 4・爆弾 10</td></tr>
+      </table></div>
+    </div>
+  </div>
+  <details>
+    <summary>表の「1秒に」の意味と、仮案の考え方<span class="hint">詳しく</span></summary>
+    <div class="body">
+      <ul>
+        <li><strong>1秒に</strong>＝1秒あたりに出てくるおよその数。ツールの「全体」ページのグラフ（青）と同じ計算です。プレイヤーにとっての「忙しさ」の目安になります。</li>
+        <li>どのウェーブも「<strong>1周（10〜15秒）を出し終えたら、2秒待って最初からくり返す</strong>」設定です。目標に届くまで敵が出続けるので、ウェーブが終わらなくなることはありません。</li>
+        <li>全部すぐ倒せたとしても、目標の数が出そろうまで WAVE 1 で約15秒、WAVE 5 で約30〜35秒かかります。5ウェーブ合わせて最短 約2分。実際は倒すのに時間がかかるので、5分の制限時間に対して「上手なチームならぎりぎり最後まで行ける」くらいを狙った仮の値です。<strong>まだ実際に4人で遊んで調整はしていません。</strong></li>
+        <li>ステージ1は「8方向のどこから来るか」で、ステージ2は「上か下か・橋が落ちた後の守り方」で変化をつけています。</li>
+      </ul>
+    </div>
+  </details>
+  <details>
+    <summary>行の中身をすべて見る（ステージ1）<span class="hint">全データ</span></summary>
+    <div class="body scroll">
+      <p class="small">すべて「かける秒数」で出しています。例: 「0秒｜Spawn_0｜スピキ×30｜6秒かけて」＝ウェーブ開始の0秒後から、上の湧き位置にスピキを30体、6秒かけて順番に出す。</p>
+      <table class="tbl">
+        <tr><th>WAVE</th><th>行（発生時刻｜湧き位置｜敵×数｜かける秒数）</th></tr>
+        <tr><td>1</td><td>0秒 Spawn_0 スピキ×30 6秒 ／ 3秒 Spawn_4 スピキ×30 6秒 ／ 6秒 Spawn_2 スピキ×30 6秒 ／ 9秒 Spawn_6 スピキ×30 6秒</td></tr>
+        <tr><td>2</td><td>0秒 Spawn_0・4 スピキ×35 6秒 ／ 5秒 Spawn_2・6 スピキ×35 6秒 ／ 9秒 Spawn_1・5 爆弾×4 2秒</td></tr>
+        <tr><td>3</td><td>0秒 全8か所 スピキ×18 6秒 ／ 5秒 Spawn_0・4 ボス×1 ／ 8秒 Spawn_3・7 爆弾×4 2秒</td></tr>
+        <tr><td>4</td><td>0秒 Spawn_1・3・5・7 スピキ×30 6秒 ／ 4秒 Spawn_0・2・4・6 スピキ×25 5秒 ／ 8秒 Spawn_0・2・4・6 爆弾×4 2秒 ／ 10秒 Spawn_2・6 ボス×1</td></tr>
+        <tr><td>5</td><td>0秒 全8か所 スピキ×30 7秒 ／ 5秒 Spawn_1・3・5・7 ボス×1 ／ 8秒 Spawn_0・2・4・6 爆弾×5 2秒 ／ 11秒 全8か所 スピキ×12 4秒</td></tr>
+      </table>
+    </div>
+  </details>
+  <details>
+    <summary>行の中身をすべて見る（ステージ2）<span class="hint">全データ</span></summary>
+    <div class="body scroll">
+      <table class="tbl">
+        <tr><th>WAVE</th><th>行（発生時刻｜湧き位置｜敵×数｜かける秒数）</th></tr>
+        <tr><td>1</td><td>0秒 TopL・TopR スピキ×30 6秒 ／ 7秒 TopL・TopR スピキ×30 6秒</td></tr>
+        <tr><td>2</td><td>0秒 TopL・TopR スピキ×45 6秒 ／ 4秒 SideL・SideR スピキ×25 5秒 ／ 8秒 TopL・TopR 爆弾×4 2秒</td></tr>
+        <tr><td>3</td><td>0秒 SideL・SideR スピキ×45 6秒 ／ 2秒 TopL・TopR スピキ×40 6秒 ／ 6秒 SideL・SideR ボス×1 ／ 9秒 SideL・SideR 爆弾×4 2秒</td></tr>
+        <tr><td>4</td><td>0秒 SideL・SideR スピキ×50 6秒 ／ 0秒 TopL・TopR スピキ×40 6秒 ／ 6秒 4か所 爆弾×4 2秒 ／ 9秒 SideL・SideR スピキ×30 4秒</td></tr>
+        <tr><td>5</td><td>0秒 4か所 スピキ×50 7秒 ／ 5秒 4か所 ボス×1 ／ 8秒 SideL・SideR 爆弾×5 2秒 ／ 10秒 4か所 スピキ×30 5秒</td></tr>
+      </table>
+    </div>
+  </details>
+</div></section>
+
+<!-- ───────── 07 決めること ───────── -->
+<section id="decide"><div class="wrap">
+  <p class="eyebrow">07 · 決めること</p>
+  <h2>ウェーブ1つで決める項目</h2>
+  <p class="sub">太字の3つが本番です。残りはだいたい今のままで大丈夫です。</p>
+  <div class="card form">
+    <div class="field"><div class="k">目標撃破数<small>targetKills</small></div><div class="v"><strong>この数を倒したら次へ。</strong>WAVE 5 ならクリア。ウェーブの長さを決めるいちばん大きなつまみです。</div></div>
+    <div class="field"><div class="k">湧きの行<small>spawnEntries</small></div><div class="v"><strong>「何秒後に・どこから・どの敵を・何体・何秒かけて」を1行にしたもの。</strong>何行でも足せます。出る順番は発生時刻で自動に決まるので、行の並び順は自由です。</div></div>
+    <div class="field"><div class="k">目標までくり返す<small>repeatUntilCleared</small></div><div class="v"><strong>基本は ON。</strong>行を最後まで出し終えたら、決めた秒数待って最初から出し直します。OFF にすると1回きりで、出る数が目標より少ないと終わらなくなります（ツールが赤い ✖ で教えてくれます）。</div></div>
+    <div class="field"><div class="k">くり返すまで（秒）<small>repeatGapSeconds</small></div><div class="v">1周の終わりから次の周までの「息つぎ」。いまは 2秒。</div></div>
+    <div class="field"><div class="k">このウェーブの後<small>intervalEvent / restSeconds</small></div><div class="v">合間のイベント（いまは全部「歯みがきタイム」）。空にすると、指定した秒数休むだけになります。WAVE 5 の後は使われません。</div></div>
+    <div class="field"><div class="k">名前<small>label</small></div><div class="v">空なら「WAVE n」。ふつうは空のままで。</div></div>
+  </div>
+
+  <details>
+    <summary>湧きの行1つの中身<span class="hint">詳しく</span></summary>
+    <div class="body">
+      <table class="tbl">
+        <tr><th>欄</th><th>意味</th><th>例</th></tr>
+        <tr><td>発生時刻（秒）</td><td>ウェーブが始まって（GO! から）何秒後に、この行の1体目を出すか</td><td>5</td></tr>
+        <tr><td>湧き位置</td><td>どこから出すか（ステージの図の ● の名前）</td><td>Spawn_2</td></tr>
+        <tr><td>敵の種類</td><td>スピキ・爆弾スピキ・ボススピキ</td><td>スピキ</td></tr>
+        <tr><td>数</td><td>この行で出す数</td><td>30</td></tr>
+        <tr><td>出し方</td><td><strong>かける秒数</strong>（全部を出し終えるまでの秒数。間隔は自動）か、<strong>間隔</strong>（1体ずつの秒数）。おすすめは「かける秒数」。数を変えても長さが変わらないので調整が楽です</td><td>6秒かけて</td></tr>
+      </table>
+      <p class="small">0秒にすると全部同時に出ます（ボスを1体出すときなど）。</p>
+    </div>
+  </details>
+  <details>
+    <summary>ステージ全体で決める項目（ふつうは触らなくてよい）<span class="hint">詳しく</span></summary>
+    <div class="body">
+      <table class="tbl">
+        <tr><th>項目</th><th>今の値</th><th>メモ</th></tr>
+        <tr><td>制限時間</td><td>300秒</td><td>試合全体。0 で時間切れなし</td></tr>
+        <tr><td>時間切れのとき</td><td>ゲームオーバー</td><td>「クリア扱い」にもできる（後で変わるかも）</td></tr>
+        <tr><td>合間の間も時間を減らす</td><td>OFF</td><td>OFF＝戦っている間だけ減る</td></tr>
+        <tr><td>発表の長さ</td><td>4秒</td><td>最後の 2秒が 3・2・1</td></tr>
+        <tr><td>敵のルートを赤い線で見せる</td><td>ON</td><td>発表の間に出る</td></tr>
+        <tr><td>WAVE CLEAR! の最短 ／ 逃げ切るのを待つ最長</td><td>1.6秒 ／ 5秒</td><td>クリア後の間</td></tr>
+      </table>
+      <p class="small">2つのステージで難しさをそろえたいので、制限時間などは2ステージで同じにしておくのがおすすめです。</p>
+    </div>
+  </details>
+</div></section>
+
+<!-- ───────── 08 入れ方 ───────── -->
+<section id="howto"><div class="wrap">
+  <p class="eyebrow">08 · ツールでの入れ方</p>
+  <h2>要塞デザイナーの「敵ウェーブ」タブで入れる</h2>
+  <p class="sub">データはステージごとに1ファイル。ツールで変えると自動で保存されます。</p>
+  <div class="steps">
+    <div class="st"><div>
+      <h3>ステージのシーンを開く</h3>
+      <p class="muted">Project ウィンドウで <code>Assets/Scenes/Stages/</code> の <code>Stage1</code> か <code>Stage2_Bath</code> をダブルクリック。</p>
+    </div></div>
+    <div class="st"><div>
+      <h3>要塞デザイナーを開いて「敵ウェーブ」タブへ</h3>
+      <p class="path"><span>Tools</span><em>›</em><span>要塞</span><em>›</em><span>要塞デザイナーを開く</span><em>→</em><span>敵ウェーブ</span></p>
+      <p class="muted" style="margin-top:8px">上に「全体」「WAVE 1」〜「WAVE 5」「湧き位置」のページが並びます。問題のあるウェーブには ⚠、最終ウェーブには ★ が付きます。</p>
+    </div></div>
+    <div class="st"><div>
+      <h3>「全体」ページで流れを確認</h3>
+      <p class="muted">試合の流れ（WAVE と合間の並び）、目標の合計、難しさの上がり方のグラフ（赤＝目標撃破数、青＝1秒に出る数）、気になる所が出ます。</p>
+    </div></div>
+    <div class="st"><div>
+      <h3>「WAVE n」ページで目標と行を入れる</h3>
+      <p class="muted">「きまり」で目標撃破数を、「湧きの行」の表で行を足して中身を入れます。行をクリックすると、その行だけが開いて編集できます。上のタイムライン（棒グラフ）で、いつ何が出るかが見えます。</p>
+    </div></div>
+    <div class="st"><div>
+      <h3>Play して試す → 直す</h3>
+      <p class="muted">次の「試し方」へ。直した数字は Play を止めても残ります。</p>
+    </div></div>
+  </div>
+
+  <details>
+    <summary>作業が速くなるボタン<span class="hint">便利機能</span></summary>
+    <div class="body">
+      <table class="tbl">
+        <tr><th>ボタン</th><th>何が起きるか</th><th>こんなときに</th></tr>
+        <tr><td>行を足す ／ 選んだ行を複製</td><td>行を1つ足す ／ 選んだ行のコピーを下に足す</td><td>基本の作業</td></tr>
+        <tr><td>全ての湧き位置に足す</td><td>選んだ行と同じ時刻・敵・数で、全部の湧き位置から出す行をまとめて作る</td><td>四方から一斉に攻める場面</td></tr>
+        <tr><td>○秒以降の行をずらす</td><td>選んだ行とそれより後の行を、まとめて遅らせる（早める）</td><td>途中に新しい場面を差し込みたい</td></tr>
+        <tr><td>全部の数を ×倍率</td><td>このウェーブの全行の数をまとめて増減</td><td>難しさを全体的に上げ下げ</td></tr>
+        <tr><td>前のウェーブの行を写す（×倍率）</td><td>前のウェーブの行を、数を倍率で増やして写す</td><td>前のウェーブを土台に強くしたい</td></tr>
+        <tr><td>＋ ／ −（ページの横）</td><td>ウェーブを1つ足す（最後を写して数×1.2）／ 開いているウェーブを消す</td><td>ウェーブ数を変えたい（要相談）</td></tr>
+      </table>
+      <p class="small">間違えても Ctrl+Z で戻せます。</p>
+    </div>
+  </details>
+  <details>
+    <summary>「湧き位置」ページ（場所を動かす・増やす）<span class="hint">詳しく</span></summary>
+    <div class="body">
+      <ul>
+        <li><strong>＋ 追加</strong>：Scene ビューの真ん中に新しい湧き位置を作ります。</li>
+        <li><strong>ドラッグ編集</strong> を ON にすると、Scene ビューで直接つかんで動かせます。グリッドに合わせることもできます。</li>
+        <li>名前（ID）を変えると、ウェーブの行の参照も自動でついてきます。</li>
+        <li>各湧き位置の横に、何体そこから出しているかが出ます（「未使用」なら一度も使っていない）。</li>
+        <li>湧き位置を動かしたら、<strong>ステージのシーンを保存（Ctrl+S）</strong>してください。これだけはシーンの中の物です。</li>
+      </ul>
+    </div>
+  </details>
+  <details>
+    <summary>ファイルの場所<span class="hint">参考</span></summary>
+    <div class="body">
+      <table class="tbl">
+        <tr><th>物</th><th>場所</th></tr>
+        <tr><td>ステージ1のウェーブの計画</td><td><code>Assets/Stages/Data/Stage1/WavePlan_Stage1.asset</code></td></tr>
+        <tr><td>ステージ2のウェーブの計画</td><td><code>Assets/Stages/Data/Stage2/WavePlan_Stage2_Bath.asset</code></td></tr>
+        <tr><td>ステージのシーン（湧き位置・障害物）</td><td><code>Assets/Scenes/Stages/Stage1.unity</code> ／ <code>Stage2_Bath.unity</code></td></tr>
+        <tr><td>歯みがきタイムの設定（全ステージ共通）</td><td><code>Assets/_Game/Fortress/Presets/Waves/Brushing_Default.asset</code></td></tr>
+      </table>
+      <p class="small">ウェーブの計画は「1ステージ1ファイル」です。別のステージのファイルを使い回さないでください。</p>
+    </div>
+  </details>
+</div></section>
+
+<!-- ───────── 09 試し方 ───────── -->
+<section id="test"><div class="wrap">
+  <p class="eyebrow">09 · 試し方</p>
+  <h2>ステージのシーンを開いたまま Play</h2>
+  <p class="sub">ステージのシーンだけ開いて Play すると、ゲームに必要な物（Game のシーン）が自動で読み込まれ、そのステージで WAVE 1 から始まります。</p>
+  <div class="grid g2">
+    <div class="card">
+      <span class="num">KEYBOARD</span>
+      <h3>キーボードで握る</h3>
+      <table class="tbl">
+        <tr><th>キー</th><th>意味</th></tr>
+        <tr><td><code>Q</code> <code>W</code> <code>O</code> <code>P</code></td><td>P1〜P4 が握る（押している間ビーム）</td></tr>
+        <tr><td><code>1</code>〜<code>4</code></td><td>P1〜P4 のスキルを使える状態にする（テスト用）</td></tr>
+      </table>
+      <p class="muted small" style="margin-top:12px">キーボードの握りは強さが一定なので、本物のセンサーより弱く感じることがあります。最後は必ず本物で確かめてください。</p>
+    </div>
+    <div class="card">
+      <span class="num">TOOL</span>
+      <h3>ツールのテスト用ボタン（Play 中）</h3>
+      <table class="tbl">
+        <tr><th>ボタン</th><th>意味</th></tr>
+        <tr><td>▶ WAVE n の発表から</td><td>開いているページのウェーブから始め直す</td></tr>
+        <tr><td>目標を倒したことにする</td><td>今のウェーブをすぐクリア</td></tr>
+        <tr><td>今の段階を飛ばす</td><td>発表・撤退・合間をすぐ終わらせる</td></tr>
+      </table>
+      <p class="muted small" style="margin-top:12px">「WAVE 4 だけ何度も試す」が数秒でできます。</p>
+    </div>
+  </div>
+  <details>
+    <summary>Play しなくても確かめられること<span class="hint">詳しく</span></summary>
+    <div class="body">
+      <ul>
+        <li><strong>Scene ビューの赤い線</strong>：WAVE n ページの「Scene ビューに、このウェーブの敵のルートを表示」を ON にすると、ゲームの発表で出る赤い線と同じ道が見えます。オレンジの線はコアまで行けない道（障害物でふさがれている）です。</li>
+        <li><strong>見積もり</strong>：WAVE n ページに「1周 ○体 / ○秒・1秒に約○体・目標が出そろうまで約○秒」が出ます。全部すぐ倒せたとしたときの最短なので、実際はもっと長くなります。</li>
+        <li><strong>気になる所</strong>：「全体」ページに、終わらないウェーブ・種類が空の行・シーンに無い湧き位置などが一覧で出ます。</li>
+      </ul>
+    </div>
+  </details>
+  <details>
+    <summary>4人で遊ぶときの見え方<span class="hint">詳しく</span></summary>
+    <div class="body">
+      <p>本番は4台のPCで、1人ずつ自分の砲台のまわりを映した画面を見ます。1台で試すと全体を見下ろす画面になりがちなので、<strong>「この湧き位置の敵は、誰の画面にいつ入ってくるか」</strong>を意識すると、本番の手応えに近づきます。どこから来るかは発表の赤い線と、画面のふちの矢印で全員に伝わります。</p>
+    </div>
+  </details>
+</div></section>
+
+<!-- ───────── 10 コツ ───────── -->
+<section id="tips"><div class="wrap">
+  <p class="eyebrow">10 · 設計のコツ</p>
+  <h2>迷ったときの目安</h2>
+  <div class="grid g2">
+    <div class="card"><span class="num">PACE</span><h3>1ウェーブ 30〜60秒</h3><p class="muted">5分で5ウェーブなので、1つあたり平均 1分。前半を短く、後半を長くするとメリハリが出ます。目標撃破数で長さを調整します。</p></div>
+    <div class="card"><span class="num">TEACH</span><h3>新しい敵は1ウェーブに1種類</h3><p class="muted">はじめて出る敵には紹介カードが出ます。同じウェーブで2種類が初登場すると、紹介が渋滞します。</p></div>
+    <div class="card"><span class="num">DIRECTION</span><h3>方向で難しさを作る</h3><p class="muted">数を増やす前に、出てくる方向を増やす・ずらすだけで、ぐっと忙しくなります。4人の画面が違うので「誰かの方向に偏る」と、助け合いが生まれます。</p></div>
+    <div class="card"><span class="num">BREATH</span><h3>波に「息つぎ」を作る</h3><p class="muted">ずっと同じ量より、押し寄せる → 少し引く、のくり返しが気持ちいい。発生時刻をずらしたり、くり返しの待ちで作れます。</p></div>
+  </div>
+  <details>
+    <summary>やりがちな失敗<span class="hint">注意</span></summary>
+    <div class="body">
+      <ul>
+        <li><strong>倒しきれない量を出す</strong> → コアに着いた敵は撃破数に入らないので、コアが削れるのに目標が進まず、いちばんつらい展開になります。「1秒に出る数」が急に跳ね上がっていないか、グラフで確かめてください。</li>
+        <li><strong>「くり返し」を OFF にして数が足りない</strong> → ウェーブが終わりません（ツールが ✖ を出します）。</li>
+        <li><strong>ボスを同時に出しすぎる</strong> → 4人のビームが分散して、どれも倒せなくなります。</li>
+        <li><strong>湧き位置を障害物の向こうに置く</strong> → コアまで行けず、敵がたまります（Scene ビューでオレンジの線になります）。</li>
+        <li><strong>片方のステージだけ難しくなる</strong> → 2ステージは同じくらいの手応えにする決まりです。片方を直したら、もう片方と比べてください。</li>
+      </ul>
+    </div>
+  </details>
+</div></section>
+
+<!-- ───────── 11 提出前 ───────── -->
+<section id="done"><div class="wrap">
+  <p class="eyebrow">11 · 提出前チェック</p>
+  <h2>終わったら、これだけ確認</h2>
+  <ul class="check">
+    <li><label><input type="checkbox"><span>「全体」ページの「気になる所」に ✖（赤）が1つも無い</span></label></li>
+    <li><label><input type="checkbox"><span>2つのステージとも、WAVE 1 からクリアまで通しで1回遊んだ</span></label></li>
+    <li><label><input type="checkbox"><span>2つのステージの難しさが同じくらいになっている（片方だけ簡単・難しいになっていない）</span></label></li>
+    <li><label><input type="checkbox"><span>新しい敵の初登場は、1ウェーブに1種類まで</span></label></li>
+    <li><label><input type="checkbox"><span>湧き位置を動かした場合は、ステージのシーンを保存した</span></label></li>
+    <li><label><input type="checkbox"><span>各ステージの計画の「メモ」に、狙い（どこで何を楽しませたいか）を一言書いた</span></label></li>
+  </ul>
+  <p class="note">わからないこと・ツールで足りない機能があれば、気軽に相談してください。「この敵の種類がほしい」「この演出がほしい」も歓迎です。</p>
+</div></section>
+
+</main>
+
+<footer><div class="wrap">
+  <span>握れ、灼ける前に</span><span>|</span><span>ステージ1・2 レベルデザイン資料</span><span>|</span><span>2026-10-25 時点のゲームの中身から作成</span>
+</div></footer>
+
+<script>
+// 目次: 今読んでいる節を明るくする
+(function(){
+  var links = Array.prototype.slice.call(document.querySelectorAll('.nav a'));
+  var map = {};
+  links.forEach(function(a){ map[a.getAttribute('href').slice(1)] = a; });
+  if (!('IntersectionObserver' in window)) return;
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting) {
+        links.forEach(function(a){ a.classList.remove('on'); });
+        var a = map[e.target.id];
+        if (a) { a.classList.add('on'); a.scrollIntoView({block:'nearest', inline:'nearest'}); }
+      }
+    });
+  }, {rootMargin:'-45% 0px -50% 0px'});
+  document.querySelectorAll('main section[id]').forEach(function(s){ io.observe(s); });
+})();
+</script>
+</body>
+</html>
