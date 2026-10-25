@@ -69,9 +69,11 @@ namespace MS2026.Fortress.EditorTools
                 var scale = EditorPrefs.GetFloat(PrefScale, 1.2f);
                 EditorGUI.BeginChangeCheck();
                 scale = EditorGUILayout.FloatField(new GUIContent("数の倍率", "右のボタンで、全部の行の数をこの倍率にします（1体以上・四捨五入）。「秒数で決める」行は、かける秒数はそのままで密度が上がります。"), scale);
+                // 0 やマイナスを打つと全部の行が1体になってしまうので、0.1 倍より小さくはしない。
+                scale = Mathf.Max(0.1f, scale);
                 if (EditorGUI.EndChangeCheck())
                 {
-                    EditorPrefs.SetFloat(PrefScale, Mathf.Max(0.01f, scale));
+                    EditorPrefs.SetFloat(PrefScale, scale);
                 }
 
                 using (new EditorGUI.DisabledScope(entries.Count == 0))

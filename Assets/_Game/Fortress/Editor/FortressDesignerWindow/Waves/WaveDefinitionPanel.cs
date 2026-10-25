@@ -122,9 +122,11 @@ namespace MS2026.Fortress.EditorTools
                 var scale = EditorPrefs.GetFloat(PrefCopyScale, 1.2f);
                 EditorGUI.BeginChangeCheck();
                 scale = EditorGUILayout.FloatField(new GUIContent("写すときの倍率", "右のボタンで前のウェーブの行を写すとき、数をこの倍率にします。"), scale);
+                // 0 やマイナスを打つと全部の行が1体になってしまうので、0.1 倍より小さくはしない。
+                scale = Mathf.Max(0.1f, scale);
                 if (EditorGUI.EndChangeCheck())
                 {
-                    EditorPrefs.SetFloat(PrefCopyScale, Mathf.Max(0.01f, scale));
+                    EditorPrefs.SetFloat(PrefCopyScale, scale);
                 }
 
                 if (GUILayout.Button(new GUIContent($"前のウェーブの行を写す（×{scale:0.##}）", "このウェーブの行を、前のウェーブの行の写しに置きかえます（目標・名前・合間はそのまま）。"), GUILayout.Width(240)))
