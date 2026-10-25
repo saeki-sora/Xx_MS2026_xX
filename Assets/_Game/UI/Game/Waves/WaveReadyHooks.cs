@@ -14,6 +14,8 @@ namespace MS2026.UI.Game
         private static void Register()
         {
             FortressWaves.AddReadyBlocker(IsTransitionPlaying);
+            // 幕が開ききってから、試合の始まりの演出（ステージの物が落ちてくる）を始めるため。
+            FortressScreenCover.Add(IsTransitionPlaying);
         }
 
         private static bool IsTransitionPlaying()

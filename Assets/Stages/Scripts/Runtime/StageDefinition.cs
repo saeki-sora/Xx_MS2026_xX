@@ -31,6 +31,9 @@ namespace MS2026.Stages
         [Tooltip("OFF にすると、ルーレットに出さない（作りかけのステージなど）。Game だけで遊ぶときに直接選ぶことはできる。")]
         public bool includeInRoulette = true;
 
+        [Tooltip("OFF にすると、このステージでは試合の始まりの演出（障害物・コア・プレイヤーが上から落ちてくる）をしない。演出の設定は Resources の StageDropIntroSettings。")]
+        public bool playDropIntro = true;
+
         /// <summary>画面に出す名前（空ならファイル名）。</summary>
         public string DisplayName => string.IsNullOrWhiteSpace(displayName) ? name : displayName;
     }

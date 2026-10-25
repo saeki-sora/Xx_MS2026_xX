@@ -58,6 +58,8 @@ namespace MS2026.CharacterSelect
             GameSession.GameStartCurtain = TryPlayGameStart;
             // 幕が画面を覆っている間は、ウェーブ（WAVE 1 の発表）を始めない。
             MS2026.Fortress.FortressWaves.AddReadyBlocker(() => IsCovering);
+            // 流れ落ちる途中も含めて幕が出ている間は、試合の始まりの演出（ステージの物が落ちてくる）を待たせる。
+            MS2026.Fortress.FortressScreenCover.Add(() => IsPlaying);
         }
 
         /// <summary>「GO!」のあとゲームへ進むときも、この幕で切り替えるか（設定の useForGameStart）。</summary>

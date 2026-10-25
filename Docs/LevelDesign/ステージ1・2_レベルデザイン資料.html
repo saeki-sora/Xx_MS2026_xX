@@ -156,6 +156,41 @@ details>summary:focus-visible{outline:1px solid var(--edge);outline-offset:2px}
 .note{border-left:2px solid var(--edge);padding:4px 0 4px 16px;color:var(--text-2);font-size:15px;margin:16px 0}
 .note.warn{border-color:var(--coral)}
 
+/* ── コマンド ── */
+pre.cmd{margin:8px 0 12px;padding:12px 14px;background:var(--recessed);border:1px solid var(--line);border-radius:8px;font-family:var(--mono);font-size:13px;line-height:1.7;color:var(--mist);overflow-x:auto;white-space:pre}
+pre.cmd .c{color:var(--text-3)}
+
+/* ── やりたいこと別ガイド ── */
+.qa{background:var(--card);border-radius:16px;box-shadow:var(--key);padding:22px 24px;margin:0 0 12px;transition:box-shadow .3s}
+.qa h3{display:flex;gap:10px;align-items:baseline;margin-bottom:10px}
+.qa h3::before{content:"Q";font-family:var(--mono);font-size:12px;color:var(--coral);flex:none}
+.qa>p{color:var(--text-2);margin:8px 0 0}
+.qa details{background:var(--recessed);box-shadow:none;border:1px solid var(--line)}
+.qa.flash{box-shadow:rgba(255,99,99,.6) 0 0 0 1px, rgba(255,99,99,.15) 0 0 24px 2px}
+.qgroup{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);margin:32px 0 12px}
+.qgroup:first-of-type{margin-top:0}
+
+/* ── 左の「やりたいこと」 ── */
+.rail{position:fixed;left:16px;top:16px;bottom:16px;width:232px;z-index:11;display:flex;flex-direction:column;
+  background:rgba(7,8,10,.92);border:1px solid var(--edge);border-radius:16px;box-shadow:rgba(0,0,0,.4) 0 4px 40px 8px}
+.rail-head{padding:16px 16px 8px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px}
+.rail-head i{width:8px;height:8px;background:var(--coral);transform:rotate(45deg);border-radius:2px}
+.rail-head small{display:block;font-weight:400;color:var(--text-3);font-size:11px}
+.rail-list{overflow-y:auto;padding:0 8px 12px;scrollbar-width:thin;scrollbar-color:var(--iron) transparent}
+.rail-list b{display:block;font-family:var(--mono);font-size:10px;font-weight:400;letter-spacing:.1em;color:var(--text-3);text-transform:uppercase;padding:12px 8px 4px}
+.rail-list a{display:block;padding:7px 8px;border-radius:8px;font-size:13px;line-height:1.5;color:var(--text-2);text-decoration:none}
+.rail-list a:hover,.rail-list a:focus-visible{background:var(--badge);color:var(--text);outline:none}
+.rail-toggle{display:none}
+@media (min-width:1101px){
+  body{padding-left:264px}
+}
+@media (max-width:1100px){
+  .rail{display:none;top:auto;bottom:76px;max-height:70vh;width:min(320px,calc(100vw - 32px))}
+  .rail.open{display:flex}
+  .rail-toggle{display:flex;align-items:center;gap:8px;position:fixed;left:16px;bottom:16px;z-index:12;padding:10px 16px;border-radius:9999px;border:1px solid var(--edge);
+    background:var(--mist);color:var(--iron);font:500 14px var(--sans);cursor:pointer;box-shadow:rgba(0,0,0,.25) 0 4px 4px 0}
+}
+
 footer{margin-top:96px;padding:32px 0 48px;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--text-3)}
 footer .wrap{display:flex;flex-wrap:wrap;gap:8px 16px}
 
@@ -183,19 +218,47 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:8px 16px}
     <div class="brand"><i></i><b>レベルデザイン資料</b></div>
     <ol>
       <li><a href="#ask">お願い</a></li>
-      <li><a href="#game">ゲームの基本</a></li>
+      <li><a href="#start">作業の始め方</a></li>
       <li><a href="#flow">1試合の流れ</a></li>
       <li><a href="#enemy">敵</a></li>
       <li><a href="#stage">ステージ</a></li>
       <li><a href="#now">いまの仮案</a></li>
       <li><a href="#decide">決めること</a></li>
       <li><a href="#howto">入れ方</a></li>
+      <li><a href="#qa">やりたいこと別</a></li>
       <li><a href="#test">試し方</a></li>
       <li><a href="#tips">コツ</a></li>
       <li><a href="#done">提出前</a></li>
     </ol>
   </div>
 </nav>
+
+<aside class="rail" id="rail" aria-label="やりたいこと別のショートカット">
+  <div class="rail-head"><i></i><div>やりたいこと<small>押すとその説明へ飛びます</small></div></div>
+  <div class="rail-list">
+    <b>敵</b>
+    <a href="#q-count">敵の数の調整はどこ？</a>
+    <a href="#q-time">敵が出るタイミングを変えるには？</a>
+    <a href="#q-spawn">敵が出てくる場所を変えるには？</a>
+    <a href="#q-target">目標撃破数を変えるには？</a>
+    <a href="#q-enemy">敵の強さ・速さを変えるには？</a>
+    <a href="#q-newenemy">新しい敵の種類を作るには？</a>
+    <b>障害物</b>
+    <a href="#q-obst-new">障害物を新規で設置するには？</a>
+    <a href="#q-obst-move">既存障害物の移動方法は？</a>
+    <a href="#q-obst-size">障害物の大きさを変えるには？</a>
+    <a href="#q-obst-del">障害物を消すには？</a>
+    <a href="#q-obst-hp">壊せる障害物の硬さ・復活時間は？</a>
+    <a href="#q-smash">スキル玉を置く・動かすには？</a>
+    <a href="#q-route">敵がコアまで行けるか確かめるには？</a>
+    <b>試す・その他</b>
+    <a href="#q-test">特定のウェーブだけ試すには？</a>
+    <a href="#q-limit">制限時間を変えるには？</a>
+    <a href="#start">作業の始め方（ブランチ）は？</a>
+    <a href="#q-save">保存・提出はどうする？</a>
+  </div>
+</aside>
+<button class="rail-toggle" id="railToggle" aria-controls="rail" aria-expanded="false">？ やりたいこと</button>
 
 <header class="hero">
   <i class="bar a"></i><i class="bar b"></i>
@@ -217,12 +280,13 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:8px 16px}
 <!-- ───────── 01 お願い ───────── -->
 <section id="ask"><div class="wrap">
   <p class="eyebrow">01 · お願いしたいこと</p>
-  <h2>やってほしいことは、この3つだけ</h2>
-  <p class="sub">いまは仮のレベルデザインが入っていて、そのまま遊べます。これを土台に、気持ちよく遊べる形へ作り直してください。</p>
-  <div class="grid g3">
-    <div class="card ask"><span class="num">STEP 1</span><h3>敵の出し方を決める</h3><p class="muted">ウェーブごとに「何秒後に・どの湧き位置から・どの敵を・何体・何秒かけて」出すかを決めます。</p></div>
-    <div class="card ask"><span class="num">STEP 2</span><h3>目標撃破数を決める</h3><p class="muted">「この数を倒したら次のウェーブへ」という数です。WAVE 5 の目標を倒したらクリアになります。</p></div>
-    <div class="card ask"><span class="num">STEP 3</span><h3>遊んで直す</h3><p class="muted">Unity で Play して確かめ、数字を直します。ツールにテスト用のボタン（ウェーブを飛ばすなど）があります。</p></div>
+  <h2>やってほしいことは、この4つ</h2>
+  <p class="sub">いまは仮のレベルデザインが入っていて、そのまま遊べます。これを土台に、気持ちよく遊べる形へ作り直してください。迷ったら左の「やりたいこと」から探せます。</p>
+  <div class="grid g2">
+    <div class="card ask"><span class="num">1 · WAVE</span><h3>敵の出し方を決める</h3><p class="muted">ウェーブごとに「何秒後に・どの湧き位置から・どの敵を・何体・何秒かけて」出すかを決めます。</p></div>
+    <div class="card ask"><span class="num">2 · GOAL</span><h3>目標撃破数を決める</h3><p class="muted">「この数を倒したら次のウェーブへ」という数です。WAVE 5 の目標を倒したらクリアになります。</p></div>
+    <div class="card ask"><span class="num">3 · MAP</span><h3>障害物・敵の強さを整える</h3><p class="muted">障害物の配置の変更・追加と、敵の体力・速さの調整も、今回お願いする範囲です。</p></div>
+    <div class="card ask"><span class="num">4 · PLAY</span><h3>遊んで直す</h3><p class="muted">Unity で Play して確かめ、数字を直します。ツールにテスト用のボタン（ウェーブを飛ばすなど）があります。</p></div>
   </div>
 
   <details>
@@ -230,9 +294,10 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:8px 16px}
     <div class="body">
       <ul>
         <li><strong>プログラム（.cs ファイル）</strong>は触りません。全部ツールの画面で数字を入れるだけです。</li>
-        <li><strong>Game のシーン</strong>（<code>Assets/Scenes/Game.unity</code>）は触りません。カメラや HUD など、全ステージ共通の物が入っています。</li>
-        <li><strong>敵そのものの強さ</strong>（HP・速さ）や、<strong>画面の表示のタイミング</strong>は全ステージ共通です。変えたいときは相談してください（変えると両方のステージに効きます）。</li>
+        <li><strong>Game のシーン</strong>（<code>Assets/Scenes/Game.unity</code>）は触りません。カメラや HUD など、全ステージ共通の物が入っています。作業は<strong>ステージのシーンだけを開いて</strong>行ってください。</li>
+        <li><strong>画面の表示のタイミング</strong>（発表の長さ、赤い線の出方など）は全ステージ共通です。変えたいときは相談してください。</li>
         <li><strong>背景の見た目</strong>は今回の範囲外です（ステージ2の床や壁は仮の四角です）。</li>
+        <li>ステージ2の<strong>橋（Bridge）</strong>は、WAVE 3 で崩れる仕掛けとつながっています。消したり名前を変えたりしないでください。</li>
       </ul>
     </div>
   </details>
@@ -249,24 +314,59 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:8px 16px}
   </details>
 </div></section>
 
-<!-- ───────── 02 ゲームの基本 ───────── -->
-<section id="game"><div class="wrap">
-  <p class="eyebrow">02 · ゲームの基本</p>
-  <h2>1分でわかる、このゲーム</h2>
-  <p class="sub">4人が握力センサーを握って、真ん中の「歯（コア）」に押し寄せるバイキンの大群をビームで焼き払う協力ゲームです。</p>
-  <div class="grid g2">
-    <div class="card"><span class="num">PLAYER</span><h3>握るとビーム</h3><p class="muted">強く握るほどビームが太くなります。握りっぱなしだと熱がたまってオーバーヒートし、しばらく撃てません。4人はそれぞれ別の場所に砲台があり、<strong>見えている画面も1人ずつ違います</strong>。</p></div>
-    <div class="card"><span class="num">GOAL</span><h3>コアを守って、目標を倒す</h3><p class="muted">敵はコアに向かって歩いてきて、着くとコアが削れます。コアの HP が 0 になったら負け。ウェーブごとの目標撃破数を倒すと次へ進み、WAVE 5 を倒せばクリアです。</p></div>
+<!-- ───────── 02 作業の始め方 ───────── -->
+<section id="start"><div class="wrap">
+  <p class="eyebrow">02 · 作業の始め方</p>
+  <h2>最初に main を最新にして、自分のブランチを作る</h2>
+  <p class="sub">ほかの人の作業とぶつからないように、毎回この順番で始めてください。<strong>Unity は閉じた状態で</strong>やると安全です。</p>
+  <div class="steps">
+    <div class="st"><div>
+      <h3>main に切り替える</h3>
+      <pre class="cmd">git switch main</pre>
+    </div></div>
+    <div class="st"><div>
+      <h3>フェッチする（新しい変更があるか調べる）</h3>
+      <pre class="cmd">git fetch origin</pre>
+    </div></div>
+    <div class="st"><div>
+      <h3>新しい変更があればプルする</h3>
+      <pre class="cmd">git pull origin main</pre>
+      <p class="muted small">「Already up to date.」と出たら、新しい変更はありません。そのまま次へ。</p>
+    </div></div>
+    <div class="st"><div>
+      <h3>main から自分のブランチを作る</h3>
+      <pre class="cmd">git switch -c 名前＿ステージレベルデザイン</pre>
+      <p class="muted small">名前の付け方は、今までのブランチ（例: <code>佐伯＿敵ウェーブ修正</code>）に合わせて「名前＿作業内容」で。</p>
+    </div></div>
+    <div class="st"><div>
+      <h3>Unity を開いて作業 → こまめにコミット</h3>
+      <p class="muted">区切りのいいところでコミットしておくと、失敗しても戻れます。終わったら push して、ディレクター（プログラマー）に知らせてください。main への取り込み（マージ）はこちらでやります。</p>
+      <pre class="cmd">git add -A
+git commit -m "ステージ1 WAVE 1〜3 の湧き方を調整"
+git push -u origin 名前＿ステージレベルデザイン</pre>
+    </div></div>
   </div>
   <details>
-    <summary>覚えておくと設計に効くルール<span class="hint">詳しく</span></summary>
+    <summary>GitHub Desktop などの画面で操作する場合<span class="hint">詳しく</span></summary>
+    <div class="body">
+      <ol>
+        <li>上の「Current branch」で <strong>main</strong> を選ぶ。</li>
+        <li><strong>Fetch origin</strong> を押す。</li>
+        <li>ボタンが <strong>Pull origin</strong> に変わったら押す（変わらなければ新しい変更なし）。</li>
+        <li>「Current branch」→ <strong>New branch</strong> で、名前を入れて作る（元は main）。</li>
+        <li>作業したら左下でコミット → <strong>Publish branch</strong>（2回目からは Push origin）。</li>
+      </ol>
+      <p>ほかのアプリでも流れは同じです: <strong>main に切り替え → フェッチ → あればプル → main から新しいブランチ</strong>。</p>
+    </div>
+  </details>
+  <details>
+    <summary>途中で main が新しくなったら・困ったとき<span class="hint">詳しく</span></summary>
     <div class="body">
       <ul>
-        <li><strong>コアに着いた敵は撃破数に入りません。</strong>倒しきれない量を出すと、コアが削れるうえに目標も進みません。</li>
-        <li><strong>時計は戦っている間だけ減ります。</strong>発表・ウェーブクリア後・歯みがきタイムの間は止まっています。5分はまるごと「戦う時間」です。</li>
-        <li><strong>目標を倒した瞬間に、残っている敵は全員の画面の外へ逃げて消えます。</strong>余った敵が次のウェーブに持ち越されることはありません。</li>
-        <li>スキル玉（スマッシュボール）を壊すと、その人のキャラの必殺技が1回使えます。キャラは4色（赤・青・緑・黄）で、技がそれぞれ違います。</li>
-        <li>敵は数千体出ても動くように作ってあります。数そのものは気にせず、遊んで気持ちいいかで決めて大丈夫です。</li>
+        <li>作業中に main が進んでも、<strong>基本はそのまま続けて大丈夫</strong>です。取り込むときにこちらで合わせます。</li>
+        <li>「コミットしていない変更があるので切り替えられない」と出たら、先にコミットしてから切り替えてください。</li>
+        <li>同じステージのシーンを、ほかの人も同時にいじっていると、ぶつかることがあります。作業を始める前に一声かけてもらえると安全です。</li>
+        <li>わからなくなったら、何もせずに相談してください（無理に直そうとすると、変更が消えることがあります）。</li>
       </ul>
     </div>
   </details>
@@ -323,7 +423,7 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:8px 16px}
 <section id="enemy"><div class="wrap">
   <p class="eyebrow">04 · 敵の種類</p>
   <h2>いま使える敵は3種類</h2>
-  <p class="sub">湧きの行ごとに、この中から1種類を選びます。強さは全ステージ共通です。</p>
+  <p class="sub">湧きの行ごとに、この中から1種類を選びます。体力・速さなども調整してOKです（下の数字は今の値）。敵の設定は2つのステージで共通なので、変えると両方に効きます。</p>
   <div class="grid g3">
     <div class="card enemy">
       <h3><i class="dot"></i>スピキ</h3>
@@ -352,7 +452,7 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:8px 16px}
         <li><strong>爆弾スピキ</strong>：爆発の半径 1.6m、まわりの敵に 30 ダメージ（スピキは一撃）。コアに着いたときの爆発はコアに 2 ダメージ。</li>
         <li><strong>ボススピキ</strong>：当たり判定が大きく（半径 0.75m）、ビームが当たりやすい。</li>
         <li>3種類とも<strong>紹介文があるので、試合ではじめて出るウェーブで NEW ENEMY カードが出ます。</strong></li>
-        <li>新しい敵の種類を増やしたいときは相談してください（強さ・見た目・紹介文を作ります）。</li>
+        <li>数字の変え方は、左の「<a href="#q-enemy">敵の強さ・速さを変えるには？</a>」へ。新しい種類も作れます（<a href="#q-newenemy">新しい敵の種類を作るには？</a>）。</li>
       </ul>
     </div>
   </details>
@@ -539,6 +639,10 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:8px 16px}
     <div class="field"><div class="k">このウェーブの後<small>intervalEvent / restSeconds</small></div><div class="v">合間のイベント（いまは全部「歯みがきタイム」）。空にすると、指定した秒数休むだけになります。WAVE 5 の後は使われません。</div></div>
     <div class="field"><div class="k">名前<small>label</small></div><div class="v">空なら「WAVE n」。ふつうは空のままで。</div></div>
   </div>
+  <div class="card form" style="margin-top:12px">
+    <div class="field"><div class="k">障害物の配置<small>ステージごと</small></div><div class="v">壁・壊せるブロック・通りにくい地帯を置く・動かす・消す。敵の通り道が変わるので、湧き方と一緒に考えてください（<a href="#q-obst-new">やり方</a>）。</div></div>
+    <div class="field"><div class="k">敵の強さ・速さ<small>2ステージ共通</small></div><div class="v">体力・移動速度・コアへのダメージなど。変えると両方のステージに効きます（<a href="#q-enemy">やり方</a>）。</div></div>
+  </div>
 
   <details>
     <summary>湧きの行1つの中身<span class="hint">詳しく</span></summary>
@@ -642,9 +746,200 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:8px 16px}
   </details>
 </div></section>
 
-<!-- ───────── 09 試し方 ───────── -->
+<!-- ───────── 09 やりたいこと別ガイド ───────── -->
+<section id="qa"><div class="wrap">
+  <p class="eyebrow">09 · やりたいこと別ガイド</p>
+  <h2>「〇〇したい」から探す</h2>
+  <p class="sub">左の「やりたいこと」のボタンから、ここの各項目へ直接飛べます。まず1行の答えを見て、足りなければ「手順」を開いてください。ツールはすべて <span class="path"><span>Tools</span><em>›</em><span>要塞</span><em>›</em><span>要塞デザイナーを開く</span></span> で開く要塞デザイナーです。</p>
+
+  <p class="qgroup">敵</p>
+
+  <div class="qa" id="q-count">
+    <h3>敵の数の調整はどこ？</h3>
+    <p class="path"><span>敵ウェーブ</span><em>›</em><span>WAVE n</span><em>›</em><span>湧きの行</span><em>›</em><span>数</span></p>
+    <p>行を開いて「数」を変えます。ウェーブ全体をまとめて増減するなら「全部の数を ×倍率」。</p>
+    <details><summary>手順<span class="hint">詳しく</span></summary><div class="body">
+      <ol>
+        <li>変えたいウェーブのページ（WAVE 1〜5）を開く。</li>
+        <li>「湧きの行」の表で行をクリック → 開いた中の <strong>数</strong> を変える。</li>
+        <li>まとめて変えるなら、表の上の「数の倍率」に数字（例: 1.2）を入れて <strong>全部の数を ×1.2</strong>。</li>
+        <li>「かける秒数」で出している行は、数を増やしても出し終わる時間は同じで、密度が上がります。</li>
+        <li>ページ上の「見積もり」（1周の数・1秒に出る数）が変わるので、目安にしてください。</li>
+      </ol>
+    </div></details>
+  </div>
+
+  <div class="qa" id="q-time">
+    <h3>敵が出るタイミングを変えるには？</h3>
+    <p class="path"><span>敵ウェーブ</span><em>›</em><span>WAVE n</span><em>›</em><span>湧きの行</span><em>›</em><span>発生時刻・かける秒数</span></p>
+    <p>「発生時刻」＝GO! から何秒後に1体目を出すか。「かける秒数」＝全部を出し終えるまでの秒数。</p>
+    <details><summary>手順<span class="hint">詳しく</span></summary><div class="body">
+      <ul>
+        <li>行の並び順は関係ありません。出る順番は発生時刻で決まります（見やすくしたいときは「時刻順に並べる」）。</li>
+        <li>途中に場面を差し込みたいときは、行を選んで「ずらす秒数」を入れ <strong>○秒以降の行をずらす</strong>。</li>
+        <li>上のタイムライン（棒グラフ）で、いつ・どこから・何が出るかが一目で見えます。棒をクリックすると、その行が選ばれます。</li>
+        <li>1周を出し終えた後、次の周までの「息つぎ」は、きまりの <strong>くり返すまで（秒）</strong>。</li>
+      </ul>
+    </div></details>
+  </div>
+
+  <div class="qa" id="q-spawn">
+    <h3>敵が出てくる場所を変えるには？</h3>
+    <p class="path"><span>敵ウェーブ</span><em>›</em><span>湧き位置</span></p>
+    <p>行の「湧き位置」を別の場所に変えるか、「湧き位置」ページで場所そのものを動かす・増やします。</p>
+    <details><summary>手順<span class="hint">詳しく</span></summary><div class="body">
+      <ul>
+        <li><strong>使う場所を変える</strong>: 行を開いて「湧き位置」を選び直す。</li>
+        <li><strong>場所そのものを動かす</strong>: 「湧き位置」ページで <strong>ドラッグ編集</strong> を ON → Scene ビューでつかんで動かす。</li>
+        <li><strong>増やす</strong>: 「＋ 追加」で Scene ビューの真ん中に作られるので、動かして名前（ID）を付ける。</li>
+        <li><strong>四方から一斉に</strong>: 行を選んで <strong>全ての湧き位置に足す</strong>。</li>
+        <li>湧き位置はシーンの中の物なので、動かしたら <strong>Ctrl+S でステージのシーンを保存</strong>。</li>
+      </ul>
+    </div></details>
+  </div>
+
+  <div class="qa" id="q-target">
+    <h3>目標撃破数を変えるには？</h3>
+    <p class="path"><span>敵ウェーブ</span><em>›</em><span>WAVE n</span><em>›</em><span>きまり</span><em>›</em><span>目標撃破数</span></p>
+    <p>ウェーブの長さをいちばん大きく変えるつまみです。「全体」ページで5ウェーブの合計と上がり方が見られます。</p>
+  </div>
+
+  <div class="qa" id="q-enemy">
+    <h3>敵の強さ・速さを変えるには？</h3>
+    <p class="path"><span>群衆</span><em>›</em><span>敵の種類</span></p>
+    <p>種類ごとに「体力」「移動速度」「コアに与えるダメージ」などを変えます。<strong>2ステージ共通</strong>です。</p>
+    <details><summary>主な項目<span class="hint">詳しく</span></summary><div class="body">
+      <table class="tbl">
+        <tr><th>項目</th><th>意味</th></tr>
+        <tr><td>体力</td><td>倒すのに必要なダメージ。スピキ 10、ボス 150</td></tr>
+        <tr><td>移動速度</td><td>1秒に進む距離（m）。スピキ 3</td></tr>
+        <tr><td>コアに与えるダメージ</td><td>コアに着いたときに削る量</td></tr>
+        <tr><td>速度のばらつき</td><td>1体ずつの速さの差。大きいほど群れがばらける</td></tr>
+        <tr><td>レーザーが当たる半径</td><td>当てやすさ。0 なら体の大きさと同じ</td></tr>
+        <tr><td>爆弾（倒すと爆発する）</td><td>爆発の半径・巻き込むダメージ・コアに着いたら自爆 など</td></tr>
+      </table>
+      <p>Play 中に変えても、そのまま残ります（その場で手応えを確かめながら調整できます）。</p>
+    </div></details>
+  </div>
+
+  <div class="qa" id="q-newenemy">
+    <h3>新しい敵の種類を作るには？</h3>
+    <p class="path"><span>群衆</span><em>›</em><span>敵の種類</span><em>›</em><span>＋ 新しい敵の種類を作成</span></p>
+    <p>作った種類は、ウェーブの行の「敵の種類」で選べるようになります。</p>
+    <details><summary>注意<span class="hint">詳しく</span></summary><div class="body">
+      <ul>
+        <li>見た目は、絵を入れなければ自動の仮の絵で動きます。本番の絵はあとで差し替えられます。</li>
+        <li>試合ではじめて出たときの <strong>NEW ENEMY カード</strong>には、名前と紹介文が出ます（紹介文が空だとカードは出ません）。</li>
+        <li>増やしたら一声かけてください（絵や演出をこちらで用意します）。</li>
+      </ul>
+    </div></details>
+  </div>
+
+  <p class="qgroup">障害物</p>
+
+  <div class="qa" id="q-obst-new">
+    <h3>障害物を新規で設置するには？</h3>
+    <p class="path"><span>経路・障害物</span><em>›</em><span>障害物・地帯</span><em>›</em><span>＋ ボタン</span></p>
+    <p>「＋ 破壊可能ブロック」「＋ 壊れない壁」「＋ 通行コスト地帯」のどれかを押すと、Scene ビューの真ん中に置かれます。</p>
+    <details><summary>3種類の違いと、好きな場所に置くやり方<span class="hint">詳しく</span></summary><div class="body">
+      <table class="tbl">
+        <tr><th>種類</th><th>どうなる</th></tr>
+        <tr><td>破壊可能ブロック</td><td>レーザーで壊せる。壊れると敵が通れるようになり、時間で元に戻る</td></tr>
+        <tr><td>壊れない壁</td><td>ずっと通れない</td></tr>
+        <tr><td>通行コスト地帯</td><td>通れるが遅くなる。敵はなるべく避けて通る（水たまりなど）</td></tr>
+      </table>
+      <p><strong>クリックした場所にすぐ置く</strong>（壊せる物のみ）: 「破壊可能物」タブの「配置」で <strong>▶ Sceneをクリック/ドラッグして配置</strong> → Scene ビューをクリックで置く、ドラッグで好きな大きさで置く、Esc で終わり。「配置する種類」で木箱・岩・ガラスなどを選べます。</p>
+      <p><strong>必ずステージのシーンだけを開いた状態で置いてください。</strong>置いた物はステージのシーンの <code>Obstacles</code> の中に入ります。置いたら Ctrl+S で保存。</p>
+    </div></details>
+  </div>
+
+  <div class="qa" id="q-obst-move">
+    <h3>既存障害物の移動方法は？</h3>
+    <p class="path"><span>経路・障害物</span><em>›</em><span>障害物・地帯</span><em>›</em><span>選択</span></p>
+    <p>一覧の「選択」を押すか Scene ビューでクリックして選び、移動ツール（<code>W</code> キー）でドラッグ。数字で動かすなら一覧の位置を直接書きかえます。</p>
+    <details><summary>手順<span class="hint">詳しく</span></summary><div class="body">
+      <ol>
+        <li>一覧で動かしたい障害物の <strong>選択</strong> を押す（Scene ビューにその物が映る）。</li>
+        <li>Scene ビューで <code>W</code>（移動ツール）→ 矢印をドラッグ。</li>
+        <li>きっちり合わせたいときは、一覧の位置の数字を直接入れる。</li>
+        <li>動かすと敵の通り道は自動で計算し直されます。<a href="#q-route">コアまで行けるか</a>を確認。</li>
+        <li>Ctrl+S でステージのシーンを保存。間違えたら Ctrl+Z。</li>
+      </ol>
+    </div></details>
+  </div>
+
+  <div class="qa" id="q-obst-size">
+    <h3>障害物の大きさを変えるには？</h3>
+    <p class="path"><span>破壊可能物</span><em>›</em><span>Sceneでの表示</span><em>›</em><span>リサイズハンドル</span></p>
+    <p>壊せる物は、選んで角や辺をドラッグ。壁・地帯は「経路・障害物」の一覧で大きさの数字を書きかえます。</p>
+  </div>
+
+  <div class="qa" id="q-obst-del">
+    <h3>障害物を消すには？</h3>
+    <p class="path"><span>経路・障害物</span><em>›</em><span>障害物・地帯</span><em>›</em><span>削除</span></p>
+    <p>一覧の「削除」を押します（Ctrl+Z で戻せます）。ステージ2の <strong>橋（Bridge）は消さないでください</strong>（WAVE 3 で崩れる仕掛け）。</p>
+  </div>
+
+  <div class="qa" id="q-obst-hp">
+    <h3>壊せる障害物の硬さ・復活時間は？</h3>
+    <p class="path"><span>破壊可能物</span><em>›</em><span>選んだ物の設定</span><em>›</em><span>耐久・再生</span></p>
+    <p>「耐久値」で硬さ、「再生までの時間(秒)」で壊れてから戻るまでの時間を変えます。</p>
+    <details><summary>まとめて変える（プリセット）<span class="hint">詳しく</span></summary><div class="body">
+      <ul>
+        <li>同じ種類の物をまとめて変えたいときは「プリセット」を使います。プリセット＝耐久・見た目・演出の設定一式（位置・大きさは入らない）。</li>
+        <li>1つを調整 → <strong>選択中を新しいプリセットとして保存</strong> → ほかの物を選んで <strong>選択中に適用</strong>。</li>
+        <li>一覧の <strong>同じ種類を選択</strong> で、同じプリセットの物を全部選べます。</li>
+      </ul>
+    </div></details>
+  </div>
+
+  <div class="qa" id="q-smash">
+    <h3>スキル玉（スマッシュボール）を置く・動かすには？</h3>
+    <p class="path"><span>スマッシュボール</span><em>›</em><span>一覧</span><em>›</em><span>スマッシュボール化</span></p>
+    <p>スキル玉は「壊せる障害物にスキル玉の機能を足した物」です。破壊可能物を置いてから、一覧で <strong>スマッシュボール化</strong>。動かし方は障害物と同じです。</p>
+    <details><summary>浮かせる・止める<span class="hint">詳しく</span></summary><div class="body">
+      <ul>
+        <li>既定では画面の中をふわふわ漂います。「浮遊」を OFF にすると置いた場所から動きません。</li>
+        <li>Play 中は「P1が割る」などのボタンで、割れたときの動き（スキルが使えるようになる）を試せます。</li>
+      </ul>
+    </div></details>
+  </div>
+
+  <div class="qa" id="q-route">
+    <h3>敵がコアまで行けるか確かめるには？</h3>
+    <p class="path"><span>経路・障害物</span><em>›</em><span>Sceneでの可視化</span><em>›</em><span>湧き位置→コアの予想ルート</span></p>
+    <p>Scene ビューに、湧き位置ごとの道が線で出ます。<strong>緑＝行ける、赤＝行けない</strong>。赤があったら障害物か湧き位置を動かしてください。</p>
+    <details><summary>ほかの確かめ方<span class="hint">詳しく</span></summary><div class="body">
+      <ul>
+        <li>「敵ウェーブ › WAVE n」の <strong>Scene ビューに、このウェーブの敵のルートを表示</strong>: ゲームの発表で出る赤い線と同じ道。オレンジの線はコアまで行けない道。</li>
+        <li>「進行方向の矢印」「距離ヒートマップ」を ON にすると、敵がどう回り込むかが見えます。</li>
+      </ul>
+    </div></details>
+  </div>
+
+  <p class="qgroup">試す・その他</p>
+
+  <div class="qa" id="q-test">
+    <h3>特定のウェーブだけ試すには？</h3>
+    <p class="path"><span>敵ウェーブ</span><em>›</em><span>WAVE n</span><em>›</em><span>▶ WAVE n の発表から</span></p>
+    <p>Play 中にそのウェーブのページを開いてボタンを押すと、そこから始め直せます。詳しくは「<a href="#test">試し方</a>」。</p>
+  </div>
+
+  <div class="qa" id="q-limit">
+    <h3>制限時間を変えるには？</h3>
+    <p class="path"><span>敵ウェーブ</span><em>›</em><span>全体</span><em>›</em><span>制限時間(秒・0でなし)</span></p>
+    <p>今は 300秒（戦っている間だけ減る）。2ステージで同じにしておくのがおすすめです。</p>
+  </div>
+
+  <div class="qa" id="q-save">
+    <h3>保存・提出はどうする？</h3>
+    <p>ウェーブの数字と敵の種類は自動で保存されます。<strong>湧き位置・障害物を動かしたときだけ Ctrl+S</strong>（ステージのシーンの保存）が必要です。終わったら「<a href="#done">提出前チェック</a>」を見て、コミット → push → 一声かけてください。</p>
+  </div>
+</div></section>
+
+<!-- ───────── 10 試し方 ───────── -->
 <section id="test"><div class="wrap">
-  <p class="eyebrow">09 · 試し方</p>
+  <p class="eyebrow">10 · 試し方</p>
   <h2>ステージのシーンを開いたまま Play</h2>
   <p class="sub">ステージのシーンだけ開いて Play すると、ゲームに必要な物（Game のシーン）が自動で読み込まれ、そのステージで WAVE 1 から始まります。</p>
   <div class="grid g2">
@@ -688,12 +983,12 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:8px 16px}
   </details>
 </div></section>
 
-<!-- ───────── 10 コツ ───────── -->
+<!-- ───────── 11 コツ ───────── -->
 <section id="tips"><div class="wrap">
-  <p class="eyebrow">10 · 設計のコツ</p>
+  <p class="eyebrow">11 · 設計のコツ</p>
   <h2>迷ったときの目安</h2>
   <div class="grid g2">
-    <div class="card"><span class="num">PACE</span><h3>1ウェーブ 30〜60秒</h3><p class="muted">5分で5ウェーブなので、1つあたり平均 1分。前半を短く、後半を長くするとメリハリが出ます。目標撃破数で長さを調整します。</p></div>
+    <div class="card"><span class="num">PACE</span><h3>1ウェーブ 30〜40秒が理想</h3><p class="muted">ふつうに遊んで、1ウェーブがだいたい 30〜40秒で終わるくらいを狙ってください。長さは目標撃破数でいちばん大きく変わります。実際にかかった秒数は Play 中にツールの残り時間で測れます。</p></div>
     <div class="card"><span class="num">TEACH</span><h3>新しい敵は1ウェーブに1種類</h3><p class="muted">はじめて出る敵には紹介カードが出ます。同じウェーブで2種類が初登場すると、紹介が渋滞します。</p></div>
     <div class="card"><span class="num">DIRECTION</span><h3>方向で難しさを作る</h3><p class="muted">数を増やす前に、出てくる方向を増やす・ずらすだけで、ぐっと忙しくなります。4人の画面が違うので「誰かの方向に偏る」と、助け合いが生まれます。</p></div>
     <div class="card"><span class="num">BREATH</span><h3>波に「息つぎ」を作る</h3><p class="muted">ずっと同じ量より、押し寄せる → 少し引く、のくり返しが気持ちいい。発生時刻をずらしたり、くり返しの待ちで作れます。</p></div>
@@ -712,16 +1007,19 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:8px 16px}
   </details>
 </div></section>
 
-<!-- ───────── 11 提出前 ───────── -->
+<!-- ───────── 12 提出前 ───────── -->
 <section id="done"><div class="wrap">
-  <p class="eyebrow">11 · 提出前チェック</p>
+  <p class="eyebrow">12 · 提出前チェック</p>
   <h2>終わったら、これだけ確認</h2>
   <ul class="check">
     <li><label><input type="checkbox"><span>「全体」ページの「気になる所」に ✖（赤）が1つも無い</span></label></li>
     <li><label><input type="checkbox"><span>2つのステージとも、WAVE 1 からクリアまで通しで1回遊んだ</span></label></li>
     <li><label><input type="checkbox"><span>2つのステージの難しさが同じくらいになっている（片方だけ簡単・難しいになっていない）</span></label></li>
     <li><label><input type="checkbox"><span>新しい敵の初登場は、1ウェーブに1種類まで</span></label></li>
-    <li><label><input type="checkbox"><span>湧き位置を動かした場合は、ステージのシーンを保存した</span></label></li>
+    <li><label><input type="checkbox"><span>1ウェーブが、ふつうに遊んで 30〜40秒くらいで終わる</span></label></li>
+    <li><label><input type="checkbox"><span>湧き位置・障害物を動かした場合は、ステージのシーンを保存した</span></label></li>
+    <li><label><input type="checkbox"><span>障害物を変えたあと、「湧き位置→コアの予想ルート」に赤（行けない道）が無い</span></label></li>
+    <li><label><input type="checkbox"><span>自分のブランチにコミットして push し、一声かけた</span></label></li>
     <li><label><input type="checkbox"><span>各ステージの計画の「メモ」に、狙い（どこで何を楽しませたいか）を一言書いた</span></label></li>
   </ul>
   <p class="note">わからないこと・ツールで足りない機能があれば、気軽に相談してください。「この敵の種類がほしい」「この演出がほしい」も歓迎です。</p>
@@ -756,6 +1054,30 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:8px 16px}
     });
   }, {rootMargin:'-45% 0px -50% 0px'});
   document.querySelectorAll('main section[id]').forEach(function(s){ io.observe(s); });
+})();
+
+// 左の「やりたいこと」: 押したら飛んで、飛んだ先を少し光らせる。狭い画面では左下のボタンで開け閉め。
+(function(){
+  var rail = document.getElementById('rail');
+  var toggle = document.getElementById('railToggle');
+  function setOpen(open){
+    rail.classList.toggle('open', open);
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  toggle.addEventListener('click', function(){ setOpen(!rail.classList.contains('open')); });
+  rail.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click', function(){
+      var target = document.querySelector(a.getAttribute('href'));
+      if (target) {
+        target.classList.remove('flash');
+        void target.offsetWidth;
+        target.classList.add('flash');
+        setTimeout(function(){ target.classList.remove('flash'); }, 1600);
+      }
+      setOpen(false);
+    });
+  });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') setOpen(false); });
 })();
 </script>
 </body>
