@@ -16,7 +16,9 @@ namespace MS2026.Fortress.EditorTools
             ("moveSpeed", "移動速度"),
             ("damageToCore", "コアに与えるダメージ"),
             ("navigationProfile", "経路プロファイル"),
-            ("placeholderColor", "仮絵の色")
+            ("placeholderColor", "仮絵の色"),
+            ("introText", "紹介文（NEW ENEMY・30字まで・空=出さない）"),
+            ("introIcon", "紹介カードの絵（空=群衆の絵）")
         };
 
         private static readonly (string path, string label)[] SwarmFields =
