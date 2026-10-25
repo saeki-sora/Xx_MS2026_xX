@@ -338,6 +338,15 @@ namespace MS2026.Fortress.EditorTools
                 return;
             }
 
+            // ほかの湧き位置と同じ名前にすると、その名前の行が全部ひとまとめになって元に戻せなくなるので断る。
+            if (FindAllPoints().Any(p => p != point && p.ResolvedId == newId))
+            {
+                EditorUtility.DisplayDialog("名前を変えられません",
+                    $"「{newId}」という湧き位置はもうあります。ほかの名前にしてください。\n（同じ名前にすると、「{oldId}」を使っている行が「{newId}」の行とまざってしまいます）",
+                    "OK");
+                return;
+            }
+
             Undo.RecordObject(point, "Rename Spawn Point");
             Undo.RecordObject(point.gameObject, "Rename Spawn Point");
             point.spawnPointId = newId;
