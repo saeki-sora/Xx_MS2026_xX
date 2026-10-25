@@ -679,7 +679,7 @@ git push -u origin 名前＿ステージレベルデザイン</pre>
 <section id="howto"><div class="wrap">
   <p class="eyebrow">08 · ツールでの入れ方</p>
   <h2>要塞デザイナーの「敵ウェーブ」タブで入れる</h2>
-  <p class="sub">データはステージごとに1ファイル。ツールで変えると自動で保存されます。</p>
+  <p class="sub">データはステージごとに1ファイル。ツールで変えた数字はすぐ効きますが、<strong>ファイルに書き込まれるのは Ctrl+S（File › Save）を押したとき</strong>です。こまめに Ctrl+S を押してください。</p>
   <div class="steps">
     <div class="st"><div>
       <h3>ステージのシーンを開く</h3>
@@ -700,7 +700,7 @@ git push -u origin 名前＿ステージレベルデザイン</pre>
     </div></div>
     <div class="st"><div>
       <h3>Play して試す → 直す</h3>
-      <p class="muted">次の「試し方」へ。直した数字は Play を止めても残ります。</p>
+      <p class="muted">次の「試し方」へ。ウェーブ・敵の数字は Play 中に直しても、Play を止めたあと残ります（湧き位置・障害物を Play 中に動かした分は戻ります）。最後に Ctrl+S。</p>
     </div></div>
   </div>
 
@@ -829,7 +829,7 @@ git push -u origin 名前＿ステージレベルデザイン</pre>
     <details><summary>注意<span class="hint">詳しく</span></summary><div class="body">
       <ul>
         <li>見た目は、絵を入れなければ自動の仮の絵で動きます。本番の絵はあとで差し替えられます。</li>
-        <li>試合ではじめて出たときの <strong>NEW ENEMY カード</strong>には、名前と紹介文が出ます（紹介文が空だとカードは出ません）。</li>
+        <li>試合ではじめて出たときの <strong>NEW ENEMY カード</strong>には、「表示名」と「紹介文」が出ます。どちらも同じ「敵の種類」の欄で書けます（紹介文が空だとカードは出ません。30文字まで）。</li>
         <li>増やしたら一声かけてください（絵や演出をこちらで用意します）。</li>
       </ul>
     </div></details>
@@ -848,7 +848,7 @@ git push -u origin 名前＿ステージレベルデザイン</pre>
         <tr><td>壊れない壁</td><td>ずっと通れない</td></tr>
         <tr><td>通行コスト地帯</td><td>通れるが遅くなる。敵はなるべく避けて通る（水たまりなど）</td></tr>
       </table>
-      <p><strong>クリックした場所にすぐ置く</strong>（壊せる物のみ）: 「破壊可能物」タブの「配置」で <strong>▶ Sceneをクリック/ドラッグして配置</strong> → Scene ビューをクリックで置く、ドラッグで好きな大きさで置く、Esc で終わり。「配置する種類」で木箱・岩・ガラスなどを選べます。</p>
+      <p><strong>クリックした場所にすぐ置く</strong>（壊せる物のみ）: 「破壊可能物」タブの「配置」で <strong>▶ Sceneをクリック/ドラッグして配置</strong> → Scene ビューをクリックで置く、ドラッグで好きな大きさで置く、Esc で終わり。最初に「プリセット」の <strong>サンプルを作る（木箱・岩・ガラス）</strong> を1回押しておくと、「配置する種類」で木箱・岩・ガラスを選べるようになります（押さなければ、ふつうのブロック）。</p>
       <p><strong>必ずステージのシーンだけを開いた状態で置いてください。</strong>置いた物はステージのシーンの <code>Obstacles</code> の中に入ります。置いたら Ctrl+S で保存。</p>
     </div></details>
   </div>
@@ -923,6 +923,7 @@ git push -u origin 名前＿ステージレベルデザイン</pre>
     <h3>特定のウェーブだけ試すには？</h3>
     <p class="path"><span>敵ウェーブ</span><em>›</em><span>WAVE n</span><em>›</em><span>▶ WAVE n の発表から</span></p>
     <p>Play 中にそのウェーブのページを開いてボタンを押すと、そこから始め直せます。詳しくは「<a href="#test">試し方</a>」。</p>
+    <p class="small">ステージ2で WAVE 3 以降を試すと橋が崩れます。そのあと WAVE 1・2 に戻しても橋は元に戻らないので、WAVE 1・2 を試すときは Play し直してください。</p>
   </div>
 
   <div class="qa" id="q-limit">
@@ -933,7 +934,7 @@ git push -u origin 名前＿ステージレベルデザイン</pre>
 
   <div class="qa" id="q-save">
     <h3>保存・提出はどうする？</h3>
-    <p>ウェーブの数字と敵の種類は自動で保存されます。<strong>湧き位置・障害物を動かしたときだけ Ctrl+S</strong>（ステージのシーンの保存）が必要です。終わったら「<a href="#done">提出前チェック</a>」を見て、コミット → push → 一声かけてください。</p>
+    <p>ツールで変えた数字（ウェーブ・敵の種類）も、湧き位置・障害物も、<strong>Ctrl+S（File › Save）を押したときにファイルへ書き込まれます</strong>。押さずにコミットすると、変更が入りません。終わったら「<a href="#done">提出前チェック</a>」を見て、コミット → push → 一声かけてください。</p>
   </div>
 </div></section>
 
@@ -1017,7 +1018,7 @@ git push -u origin 名前＿ステージレベルデザイン</pre>
     <li><label><input type="checkbox"><span>2つのステージの難しさが同じくらいになっている（片方だけ簡単・難しいになっていない）</span></label></li>
     <li><label><input type="checkbox"><span>新しい敵の初登場は、1ウェーブに1種類まで</span></label></li>
     <li><label><input type="checkbox"><span>1ウェーブが、ふつうに遊んで 30〜40秒くらいで終わる</span></label></li>
-    <li><label><input type="checkbox"><span>湧き位置・障害物を動かした場合は、ステージのシーンを保存した</span></label></li>
+    <li><label><input type="checkbox"><span>最後に Ctrl+S（File › Save）を押した（ウェーブの数字・敵の種類・湧き位置・障害物が全部ファイルに書き込まれる）</span></label></li>
     <li><label><input type="checkbox"><span>障害物を変えたあと、「湧き位置→コアの予想ルート」に赤（行けない道）が無い</span></label></li>
     <li><label><input type="checkbox"><span>自分のブランチにコミットして push し、一声かけた</span></label></li>
     <li><label><input type="checkbox"><span>各ステージの計画の「メモ」に、狙い（どこで何を楽しませたいか）を一言書いた</span></label></li>
