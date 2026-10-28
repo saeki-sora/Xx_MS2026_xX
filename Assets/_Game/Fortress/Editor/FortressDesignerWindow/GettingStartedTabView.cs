@@ -86,6 +86,12 @@ namespace MS2026.Fortress.EditorTools
                 "プログラムなしで整えられます。",
                 "UIスタジオを開く", () => EditorApplication.ExecuteMenuItem("Tools/UIスタジオ/UIスタジオを開く"));
 
+            AddStep(
+                "12. 歯車・動く障害物を作る",
+                "「仕掛け」タブで、決まった時刻に回る歯車（腕の壁で通り道を開け閉めする）と、行き来する障害物を作れます。" +
+                "時間割をクリックするとその時刻の形と敵の予想ルートが Scene に出て、「調べる」でコアへ行けない時間が無いか点検できます。",
+                "仕掛けタブを開く", window.SwitchToGimmicksTab);
+
             var note = new Label(
                 "ヒント: 太さ・熱の増加量・オーバーヒートしきい値などは全て ScriptableObject (Laser Tuning Config) に" +
                 "まとまっているので、コードを触らずに何度でも調整・比較できます。");
