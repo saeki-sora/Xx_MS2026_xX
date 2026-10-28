@@ -15,6 +15,36 @@ namespace MS2026.Stage.Tests.EditMode
         }
 
         [Test]
+        public void SnapGroupLift_SnapsTheLowestObject()
+        {
+            // 皿（0.12m 浮き）と、その上の石けん（0.13m 浮き）を一緒に 0.1m 下げる → 皿が床に付く量だけ下げる
+            Assert.AreEqual(-0.12f, StagePlaceMath.SnapGroupLift(0.12f, -0.1f, snap: false), 1e-5f, "吸着なしでも、いちばん下が床の近くなら床にくっつける");
+            Assert.AreEqual(-0.07f, StagePlaceMath.SnapGroupLift(0.12f, -0.06f, snap: true), 1e-5f, "いちばん下が 0.05 刻みになる量");
+            Assert.AreEqual(0.2f, StagePlaceMath.SnapGroupLift(0.12f, 0.2f, snap: false), 1e-5f, "床から遠ければそのまま");
+        }
+
+        [Test]
+        public void ClosestLocalAxis_PicksTheAxisPointingThatWay()
+        {
+            Assert.AreEqual(0, StagePlaceMath.ClosestLocalAxis(Quaternion.identity, Vector3.right));
+            // Maya の向きを床に合わせた物（X まわりに −90°）: 自分の Y がワールドの高さ（Z）の向き
+            Assert.AreEqual(1, StagePlaceMath.ClosestLocalAxis(Quaternion.Euler(-90f, 0f, 0f), Vector3.forward));
+            // 床の上で 30° 回した物の幅（ワールド X）は、まだ自分の X に近い
+            Assert.AreEqual(0, StagePlaceMath.ClosestLocalAxis(Quaternion.Euler(0f, 0f, 30f), Vector3.right));
+            // 60° 回すと、自分の Y の方が近い
+            Assert.AreEqual(1, StagePlaceMath.ClosestLocalAxis(Quaternion.Euler(0f, 0f, 60f), Vector3.right));
+        }
+
+        [Test]
+        public void GroupDropDistance_FirstObjectToTouchTheFloorRestsOnIt()
+        {
+            // 見える床は z=0.33（上は −Z）。皿の底 z=−0.2、その上の石けんの底 z=−0.3 → 皿が床に着くまで 0.53 下げる
+            Assert.AreEqual(0.53f, StagePlaceMath.GroupDropDistance(new[] { 0.33f, 0.33f }, new[] { -0.2f, -0.3f }), 1e-5f);
+            Assert.AreEqual(-0.1f, StagePlaceMath.GroupDropDistance(new[] { 0f }, new[] { 0.1f }), 1e-5f, "床に沈んでいれば持ち上げる");
+            Assert.AreEqual(0f, StagePlaceMath.GroupDropDistance(new float[0], new float[0]), 1e-6f, "物が無ければ動かさない");
+        }
+
+        [Test]
         public void EdgeSnap_TouchesNeighbourEdge()
         {
             var moving = Rect.MinMaxRect(2.1f, 0f, 3.1f, 1f);

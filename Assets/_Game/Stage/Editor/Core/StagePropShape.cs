@@ -17,6 +17,13 @@ namespace MS2026.Stage.EditorTools
         private static readonly Dictionary<Mesh, Vector3[]> SampledVertices = new Dictionary<Mesh, Vector3[]>();
         private static readonly Dictionary<Mesh, Vector3[]> FullVertices = new Dictionary<Mesh, Vector3[]>();
         private static readonly List<Vector3> Scratch = new List<Vector3>(4096);
+
+        // 真下の床を探す5か所（見た目の箱の真ん中と、四隅の少し内側。箱の半分の大きさに対する割合）。
+        private static readonly Vector2[] FloorProbe =
+        {
+            Vector2.zero, new Vector2(-0.7f, -0.7f), new Vector2(0.7f, -0.7f), new Vector2(-0.7f, 0.7f), new Vector2(0.7f, 0.7f)
+        };
+
         private static MethodInfo _intersectRayMesh;
 
         /// <summary>視線に最初に当たる背景オブジェクトと、その当たった点。</summary>
@@ -144,6 +151,34 @@ namespace MS2026.Stage.EditorTools
             }
 
             return any;
+        }
+
+        /// <summary>
+        /// prop の真下にある floors の表面のワールド z（上は −Z なので、当たった中でいちばん上 = z がいちばん小さい所）。
+        /// 見た目のてっぺんの少し上から、箱の真ん中と四隅の少し内側の5か所で真下へ視線を当てる
+        /// （床の端や穴にかかっても沈まないように、いちばん高い面を使う。物より上にある床は数えない）。どこにも当たらなければ false。
+        /// </summary>
+        public static bool TryFloorBelow(StageProp prop, IReadOnlyList<StageProp> floors, out float z)
+        {
+            z = float.PositiveInfinity;
+            if (floors.Count == 0)
+            {
+                return false;
+            }
+
+            var bounds = prop.VisualBounds;
+            var startZ = bounds.min.z - 0.01f;
+            for (var i = 0; i < FloorProbe.Length; i++)
+            {
+                var x = bounds.center.x + bounds.extents.x * FloorProbe[i].x;
+                var y = bounds.center.y + bounds.extents.y * FloorProbe[i].y;
+                if (Pick(new Ray(new Vector3(x, y, startZ), Vector3.forward), floors, out _, out var hit))
+                {
+                    z = Mathf.Min(z, hit.z);
+                }
+            }
+
+            return !float.IsPositiveInfinity(z);
         }
 
         /// <summary>from から向き dir（長さ1）へ、見た目がどこまで伸びているか（m。頂点を間引いて測る）。</summary>

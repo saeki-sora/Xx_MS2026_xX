@@ -72,6 +72,13 @@ namespace MS2026.Stage.EditorTools
             set => EditorPrefs.SetBool(Prefix + "ParallaxAll", value);
         }
 
+        /// <summary>配置ページの幅・奥行・高さを変えたとき、形を保って全体を大きく／小さくする（false ならその向きだけ伸び縮みする）。</summary>
+        public static bool KeepShape
+        {
+            get => EditorPrefs.GetBool(Prefix + "KeepShape", true);
+            set => EditorPrefs.SetBool(Prefix + "KeepShape", value);
+        }
+
         /// <summary>背景を選んだら、自動でステージ配置ツールに切り替える。</summary>
         public static bool AutoTool
         {

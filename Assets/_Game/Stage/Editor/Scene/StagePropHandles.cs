@@ -24,6 +24,7 @@ namespace MS2026.Stage.EditorTools
         private float _scaleApplied = 1f;
         private float _liftStartMouseY;
         private float _liftMetersPerPixel;
+        private float _startLowestLift;
         private int _undoGroup;
         private GUIStyle _label;
         private GUIStyle _pill;
@@ -78,7 +79,7 @@ namespace MS2026.Stage.EditorTools
             _label ??= new GUIStyle(EditorStyles.miniBoldLabel) { alignment = TextAnchor.MiddleCenter, normal = { textColor = Color.white } };
             RotateRing(selection, _primary, _pivot, _radius);
             ScaleKnob(selection, _pivot, _knob);
-            LiftPill(selection, _primary, _bounds);
+            LiftPill(selection, _bounds);
             if (_hasKnob || _tilt.IsActive)
             {
                 TiltKnob(selection);
@@ -267,12 +268,13 @@ namespace MS2026.Stage.EditorTools
             }
         }
 
-        private void LiftPill(IReadOnlyList<StageProp> selection, StageProp primary, Bounds bounds)
+        // 複数選んでいるときは、全体のいちばん下の高さを出し、それを基準に吸着させる（全員を同じだけ上下する）。
+        private void LiftPill(IReadOnlyList<StageProp> selection, Bounds bounds)
         {
             var e = Event.current;
             var id = GUIUtility.GetControlID(LiftHash, FocusType.Passive);
             var top = new Vector3(bounds.center.x, bounds.center.y, bounds.min.z);
-            var lift = StagePropTransformOps.Lift(primary);
+            var lift = StagePropTransformOps.LowestLift(selection);
             var rect = _pillRect;
 
             switch (e.GetTypeForControl(id))
@@ -290,6 +292,8 @@ namespace MS2026.Stage.EditorTools
                             _startLifts.Add(prop != null ? StagePropTransformOps.Lift(prop) : 0f);
                         }
 
+                        _startLowestLift = lift;
+
                         BeginGesture("高さを変える");
                         e.Use();
                     }
@@ -299,6 +303,8 @@ namespace MS2026.Stage.EditorTools
                     if (GUIUtility.hotControl == id)
                     {
                         var delta = (_liftStartMouseY - e.mousePosition.y) * _liftMetersPerPixel * (e.shift ? 0.2f : 1f);
+                        // 吸着は全体のいちばん下で決め（吸着を切っていても床にはくっつける）、全員に同じ量を足す。
+                        delta = StagePlaceMath.SnapGroupLift(_startLowestLift, delta, StagePlaceSettings.SnapActive(e));
                         for (var i = 0; i < selection.Count && i < _startLifts.Count; i++)
                         {
                             if (selection[i] == null)
@@ -306,17 +312,7 @@ namespace MS2026.Stage.EditorTools
                                 continue;
                             }
 
-                            var target = _startLifts[i] + delta;
-                            if (StagePlaceSettings.SnapActive(e))
-                            {
-                                target = StagePlaceMath.SnapValue(target, 0.05f);
-                            }
-                            else if (Mathf.Abs(target) < 0.03f)
-                            {
-                                target = 0f; // 吸着を切っていても床にはくっつける
-                            }
-
-                            StagePropTransformOps.SetLift(selection[i], target);
+                            StagePropTransformOps.SetLift(selection[i], _startLifts[i] + delta);
                         }
 
                         StageGameCamera.MarkDirty();

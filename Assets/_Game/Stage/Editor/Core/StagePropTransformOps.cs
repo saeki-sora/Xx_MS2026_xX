@@ -32,6 +32,24 @@ namespace MS2026.Stage.EditorTools
             return prop.transform.position.z - bottom;
         }
 
+        /// <summary>まとめて選んだ物の床からの高さ = いちばん低い物の高さ（物が無ければ 0）。</summary>
+        public static float LowestLift(IReadOnlyList<StageProp> props)
+        {
+            var lowest = float.PositiveInfinity;
+            if (props != null)
+            {
+                foreach (var prop in props)
+                {
+                    if (prop != null)
+                    {
+                        lowest = Mathf.Min(lowest, Lift(prop));
+                    }
+                }
+            }
+
+            return float.IsPositiveInfinity(lowest) ? 0f : lowest;
+        }
+
         /// <summary>見た目の大きさ（幅・奥行き・高さ、メートル）。</summary>
         public static Vector3 Size(StageProp prop) => VisualBounds(prop).size;
 
@@ -135,6 +153,99 @@ namespace MS2026.Stage.EditorTools
             StageFootprintRefresher.Request(prop, factor);
         }
 
+        /// <summary>
+        /// その物自身の向きで測った見た目の大きさ（m。x=幅、y=奥行、z=高さ）。斜めに置いても、その物自身の幅・奥行・高さになる
+        /// （<see cref="Size"/> は床の X・Y・Z にそろえた箱の大きさなので、斜めの物は大きめに出る）。1方向だけ伸ばすときに使う。
+        /// </summary>
+        public static Vector3 OwnSize(StageProp prop)
+        {
+            var model = Model(prop);
+            var toModel = model.worldToLocalMatrix;
+            var any = false;
+            var bounds = new Bounds();
+            foreach (var renderer in model.GetComponentsInChildren<Renderer>(false))
+            {
+                if (!renderer.enabled || renderer is ParticleSystemRenderer)
+                {
+                    continue;
+                }
+
+                // メッシュは自分の中の箱（ぴったり）、骨で曲がるモデルなどは見た目の箱で代用する。
+                var hasMesh = renderer.TryGetComponent<MeshFilter>(out var filter) && filter.sharedMesh != null;
+                var local = hasMesh ? filter.sharedMesh.bounds : renderer.bounds;
+                var matrix = hasMesh ? toModel * filter.transform.localToWorldMatrix : toModel;
+                for (var i = 0; i < 8; i++)
+                {
+                    var corner = new Vector3(
+                        (i & 1) == 0 ? local.min.x : local.max.x,
+                        (i & 2) == 0 ? local.min.y : local.max.y,
+                        (i & 4) == 0 ? local.min.z : local.max.z);
+                    var point = matrix.MultiplyPoint3x4(corner);
+                    if (!any)
+                    {
+                        bounds = new Bounds(point, Vector3.zero);
+                        any = true;
+                    }
+                    else
+                    {
+                        bounds.Encapsulate(point);
+                    }
+                }
+            }
+
+            if (!any)
+            {
+                return Vector3.zero;
+            }
+
+            var lossy = model.lossyScale;
+            var size = Vector3.zero;
+            for (var k = 0; k < 3; k++)
+            {
+                var axis = OwnAxis(prop, k);
+                size[k] = bounds.size[axis] * Mathf.Abs(lossy[axis]);
+            }
+
+            return size;
+        }
+
+        /// <summary>
+        /// 幅・奥行・高さ（sizeAxis 0/1/2）が、モデル自身のどの軸（0=X、1=Y、2=Z）にあたるか。
+        /// 幅＝根元の左右、奥行＝根元の前後、高さ＝床から上 の向きにいちばん近い軸。
+        /// </summary>
+        public static int OwnAxis(StageProp prop, int sizeAxis)
+        {
+            var root = prop.transform;
+            var direction = sizeAxis == 0 ? root.right : sizeAxis == 1 ? root.up : Vector3.forward;
+            return StagePlaceMath.ClosestLocalAxis(Model(prop).rotation, direction);
+        }
+
+        /// <summary>
+        /// モデルを1方向だけ factor 倍に伸び縮みさせる（形は変わる）。sizeAxis: 0=幅、1=奥行、2=高さ（<see cref="OwnSize"/> の向き）。
+        /// その物自身の軸の向きに伸ばすので、斜めに置いた物・傾けた物もねじれず、ほかの2つの大きさは変わらない。
+        /// 床の上は根元を中心に伸び、床からの高さ（底の位置）は伸ばす前のまま（傾けた物も底が浮いたり沈んだりしない）。
+        /// </summary>
+        public static void StretchModel(StageProp prop, int sizeAxis, float factor)
+        {
+            factor = Mathf.Max(MinScaleFactor, factor);
+            var model = Model(prop);
+            var axis = OwnAxis(prop, sizeAxis);
+            var local = Vector3.zero;
+            local[axis] = 1f;
+            var direction = model.rotation * local;
+            var lift = Lift(prop);
+
+            Undo.RecordObject(model, "大きさを変える");
+            var pivot = prop.transform.position;
+            var offset = model.position - pivot;
+            model.position = pivot + offset + direction * ((factor - 1f) * Vector3.Dot(offset, direction));
+            var scale = model.localScale;
+            scale[axis] *= factor;
+            model.localScale = scale;
+            SetLift(prop, lift);
+            StageFootprintRefresher.RequestStretch(prop, factor, direction);
+        }
+
         /// <summary>モデルを上下に動かして、床からの高さを lift にする。</summary>
         public static void SetLift(StageProp prop, float lift)
         {
@@ -194,6 +305,48 @@ namespace MS2026.Stage.EditorTools
 
             Pending.Add(prop);
             _due = EditorApplication.timeSinceStartup + Delay;
+        }
+
+        /// <summary>
+        /// 1方向だけ伸ばしたとき用。手で直した形は、伸ばした向き（床の上に映した向き）にだけ factor 倍する
+        /// （ほぼ真上・真下に伸ばしたときは床の上の形は変えない）。それ以外は <see cref="Request"/> と同じ。
+        /// </summary>
+        public static void RequestStretch(StageProp prop, float factor, Vector3 worldDirection)
+        {
+            if (prop == null || prop.footprint == null)
+            {
+                return;
+            }
+
+            if (!prop.footprint.manuallyEdited)
+            {
+                Request(prop, 1f);
+                return;
+            }
+
+            var collider = prop.footprint.Collider;
+            var onFloor = (Vector2)collider.transform.InverseTransformDirection(worldDirection);
+            if (Mathf.Approximately(factor, 1f) || onFloor.magnitude < 0.7f)
+            {
+                return;
+            }
+
+            var u = onFloor.normalized;
+            var pivot = (Vector2)collider.transform.InverseTransformPoint(prop.transform.position);
+            Undo.RecordObject(collider, "大きさを変える");
+            for (var p = 0; p < collider.pathCount; p++)
+            {
+                var path = collider.GetPath(p);
+                for (var i = 0; i < path.Length; i++)
+                {
+                    var d = path[i] - pivot;
+                    path[i] = pivot + d + u * ((factor - 1f) * Vector2.Dot(d, u));
+                }
+
+                collider.SetPath(p, path);
+            }
+
+            NavigationObstacle.NotifyChanged();
         }
 
         /// <summary>待っている作り直しをすぐ行う（ドラッグを離したとき）。</summary>

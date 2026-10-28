@@ -27,6 +27,64 @@ namespace MS2026.Stage.EditorTools
             new Vector2(SnapValue(point.x, step), SnapValue(point.y, step));
 
         /// <summary>
+        /// 高さの取っ手を引いた量 delta を、まとめて動かす物のいちばん低い物（引き始めの高さ lowestStart）を基準に吸着させた量にする。
+        /// snap なら step 刻み、そうでなくても床（0）から floorStick 以内なら床にくっつける。
+        /// 全員にこの量を足すので、物どうしの高さの差（皿に乗せた石けんなど）は変わらない。
+        /// </summary>
+        public static float SnapGroupLift(float lowestStart, float delta, bool snap, float step = 0.05f, float floorStick = 0.03f)
+        {
+            var target = lowestStart + delta;
+            if (snap)
+            {
+                target = SnapValue(target, step);
+            }
+            else if (Mathf.Abs(target) < floorStick)
+            {
+                target = 0f;
+            }
+
+            return target - lowestStart;
+        }
+
+        /// <summary>
+        /// rotation の向きの物の、自分の軸（0=X、1=Y、2=Z）のうち、ワールドの向き worldDirection にいちばん近い（平行に近い）軸。
+        /// 1方向だけ伸ばすとき、どの軸の大きさを変えるかを決めるのに使う。
+        /// </summary>
+        public static int ClosestLocalAxis(Quaternion rotation, Vector3 worldDirection)
+        {
+            var best = 0;
+            var bestDot = -1f;
+            for (var axis = 0; axis < 3; axis++)
+            {
+                var local = Vector3.zero;
+                local[axis] = 1f;
+                var dot = Mathf.Abs(Vector3.Dot(rotation * local, worldDirection));
+                if (dot > bestDot + 1e-5f)
+                {
+                    best = axis;
+                    bestDot = dot;
+                }
+            }
+
+            return best;
+        }
+
+        /// <summary>
+        /// まとめて床に下ろすときに下へ動かす量（上は −Z なので + で下がる）。物ごとの「真下の床の z − 見た目のいちばん下の z」の最小:
+        /// いちばん先に床に着く物が床にのり、どれも床に沈まない（沈んでいる物があれば、その分持ち上げる）。物が無ければ 0。
+        /// </summary>
+        public static float GroupDropDistance(IReadOnlyList<float> floorZ, IReadOnlyList<float> bottomZ)
+        {
+            var drop = float.PositiveInfinity;
+            for (var i = 0; i < floorZ.Count && i < bottomZ.Count; i++)
+            {
+                drop = Mathf.Min(drop, floorZ[i] - bottomZ[i]);
+            }
+
+            return float.IsPositiveInfinity(drop) ? 0f : drop;
+        }
+
+        /// <summary>
         /// 動かしている物の範囲（moving）を、他の物の範囲の端にそろえるためのずらし量。
         /// 「くっつける（自分の左端＝相手の右端）」と「そろえる（左端どうし）」の両方を候補にし、threshold 以内で一番近いものを選ぶ。
         /// </summary>

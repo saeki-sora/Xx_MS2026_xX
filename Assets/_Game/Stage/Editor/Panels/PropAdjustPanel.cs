@@ -106,10 +106,17 @@ namespace MS2026.Stage.EditorTools
             _tiltNote = Hint("通れない範囲を手で直しているので、傾けても形は変わりません（オブジェクトページの「作り直す」で今の形に合わせられます）。");
             _body.Add(_tiltNote);
 
-            _body.Add(Group("大きさ（m）", "見た目の幅・奥行き・高さ。どれを変えても形はそのまま全体が大きく／小さくなります（足元が中心）。ゲーム画面では Shift+ホイール、- / + キー。"));
-            _width = Field("幅", "見た目の横幅（m）。変えると全体がその幅になるように大きさが変わります。", (o, n) => ScaleTo(o, n));
-            _depth = Field("奥行", "見た目の奥行き（m）。変えると全体がその奥行きになるように大きさが変わります。", (o, n) => ScaleTo(o, n));
-            _height = Field("高さ", "見た目の高さ（m）。変えると全体がその高さになるように大きさが変わります。", (o, n) => ScaleTo(o, n));
+            _body.Add(Group("大きさ（m）", "見た目の幅・奥行き・高さ（足元が中心）。「形を保つ」がオンなら、どれを変えても形はそのまま全体が大きく／小さくなります。オフなら変えた向きだけ伸び縮みします。ゲーム画面では Shift+ホイール、- / + キー（こちらはいつも全体）。"));
+            var keepShape = new Toggle("形を保つ")
+            {
+                value = StagePlaceSettings.KeepShape,
+                tooltip = "オン: 幅・奥行・高さのどれを変えても、形を保って全体が大きく／小さくなります（数字は床の縦横にそろえた大きさ）。\nオフ: 変えた1つだけ伸び縮みします。数字はその物自身の向きで測った幅・奥行・高さになり、斜めに置いた物もその物の向きに伸びます。高さを変えても底は動きません。テクスチャもその向きに伸びて見えます。"
+            };
+            keepShape.RegisterValueChangedCallback(e => StagePlaceSettings.KeepShape = e.newValue);
+            _body.Add(keepShape);
+            _width = Field("幅", "見た目の横幅（m）。「形を保つ」がオンなら全体が、オフなら横だけが、この幅になるように変わります。", (o, n) => ResizeTo(0, o, n));
+            _depth = Field("奥行", "見た目の奥行き（m）。「形を保つ」がオンなら全体が、オフなら奥行きだけが、この奥行きになるように変わります。", (o, n) => ResizeTo(1, o, n));
+            _height = Field("高さ", "見た目の高さ（m）。「形を保つ」がオンなら全体が、オフなら高さだけが、この高さになるように変わります。", (o, n) => ResizeTo(2, o, n));
             _body.Add(_width);
             _body.Add(_depth);
             _body.Add(_height);
@@ -120,11 +127,11 @@ namespace MS2026.Stage.EditorTools
                 Small("+10%", "1割大きくします。", () => StageSelectionAdjust.Scale(_context.SelectedProps, 1.1f))));
 
             _body.Add(Group("床からの高さ（m）", "見た目のいちばん下が床からどれだけ浮いているか（マイナスは床に沈んでいる）。ゲーム画面では Alt+ホイール、PageUp / PageDown。"));
-            _lift = Field("床から", "床からの高さ（m）。名前を左右にドラッグで上げ下げできます。", (o, n) => StageSelectionAdjust.Lift(_context.SelectedProps, n - o));
+            _lift = Field("床から", "床からの高さ（m）。複数選んでいるときは、いちばん低い物の高さ（全員を同じだけ上げ下げします）。名前を左右にドラッグで上げ下げできます。", (o, n) => StageSelectionAdjust.Lift(_context.SelectedProps, n - o));
             _body.Add(_lift);
             _body.Add(StudioUi.Row(
                 Small("▼5cm", "5cm 下げます。", () => StageSelectionAdjust.Lift(_context.SelectedProps, -0.05f)),
-                Small("床に下ろす", "見た目のいちばん下を床（高さ0）にそろえます。", () => StageSelectionAdjust.SetLift(_context.SelectedProps, 0f)),
+                Small("床に下ろす", "真下にある「床」役の物の表面に、見た目のいちばん下をのせます（真下に床役が無ければ高さ0）。複数選んでいるときは全員を同じだけ動かし、いちばん先に床に着く物がのります（皿に乗せた物などは乗ったまま）。", () => StageSelectionAdjust.DropToFloor(_context.SelectedProps)),
                 Small("▲5cm", "5cm 上げます。", () => StageSelectionAdjust.Lift(_context.SelectedProps, 0.05f))));
             _underNote = Hint("床から高いので、敵は下をくぐれます。");
             _body.Add(_underNote);
@@ -173,7 +180,8 @@ namespace MS2026.Stage.EditorTools
             _role.style.color = StageRoleStyle.Color(prop.role);
 
             var p = prop.transform.position;
-            var size = StagePropTransformOps.Size(prop);
+            // 形を保たないときは、その物自身の向きで測る（斜めの物でも、変えた1つだけが変わって見える）。
+            var size = StagePlaceSettings.KeepShape ? StagePropTransformOps.Size(prop) : StagePropTransformOps.OwnSize(prop);
             var lift = StagePropTransformOps.Lift(prop);
             Show(_x, p.x);
             Show(_y, p.y);
@@ -185,7 +193,7 @@ namespace MS2026.Stage.EditorTools
             Show(_width, size.x);
             Show(_depth, size.y);
             Show(_height, size.z);
-            Show(_lift, lift);
+            Show(_lift, count > 1 ? StagePropTransformOps.LowestLift(_context.SelectedProps) : lift);
             _underNote.style.display = prop.footprint != null && lift > prop.footprint.settings.blockHeight ? DisplayStyle.Flex : DisplayStyle.None;
 
             _arrange.style.display = count >= 2 ? DisplayStyle.Flex : DisplayStyle.None;
@@ -249,11 +257,21 @@ namespace MS2026.Stage.EditorTools
             }
         }
 
-        private void ScaleTo(float oldValue, float newValue)
+        // sizeAxis: 0=幅、1=奥行、2=高さ。
+        private void ResizeTo(int sizeAxis, float oldValue, float newValue)
         {
-            if (oldValue > 1e-3f && newValue > 1e-3f)
+            if (oldValue <= 1e-3f || newValue <= 1e-3f)
+            {
+                return;
+            }
+
+            if (StagePlaceSettings.KeepShape)
             {
                 StageSelectionAdjust.Scale(_context.SelectedProps, newValue / oldValue);
+            }
+            else
+            {
+                StageSelectionAdjust.StretchTo(_context.SelectedProps, _context.Primary, sizeAxis, newValue);
             }
         }
 

@@ -634,6 +634,9 @@ MonoBehaviour:
   ambientParticles:
   - {fileID: 1398337916}
   - {fileID: 875962898}
+  characters: {fileID: 0}
+  characterLeft: {fileID: 0}
+  characterRight: {fileID: 0}
   fader: {fileID: 635984945}
   cameraMotion: {fileID: 1232967108}
   fadeInSeconds: 0.8
@@ -1376,8 +1379,8 @@ Transform:
   m_GameObject: {fileID: 833883007}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.7826087, y: 0.7826087, z: 1}
+  m_LocalPosition: {x: 0, y: -0.47, z: 0}
+  m_LocalScale: {x: 0.7428571, y: 0.7428571, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 436095639}
@@ -1411,7 +1414,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MS2026.Title.Runtime::MS2026.Title.TitleSpriteFit
   mode: 1
-  size: 3.6
+  size: 5.2
   coverOverscan: 1.12
   targetCamera: {fileID: 0}
 --- !u!212 &833883011
