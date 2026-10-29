@@ -151,7 +151,7 @@ namespace MS2026.UI.Game
                 {
                     // 参加側は NGO が自動でゲームのシーンを読み込む。読み終わるまで幕で隠す（キャラクター選択からなら、その幕）。
                     Func<bool> loaded = () => IsGameLoaded || !IsOnline || Roster.phase == LobbyPhase.Waiting;
-                    if (before == LobbyPhase.CharacterSelect || before == LobbyPhase.StageRoulette)
+                    if (before == LobbyPhase.CharacterSelect || before == LobbyPhase.StageRoulette || before == LobbyPhase.Practice)
                     {
                         PlayGameStartCover(null, loaded);
                     }
@@ -176,6 +176,7 @@ namespace MS2026.UI.Game
 
             OnCharacterSelectPhase(before, after);
             OnStageRoulettePhase(before, after);
+            OnPracticePhase(before, after);
             RaiseChanged();
         }
 

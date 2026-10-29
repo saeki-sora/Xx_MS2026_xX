@@ -36,9 +36,10 @@ namespace MS2026.UI.Game
         /// </summary>
         public static CoverTry GameStartCurtain;
 
-        /// <summary>キャラクター選択からゲームへ進むときの幕を出す（差し替えが無ければ gameTransition）。</summary>
+        /// <summary>キャラクター選択からゲームへ進むときの幕を出す（差し替えが無ければ gameTransition）。覆っている間は歯みがきタイムのヒントを出す。</summary>
         private void PlayGameStartCover(Action onCovered, Func<bool> isReady)
         {
+            AddLoadingTip(ref onCovered, ref isReady);
             if (GameStartCurtain != null && GameStartCurtain(onCovered, isReady))
             {
                 return;
@@ -132,8 +133,25 @@ namespace MS2026.UI.Game
             ProceedAfterRoulette();
         }
 
-        /// <summary>ホスト: ルーレットの後（または見せないとき）、幕で隠して選択のシーンを外し、ステージとゲームのシーンを読み込む。</summary>
+        /// <summary>ホスト: ルーレットの後（または見せないとき）、あそびかたの練習へ（使わない設定なら、すぐゲームへ）。</summary>
         private void ProceedAfterRoulette()
+        {
+            if (!IsHost || !IsCharacterSelectLoaded)
+            {
+                return;
+            }
+
+            if (TryBeginPractice())
+            {
+                // 練習が終わったら ProceedToLoadGame が呼ばれる（GameSession.Practice.cs）。
+                return;
+            }
+
+            ProceedToLoadGame();
+        }
+
+        /// <summary>ホスト: 幕で隠して選択のシーンを外し、ステージとゲームのシーンを読み込む。</summary>
+        private void ProceedToLoadGame()
         {
             if (!IsHost || !IsCharacterSelectLoaded)
             {
@@ -181,6 +199,7 @@ namespace MS2026.UI.Game
             // 先に「待っている」に戻す（選択のシーンを外したときに「ゲームへ進む途中」と見なされないように）。
             ChangePhase(LobbyPhase.Waiting);
             CancelStageRoulette();
+            CancelPractice();
             if (!IsGameLoaded)
             {
                 // ステージだけ読み込めていたら外す。

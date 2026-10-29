@@ -248,6 +248,7 @@ namespace MS2026.UI.Game
             manager.OnClientConnectedCallback += HandleClientConnected;
             manager.OnClientDisconnectCallback += HandleClientDisconnected;
             LobbyMessages.Register(manager, HandleHello, HandleReady, HandleState);
+            PracticeMessages.Register(manager, HandlePracticeInput, HandlePracticeState);
             RegisterResultMessages(manager);
         }
 
@@ -261,6 +262,7 @@ namespace MS2026.UI.Game
             _subscribed.OnClientConnectedCallback -= HandleClientConnected;
             _subscribed.OnClientDisconnectCallback -= HandleClientDisconnected;
             LobbyMessages.Unregister(_subscribed);
+            PracticeMessages.Unregister(_subscribed);
             UnregisterResultMessages(_subscribed);
             _subscribed = null;
         }
