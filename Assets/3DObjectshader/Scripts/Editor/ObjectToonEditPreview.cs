@@ -15,6 +15,16 @@ namespace MS2026.ObjectToon.EditorTools
     {
         private const string StateKey = "MS2026.ObjectToon.EditPreview";
 
+        // このPC（このUnityの起動中）で、プレビューのトゥーン材質を当てたことがあるか。
+        // 当てていないときは戻す処理もしない（トゥーン材質を手でシーンに付けた人の材質を、保存のたびに戻してしまわないように）。
+        private const string AppliedKey = "MS2026.ObjectToon.EditPreview.Applied";
+
+        private static bool Applied
+        {
+            get => SessionState.GetBool(AppliedKey, false);
+            set => SessionState.SetBool(AppliedKey, value);
+        }
+
         static ObjectToonEditPreview()
         {
             EditorSceneManager.sceneSaving += (scene, path) => Revert(scene);
@@ -42,7 +52,7 @@ namespace MS2026.ObjectToon.EditorTools
         /// <summary>表を変えたあとに呼ぶ（いったん全部戻してから、プレビュー中なら当て直す）。</summary>
         public static void Refresh()
         {
-            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            if (EditorApplication.isPlayingOrWillChangePlaymode || (!Applied && !IsOn))
             {
                 return;
             }
@@ -53,18 +63,11 @@ namespace MS2026.ObjectToon.EditorTools
                 return;
             }
 
-            for (int i = 0; i < SceneManager.sceneCount; i++)
-            {
-                var scene = SceneManager.GetSceneAt(i);
-                if (scene.isLoaded)
-                {
-                    ObjectToonApplier.Revert(scene, profile);
-                }
-            }
-
+            RevertAll();
             if (IsOn)
             {
                 ObjectToonApplier.ApplyAllLoaded(profile);
+                Applied = true;
             }
 
             ObjectToonMaterials.RepaintViews();
@@ -91,19 +94,30 @@ namespace MS2026.ObjectToon.EditorTools
             }
         }
 
-        /// <summary>プレビューの切り替えに関係なく、トゥーン材質を全部元に戻す。</summary>
+        /// <summary>プレビューで当てたトゥーン材質を全部元に戻す（当てていなければ何もしない）。</summary>
         public static void RevertAll()
         {
+            if (!Applied)
+            {
+                return;
+            }
+
             var profile = ObjectToonMaterials.LoadProfile();
             for (int i = 0; i < SceneManager.sceneCount; i++)
             {
                 Revert(SceneManager.GetSceneAt(i), profile);
             }
+
+            Applied = false;
         }
 
+        // 保存・閉じる直前に、そのシーンだけ戻す（ほかのシーンはプレビューのまま）。
         private static void Revert(Scene scene)
         {
-            Revert(scene, ObjectToonMaterials.LoadProfile());
+            if (Applied)
+            {
+                Revert(scene, ObjectToonMaterials.LoadProfile());
+            }
         }
 
         // 開いているシーンだけ（Prefab の編集画面は SceneManager に入らないので対象外。Prefab に保存されない）。
