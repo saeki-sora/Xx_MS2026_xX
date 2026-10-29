@@ -38,6 +38,39 @@ MonoBehaviour:
     showMarker: 1
     markerColor: {r: 0.35, g: 0.85, b: 1.6, a: 0.55}
     markerDots: 14
+  gripDistance:
+    mode: 2
+    minDistance: 3
+    maxDistance: 18
+    secondsToMax: 1
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 1
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    gripSpeedInfluence: 0
+    autoThrowSeconds: 0
+    freezeWhileLoosening: 1
+    releaseDrop: 0.2
   multi:
     mode: 2
     count: 3
@@ -94,7 +127,7 @@ MonoBehaviour:
     pullSpeed: 0.7
     pullInnerRadius: 0.3
     damageTakenMultiplier: 1.5
-    tickDamage: 0
+    tickDamage: 1.5
     tickInterval: 0.5
     tickFlash: 1
     lingerSeconds: 0.4

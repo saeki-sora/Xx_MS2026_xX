@@ -25,6 +25,10 @@ namespace MS2026.Skills.Blue
         [SkillLabel("落ちる場所（渦を広げる場所）")]
         public BlueThrowTarget target = new BlueThrowTarget();
 
+        [Tooltip("握っている長さで投げる距離を変える（最大で止まる／最大と最小を往復する）。使うときは、握っている間に距離が伸びて、離した瞬間に投げる。「使わない」なら「落ちる場所」の距離にいつも落ちる。")]
+        [SkillLabel("握って飛距離を決める")]
+        public BlueGripDistance gripDistance = new BlueGripDistance();
+
         [Tooltip("ボトルを何本持つか・どう投げるか（1本だけ／まとめて一気に／1本ずつ順番に）。「1本だけ」にすると元の動きに戻る。")]
         [SkillLabel("投げ方（1本・まとめて・1本ずつ）")]
         public BlueMultiThrow multi = new BlueMultiThrow();
@@ -91,7 +95,7 @@ namespace MS2026.Skills.Blue
         /// </summary>
         public Vector3 PredictLanding(LaserTurret turret)
         {
-            return PredictLanding(turret, 0f, 1f);
+            return PredictLanding(turret, target.distance, 0f, 1f);
         }
 
         /// <summary>
@@ -99,6 +103,15 @@ namespace MS2026.Skills.Blue
         /// 「まとめて一気に」以外なら1つだけ（<see cref="PredictLanding(LaserTurret)"/> と同じ場所）。
         /// </summary>
         public int PredictLandings(LaserTurret turret, List<Vector3> results)
+        {
+            return PredictLandings(turret, results, target.distance);
+        }
+
+        /// <summary>
+        /// 落ちる距離（真ん中の1本。m）を指定して <see cref="PredictLandings(LaserTurret, List{Vector3})"/> と同じ計算をする。
+        /// 「握って飛距離を決める」で、握っている長さから決めた距離を使うときに使う。
+        /// </summary>
+        public int PredictLandings(LaserTurret turret, List<Vector3> results, float distance)
         {
             results.Clear();
             var count = ThrowCount;
@@ -108,7 +121,7 @@ namespace MS2026.Skills.Blue
                 var offset = i - center;
                 var outer = center > 0f ? Mathf.Abs(offset) / center : 0f;
                 var distanceScale = Mathf.Lerp(1f, multi.outerDistanceScale, outer);
-                results.Add(PredictLanding(turret, offset * multi.spreadAngle, distanceScale));
+                results.Add(PredictLanding(turret, distance, offset * multi.spreadAngle, distanceScale));
             }
 
             return count;
@@ -117,7 +130,7 @@ namespace MS2026.Skills.Blue
         /// <summary>まとめて一気に投げるときの、1つの渦の大きさの倍率（それ以外は 1）。</summary>
         public float AreaRadiusScale => multi != null && multi.ThrowCount > 1 ? multi.radiusScale : 1f;
 
-        private Vector3 PredictLanding(LaserTurret turret, float angleOffset, float distanceScale)
+        private Vector3 PredictLanding(LaserTurret turret, float baseDistance, float angleOffset, float distanceScale)
         {
             if (turret == null)
             {
@@ -136,7 +149,7 @@ namespace MS2026.Skills.Blue
             var dir = BlueFx.Rotate(aim, -angleOffset);
             var muzzle = turret.MuzzlePosition;
             Vector2 origin = target.measureFromMuzzle ? (Vector2)muzzle : (Vector2)turret.transform.position;
-            var distance = Mathf.Max(0f, target.distance) * distanceScale;
+            var distance = Mathf.Max(0f, baseDistance) * distanceScale;
             var goal = origin + dir * distance + right * target.sideOffset;
 
             if (target.stopAtWalls)

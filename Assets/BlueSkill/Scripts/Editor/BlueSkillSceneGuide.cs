@@ -44,27 +44,52 @@ namespace MS2026.Skills.Blue.EditorTools
         {
             var turrets = Object.FindObjectsByType<LaserTurret>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
             var radius = Mathf.Max(0.05f, skill.area.radius * skill.AreaRadiusScale);
+            var grip = skill.gripDistance;
+            var gripMode = grip != null && grip.Enabled;
             for (var i = 0; i < turrets.Length; i++)
             {
                 var turret = turrets[i];
-                var count = skill.PredictLandings(turret, Landings);
-                var from = turret.MuzzlePosition;
-                for (var k = 0; k < count; k++)
+                if (gripMode)
                 {
-                    var landing = Landings[k];
-                    Handles.color = GuideColor;
-                    Handles.DrawDottedLine(from, landing, 4f);
-                    Handles.color = FillColor;
-                    Handles.DrawSolidDisc(landing, Vector3.forward, radius);
-                    Handles.color = GuideColor;
-                    Handles.DrawWireDisc(landing, Vector3.forward, radius, 2f);
-                    Handles.DrawWireDisc(landing, Vector3.forward, radius * Mathf.Clamp01(skill.debuff.pullInnerRadius));
+                    // 握って飛距離を決めるときは、いちばん遠い所（薄く）といちばん近い所の両方を描く。
+                    DrawLandings(skill, turret, grip.Distance(1f), radius, 0.4f, "いちばん遠い");
+                    DrawLandings(skill, turret, grip.Distance(0f), radius, 1f, "いちばん近い");
                 }
-
-                var center = Landings[(count - 1) / 2];
-                var label = "P" + (turret.playerIndex + 1) + " 青スキルの渦（半径 " + radius.ToString("0.0") + "m" + (count > 1 ? " × " + count + "個" : "") + "）";
-                Handles.Label(center + new Vector3(0f, radius + 0.3f, 0f), label);
+                else
+                {
+                    DrawLandings(skill, turret, skill.target.distance, radius, 1f, null);
+                }
             }
+        }
+
+        private static void DrawLandings(BlueVortexSkill skill, LaserTurret turret, float distance, float radius, float alpha, string note)
+        {
+            var count = skill.PredictLandings(turret, Landings, distance);
+            var from = turret.MuzzlePosition;
+            var guide = GuideColor;
+            guide.a *= alpha;
+            var fill = FillColor;
+            fill.a *= alpha;
+            for (var k = 0; k < count; k++)
+            {
+                var landing = Landings[k];
+                Handles.color = guide;
+                Handles.DrawDottedLine(from, landing, 4f);
+                Handles.color = fill;
+                Handles.DrawSolidDisc(landing, Vector3.forward, radius);
+                Handles.color = guide;
+                Handles.DrawWireDisc(landing, Vector3.forward, radius, 2f);
+                Handles.DrawWireDisc(landing, Vector3.forward, radius * Mathf.Clamp01(skill.debuff.pullInnerRadius));
+            }
+
+            var center = Landings[(count - 1) / 2];
+            var label = "P" + (turret.playerIndex + 1) + " 青スキルの渦（半径 " + radius.ToString("0.0") + "m" + (count > 1 ? " × " + count + "個" : "") + "）";
+            if (note != null)
+            {
+                label += " " + note + " " + distance.ToString("0.0") + "m";
+            }
+
+            Handles.Label(center + new Vector3(0f, radius + 0.3f, 0f), label);
         }
 
         private static void DrawActiveAreas()
