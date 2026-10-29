@@ -3,9 +3,49 @@ guid: 91254b8c578078445a1fd09d52dc4f27
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: G3_Brass
+    second: {fileID: 2100000, guid: 10a4a17343e202b47824cd400fba52ea, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: G3_Floor
+    second: {fileID: 2100000, guid: 805a891702e27c34e8bf3e1975180e5b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: G3_GlowCyan
+    second: {fileID: 2100000, guid: 3dbd0dd4d682aba4db5bb1816abe4f29, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: G3_GlowPink
+    second: {fileID: 2100000, guid: 56d32542113ca9843ba175ea447e3d87, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: G3_Gold
+    second: {fileID: 2100000, guid: 989e93641980a3248b4adfc4996262e5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: G3_Hazard
+    second: {fileID: 2100000, guid: 08ff8ee223c7f7044b0f609b50692277, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: G3_Panel
+    second: {fileID: 2100000, guid: 08ffd7ba1680fe041ae059dbd0217445, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: G3_Steel
+    second: {fileID: 2100000, guid: 58ebbf478d5129146aca005e4093015d, type: 2}
   materials:
-    materialImportMode: 2
+    materialImportMode: 1
     materialName: 0
     materialSearch: 1
     materialLocation: 1
@@ -30,7 +70,7 @@ ModelImporter:
     extraExposedTransformPaths: []
     extraUserProperties: []
     clipAnimations: []
-    isReadable: 0
+    isReadable: 1
   meshes:
     lODScreenPercentages: []
     globalScale: 1
@@ -71,15 +111,15 @@ ModelImporter:
     useFileScale: 1
     strictVertexDataChecks: 0
   tangentSpace:
-    normalSmoothAngle: 60
-    normalImportMode: 0
+    normalSmoothAngle: 25
+    normalImportMode: 1
     tangentImportMode: 3
     normalCalculationMode: 4
     legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
     blendShapeNormalImportMode: 1
     normalSmoothingSource: 0
   referencedClips: []
-  importAnimation: 1
+  importAnimation: 0
   humanDescription:
     serializedVersion: 3
     human: []

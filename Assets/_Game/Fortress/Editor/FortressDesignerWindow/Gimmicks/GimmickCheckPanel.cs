@@ -97,7 +97,8 @@ namespace MS2026.Fortress.EditorTools
 
                     foreach (var (label, position) in targets)
                     {
-                        if (colliders.Any(c => c != null && c.enabled && Vector2.Distance(c.ClosestPoint(position), position) < TouchRadius))
+                        if (colliders.Any(c => c != null && c.enabled && !TurnsAround(c, position) &&
+                                               Vector2.Distance(c.ClosestPoint(position), position) < TouchRadius))
                         {
                             touching[label].Add(t);
                         }
@@ -136,6 +137,14 @@ namespace MS2026.Fortress.EditorTools
             }
 
             _ok = _results.Count == 0;
+        }
+
+        /// <summary>歯車の腕は、その歯車の真ん中に置いた物（歯車の上の砲台など）の周りを回るだけなので、重なりとは数えない。</summary>
+        private static bool TurnsAround(Collider2D collider, Vector2 position)
+        {
+            var gear = collider.GetComponentInParent<GimmickGear>();
+            return gear != null && collider.GetComponent<GimmickGearArm>() != null &&
+                   Vector2.Distance(gear.transform.position, position) < TouchRadius;
         }
 
         private static List<(string label, Vector2 position)> CollectTargets(EnemySpawnPoint[] spawns)

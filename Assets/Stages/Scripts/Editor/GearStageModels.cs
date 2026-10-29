@@ -219,6 +219,43 @@ namespace MS2026.Stages.EditorTools
         }
 
         /// <summary>
+        /// 床・壁などのモデル（Stage03_Static.obj）から消えた部分の背景オブジェクトを、ステージの Prefab から外す
+        /// （make_models.py で部品を消して作り直したとき用。例: 2026-10-29 に四隅の砲台の台をやめた）。外した数を返す。
+        /// </summary>
+        public static int RemoveMissingStaticParts(StageSet set)
+        {
+            var source = AssetDatabase.LoadAssetAtPath<GameObject>($"{GearStageBuilder.ModelFolder}/{StaticModel}.obj");
+            var path = set != null && set.stagePrefab != null ? AssetDatabase.GetAssetPath(set.stagePrefab) : null;
+            if (source == null || string.IsNullOrEmpty(path))
+            {
+                return 0;
+            }
+
+            var contents = PrefabUtility.LoadPrefabContents(path);
+            try
+            {
+                var gone = contents.GetComponentsInChildren<StageProp>(true)
+                    .Where(p => p.sourceModel == source && !string.IsNullOrEmpty(p.sourceNodePath) && source.transform.Find(p.sourceNodePath) == null)
+                    .ToList();
+                foreach (var prop in gone)
+                {
+                    Object.DestroyImmediate(prop.gameObject);
+                }
+
+                if (gone.Count > 0)
+                {
+                    PrefabUtility.SaveAsPrefabAsset(contents, path);
+                }
+
+                return gone.Count;
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(contents);
+            }
+        }
+
+        /// <summary>
         /// モデル（name.obj）を world の位置・Z の向き（度）に置き、背景スタジオの背景オブジェクト（飾り）にして parent の中へ入れる。
         /// マテリアルは専用シェーダー（透け・ビームの光）に切り替える。
         /// </summary>

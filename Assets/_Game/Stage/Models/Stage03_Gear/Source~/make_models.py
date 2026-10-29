@@ -203,7 +203,7 @@ LANES = {
     "Lane_BottomR": (-2, -1, -17, -12.5),
 }
 
-PADS = {"Pad_P1": (-14.5, 4.5), "Pad_P2": (14.5, 4.5), "Pad_P3": (-14.5, -9.5), "Pad_P4": (14.5, -9.5)}
+# 砲台は四隅の台ではなく、歯車の門（Gear_Gate）の真ん中の軸の上に乗る（GearStageBuilder の Gates と同じ位置）。
 PORTALS = {"Portal_Top": (4, 10.5), "Portal_Bottom": (-4, -15.5)}
 CORE = (0, -2.5)
 
@@ -226,10 +226,6 @@ def make_static():
     for name, (x0, x1, y0, y1) in LANES.items():
         m.begin(name)
         walled_block(m, x0, x1, y0, y1, 1.4, trim="G3_GlowPink", plate="G3_Brass")
-    for name, (x, y) in PADS.items():
-        m.begin(name)
-        cylinder(m, x, y, 2.2, 0.0, 0.12, "G3_Steel", "G3_Panel")
-        ring(m, x, y, 1.75, 2.0, 0.12, 0.15, "G3_GlowCyan")
     for name, (x, y) in PORTALS.items():
         m.begin(name)
         cylinder(m, x, y, 1.9, 0.0, 0.03, "G3_Steel", "G3_Panel")
@@ -255,12 +251,13 @@ def make_parts():
         make(m)
         m.write(os.path.join(OUT, name + ".obj"))
 
-    # 歯車の棒（腕の見た目。長さ 4.6・太さ 0.7）
+    # 歯車の棒（腕の見た目。長さ 4.6・太さ 0.7）。真ん中（半径 1.25）は砲台が乗るので空ける（当たり判定は 1 本の棒のまま）。
     m = Mesh()
     m.begin("Gate_Bar")
-    box(m, -2.3, 2.3, -0.35, 0.35, 0.18, 0.85, "G3_Brass", bottom=True)
-    box(m, -2.15, 2.15, -0.12, 0.12, 0.85, 0.92, "G3_GlowCyan")
-    for x in (-2.3, 2.1):
+    for x0, x1 in ((-2.3, -1.25), (1.25, 2.3)):
+        box(m, x0, x1, -0.35, 0.35, 0.18, 0.85, "G3_Brass", bottom=True)
+        box(m, x0 + 0.1, x1 - 0.1, -0.12, 0.12, 0.85, 0.92, "G3_GlowCyan")
+    for x in (-2.3, -1.45, 1.25, 2.1):
         box(m, x, x + 0.2, -0.4, 0.4, 0.18, 0.95, "G3_Gold")
     m.write(os.path.join(OUT, "Gate_Bar.obj"))
 

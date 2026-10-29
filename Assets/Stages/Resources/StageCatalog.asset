@@ -16,6 +16,7 @@ MonoBehaviour:
   stages:
   - {fileID: 11400000, guid: 4598b3e355563c04991227ff6d654a5a, type: 2}
   - {fileID: 11400000, guid: 889f228d605a57b418646c933b59b0a6, type: 2}
+  - {fileID: 11400000, guid: 6221185f151517d48b03098d4228d6fa, type: 2}
   defaultStageIndex: 1
   avoidRepeat: 1
   roulette:

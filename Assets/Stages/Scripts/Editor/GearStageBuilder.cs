@@ -45,14 +45,6 @@ namespace MS2026.Stages.EditorTools
             ("Spawn_Bottom", new Vector2(-4f, -15.5f)),
         };
 
-        private static readonly Vector2[] TurretPositions =
-        {
-            new Vector2(-14.5f, 4.5f), // P1 左上
-            new Vector2(14.5f, 4.5f), // P2 右上
-            new Vector2(-14.5f, -9.5f), // P3 左下
-            new Vector2(14.5f, -9.5f), // P4 右下
-        };
-
         // 島（通路の間の壁。ビームは通す）
         private static readonly (string name, float x0, float x1, float y0, float y1)[] Islands =
         {
@@ -80,6 +72,7 @@ namespace MS2026.Stages.EditorTools
         };
 
         // 歯車の門: 名前・位置・最初の向き（0 = 棒が通路に沿う＝通れる、90 = ふさぐ）・時計回りか
+        // 砲台はこの真ん中（軸の上）に乗る。並びは P1 左上・P2 右上・P3 左下・P4 右下（ユーザー決定 2026-10-29）。
         private static readonly (string name, Vector2 position, float angle, bool clockwise)[] Gates =
         {
             ("Gate_TopL", new Vector2(-8f, 4.5f), 0f, true),
@@ -115,7 +108,7 @@ namespace MS2026.Stages.EditorTools
                   "・外まわりの通路と、コアのある広場へ入る左右の通路（壁はビームを通す）\n" +
                   "・通路の 4 か所に、決まった時刻に 90° 回って道を開け閉めする歯車の門\n" +
                   "・左右の通路に、出たり引っ込んだりする動く壁\n" +
-                  "・上と下の湧き位置、コア・砲台 4 台の目印、カメラの視点（ステージ2 から写す）\n" +
+                  "・上と下の湧き位置、コア・砲台 4 台の目印（砲台は歯車の門の上）、カメラの視点（ステージ2 から写す）\n" +
                   "・ステージ背景スタジオの背景（仮の 3D モデル: 床・壁・歯車）\n\n" +
                   "ルーレットにステージ3として足します。";
             if (!EditorUtility.DisplayDialog("歯車ステージ（ステージ3）", message, exists ? "作り直す" : "作る", "やめる"))
@@ -224,14 +217,15 @@ namespace MS2026.Stages.EditorTools
             layout.cameraPreset = cameraPreset;
             layout.coreAnchor = NewChild(layoutGo.transform, "Core", CorePosition).transform;
             layout.turretAnchors = new Transform[StageLayout.TurretCount];
-            for (var i = 0; i < StageLayout.TurretCount; i++)
+            for (var i = 0; i < StageLayout.TurretCount && i < Gates.Length; i++)
             {
-                var anchor = NewChild(layoutGo.transform, $"Turret_P{i + 1}", TurretPositions[i]).transform;
-                anchor.rotation = Quaternion.Euler(0f, 0f, FacingDegrees(TurretPositions[i], CorePosition));
+                var position = Gates[i].position;
+                var anchor = NewChild(layoutGo.transform, $"Turret_P{i + 1}", position).transform;
+                anchor.rotation = Quaternion.Euler(0f, 0f, FacingDegrees(position, CorePosition));
                 layout.turretAnchors[i] = anchor;
             }
 
-            report.Add("配置の目印: コア＝真ん中の大歯車の上、P1〜P4＝四隅の丸い台（向きはコアの方）。");
+            report.Add("配置の目印: コア＝真ん中の大歯車の上、P1〜P4＝歯車の門の真ん中（軸の上。歯車と棒は砲台の下で回る。向きはコアの方）。");
 
             if (File.Exists(ScenePath))
             {
@@ -466,6 +460,15 @@ namespace MS2026.Stages.EditorTools
                 set.memo = $"{SceneName}（ステージ3「歯車ステージ」）用。光は Stage1 から写した。床・壁・歯車は仮の 3D モデル（Models/Stage03_Gear、作り直しは Source~/make_models.py）。";
                 EditorUtility.SetDirty(set);
                 AssetDatabase.SaveAssets();
+            }
+
+            if (!created)
+            {
+                var removed = GearStageModels.RemoveMissingStaticParts(set);
+                if (removed > 0)
+                {
+                    report.Add($"床・壁のモデルから消えた部分の背景 {removed} 個を、ステージの Prefab から外した。");
+                }
             }
 
             var root = new GameObject(StageSceneService.RootName).AddComponent<StageRoot>();

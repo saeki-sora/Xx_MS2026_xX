@@ -1,0 +1,418 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99359cf5400741688f5eb57655e20b80, type: 3}
+  m_Name: WavePlan_Stage3_Gear
+  m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.WavePlan
+  memo: "\u4EEE\u306E\u30EC\u30D9\u30EB\u30C7\u30B6\u30A4\u30F3\uFF08Claude 2026-10-29\uFF09\u3002Stage2
+    \u306E\u8A08\u753B\uFF08\u76EE\u6A19 120/250/400/530/700\uFF09\u3092\u5199\u3057\u3001\u5DE6\u5074\u306E\u6E67\u304D\u4F4D\u7F6E\u306E\u884C\u3092\u4E0A\uFF08Spawn_Top\uFF09\u3001\u53F3\u5074\u306E\u884C\u3092\u4E0B\uFF08Spawn_Bottom\uFF09\u306B\u3057\u305F\u3002\u6B6F\u8ECA\u306E\u9580\u306F
+    8 \u79D2\u304B\u3089 9.5 \u79D2\u3054\u3068\u306B\u56DE\u308B\uFF08\u4ED5\u639B\u3051\u30BF\u30D6\uFF09\u3002"
+  waves:
+  - label: 
+    announceText: "\u6B6F\u8ECA\u304C\u56DE\u308B\u3068\u9053\u304C\u5909\u308F\u308B\uFF01"
+    targetKills: 120
+    spawnEntries:
+    - triggerTime: 0
+      spawnPointId: Spawn_Top
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 30
+      intervalBetweenSpawns: 0.2069
+      timing: 1
+      durationSeconds: 6
+    - triggerTime: 0
+      spawnPointId: Spawn_Bottom
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 30
+      intervalBetweenSpawns: 0.2069
+      timing: 1
+      durationSeconds: 6
+    - triggerTime: 7
+      spawnPointId: Spawn_Top
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 30
+      intervalBetweenSpawns: 0.2069
+      timing: 1
+      durationSeconds: 6
+    - triggerTime: 7
+      spawnPointId: Spawn_Bottom
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 30
+      intervalBetweenSpawns: 0.2069
+      timing: 1
+      durationSeconds: 6
+    repeatUntilCleared: 1
+    repeatGapSeconds: 2
+    intervalEvent: {fileID: 11400000, guid: 2526502f71e844809aacc98223d4e078, type: 2}
+    restSeconds: 3
+  - label: 
+    announceText: 
+    targetKills: 250
+    spawnEntries:
+    - triggerTime: 0
+      spawnPointId: Spawn_Top
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 45
+      intervalBetweenSpawns: 0.1364
+      timing: 1
+      durationSeconds: 6
+    - triggerTime: 0
+      spawnPointId: Spawn_Bottom
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 45
+      intervalBetweenSpawns: 0.1364
+      timing: 1
+      durationSeconds: 6
+    - triggerTime: 4
+      spawnPointId: Spawn_Top
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 25
+      intervalBetweenSpawns: 0.2083
+      timing: 1
+      durationSeconds: 5
+    - triggerTime: 4
+      spawnPointId: Spawn_Bottom
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 25
+      intervalBetweenSpawns: 0.2083
+      timing: 1
+      durationSeconds: 5
+    - triggerTime: 8
+      spawnPointId: Spawn_Top
+      enemyType: {fileID: 11400000, guid: 6d198346f01843cead1c71f12aff332a, type: 2}
+      count: 4
+      intervalBetweenSpawns: 0.6667
+      timing: 1
+      durationSeconds: 2
+    - triggerTime: 8
+      spawnPointId: Spawn_Bottom
+      enemyType: {fileID: 11400000, guid: 6d198346f01843cead1c71f12aff332a, type: 2}
+      count: 4
+      intervalBetweenSpawns: 0.6667
+      timing: 1
+      durationSeconds: 2
+    repeatUntilCleared: 1
+    repeatGapSeconds: 2
+    intervalEvent: {fileID: 11400000, guid: 2526502f71e844809aacc98223d4e078, type: 2}
+    restSeconds: 3
+  - label: 
+    announceText: "\u52D5\u304F\u58C1\u306B\u6C17\u3092\u3064\u3051\u308D\uFF01"
+    targetKills: 400
+    spawnEntries:
+    - triggerTime: 0
+      spawnPointId: Spawn_Top
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 45
+      intervalBetweenSpawns: 0.1364
+      timing: 1
+      durationSeconds: 6
+    - triggerTime: 0
+      spawnPointId: Spawn_Bottom
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 45
+      intervalBetweenSpawns: 0.1364
+      timing: 1
+      durationSeconds: 6
+    - triggerTime: 2
+      spawnPointId: Spawn_Top
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 40
+      intervalBetweenSpawns: 0.1538
+      timing: 1
+      durationSeconds: 6
+    - triggerTime: 2
+      spawnPointId: Spawn_Bottom
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 40
+      intervalBetweenSpawns: 0.1538
+      timing: 1
+      durationSeconds: 6
+    - triggerTime: 6
+      spawnPointId: Spawn_Top
+      enemyType: {fileID: 11400000, guid: a18afcc80195bc540ba57ee4e79a6d0d, type: 2}
+      count: 1
+      intervalBetweenSpawns: 0
+      timing: 1
+      durationSeconds: 0
+    - triggerTime: 6
+      spawnPointId: Spawn_Bottom
+      enemyType: {fileID: 11400000, guid: a18afcc80195bc540ba57ee4e79a6d0d, type: 2}
+      count: 1
+      intervalBetweenSpawns: 0
+      timing: 1
+      durationSeconds: 0
+    - triggerTime: 9
+      spawnPointId: Spawn_Top
+      enemyType: {fileID: 11400000, guid: 6d198346f01843cead1c71f12aff332a, type: 2}
+      count: 4
+      intervalBetweenSpawns: 0.6667
+      timing: 1
+      durationSeconds: 2
+    - triggerTime: 9
+      spawnPointId: Spawn_Bottom
+      enemyType: {fileID: 11400000, guid: 6d198346f01843cead1c71f12aff332a, type: 2}
+      count: 4
+      intervalBetweenSpawns: 0.6667
+      timing: 1
+      durationSeconds: 2
+    repeatUntilCleared: 1
+    repeatGapSeconds: 2
+    intervalEvent: {fileID: 11400000, guid: 2526502f71e844809aacc98223d4e078, type: 2}
+    restSeconds: 3
+  - label: 
+    announceText: 
+    targetKills: 530
+    spawnEntries:
+    - triggerTime: 0
+      spawnPointId: Spawn_Top
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 50
+      intervalBetweenSpawns: 0.1224
+      timing: 1
+      durationSeconds: 6
+    - triggerTime: 0
+      spawnPointId: Spawn_Bottom
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 50
+      intervalBetweenSpawns: 0.1224
+      timing: 1
+      durationSeconds: 6
+    - triggerTime: 0
+      spawnPointId: Spawn_Top
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 40
+      intervalBetweenSpawns: 0.1538
+      timing: 1
+      durationSeconds: 6
+    - triggerTime: 0
+      spawnPointId: Spawn_Bottom
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 40
+      intervalBetweenSpawns: 0.1538
+      timing: 1
+      durationSeconds: 6
+    - triggerTime: 6
+      spawnPointId: Spawn_Top
+      enemyType: {fileID: 11400000, guid: 6d198346f01843cead1c71f12aff332a, type: 2}
+      count: 4
+      intervalBetweenSpawns: 0.6667
+      timing: 1
+      durationSeconds: 2
+    - triggerTime: 6
+      spawnPointId: Spawn_Bottom
+      enemyType: {fileID: 11400000, guid: 6d198346f01843cead1c71f12aff332a, type: 2}
+      count: 4
+      intervalBetweenSpawns: 0.6667
+      timing: 1
+      durationSeconds: 2
+    - triggerTime: 6
+      spawnPointId: Spawn_Top
+      enemyType: {fileID: 11400000, guid: 6d198346f01843cead1c71f12aff332a, type: 2}
+      count: 4
+      intervalBetweenSpawns: 0.6667
+      timing: 1
+      durationSeconds: 2
+    - triggerTime: 6
+      spawnPointId: Spawn_Bottom
+      enemyType: {fileID: 11400000, guid: 6d198346f01843cead1c71f12aff332a, type: 2}
+      count: 4
+      intervalBetweenSpawns: 0.6667
+      timing: 1
+      durationSeconds: 2
+    - triggerTime: 9
+      spawnPointId: Spawn_Top
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 30
+      intervalBetweenSpawns: 0.1379
+      timing: 1
+      durationSeconds: 4
+    - triggerTime: 9
+      spawnPointId: Spawn_Bottom
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 30
+      intervalBetweenSpawns: 0.1379
+      timing: 1
+      durationSeconds: 4
+    repeatUntilCleared: 1
+    repeatGapSeconds: 2
+    intervalEvent: {fileID: 11400000, guid: 2526502f71e844809aacc98223d4e078, type: 2}
+    restSeconds: 3
+  - label: 
+    announceText: 
+    targetKills: 700
+    spawnEntries:
+    - triggerTime: 0
+      spawnPointId: Spawn_Top
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 50
+      intervalBetweenSpawns: 0.1429
+      timing: 1
+      durationSeconds: 7
+    - triggerTime: 0
+      spawnPointId: Spawn_Bottom
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 50
+      intervalBetweenSpawns: 0.1429
+      timing: 1
+      durationSeconds: 7
+    - triggerTime: 0
+      spawnPointId: Spawn_Top
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 50
+      intervalBetweenSpawns: 0.1429
+      timing: 1
+      durationSeconds: 7
+    - triggerTime: 0
+      spawnPointId: Spawn_Bottom
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 50
+      intervalBetweenSpawns: 0.1429
+      timing: 1
+      durationSeconds: 7
+    - triggerTime: 5
+      spawnPointId: Spawn_Top
+      enemyType: {fileID: 11400000, guid: a18afcc80195bc540ba57ee4e79a6d0d, type: 2}
+      count: 1
+      intervalBetweenSpawns: 0
+      timing: 1
+      durationSeconds: 0
+    - triggerTime: 5
+      spawnPointId: Spawn_Bottom
+      enemyType: {fileID: 11400000, guid: a18afcc80195bc540ba57ee4e79a6d0d, type: 2}
+      count: 1
+      intervalBetweenSpawns: 0
+      timing: 1
+      durationSeconds: 0
+    - triggerTime: 5
+      spawnPointId: Spawn_Top
+      enemyType: {fileID: 11400000, guid: a18afcc80195bc540ba57ee4e79a6d0d, type: 2}
+      count: 1
+      intervalBetweenSpawns: 0
+      timing: 1
+      durationSeconds: 0
+    - triggerTime: 5
+      spawnPointId: Spawn_Bottom
+      enemyType: {fileID: 11400000, guid: a18afcc80195bc540ba57ee4e79a6d0d, type: 2}
+      count: 1
+      intervalBetweenSpawns: 0
+      timing: 1
+      durationSeconds: 0
+    - triggerTime: 8
+      spawnPointId: Spawn_Top
+      enemyType: {fileID: 11400000, guid: 6d198346f01843cead1c71f12aff332a, type: 2}
+      count: 5
+      intervalBetweenSpawns: 0.5
+      timing: 1
+      durationSeconds: 2
+    - triggerTime: 8
+      spawnPointId: Spawn_Bottom
+      enemyType: {fileID: 11400000, guid: 6d198346f01843cead1c71f12aff332a, type: 2}
+      count: 5
+      intervalBetweenSpawns: 0.5
+      timing: 1
+      durationSeconds: 2
+    - triggerTime: 10
+      spawnPointId: Spawn_Top
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 30
+      intervalBetweenSpawns: 0.1724
+      timing: 1
+      durationSeconds: 5
+    - triggerTime: 10
+      spawnPointId: Spawn_Bottom
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 30
+      intervalBetweenSpawns: 0.1724
+      timing: 1
+      durationSeconds: 5
+    - triggerTime: 10
+      spawnPointId: Spawn_Top
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 30
+      intervalBetweenSpawns: 0.1724
+      timing: 1
+      durationSeconds: 5
+    - triggerTime: 10
+      spawnPointId: Spawn_Bottom
+      enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
+      count: 30
+      intervalBetweenSpawns: 0.1724
+      timing: 1
+      durationSeconds: 5
+    repeatUntilCleared: 1
+    repeatGapSeconds: 2
+    intervalEvent: {fileID: 0}
+    restSeconds: 3
+  timeLimitSeconds: 300
+  timeUpRule: 0
+  clockRunsDuringBreaks: 0
+  startDelaySeconds: 0.8
+  maxWaitForPlayersSeconds: 10
+  announceSeconds: 4
+  countdownSeconds: 2
+  showRoutes: 1
+  display: {fileID: 11400000, guid: 216f6f7c18b945f995221f1127805434, type: 2}
+  clearBannerSeconds: 1.6
+  retreatMaxSeconds: 5
+  retreatSpeedMultiplier: 2.4
+  onAnnounce:
+    vfx:
+      value: 0
+      type: 0
+    se:
+      value: 0
+      type: 0
+    tintWithPlayerColor: 0
+    colorParam: Color
+  onFinalAnnounce:
+    vfx:
+      value: 0
+      type: 0
+    se:
+      value: 0
+      type: 0
+    tintWithPlayerColor: 0
+    colorParam: Color
+  onCountdownTick:
+    vfx:
+      value: 0
+      type: 0
+    se:
+      value: 0
+      type: 0
+    tintWithPlayerColor: 0
+    colorParam: Color
+  onWaveStart:
+    vfx:
+      value: 0
+      type: 0
+    se:
+      value: 0
+      type: 0
+    tintWithPlayerColor: 0
+    colorParam: Color
+  onWaveClear:
+    vfx:
+      value: 0
+      type: 0
+    se:
+      value: 0
+      type: 0
+    tintWithPlayerColor: 0
+    colorParam: Color
+  onTimeWarning:
+    vfx:
+      value: 0
+      type: 0
+    se:
+      value: 0
+      type: 0
+    tintWithPlayerColor: 0
+    colorParam: Color
