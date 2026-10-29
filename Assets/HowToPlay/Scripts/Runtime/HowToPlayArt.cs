@@ -13,7 +13,11 @@ namespace MS2026.HowToPlay
         public static readonly Color Ink = new Color(0.02f, 0.05f, 0.12f, 1f);
         public static readonly Color Navy = new Color(0.05f, 0.09f, 0.17f, 1f);
 
+        /// <summary>画面全体の後ろの色（不透明。ステージ抽選のルーレットと同じ紺）。</summary>
+        public static readonly Color Backdrop = new Color(0.02f, 0.04f, 0.12f, 1f);
+
         private static Font _font;
+        private static Texture2D _stripes;
         private static Sprite _rounded;
         private static Sprite _outline;
         private static Sprite _circle;
@@ -159,16 +163,23 @@ namespace MS2026.HowToPlay
             return t * t * ((S + 1f) * t + S) + 1f;
         }
 
-        /// <summary>熱の色（黄 → 橙 → 赤）。</summary>
-        public static Color HeatColor(float heat01)
-        {
-            var yellow = new Color(1f, 0.82f, 0.25f);
-            var orange = new Color(1f, 0.54f, 0.16f);
-            var red = new Color(1f, 0.23f, 0.23f);
-            return heat01 < 0.5f ? Color.Lerp(yellow, orange, heat01 * 2f) : Color.Lerp(orange, red, (heat01 - 0.5f) * 2f);
-        }
-
         // ───────── 絵 ─────────
+
+        /// <summary>斜めのしま（くり返して貼る。ステージ抽選のルーレットと同じ模様）。</summary>
+        public static Texture2D Stripes
+        {
+            get
+            {
+                if (_stripes != null)
+                {
+                    return _stripes;
+                }
+
+                _stripes = NewTexture(64, 64, (u, v) => new Color(1f, 1f, 1f, Mathf.Repeat(u + v, 0.5f) / 0.5f < 0.45f ? 1f : 0f));
+                _stripes.wrapMode = TextureWrapMode.Repeat;
+                return _stripes;
+            }
+        }
 
         private static Sprite MakeRounded(int size, float radius, bool outlineOnly)
         {

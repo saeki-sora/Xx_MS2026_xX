@@ -47,6 +47,8 @@ namespace MS2026.Title
         [Header("配置物（それぞれの動きは各オブジェクトの Title Element Motion で調整）")]
         [Tooltip("背景。オープニングと同時に（最初から）出る。")]
         public TitleElementMotion background;
+        [Tooltip("背景（塗り替わった後の明るい方。子「Sprite」）でくり返し流す連番の絵。空なら Assets/Title/Resources/TitleBackgroundLoop を使う（それも無ければ動かない1枚の絵のまま）。")]
+        public TitleFrameSequence backgroundLoop;
         [Tooltip("オープニングの後に登場するもの（ロゴ・キャラ・スタートの文字など）。登場を始める秒数は各自の Enter Delay。")]
         public TitleElementMotion[] afterOpening;
         [Tooltip("「〇〇でスタート！」の文字（スタート時の効果音の位置に使う）。")]
@@ -109,6 +111,22 @@ namespace MS2026.Title
             }
 
             PickCharacters();
+            StartBackgroundLoop();
+        }
+
+        /// <summary>背景のループの連番が置かれる Resources の名前。</summary>
+        public const string BackgroundLoopResourcePath = "TitleBackgroundLoop";
+
+        // 背景の明るい方（子「Sprite」。暗い方は「SpriteBefore」）に連番のループを付ける。シーンは書き換えない（再生中に付けるだけ）。
+        private void StartBackgroundLoop()
+        {
+            var sequence = backgroundLoop != null ? backgroundLoop : Resources.Load<TitleFrameSequence>(BackgroundLoopResourcePath);
+            if (sequence == null || !sequence.IsUsable || background == null) return;
+            var sprite = background.transform.Find("Sprite");
+            if (sprite == null || !sprite.TryGetComponent<SpriteRenderer>(out _)) return;
+            var loop = sprite.GetComponent<TitleSpriteLoop>();
+            if (loop == null) loop = sprite.gameObject.AddComponent<TitleSpriteLoop>();
+            if (loop.sequence == null) loop.sequence = sequence;
         }
 
         /// <summary>今使うキャラの一覧（Inspector で空なら Resources のもの）。</summary>

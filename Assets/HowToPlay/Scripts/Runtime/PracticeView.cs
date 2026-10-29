@@ -6,25 +6,23 @@ using UnityEngine.UI;
 namespace MS2026.HowToPlay
 {
     /// <summary>
-    /// 練習の画面（全員の PC に出る）。画面を4つに分け（キャラ選択と同じ並び: 1P 左上・2P 左下・3P 右上・4P 右下）、
-    /// 席ごとに砲台・ビーム・熱の棒・3つの課題を出す。中身は <see cref="PracticeBoard"/> を見て描くだけ（動かすのはセッションの側）。
-    /// 音は自分の席の分だけ鳴らす。歯磨き粉の幕（950）より下に描き、ゲームが読み込まれる（keepVisible が false になる）まで出したまま。
+    /// 練習の画面（全員の PC に出る）。自分の席を左に大きく（砲台・ビーム・3つの課題の名前）、
+    /// ほかの3人を右に小さく縦に並べる（砲台・ビーム・課題のチェックだけ。2026-10-29、ユーザー依頼「自分だけ大きく」）。
+    /// 中身は <see cref="PracticeBoard"/> を見て描くだけ（動かすのはセッションの側）。音は自分の席の分だけ鳴らす。
+    /// 後ろは不透明（キャラ選択の画面は見せない）。歯磨き粉の幕（950）より下に描き、ゲームが読み込まれる（keepVisible が false になる）まで出したまま。
     /// </summary>
     public sealed class PracticeView : MonoBehaviour
     {
         private const float FadeSeconds = 0.3f;
         private const float StampSeconds = 0.25f;
-        private const float BeamLength = 360f;
-        private const float HeatBarWidth = 470f;
         private const int StepCount = 3;
 
-        private static readonly Vector2 PanelSize = new Vector2(930f, 420f);
+        private static readonly Vector2 BigSize = new Vector2(1240f, 860f);
+        private static readonly Vector2 BigCenter = new Vector2(-320f, -10f);
+        private static readonly Vector2 SmallSize = new Vector2(620f, 273f);
 
-        // 1P 左上・2P 左下・3P 右上・4P 右下（キャラ選択と同じ）。
-        private static readonly Vector2[] PanelCenters =
-        {
-            new Vector2(-475f, 205f), new Vector2(-475f, -235f), new Vector2(475f, 205f), new Vector2(475f, -235f)
-        };
+        // 右の列の上・中・下（ほかの人を席の番号の順に入れる）。
+        private static readonly Vector2[] SmallCenters = { new Vector2(630f, 283f), new Vector2(630f, -10f), new Vector2(630f, -303f) };
 
         private static PracticeView _current;
 
@@ -39,27 +37,30 @@ namespace MS2026.HowToPlay
         private float _finishedAt = -1f;
 
         private CanvasGroup _group;
+        private RawImage _stripes;
         private Text _title;
         private Text _footer;
         private Text _timer;
 
         private sealed class Panel
         {
+            public bool Big;
+            public float BeamLength;
+            public float BeamMin;
+            public float BeamMax;
             public CanvasGroup Group;
             public Text Absent;
-            public Text LocalMark;
             public RectTransform Turret;
             public RawImage Beam;
             public Image BeamGlow;
             public Text Overheat;
-            public Image HeatFill;
             public readonly Image[] Boxes = new Image[StepCount];
             public readonly Text[] Checks = new Text[StepCount];
+            public readonly Text[] Numbers = new Text[StepCount];
             public readonly Text[] Labels = new Text[StepCount];
             public Text Arrow;
             public RectTransform Stamp;
             public float Grip;
-            public float Heat;
             public PracticeStep LastStep;
             public bool LastOverheated;
             public float StepPopAt = -1f;
@@ -70,8 +71,11 @@ namespace MS2026.HowToPlay
         /// <summary>練習の画面を出しているか。</summary>
         public static bool IsShowing => _current != null;
 
-        /// <summary>練習の画面を出す。keepVisible が false になったら消える（null ならずっと。<see cref="Hide"/> で消す）。</summary>
-        public static PracticeView Play(HowToPlaySettings settings, PracticeBoard board, int localSeat, Func<bool> keepVisible)
+        /// <summary>
+        /// 練習の画面を出す。keepVisible が false になったら消える（null ならずっと。<see cref="Hide"/> で消す）。
+        /// fadeIn が false なら最初から見えている（前の画面から、間にキャラ選択を見せずに切り替えるとき）。
+        /// </summary>
+        public static PracticeView Play(HowToPlaySettings settings, PracticeBoard board, int localSeat, Func<bool> keepVisible, bool fadeIn = true)
         {
             Hide(true);
             if (settings == null || board == null)
@@ -82,7 +86,7 @@ namespace MS2026.HowToPlay
             var go = new GameObject("[HowToPlay] Practice");
             DontDestroyOnLoad(go);
             var view = go.AddComponent<PracticeView>();
-            view.Begin(settings, board, localSeat, keepVisible);
+            view.Begin(settings, board, localSeat, keepVisible, fadeIn);
             _current = view;
             return view;
         }
@@ -113,13 +117,15 @@ namespace MS2026.HowToPlay
             }
         }
 
-        private void Begin(HowToPlaySettings settings, PracticeBoard board, int localSeat, Func<bool> keepVisible)
+        private void Begin(HowToPlaySettings settings, PracticeBoard board, int localSeat, Func<bool> keepVisible, bool fadeIn)
         {
             _settings = settings;
             _board = board;
             _localSeat = localSeat;
             _keepVisible = keepVisible;
+            _fade = fadeIn ? 0f : 1f;
             BuildUi();
+            _group.alpha = _fade;
             for (var i = 0; i < _panels.Length; i++)
             {
                 _panels[i].LastStep = board.seats[i].step;
@@ -140,6 +146,10 @@ namespace MS2026.HowToPlay
             }
 
             _group.alpha = Mathf.Clamp01(_fade);
+            var rect = _stripes.uvRect;
+            rect.x = Mathf.Repeat(rect.x + 0.05f * dt, 1f);
+            _stripes.uvRect = rect;
+
             for (var i = 0; i < _panels.Length; i++)
             {
                 TickPanel(i, dt);
@@ -158,12 +168,10 @@ namespace MS2026.HowToPlay
 
             panel.Group.alpha = data.present ? 1f : 0.3f;
             panel.Absent.enabled = !data.present;
-            panel.LocalMark.enabled = isLocal && data.present;
 
             // ほかの人の値は 1 秒に 15 回ほどしか届かないので、なめらかに追いかける。
             var grip = data.gripping ? data.Grip01 : 0f;
             panel.Grip = isLocal ? grip : Mathf.MoveTowards(panel.Grip, grip, dt * 6f);
-            panel.Heat = isLocal ? data.Heat01 : Mathf.MoveTowards(panel.Heat, data.Heat01, dt * 3f);
 
             var firing = data.present && data.gripping && !data.overheated && panel.Grip > 0.02f;
             panel.Beam.enabled = firing;
@@ -171,17 +179,13 @@ namespace MS2026.HowToPlay
             if (firing)
             {
                 var wobble = 1f + 0.06f * Mathf.Sin(_time * 22f + seat);
-                var height = (12f + 84f * panel.Grip) * wobble;
-                panel.Beam.rectTransform.sizeDelta = new Vector2(BeamLength, height);
-                panel.BeamGlow.rectTransform.sizeDelta = new Vector2(BeamLength + 60f, height * 2.2f + 30f);
+                var height = Mathf.Lerp(panel.BeamMin, panel.BeamMax, panel.Grip) * wobble;
+                panel.Beam.rectTransform.sizeDelta = new Vector2(panel.BeamLength, height);
+                panel.BeamGlow.rectTransform.sizeDelta = new Vector2(panel.BeamLength * 1.1f, height * 2.2f + panel.BeamMin * 2f);
             }
 
             panel.Turret.localScale = Vector3.one * (1f + 0.08f * (firing ? panel.Grip : 0f));
-
             panel.Overheat.enabled = data.overheated && Mathf.Repeat(_time * 3f, 1f) < 0.65f;
-            panel.HeatFill.rectTransform.sizeDelta = new Vector2(Mathf.Max(28f, HeatBarWidth * panel.Heat), 28f);
-            panel.HeatFill.enabled = panel.Heat > 0.005f;
-            panel.HeatFill.color = HowToPlayArt.HeatColor(panel.Heat);
 
             // 課題の進み。
             if (data.step > panel.LastStep)
@@ -213,18 +217,32 @@ namespace MS2026.HowToPlay
             {
                 var done = (int)data.step > k;
                 var now = (int)data.step == k;
-                panel.Boxes[k].color = done ? color : new Color(1f, 1f, 1f, 0.15f);
+                panel.Boxes[k].color = done ? color : new Color(1f, 1f, 1f, now ? 0.35f : 0.12f);
                 panel.Checks[k].enabled = done;
-                panel.Labels[k].color = done ? new Color(1f, 1f, 1f, 0.55f) : now ? Color.white : new Color(1f, 1f, 1f, 0.4f);
+                if (panel.Numbers[k] != null)
+                {
+                    panel.Numbers[k].enabled = !done;
+                }
+
+                if (panel.Labels[k] != null)
+                {
+                    panel.Labels[k].color = done ? new Color(1f, 1f, 1f, 0.55f) : now ? Color.white : new Color(1f, 1f, 1f, 0.4f);
+                }
+
                 var pop = k == panel.StepPopIndex && panel.StepPopAt >= 0f ? Mathf.Clamp01((_time - panel.StepPopAt) / 0.3f) : 1f;
                 panel.Boxes[k].rectTransform.localScale = Vector3.one * (1f + 0.5f * (1f - pop));
             }
 
+            // 今の課題の上で ▼ が弾む（大きい区画だけ）。
             var current = (int)data.step;
-            panel.Arrow.enabled = data.present && current < StepCount;
-            if (panel.Arrow.enabled)
+            if (panel.Arrow != null)
             {
-                panel.Arrow.rectTransform.anchoredPosition = new Vector2(125f + 8f * Mathf.Sin(_time * 6f), StepRowY(current));
+                panel.Arrow.enabled = data.present && current < StepCount;
+                if (panel.Arrow.enabled)
+                {
+                    var box = panel.Boxes[current].rectTransform.anchoredPosition;
+                    panel.Arrow.rectTransform.anchoredPosition = new Vector2(box.x, box.y + 78f + 10f * Mathf.Abs(Mathf.Sin(_time * 5f)));
+                }
             }
 
             panel.Stamp.gameObject.SetActive(data.present && data.IsDone);
@@ -256,8 +274,6 @@ namespace MS2026.HowToPlay
             _timer.text = $"あと {Mathf.CeilToInt(_board.remaining)}";
         }
 
-        private static float StepRowY(int index) => 95f - index * 90f;
-
         // ───────── 作る ─────────
 
         private void BuildUi()
@@ -265,15 +281,32 @@ namespace MS2026.HowToPlay
             _group = HowToPlayArt.MakeCanvas(gameObject, _settings.sortingOrder);
             var root = (RectTransform)transform;
 
-            var backdrop = HowToPlayArt.MakeImage("Backdrop", root, null, new Color(0.02f, 0.04f, 0.1f, 0.92f), Vector2.zero, Vector2.zero);
+            // 後ろは不透明な紺に、斜めのしま（ステージ抽選のルーレットとそろえる）。
+            var backdrop = HowToPlayArt.MakeImage("Backdrop", root, null, HowToPlayArt.Backdrop, Vector2.zero, Vector2.zero);
             HowToPlayArt.Stretch(backdrop.rectTransform);
+            _stripes = new GameObject("Stripes", typeof(RectTransform)).AddComponent<RawImage>();
+            _stripes.transform.SetParent(root, false);
+            _stripes.texture = HowToPlayArt.Stripes;
+            _stripes.color = new Color(0.35f, 0.95f, 1f, 0.08f);
+            _stripes.uvRect = new Rect(0f, 0f, 6f, 3.4f);
+            _stripes.raycastTarget = false;
+            HowToPlayArt.Stretch(_stripes.rectTransform);
 
             _title = HowToPlayArt.MakeText("Title", root, _settings.title, 76, Color.white, TextAnchor.MiddleCenter, new Vector2(0f, 485f), new Vector2(1600f, 110f));
             HowToPlayArt.AddOutline(_title, HowToPlayArt.Ink, 4f);
 
+            var row = 0;
             for (var i = 0; i < _panels.Length; i++)
             {
-                _panels[i] = MakePanel(root, i);
+                if (i == _localSeat)
+                {
+                    _panels[i] = MakePanel(root, i, true, BigCenter);
+                }
+                else
+                {
+                    _panels[i] = MakePanel(root, i, false, SmallCenters[Mathf.Min(row, SmallCenters.Length - 1)]);
+                    row++;
+                }
             }
 
             var bar = HowToPlayArt.MakeImage("BottomBar", root, null, new Color(0f, 0f, 0f, 0.45f), new Vector2(0f, -497f), new Vector2(1920f, 86f));
@@ -281,25 +314,39 @@ namespace MS2026.HowToPlay
             _timer = HowToPlayArt.MakeText("Timer", bar.rectTransform, string.Empty, 38, new Color(0.82f, 0.92f, 1f), TextAnchor.MiddleRight, new Vector2(20f, 0f), new Vector2(1800f, 80f));
         }
 
-        private Panel MakePanel(RectTransform root, int seat)
+        private Panel MakePanel(RectTransform root, int seat, bool big, Vector2 center)
         {
             var color = FortressColors.SeatColor(seat);
-            var panel = new Panel();
-            var rect = HowToPlayArt.MakeRect($"Panel {seat + 1}P", root, PanelCenters[seat], PanelSize);
+            var size = big ? BigSize : SmallSize;
+            var half = size * 0.5f;
+            var panel = new Panel { Big = big };
+            var rect = HowToPlayArt.MakeRect($"Panel {seat + 1}P", root, center, size);
             panel.Group = rect.gameObject.AddComponent<CanvasGroup>();
 
-            HowToPlayArt.MakeImage("Back", rect, HowToPlayArt.Rounded, HowToPlayArt.Navy, Vector2.zero, PanelSize);
-            HowToPlayArt.MakeImage("Tint", rect, HowToPlayArt.Rounded, new Color(color.r, color.g, color.b, 0.16f), Vector2.zero, PanelSize);
-            HowToPlayArt.MakeImage("Frame", rect, HowToPlayArt.Outline, color, Vector2.zero, PanelSize);
+            HowToPlayArt.MakeImage("Back", rect, HowToPlayArt.Rounded, HowToPlayArt.Navy, Vector2.zero, size);
+            HowToPlayArt.MakeImage("Tint", rect, HowToPlayArt.Rounded, new Color(color.r, color.g, color.b, 0.16f), Vector2.zero, size);
+            HowToPlayArt.MakeImage("Frame", rect, HowToPlayArt.Outline, color, Vector2.zero, size);
 
-            var labelBack = HowToPlayArt.MakeImage("LabelBack", rect, HowToPlayArt.Rounded, color, new Vector2(-395f, 160f), new Vector2(100f, 56f));
-            HowToPlayArt.MakeText("Label", labelBack.rectTransform, $"{seat + 1}P", 36, Color.white, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(100f, 56f));
-            panel.LocalMark = HowToPlayArt.MakeText("LocalMark", rect, _settings.localMark, 32, Color.white, TextAnchor.MiddleLeft, new Vector2(-210f, 160f), new Vector2(260f, 56f));
+            // 「1P」の札（自分の区画には「あなた」も）。
+            var labelSize = big ? new Vector2(130f, 72f) : new Vector2(90f, 50f);
+            var labelPos = new Vector2(-half.x + 24f + labelSize.x * 0.5f, half.y - 24f - labelSize.y * 0.5f);
+            var labelBack = HowToPlayArt.MakeImage("LabelBack", rect, HowToPlayArt.Rounded, color, labelPos, labelSize);
+            HowToPlayArt.MakeText("Label", labelBack.rectTransform, $"{seat + 1}P", big ? 46 : 32, Color.white, TextAnchor.MiddleCenter, Vector2.zero, labelSize);
+            if (big)
+            {
+                HowToPlayArt.MakeText("LocalMark", rect, _settings.localMark, 44, Color.white, TextAnchor.MiddleLeft,
+                    new Vector2(labelPos.x + labelSize.x * 0.5f + 20f + 150f, labelPos.y), new Vector2(300f, 72f));
+            }
 
             // 砲台とビーム（ビームは砲台の右へ、握る強さで太くなる）。
-            const float TurretX = -320f;
-            const float TurretY = 10f;
-            panel.BeamGlow = HowToPlayArt.MakeImage("BeamGlow", rect, HowToPlayArt.Soft, new Color(color.r, color.g, color.b, 0.55f), new Vector2(TurretX + 20f, TurretY), new Vector2(BeamLength, 40f));
+            var turretPos = big ? new Vector2(-470f, 110f) : new Vector2(-220f, -40f);
+            var turretSize = big ? 200f : 100f;
+            panel.BeamLength = big ? 900f : 420f;
+            panel.BeamMin = big ? 20f : 8f;
+            panel.BeamMax = big ? 140f : 60f;
+            var beamStart = turretPos + new Vector2(turretSize * 0.38f, 0f);
+
+            panel.BeamGlow = HowToPlayArt.MakeImage("BeamGlow", rect, HowToPlayArt.Soft, new Color(color.r, color.g, color.b, 0.55f), beamStart - new Vector2(turretSize * 0.2f, 0f), new Vector2(panel.BeamLength, panel.BeamMin));
             HowToPlayArt.PivotLeft(panel.BeamGlow.rectTransform);
 
             panel.Beam = new GameObject("Beam", typeof(RectTransform)).AddComponent<RawImage>();
@@ -308,45 +355,55 @@ namespace MS2026.HowToPlay
             panel.Beam.color = _settings.beamTexture != null ? Color.white : Color.Lerp(color, Color.white, 0.6f);
             panel.Beam.raycastTarget = false;
             HowToPlayArt.PivotLeft(panel.Beam.rectTransform);
-            panel.Beam.rectTransform.anchoredPosition = new Vector2(TurretX + 50f, TurretY);
+            panel.Beam.rectTransform.anchoredPosition = beamStart;
 
-            panel.Turret = HowToPlayArt.MakeRect("Turret", rect, new Vector2(TurretX, TurretY), new Vector2(130f, 130f));
-            var barrel = HowToPlayArt.MakeImage("Barrel", panel.Turret, HowToPlayArt.Rounded, new Color(0.92f, 0.96f, 1f), new Vector2(20f, 0f), new Vector2(96f, 40f));
+            panel.Turret = HowToPlayArt.MakeRect("Turret", rect, turretPos, new Vector2(turretSize, turretSize));
+            var barrel = HowToPlayArt.MakeImage("Barrel", panel.Turret, HowToPlayArt.Rounded, new Color(0.92f, 0.96f, 1f), new Vector2(turretSize * 0.15f, 0f), new Vector2(turretSize * 0.75f, turretSize * 0.3f));
             HowToPlayArt.PivotLeft(barrel.rectTransform);
-            HowToPlayArt.MakeImage("Ring", panel.Turret, HowToPlayArt.Circle, HowToPlayArt.Ink, Vector2.zero, new Vector2(124f, 124f));
-            HowToPlayArt.MakeImage("Body", panel.Turret, HowToPlayArt.Circle, color, Vector2.zero, new Vector2(110f, 110f));
+            HowToPlayArt.MakeImage("Ring", panel.Turret, HowToPlayArt.Circle, HowToPlayArt.Ink, Vector2.zero, Vector2.one * (turretSize * 0.95f));
+            HowToPlayArt.MakeImage("Body", panel.Turret, HowToPlayArt.Circle, color, Vector2.zero, Vector2.one * (turretSize * 0.85f));
 
-            panel.Overheat = HowToPlayArt.MakeText("Overheat", rect, _settings.overheatText, 50, new Color(1f, 0.3f, 0.3f), TextAnchor.MiddleCenter, new Vector2(-90f, TurretY), new Vector2(520f, 80f));
-            HowToPlayArt.AddOutline(panel.Overheat, HowToPlayArt.Ink, 4f);
+            panel.Overheat = HowToPlayArt.MakeText("Overheat", rect, _settings.overheatText, big ? 72 : 40, new Color(1f, 0.3f, 0.3f), TextAnchor.MiddleCenter,
+                new Vector2(big ? 60f : 40f, turretPos.y), new Vector2(big ? 800f : 420f, big ? 110f : 60f));
+            HowToPlayArt.AddOutline(panel.Overheat, HowToPlayArt.Ink, big ? 5f : 3f);
 
-            // 熱の棒。
-            HowToPlayArt.MakeText("HeatLabel", rect, _settings.heatLabel, 32, new Color(1f, 0.85f, 0.65f), TextAnchor.MiddleCenter, new Vector2(-415f, -150f), new Vector2(60f, 50f));
-            var heatBack = HowToPlayArt.MakeImage("HeatBack", rect, HowToPlayArt.Rounded, new Color(1f, 1f, 1f, 0.14f), new Vector2(-380f, -150f), new Vector2(HeatBarWidth, 28f));
-            HowToPlayArt.PivotLeft(heatBack.rectTransform);
-            panel.HeatFill = HowToPlayArt.MakeImage("HeatFill", rect, HowToPlayArt.Rounded, HowToPlayArt.HeatColor(0f), new Vector2(-380f, -150f), new Vector2(28f, 28f));
-            HowToPlayArt.PivotLeft(panel.HeatFill.rectTransform);
-
-            // 3つの課題。
+            // 3つの課題。大きい区画: 下に横並びで名前つき。小さい区画: 右上に番号つきの四角だけ。
             for (var k = 0; k < StepCount; k++)
             {
-                var y = StepRowY(k);
-                panel.Boxes[k] = HowToPlayArt.MakeImage($"Box{k + 1}", rect, HowToPlayArt.Rounded, new Color(1f, 1f, 1f, 0.15f), new Vector2(175f, y), new Vector2(48f, 48f));
-                panel.Checks[k] = HowToPlayArt.MakeText($"Check{k + 1}", panel.Boxes[k].rectTransform, "✓", 38, Color.white, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(48f, 48f));
-                panel.Labels[k] = HowToPlayArt.MakeText($"Step{k + 1}", rect, _settings.StepLabel(k), 40, Color.white, TextAnchor.MiddleLeft, new Vector2(360f, y), new Vector2(300f, 56f));
+                if (big)
+                {
+                    var itemX = -400f + 400f * k;
+                    var boxPos = new Vector2(itemX - 150f, -270f);
+                    panel.Boxes[k] = HowToPlayArt.MakeImage($"Box{k + 1}", rect, HowToPlayArt.Rounded, new Color(1f, 1f, 1f, 0.12f), boxPos, new Vector2(64f, 64f));
+                    panel.Checks[k] = HowToPlayArt.MakeText($"Check{k + 1}", panel.Boxes[k].rectTransform, "✓", 52, Color.white, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(64f, 64f));
+                    panel.Labels[k] = HowToPlayArt.MakeText($"Step{k + 1}", rect, _settings.StepLabel(k), 48, Color.white, TextAnchor.MiddleLeft,
+                        new Vector2(itemX - 105f + 160f, -270f), new Vector2(320f, 70f));
+                }
+                else
+                {
+                    var boxPos = new Vector2(half.x - 200f + 70f * k, half.y - 24f - 25f);
+                    panel.Boxes[k] = HowToPlayArt.MakeImage($"Box{k + 1}", rect, HowToPlayArt.Rounded, new Color(1f, 1f, 1f, 0.12f), boxPos, new Vector2(50f, 50f));
+                    panel.Checks[k] = HowToPlayArt.MakeText($"Check{k + 1}", panel.Boxes[k].rectTransform, "✓", 40, Color.white, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(50f, 50f));
+                    panel.Numbers[k] = HowToPlayArt.MakeText($"Number{k + 1}", panel.Boxes[k].rectTransform, (k + 1).ToString(), 30, new Color(1f, 1f, 1f, 0.7f), TextAnchor.MiddleCenter, Vector2.zero, new Vector2(50f, 50f));
+                }
             }
 
-            panel.Arrow = HowToPlayArt.MakeText("Arrow", rect, "▶", 34, new Color(1f, 0.9f, 0.45f), TextAnchor.MiddleCenter, new Vector2(125f, StepRowY(0)), new Vector2(50f, 50f));
+            if (big)
+            {
+                panel.Arrow = HowToPlayArt.MakeText("Arrow", rect, "▼", 44, new Color(1f, 0.9f, 0.45f), TextAnchor.MiddleCenter, Vector2.zero, new Vector2(60f, 60f));
+            }
 
             // 全部できたら「OK!」の判子。
-            panel.Stamp = HowToPlayArt.MakeRect("Stamp", rect, new Vector2(0f, 10f), new Vector2(380f, 140f));
+            var stampSize = big ? new Vector2(520f, 190f) : new Vector2(300f, 110f);
+            panel.Stamp = HowToPlayArt.MakeRect("Stamp", rect, new Vector2(0f, big ? 40f : -10f), stampSize);
             panel.Stamp.localRotation = Quaternion.Euler(0f, 0f, 8f);
-            var stampBack = HowToPlayArt.MakeImage("Back", panel.Stamp, HowToPlayArt.Rounded, color, Vector2.zero, new Vector2(380f, 140f));
-            HowToPlayArt.AddOutline(stampBack, Color.white, 5f);
-            var stampText = HowToPlayArt.MakeText("Text", panel.Stamp, _settings.doneText, 92, Color.white, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(380f, 140f));
-            HowToPlayArt.AddOutline(stampText, HowToPlayArt.Ink, 4f);
+            var stampBack = HowToPlayArt.MakeImage("Back", panel.Stamp, HowToPlayArt.Rounded, color, Vector2.zero, stampSize);
+            HowToPlayArt.AddOutline(stampBack, Color.white, big ? 6f : 4f);
+            var stampText = HowToPlayArt.MakeText("Text", panel.Stamp, _settings.doneText, big ? 130 : 76, Color.white, TextAnchor.MiddleCenter, Vector2.zero, stampSize);
+            HowToPlayArt.AddOutline(stampText, HowToPlayArt.Ink, big ? 5f : 3f);
             panel.Stamp.gameObject.SetActive(false);
 
-            panel.Absent = HowToPlayArt.MakeText("Absent", rect, _settings.absentText, 44, Color.white, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(800f, 80f));
+            panel.Absent = HowToPlayArt.MakeText("Absent", rect, _settings.absentText, big ? 56 : 36, Color.white, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(size.x - 40f, 80f));
             return panel;
         }
     }

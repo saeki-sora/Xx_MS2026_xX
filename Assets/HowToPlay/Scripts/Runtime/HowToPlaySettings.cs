@@ -37,7 +37,6 @@ namespace MS2026.HowToPlay
         public string[] stepLabels = { "握ってみる", "思いきり握る", "離して冷ます" };
         public string doneText = "OK!";
         public string overheatText = "オーバーヒート！";
-        public string heatLabel = "熱";
         public string localMark = "あなた";
         public string absentText = "参加していません";
 

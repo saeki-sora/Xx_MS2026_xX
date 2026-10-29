@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using MS2026.HowToPlay;
+using MS2026.Stages;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -98,8 +99,10 @@ namespace MS2026.UI.Game
                 _practiceRunning = true;
                 SyncPracticePresence();
                 // ゲームのシーンが届くまで（歯磨き粉の幕の下で）出したまま。中止されたら消える。
+                // ルーレットから切り替わるときはふわっと出さない（間にキャラ選択の画面が透けて見えないように。練習の方が上に描かれる）。
                 PracticeView.Play(settings, _practice, LocalSeat,
-                    () => IsOnline && !IsGameLoaded && (Roster.phase == LobbyPhase.Practice || Roster.phase == LobbyPhase.Loading));
+                    () => IsOnline && !IsGameLoaded && (Roster.phase == LobbyPhase.Practice || Roster.phase == LobbyPhase.Loading),
+                    !StageRouletteView.IsShowing);
             }
             else if (before == LobbyPhase.Practice && after != LobbyPhase.Practice)
             {
