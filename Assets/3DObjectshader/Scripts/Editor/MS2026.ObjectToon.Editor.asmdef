@@ -1,0 +1,18 @@
+{
+    "name": "MS2026.ObjectToon.Editor",
+    "rootNamespace": "MS2026.ObjectToon.EditorTools",
+    "references": [
+        "MS2026.ObjectToon.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
