@@ -15,7 +15,7 @@ MonoBehaviour:
   displayName: "\u30B9\u30D4\u30AD"
   simulationMode: 0
   maxHealth: 10
-  moveSpeed: 3
+  moveSpeed: 2.6
   damageToCore: 1
   navigationProfile: {fileID: 0}
   turnSharpness: 8

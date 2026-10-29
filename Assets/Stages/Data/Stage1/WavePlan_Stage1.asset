@@ -12,11 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99359cf5400741688f5eb57655e20b80, type: 3}
   m_Name: WavePlan_Stage1
   m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.WavePlan
-  memo: "\u4eee\u306e\u30ec\u30d9\u30eb\u30c7\u30b6\u30a4\u30f3\uff08Claude 2026-10-24\uff09\u3002\u76ee\u6a19 120/250/400/530/700\uff08\u5408\u8a08 2000\uff09\u30021\u79d2\u306b\u51fa\u308b\u6570\u306f\u7d04 7\u219211\u219213\u219220\u219221 \u4f53\uff08\u30b9\u30c6\u30fc\u30b82\u306f 8\u219212\u219214\u219217\u219220\uff09\u3002\u5236\u9650\u6642\u9593\u306f\u6226\u3063\u3066\u3044\u308b\u9593\u3060\u3051 5 \u5206\u3002"
+  memo: "\u4EEE\u306E\u30EC\u30D9\u30EB\u30C7\u30B6\u30A4\u30F3\uFF08Claude 2026-10-24\uFF09\u3002\u76EE\u6A19
+    120/250/400/530/700\uFF08\u5408\u8A08 2000\uFF09\u30021\u79D2\u306B\u51FA\u308B\u6570\u306F\u7D04
+    7\u219211\u219213\u219220\u219221 \u4F53\uFF08\u30B9\u30C6\u30FC\u30B82\u306F
+    8\u219212\u219214\u219217\u219220\uFF09\u3002\u5236\u9650\u6642\u9593\u306F\u6226\u3063\u3066\u3044\u308B\u9593\u3060\u3051
+    5 \u5206\u3002"
   waves:
-  - label: ""
-    announceText: "\u307e\u305a\u306f\u5c0f\u624b\u3057\u3089\u3079\uff01"
-    targetKills: 120
+  - label: 
+    announceText: "\u307E\u305A\u306F\u5C0F\u624B\u3057\u3089\u3079\uFF01"
+    targetKills: 85
     spawnEntries:
     - triggerTime: 0
       spawnPointId: Spawn_0
@@ -50,9 +54,9 @@ MonoBehaviour:
     repeatGapSeconds: 2
     intervalEvent: {fileID: 11400000, guid: 2526502f71e844809aacc98223d4e078, type: 2}
     restSeconds: 3
-  - label: ""
-    announceText: "\u7206\u5f3e\u30b9\u30d4\u30ad\u306b\u6ce8\u610f\uff01"
-    targetKills: 250
+  - label: 
+    announceText: "\u7206\u5F3E\u30B9\u30D4\u30AD\u306B\u6CE8\u610F\uFF01"
+    targetKills: 140
     spawnEntries:
     - triggerTime: 0
       spawnPointId: Spawn_0
@@ -60,28 +64,28 @@ MonoBehaviour:
       count: 35
       intervalBetweenSpawns: 0.1765
       timing: 1
-      durationSeconds: 6
+      durationSeconds: 7
     - triggerTime: 0
       spawnPointId: Spawn_4
       enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
       count: 35
       intervalBetweenSpawns: 0.1765
       timing: 1
-      durationSeconds: 6
+      durationSeconds: 7
     - triggerTime: 5
       spawnPointId: Spawn_2
       enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
       count: 35
       intervalBetweenSpawns: 0.1765
       timing: 1
-      durationSeconds: 6
+      durationSeconds: 7
     - triggerTime: 5
       spawnPointId: Spawn_6
       enemyType: {fileID: 11400000, guid: e038cf2b6a0274f4cb2081e47cb21c06, type: 2}
       count: 35
       intervalBetweenSpawns: 0.1765
       timing: 1
-      durationSeconds: 6
+      durationSeconds: 7
     - triggerTime: 9
       spawnPointId: Spawn_1
       enemyType: {fileID: 11400000, guid: 6d198346f01843cead1c71f12aff332a, type: 2}
@@ -100,9 +104,9 @@ MonoBehaviour:
     repeatGapSeconds: 2
     intervalEvent: {fileID: 11400000, guid: 2526502f71e844809aacc98223d4e078, type: 2}
     restSeconds: 3
-  - label: ""
-    announceText: "\u30dc\u30b9\u51fa\u73fe\uff01"
-    targetKills: 400
+  - label: 
+    announceText: "\u30DC\u30B9\u51FA\u73FE\uFF01"
+    targetKills: 240
     spawnEntries:
     - triggerTime: 0
       spawnPointId: Spawn_0
@@ -192,9 +196,9 @@ MonoBehaviour:
     repeatGapSeconds: 2
     intervalEvent: {fileID: 11400000, guid: 2526502f71e844809aacc98223d4e078, type: 2}
     restSeconds: 3
-  - label: ""
-    announceText: "\u56db\u65b9\u516b\u65b9\u304b\u3089\u6765\u308b\u305e\uff01"
-    targetKills: 530
+  - label: 
+    announceText: "\u56DB\u65B9\u516B\u65B9\u304B\u3089\u6765\u308B\u305E\uFF01"
+    targetKills: 460
     spawnEntries:
     - triggerTime: 0
       spawnPointId: Spawn_1
@@ -298,9 +302,9 @@ MonoBehaviour:
     repeatGapSeconds: 2
     intervalEvent: {fileID: 11400000, guid: 2526502f71e844809aacc98223d4e078, type: 2}
     restSeconds: 3
-  - label: ""
-    announceText: "\u6700\u5f8c\u306e\u5927\u7fa4\uff01"
-    targetKills: 700
+  - label: 
+    announceText: "\u6700\u5F8C\u306E\u5927\u7FA4\uFF01"
+    targetKills: 550
     spawnEntries:
     - triggerTime: 0
       spawnPointId: Spawn_0

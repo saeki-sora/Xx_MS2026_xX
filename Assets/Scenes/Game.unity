@@ -291,8 +291,8 @@ MonoBehaviour:
   playerIndex: 2
   tuning: {fileID: 11400000, guid: 300685bf5fc7cd0478f7949bf1f8f6e5, type: 2}
   autoRotate: 1
-  rotationDirection: 0
-  rotationSpeedScale: 1
+  rotationDirection: 1
+  rotationSpeedScale: 1.2
   muzzle: {fileID: 714704709}
 --- !u!114 &62728023
 MonoBehaviour:
@@ -1422,7 +1422,7 @@ MonoBehaviour:
   tuning: {fileID: 11400000, guid: 300685bf5fc7cd0478f7949bf1f8f6e5, type: 2}
   autoRotate: 1
   rotationDirection: 0
-  rotationSpeedScale: 1
+  rotationSpeedScale: 1.2
   muzzle: {fileID: 1219381026}
 --- !u!114 &648091142
 MonoBehaviour:
@@ -1575,8 +1575,8 @@ MonoBehaviour:
   playerIndex: 0
   tuning: {fileID: 11400000, guid: 300685bf5fc7cd0478f7949bf1f8f6e5, type: 2}
   autoRotate: 1
-  rotationDirection: 0
-  rotationSpeedScale: 1
+  rotationDirection: 1
+  rotationSpeedScale: 1.2
   muzzle: {fileID: 466277769}
 --- !u!114 &669435693
 MonoBehaviour:
@@ -2741,7 +2741,7 @@ MonoBehaviour:
   tuning: {fileID: 11400000, guid: 300685bf5fc7cd0478f7949bf1f8f6e5, type: 2}
   autoRotate: 1
   rotationDirection: 0
-  rotationSpeedScale: 1
+  rotationSpeedScale: 1.2
   muzzle: {fileID: 746343943}
 --- !u!114 &1727559728
 MonoBehaviour:
@@ -3602,6 +3602,11 @@ MonoBehaviour:
   portSearchSeconds: 4
   portRetrySeconds: 5
   deviceLostSeconds: 3
+  relayBasePort: 47781
+  relayTimeoutSeconds: 0.5
+  relaySendRate: 60
+  editorRelaySensorNumber: 0
+  editorRelayForceSend: 0
   keepAcrossScenes: 0
   logValues: 1
   logIntervalSeconds: 0.3
