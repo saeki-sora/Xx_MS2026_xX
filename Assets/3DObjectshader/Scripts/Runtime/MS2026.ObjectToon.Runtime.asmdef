@@ -1,0 +1,14 @@
+{
+    "name": "MS2026.ObjectToon.Runtime",
+    "rootNamespace": "MS2026.ObjectToon",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

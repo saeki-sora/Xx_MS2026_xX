@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74b7276794de51047bf63f9d14336bc8, type: 3}
+  m_Name: ObjectToonProfile
+  m_EditorClassIdentifier: MS2026.ObjectToon.Runtime::MS2026.ObjectToon.ObjectToonProfile
+  enabledInPlay: 1
+  targetScenes:
+  - Stage1
+  commonSettings: {fileID: 2100000, guid: 635a6861afe8dcd47ba49f09f49e3e50, type: 2}
+  entries:
+  - original: {fileID: 2100000, guid: ddd500e343c1c8b45a83718163e756c7, type: 2}
+    toon: {fileID: 2100000, guid: 74878adf30a53bd4d8156c8d87e0fdae, type: 2}
+    enabled: 1
+    useCommon: 1
+  - original: {fileID: 2100000, guid: 569d36e7257f34049b9f01ae7c287d86, type: 2}
+    toon: {fileID: 2100000, guid: faa7e88394a00034098249ab6a1cf952, type: 2}
+    enabled: 1
+    useCommon: 1
+  - original: {fileID: 2100000, guid: 625a8cf53cff21b458117be32f0e7f04, type: 2}
+    toon: {fileID: 2100000, guid: 1527c5e1df6ec67409d7ec425ed74e99, type: 2}
+    enabled: 1
+    useCommon: 1
+  - original: {fileID: 2100000, guid: c7f46ac197b39fe4383741b5d1d08335, type: 2}
+    toon: {fileID: 2100000, guid: 1cde0823c0c855c4f8cae3486b30391d, type: 2}
+    enabled: 1
+    useCommon: 1
+  - original: {fileID: 2100000, guid: 61fca4d189a8dae40a07e7bf91051d55, type: 2}
+    toon: {fileID: 2100000, guid: 89ab4fbd74f52ea41b3176bc311b23d3, type: 2}
+    enabled: 1
+    useCommon: 1
+  - original: {fileID: 2100000, guid: 1684efe7df8a9084aaee9ec9f48b0065, type: 2}
+    toon: {fileID: 2100000, guid: 8cd2fad3908fe784e8df266afd3c996e, type: 2}
+    enabled: 1
+    useCommon: 1
+  - original: {fileID: 2100000, guid: e3fd8100c7c35d944a52f0ee42a96874, type: 2}
+    toon: {fileID: 2100000, guid: 02c0b6dcd6f8bb445a968cf1e73d99f5, type: 2}
+    enabled: 1
+    useCommon: 1
+  - original: {fileID: 2100000, guid: c4bce1775e98e4e45a63333571c3fe6e, type: 2}
+    toon: {fileID: 2100000, guid: d18023a4a0b9c674d9c3e325e531c773, type: 2}
+    enabled: 1
+    useCommon: 1
+  spriteEnabled: 0
+  spriteScenes:
+  - Stage1
+  - Game
+  spriteCommonSettings: {fileID: 2100000, guid: b1b39e10c546bab48873dfa779f4d64b, type: 2}
+  spriteEntries:
+  - original: {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+    toon: {fileID: 2100000, guid: a71d0c759211a3d47ac839161ca9a7c4, type: 2}
+    enabled: 1
+    useCommon: 1
+  objectOverrides: []
