@@ -40,6 +40,7 @@ Shader "MS2026/Fortress/ToothpasteBeam"
         [HideInInspector] _BeamWidth ("Beam Width", Float) = 0.3
         [HideInInspector] _BeamFlow ("Beam Flow", Float) = 0
         [HideInInspector] _BeamPower ("Beam Power", Float) = 0.5
+        [HideInInspector] _BeamTipRound ("Beam Tip Round", Float) = 0
     }
 
     SubShader
@@ -95,6 +96,7 @@ Shader "MS2026/Fortress/ToothpasteBeam"
                 float _BeamWidth;
                 float _BeamFlow;
                 half _BeamPower;
+                half _BeamTipRound;
             CBUFFER_END
 
             struct Attributes
@@ -175,6 +177,17 @@ Shader "MS2026/Fortress/ToothpasteBeam"
                 float s = along - _BeamFlow;     // 表面と一緒に先へ流れる座標
                 float x = v * 2.0 - 1.0;         // 幅方向 -1〜1
                 half alpha = 1.0;
+
+                // 届く距離の先（何にも当たっていないとき）: 先端を丸くして、絞り出した歯磨き粉の先のように終わらせる。
+                // 先から「太さの半分×1.3」の所から細くなり始め、先で0になる（四角く途切れない）。
+                if (_BeamTipRound > 0.001 && _BeamWidth > 0.0001)
+                {
+                    float capLength = _BeamWidth * 0.65;
+                    float c = saturate(1.0 - (_BeamLength - along) / capLength);
+                    float capRadius = lerp(1.0, sqrt(saturate(1.0 - c * c)), _BeamTipRound);
+                    alpha *= 1.0 - smoothstep(capRadius - 0.1, capRadius, abs(x));
+                    x /= max(capRadius, 0.15);
+                }
 
                 // 流れるこぶ: 縁がふくらんだりくびれたりしながら先へ流れる（強く握るほどはっきり）。こぶの所は少し明るい。
                 float lump = 1.0;

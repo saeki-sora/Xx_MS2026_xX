@@ -96,6 +96,9 @@ namespace MS2026.Fortress
         [Header("爆弾（倒すと爆発する敵。今は群衆モードのみ）")]
         public EnemyBombSettings bomb = new EnemyBombSettings();
 
+        [Header("盾（コの字の盾で自分とお供を守る。今は群衆モードのみ）")]
+        public EnemyShieldSettings shield = new EnemyShieldSettings();
+
         [Header("見た目（Actorモード・共通）")]
         [Tooltip("（Actorのみ）スポーン時に生成する見た目のプレファブ。未設定の場合はプレースホルダーの円形を使う。")]
         public GameObject visualPrefab;

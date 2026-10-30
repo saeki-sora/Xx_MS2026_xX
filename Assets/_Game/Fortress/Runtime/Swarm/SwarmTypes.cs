@@ -55,6 +55,9 @@ namespace MS2026.Fortress
         public float blinkSpeedUp;
         public float blinkSpeedUpDistance;
         public float blinkSwell;
+
+        /// <summary>1 なら盾持ちのお供（<see cref="EnemyShieldSettings.escortType"/>）。行き先が渡されている間は盾持ちのまわりの場所へ向かう。</summary>
+        public int followsShield;
     }
 
     /// <summary>爆弾の敵が爆発した理由。</summary>

@@ -13,6 +13,10 @@ namespace MS2026.Fortress
         private static readonly int WidthId = Shader.PropertyToID("_BeamWidth");
         private static readonly int FlowId = Shader.PropertyToID("_BeamFlow");
         private static readonly int PowerId = Shader.PropertyToID("_BeamPower");
+        private static readonly int TipRoundId = Shader.PropertyToID("_BeamTipRound");
+
+        // 当たる・外れるが切り替わったとき、先の丸みを一瞬で出し入れしない（約0.1秒）。
+        private const float TipRoundSpeed = 10f;
 
         // 流れの座標が大きくなりすぎないように折り返す（模様が一瞬ずれるだけで目立たない）。
         private const float FlowWrap = 1024f;
@@ -20,6 +24,7 @@ namespace MS2026.Fortress
         private readonly LaserBeamVisual _beam;
         private MaterialPropertyBlock _block;
         private float _flow;
+        private float _tipRound = 1f;
         private bool _applied;
 
         public BeamGelDriver(LaserBeamVisual beam)
@@ -43,12 +48,16 @@ namespace MS2026.Fortress
 
             var length = Vector3.Distance(line.GetPosition(0), line.GetPosition(line.positionCount - 1));
 
+            // 何にも当たらず届く距離で終わっているときだけ先を丸くする（壁などに当たっているときは、そこでぴったり止める）。
+            _tipRound = Mathf.MoveTowards(_tipRound, _beam.HasImpact ? 0f : 1f, TipRoundSpeed * deltaTime);
+
             _block ??= new MaterialPropertyBlock();
             line.GetPropertyBlock(_block);
             _block.SetFloat(LengthId, Mathf.Max(0.01f, length));
             _block.SetFloat(WidthId, Mathf.Max(0.001f, turret.CurrentThicknessMeters));
             _block.SetFloat(FlowId, _flow);
             _block.SetFloat(PowerId, turret.CurrentThickness01);
+            _block.SetFloat(TipRoundId, _tipRound);
             line.SetPropertyBlock(_block);
             _applied = true;
         }
