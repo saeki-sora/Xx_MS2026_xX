@@ -331,7 +331,8 @@ namespace MS2026.Stages
             _group.interactable = false;
 
             var root = (RectTransform)transform;
-            _backdrop = MakeImage("Backdrop", root, null, new Color(0.02f, 0.04f, 0.12f, 0.82f));
+            // 不透明（後ろのキャラ選択の画面は見せない。2026-10-29、ユーザー依頼）。
+            _backdrop = MakeImage("Backdrop", root, null, new Color(0.02f, 0.04f, 0.12f, 1f));
             Stretch(_backdrop.rectTransform);
 
             var stripes = _settings.stripes != null ? _settings.stripes : StripesTexture;

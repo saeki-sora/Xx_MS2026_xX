@@ -48,7 +48,7 @@ namespace MS2026.Fortress
 
             var v = math.lerp(steered, actual, momentumTransfer);
             var speed = math.length(v);
-            var cap = tp.maxSpeed * 1.6f;
+            var cap = tp.TopSpeed * 1.6f;
             if (speed > cap)
             {
                 v *= cap / speed;

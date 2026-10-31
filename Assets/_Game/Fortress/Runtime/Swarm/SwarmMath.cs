@@ -13,6 +13,19 @@ namespace MS2026.Fortress
                 math.clamp((int)math.floor((p.y - origin.y) * invCell), 0, height - 1));
         }
 
+        /// <summary>
+        /// 螺旋の敵の、回る分の速度（輪の接線の向き × 半径 × 角速度）。どこまで回ったかは 時刻 と 敵ごとの番号 で決まるので、
+        /// 敵ごとの状態を持たなくてよい。近づく速度に足すと、見えない点のまわりを回りながらその点ごと進む動きになる。
+        /// spiralMixDirections が 1 なら、番号が奇数の敵は右回り（それ以外は左回り）。
+        /// </summary>
+        public static float2 SpiralVelocity(SwarmTypeParams tp, int id, float time)
+        {
+            var spin = tp.spiralMixDirections != 0 && (id & 1) != 0 ? -1f : 1f;
+            var angle = SwarmBombMath.Seed(id) * (2f * math.PI) + spin * tp.spiralAngularSpeed * time;
+            math.sincos(angle, out var s, out var c);
+            return new float2(-s, c) * (spin * tp.spiralRadius * tp.spiralAngularSpeed);
+        }
+
         public static int NearestIndex(float2 p, float2 origin, float cell, int width, int height)
         {
             var x = math.clamp((int)math.floor((p.x - origin.x) / cell), 0, width - 1);

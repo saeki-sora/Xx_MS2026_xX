@@ -24,7 +24,10 @@ namespace MS2026.UI.Game
         CharacterSelect = 5,
 
         /// <summary>キャラクター選択の後、ステージ抽選のルーレットを見せている（選ばれたステージは <see cref="LobbyRoster.stageIndex"/>）。2026-10-21。</summary>
-        StageRoulette = 6
+        StageRoulette = 6,
+
+        /// <summary>ステージ抽選の後、あそびかたの練習（握って試す）をしている。2026-10-29。</summary>
+        Practice = 7
     }
 
     /// <summary>

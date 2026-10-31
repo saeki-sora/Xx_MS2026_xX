@@ -47,6 +47,10 @@ namespace MS2026.Title
         [Header("配置物（それぞれの動きは各オブジェクトの Title Element Motion で調整）")]
         [Tooltip("背景。オープニングと同時に（最初から）出る。")]
         public TitleElementMotion background;
+        [Tooltip("背景（塗り替わった後の明るい方。子「Sprite」）でくり返し流す連番の絵。空なら Assets/Title/Resources/TitleBackgroundLoop を使う（それも無ければ動かない1枚の絵のまま）。")]
+        public TitleFrameSequence backgroundLoop;
+        [Tooltip("塗り替わる前（オープニング中の暗い背景。子「SpriteBefore」）にも同じループを流し、この色を掛けて暗くする。")]
+        public Color backgroundBeforeTint = new(0.25f, 0.18f, 0.35f, 1f);
         [Tooltip("オープニングの後に登場するもの（ロゴ・キャラ・スタートの文字など）。登場を始める秒数は各自の Enter Delay。")]
         public TitleElementMotion[] afterOpening;
         [Tooltip("「〇〇でスタート！」の文字（スタート時の効果音の位置に使う）。")]
@@ -109,6 +113,34 @@ namespace MS2026.Title
             }
 
             PickCharacters();
+            StartBackgroundLoop();
+        }
+
+        /// <summary>背景のループの連番が置かれる Resources の名前。</summary>
+        public const string BackgroundLoopResourcePath = "TitleBackgroundLoop";
+
+        // 背景の明るい方（子「Sprite」）と、塗り替わる前の暗い方（子「SpriteBefore」）に連番のループを付ける。
+        // 暗い方は同じ絵に色を掛けて暗くする。シーンは書き換えない（再生中に付けるだけ）。
+        private void StartBackgroundLoop()
+        {
+            var sequence = backgroundLoop != null ? backgroundLoop : Resources.Load<TitleFrameSequence>(BackgroundLoopResourcePath);
+            if (sequence == null || !sequence.IsUsable || background == null) return;
+            AddBackgroundLoop("Sprite", sequence, null);
+            AddBackgroundLoop("SpriteBefore", sequence, backgroundBeforeTint);
+        }
+
+        private void AddBackgroundLoop(string childName, TitleFrameSequence sequence, Color? tint)
+        {
+            var child = background.transform.Find(childName);
+            if (child == null || !child.TryGetComponent<SpriteRenderer>(out var spriteRenderer)) return;
+            var loop = child.GetComponent<TitleSpriteLoop>();
+            if (loop == null) loop = child.gameObject.AddComponent<TitleSpriteLoop>();
+            if (loop.sequence == null) loop.sequence = sequence;
+            if (tint is { } c)
+            {
+                // 透明度は背景の動き（フェードイン）が使うので、色だけ替える。
+                spriteRenderer.color = new Color(c.r, c.g, c.b, spriteRenderer.color.a);
+            }
         }
 
         /// <summary>今使うキャラの一覧（Inspector で空なら Resources のもの）。</summary>

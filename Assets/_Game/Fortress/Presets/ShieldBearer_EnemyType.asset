@@ -1,0 +1,104 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 391a8783ea5b9ff488434e3202d61524, type: 3}
+  m_Name: ShieldBearer_EnemyType
+  m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.EnemyTypeDefinition
+  displayName: "\u76FE\u6301\u3061\u30B9\u30D4\u30AD"
+  simulationMode: 0
+  maxHealth: 30
+  moveSpeed: 1.4
+  damageToCore: 5
+  navigationProfile: {fileID: 0}
+  turnSharpness: 8
+  swarm:
+    radius: 0.28
+    hitRadius: 0
+    mass: 4
+    acceleration: 8
+    speedVariance: 0.15
+    spriteSize: 1.1
+    spriteSheet: {fileID: 2800000, guid: 645e5268fc2141a5ba84a296b97a13ff, type: 3}
+    frameCount: 1
+    directionCount: 1
+    animationFps: 8
+  bomb:
+    explodeOnDeath: 0
+    explosionRadius: 1.6
+    enemyDamage: 30
+    obstacleDamage: 10
+    coreDamage: 2
+    chainDelaySeconds: 0.12
+    explodeAtCore: 1
+    onExplode:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 0
+      colorParam: Color
+    showBlastRing: 1
+    blastRingColor: {r: 1, g: 0.55, b: 0.15, a: 0.9}
+    shockwave: 1
+    shockwaveStrength: 0.25
+    shockwaveSeconds: 0.45
+    flash: 1
+    flashColor: {r: 1, g: 0.85, b: 0.55, a: 1}
+    flashSize: 1
+    flashSeconds: 0.22
+    blinkColor: {r: 1, g: 0.15, b: 0.1, a: 1}
+    blinkStrength: 0.85
+    blinkPerSecond: 1.5
+    blinkSpeedUpNearCore: 4
+    blinkSpeedUpDistance: 14
+    blinkSwell: 0.15
+  shield:
+    hasShield: 1
+    frontDistance: 1.85
+    halfWidth: 1.75
+    sideLength: 1.85
+    thickness: 0.25
+    turnDegreesPerSecond: 63
+    threatMemorySeconds: 2
+    switchRatio: 1.3
+    threatRadius: 2.4
+    escortType: {fileID: 11400000, guid: b3122d580d214a0db92a6729fac26588, type: 2}
+    escortCount: 12
+    escortSpacing: 0.46
+    escortLeashDistance: 5
+    color: {r: 0.62, g: 0.68, b: 0.74, a: 1}
+    wallHeight: 0.6
+    visualPrefab: {fileID: 0}
+    showFocusMarker: 1
+    onBreak:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onFocusChanged:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+  visualPrefab: {fileID: 0}
+  placeholderColor: {r: 1, g: 0, b: 1, a: 1}
+  introText: "\u76FE\u3067\u306B\u3089\u3093\u3060\u4EBA\u306E\u30D3\u30FC\u30E0\u3092\u6B62\u3081\u308B\u3002\u6A2A\u3084\u5F8C\u308D\u304B\u3089\u6483\u3068\u3046\uFF01"
+  introIcon: {fileID: 0}

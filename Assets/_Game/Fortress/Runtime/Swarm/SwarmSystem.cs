@@ -158,6 +158,12 @@ namespace MS2026.Fortress
             {
                 gameObject.AddComponent<SwarmFxDirector>();
             }
+
+            // 盾持ちの盾（当たり判定・見た目・向き・通信）。これも Play 中だけ付ける。
+            if (Application.isPlaying && GetComponent<EnemyShieldDirector>() == null)
+            {
+                gameObject.AddComponent<EnemyShieldDirector>();
+            }
         }
 
         private void Initialize()
@@ -198,6 +204,7 @@ namespace MS2026.Fortress
             InitializeHitReports();
             InitializeBombs();
             InitializeDeaths();
+            InitializeShields();
 
             InitializeNet(capacity);
 
@@ -217,8 +224,19 @@ namespace MS2026.Fortress
         // 公開API（敵の追加・削除・レーザーはキューに積み、ジョブの合間に反映される）
         // ---------------------------------------------------------------
 
-        /// <summary>敵を1体湧かせる。上限に達していれば false。</summary>
+        /// <summary>敵を1体湧かせる（盾持ちならお供も一緒に）。上限に達していれば false。</summary>
         public bool Spawn(EnemyTypeDefinition definition, Vector2 position)
+        {
+            if (!SpawnOne(definition, position))
+            {
+                return false;
+            }
+
+            SpawnEscorts(definition, position);
+            return true;
+        }
+
+        private bool SpawnOne(EnemyTypeDefinition definition, Vector2 position)
         {
             Initialize();
 
@@ -371,6 +389,8 @@ namespace MS2026.Fortress
             _lastNavMs = (float)_phaseWatch.Elapsed.TotalMilliseconds;
             _lastNavRebuilt = Navigation.BuiltVersion != versionBefore;
             _stats.navigationMs = Mathf.Lerp(_stats.navigationMs, _lastNavMs, 0.2f);
+
+            UpdateShields(Mathf.Min(Time.deltaTime, _settings.maxFrameDelta));
 
             // ジョブが止まっていて配列を読める最後の瞬間。ネット同期(位置の配信・途中参加者への全体送信)はここで読む。
             StorageReadable?.Invoke();
@@ -640,6 +660,7 @@ namespace MS2026.Fortress
                 typeIdx = Storage.typeIdx,
                 state = Storage.state,
                 speedScale = Storage.speedScale,
+                netId = Storage.netId,
                 types = _typeParams,
                 flowDirs = Navigation.FlowDirs,
                 speedMul = Navigation.SpeedMultiplier,
@@ -670,7 +691,9 @@ namespace MS2026.Fortress
                 retreat = Retreating ? 1 : 0,
                 retreatSpeed = _retreatSpeed,
                 retreatDirs = _retreatDirs,
-                retreatHasField = _retreatHasField
+                retreatHasField = _retreatHasField,
+                followTargets = _follow,
+                time = Time.time
             }.Schedule(count, 128, handle);
             Mark(ref handle, 2);
 
@@ -899,6 +922,8 @@ namespace MS2026.Fortress
                 _typeProfileIndex[t] = profileIndex;
                 var bomb = definition.bomb;
                 var explodes = bomb != null && bomb.explodeOnDeath;
+                var spiral = definition.spiral;
+                var spirals = spiral != null && spiral.enabled;
 
                 _typeParams[t] = new SwarmTypeParams
                 {
@@ -920,9 +945,14 @@ namespace MS2026.Fortress
                     blinkPerSecond = explodes ? bomb.blinkPerSecond : 0f,
                     blinkSpeedUp = explodes ? bomb.blinkSpeedUpNearCore : 0f,
                     blinkSpeedUpDistance = explodes ? bomb.blinkSpeedUpDistance : 1f,
-                    blinkSwell = explodes ? bomb.blinkSwell : 0f
+                    blinkSwell = explodes ? bomb.blinkSwell : 0f,
+                    spiralRadius = spirals ? spiral.radius : 0f,
+                    spiralAngularSpeed = spirals ? spiral.turnsPerSecond * Mathf.PI * 2f : 0f,
+                    spiralMixDirections = spirals && spiral.mixDirections ? 1 : 0
                 };
             }
+
+            RefreshShieldTypes();
 
             if (_profiles.Count != profileCountBefore)
             {
@@ -1122,6 +1152,7 @@ namespace MS2026.Fortress
             DisposeHitReports();
             DisposeBombs();
             DisposeDeaths();
+            DisposeShields();
             DisposeNet();
             DisposeRetreat();
         }
