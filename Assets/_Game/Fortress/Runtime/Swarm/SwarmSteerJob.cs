@@ -21,6 +21,7 @@ namespace MS2026.Fortress
         [ReadOnly] public NativeArray<int> typeIdx;
         [ReadOnly] public NativeArray<int> state;
         [ReadOnly] public NativeArray<float> speedScale;
+        [ReadOnly] public NativeArray<int> netId;
         [ReadOnly] public NativeArray<SwarmTypeParams> types;
 
         [ReadOnly] public NativeArray<float2> flowDirs;
@@ -60,6 +61,10 @@ namespace MS2026.Fortress
         [ReadOnly] public NativeHashMap<int, float2> followTargets;
 
         public float dt;
+
+        /// <summary>今の時刻（秒）。螺旋の敵がどこまで回ったかを、敵ごとの番号と合わせて決める。</summary>
+        public float time;
+
         public float densityRadiusSq;
         public float densityReference;
         public float densitySlowdown;
@@ -115,7 +120,13 @@ namespace MS2026.Fortress
                 var terrain = speedMul[SwarmMath.NearestIndex(p, navOrigin, navCell, navW, navH)];
                 var crowd = math.saturate(CountNeighbors(i, p) / densityReference);
                 var slow = math.max(minSpeedFactor, 1f - densitySlowdown * crowd);
-                desired = flow * (tp.maxSpeed * speedScale[i] * terrain * slow);
+                desired = flow * tp.maxSpeed;
+                if (tp.spiralRadius > 0f)
+                {
+                    desired += SwarmMath.SpiralVelocity(tp, netId[i], time);
+                }
+
+                desired *= speedScale[i] * terrain * slow;
             }
 
             var blend = 1f - math.exp(-tp.acceleration * dt);

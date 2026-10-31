@@ -660,6 +660,7 @@ namespace MS2026.Fortress
                 typeIdx = Storage.typeIdx,
                 state = Storage.state,
                 speedScale = Storage.speedScale,
+                netId = Storage.netId,
                 types = _typeParams,
                 flowDirs = Navigation.FlowDirs,
                 speedMul = Navigation.SpeedMultiplier,
@@ -691,7 +692,8 @@ namespace MS2026.Fortress
                 retreatSpeed = _retreatSpeed,
                 retreatDirs = _retreatDirs,
                 retreatHasField = _retreatHasField,
-                followTargets = _follow
+                followTargets = _follow,
+                time = Time.time
             }.Schedule(count, 128, handle);
             Mark(ref handle, 2);
 
@@ -920,6 +922,8 @@ namespace MS2026.Fortress
                 _typeProfileIndex[t] = profileIndex;
                 var bomb = definition.bomb;
                 var explodes = bomb != null && bomb.explodeOnDeath;
+                var spiral = definition.spiral;
+                var spirals = spiral != null && spiral.enabled;
 
                 _typeParams[t] = new SwarmTypeParams
                 {
@@ -941,7 +945,10 @@ namespace MS2026.Fortress
                     blinkPerSecond = explodes ? bomb.blinkPerSecond : 0f,
                     blinkSpeedUp = explodes ? bomb.blinkSpeedUpNearCore : 0f,
                     blinkSpeedUpDistance = explodes ? bomb.blinkSpeedUpDistance : 1f,
-                    blinkSwell = explodes ? bomb.blinkSwell : 0f
+                    blinkSwell = explodes ? bomb.blinkSwell : 0f,
+                    spiralRadius = spirals ? spiral.radius : 0f,
+                    spiralAngularSpeed = spirals ? spiral.turnsPerSecond * Mathf.PI * 2f : 0f,
+                    spiralMixDirections = spirals && spiral.mixDirections ? 1 : 0
                 };
             }
 

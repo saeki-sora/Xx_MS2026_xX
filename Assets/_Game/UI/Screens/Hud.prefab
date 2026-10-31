@@ -17430,12 +17430,12 @@ MonoBehaviour:
   entries:
   - trigger: 5
     name: 
-    valueKey: local.overheated
+    valueKey: local.skillReady
     target: {fileID: 0}
     motion:
       source: 0
       preset:
-        Preset: 52
+        Preset: 49
         Duration: 0.35
         Distance: 0
         EaseOverride:
@@ -21030,11 +21030,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 03ed8486e362cbd46925d3a8c152143e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MS2026.UI.Runtime::MS2026.UI.UiBindFill
-  key: local.heat
+  key: local.skillGauge
   fill: {fileID: 5623510181180175616}
   min: 0
   max: 1
-  smoothSeconds: 0.08
+  smoothSeconds: 0.25
   trail: {fileID: 0}
   trailDelay: 0.4
   trailSpeed: 1.2

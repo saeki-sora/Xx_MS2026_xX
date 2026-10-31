@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 391a8783ea5b9ff488434e3202d61524, type: 3}
+  m_Name: Spiral_EnemyType
+  m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.EnemyTypeDefinition
+  displayName: "くるくるスピキ"
+  simulationMode: 0
+  maxHealth: 3
+  moveSpeed: 1.5
+  damageToCore: 1
+  navigationProfile: {fileID: 0}
+  turnSharpness: 8
+  swarm:
+    radius: 0.22
+    hitRadius: 0
+    mass: 1
+    acceleration: 10
+    speedVariance: 0.1
+    spriteSize: 0.8
+    spriteSheet: {fileID: 0}
+    frameCount: 10
+    directionCount: 8
+    animationFps: 12
+  spiral:
+    enabled: 1
+    radius: 0.7
+    turnsPerSecond: 0.5
+    mixDirections: 1
+  visualPrefab: {fileID: 0}
+  placeholderColor: {r: 0.6, g: 0.38, b: 0.84, a: 1}
+  introText: "くるくる回って狙いにくい！でも打たれ弱い"
+  introIcon: {fileID: 0}

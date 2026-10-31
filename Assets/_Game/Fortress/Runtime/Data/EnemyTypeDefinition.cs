@@ -99,6 +99,9 @@ namespace MS2026.Fortress
         [Header("盾（コの字の盾で自分とお供を守る。今は群衆モードのみ）")]
         public EnemyShieldSettings shield = new EnemyShieldSettings();
 
+        [Header("螺旋（くるくる回りながら近づく。今は群衆モードのみ）")]
+        public EnemySpiralSettings spiral = new EnemySpiralSettings();
+
         [Header("見た目（Actorモード・共通）")]
         [Tooltip("（Actorのみ）スポーン時に生成する見た目のプレファブ。未設定の場合はプレースホルダーの円形を使う。")]
         public GameObject visualPrefab;
