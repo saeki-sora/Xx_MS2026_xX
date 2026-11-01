@@ -86,6 +86,8 @@ namespace MS2026.Stages
             {
                 Active = null;
             }
+
+            FortressSeats.UnregisterSeats(this);
         }
 
         private void Start()
@@ -123,7 +125,8 @@ namespace MS2026.Stages
             for (var i = 0; i < turrets.Length; i++)
             {
                 var turret = turrets[i];
-                var anchor = AnchorFor(turret.playerIndex);
+                // 席替え（FortressSeats）をしていれば、そのプレイヤーが今座っている席の目印へ（試合の始まりは P1 が席 1 …のまま）。
+                var anchor = turret != null ? AnchorFor(FortressSeats.SeatOf(turret.playerIndex)) : null;
                 if (turret == null || anchor == null)
                 {
                     continue;
@@ -133,6 +136,8 @@ namespace MS2026.Stages
                     Flat(anchor.position, turret.transform.position.z),
                     Quaternion.Euler(0f, 0f, anchor.eulerAngles.z));
             }
+
+            RegisterSeats(core);
 
             ApplyCamera();
 
@@ -161,6 +166,31 @@ namespace MS2026.Stages
             }
 
             return true;
+        }
+
+        // 席替えの係に、席（砲台の目印 P1〜P4）の場所とコアの場所を知らせる（席の並び＝時計回りの順は、ここから自動で決まる）。
+        private void RegisterSeats(CoreCrystalController core)
+        {
+            if (turretAnchors == null || turretAnchors.Length != TurretCount)
+            {
+                return;
+            }
+
+            var seats = new Vector2[TurretCount];
+            var sum = Vector2.zero;
+            for (var i = 0; i < TurretCount; i++)
+            {
+                if (turretAnchors[i] == null)
+                {
+                    return;
+                }
+
+                seats[i] = turretAnchors[i].position;
+                sum += seats[i];
+            }
+
+            var center = coreAnchor != null ? (Vector2)coreAnchor.position : core != null ? (Vector2)core.transform.position : sum / TurretCount;
+            FortressSeats.RegisterSeats(this, seats, center);
         }
 
         /// <summary>その席の砲台の目印（無ければ null）。</summary>

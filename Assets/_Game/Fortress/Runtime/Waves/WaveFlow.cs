@@ -28,7 +28,10 @@ namespace MS2026.Fortress
         Finished = 6,
 
         /// <summary>試合の始まりの「握り方のヒント」（全員の準備ができた後、WAVE 1 の発表の前。敵は来ない）。</summary>
-        Hint = 7
+        Hint = 7,
+
+        /// <summary>合間の後、次のウェーブの発表の前の「席替え」（全員の砲台が隣の席へ跳び、YOU の矢印が出る。敵は来ない）。</summary>
+        SeatChange = 8
     }
 
     /// <summary>ウェーブの計画が終わった理由。</summary>
@@ -91,6 +94,10 @@ namespace MS2026.Fortress
         public float hintSeconds;
 
         public float announceSeconds = 4f;
+
+        /// <summary>合間の後、発表の前の「席替え」の秒数（0 なら無し。跳ぶ動きと YOU の矢印が終わるまで）。</summary>
+        public float seatChangeSeconds;
+
         public float clearBannerSeconds = 1.6f;
         public float retreatMaxSeconds = 5f;
 
@@ -128,6 +135,7 @@ namespace MS2026.Fortress
             config.hintSeconds = plan.display != null && plan.display.timing != null ? plan.display.timing.hintSeconds : WaveDisplayTiming.Default.hintSeconds;
             config.maxWaitForPlayersSeconds = plan.maxWaitForPlayersSeconds;
             config.announceSeconds = plan.announceSeconds;
+            config.seatChangeSeconds = plan.seatRotation != null ? plan.seatRotation.WaveSeconds : 0f;
             config.clearBannerSeconds = plan.clearBannerSeconds;
             config.retreatMaxSeconds = plan.retreatMaxSeconds;
             config.timeLimitSeconds = plan.timeLimitSeconds;
@@ -154,7 +162,7 @@ namespace MS2026.Fortress
 
     /// <summary>
     /// ウェーブの進め方（Unity に頼らない状態機械。テストあり）。決めるのは Host（オフラインでは自分）だけ。
-    /// 待つ →（握り方のヒント）→ 発表 → 戦う →（目標）→ 撤退 → 合間 → 発表 … → 最後のウェーブの目標でクリア。制限時間が来たら時間切れ。
+    /// 待つ →（握り方のヒント）→ 発表 → 戦う →（目標）→ 撤退 → 合間 →（席替え）→ 発表 …→ 最後のウェーブの目標でクリア。制限時間が来たら時間切れ。
     /// </summary>
     public sealed class WaveFlow
     {
@@ -277,8 +285,13 @@ namespace MS2026.Fortress
                     var waits = WaveIndex < _config.breakWaitsForEvent.Length && _config.breakWaitsForEvent[WaveIndex];
                     if (PhaseTime >= PhaseDuration || (waits && input.breakFinished))
                     {
-                        WaveIndex++;
-                        signal |= WaveFlowSignal.EndBreak;
+                        signal |= EndBreak();
+                    }
+
+                    break;
+                case WavePhase.SeatChange:
+                    if (PhaseTime >= _config.seatChangeSeconds)
+                    {
                         signal |= Enter(WavePhase.Announce, _config.announceSeconds, WaveFlowSignal.None);
                     }
 
@@ -305,8 +318,9 @@ namespace MS2026.Fortress
                 case WavePhase.Retreat:
                     return WaveFlowSignal.FinishRetreat | Enter(WavePhase.Break, BreakSeconds(WaveIndex), WaveFlowSignal.BeginBreak);
                 case WavePhase.Break:
-                    WaveIndex++;
-                    return WaveFlowSignal.EndBreak | Enter(WavePhase.Announce, _config.announceSeconds, WaveFlowSignal.None);
+                    return EndBreak();
+                case WavePhase.SeatChange:
+                    return Enter(WavePhase.Announce, _config.announceSeconds, WaveFlowSignal.None);
                 default:
                     return WaveFlowSignal.None;
             }
@@ -333,6 +347,16 @@ namespace MS2026.Fortress
             _config.hintSeconds > 0f
                 ? Enter(WavePhase.Hint, _config.hintSeconds, WaveFlowSignal.None)
                 : Enter(WavePhase.Announce, _config.announceSeconds, WaveFlowSignal.None);
+
+        // 合間が終わったら次のウェーブの番号にして、席替え（あれば）→ 発表。
+        private WaveFlowSignal EndBreak()
+        {
+            WaveIndex++;
+            var next = _config.seatChangeSeconds > 0f
+                ? Enter(WavePhase.SeatChange, _config.seatChangeSeconds, WaveFlowSignal.None)
+                : Enter(WavePhase.Announce, _config.announceSeconds, WaveFlowSignal.None);
+            return WaveFlowSignal.EndBreak | next;
+        }
 
         private float BreakSeconds(int wave) =>
             wave >= 0 && wave < _config.breakSeconds.Length ? Mathf.Max(0f, _config.breakSeconds[wave]) : 0f;

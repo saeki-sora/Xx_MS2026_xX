@@ -148,7 +148,7 @@ namespace MS2026.Fortress
             return issues;
         }
 
-        /// <summary>戦っている時間以外の、決まった長さの合計（発表・撤退の最短・合間）。</summary>
+        /// <summary>戦っている時間以外の、決まった長さの合計（発表・撤退の最短・合間・席替え）。</summary>
         public static float FixedSeconds(WavePlan plan)
         {
             if (plan == null)
@@ -162,6 +162,7 @@ namespace MS2026.Fortress
                 var wave = plan.waves[i];
                 total += plan.clearBannerSeconds;
                 total += wave?.intervalEvent != null ? wave.intervalEvent.DurationSeconds : wave?.restSeconds ?? 0f;
+                total += plan.seatRotation != null ? plan.seatRotation.WaveSeconds : 0f;
             }
 
             return total;

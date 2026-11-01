@@ -54,6 +54,26 @@ namespace MS2026.Fortress.EditorTools
                     }
                 }
 
+                // 席替えのテスト（2026-10-31）。ウェーブを進めなくても、跳ぶ動き・カメラ・YOU の矢印を何度でも試せる。
+                using (new EditorGUI.DisabledScope(!canControl))
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button(new GUIContent("⟳ 今すぐ1つ席替え", "全員の砲台を1つ隣の席へ跳ばします（ウェーブは進みません。「ウェーブごとに席を回す」が OFF でも動きます）。")))
+                    {
+                        FortressSeats.DebugRotate();
+                    }
+
+                    using (new EditorGUI.DisabledScope(FortressSeats.Shift == 0))
+                    {
+                        if (GUILayout.Button(new GUIContent("最初の席に戻す", "全員を試合の始まりの席（P1 が席 1 …）に戻します。1つ隣なら跳んで、2つ離れていればその場に置きます。")))
+                        {
+                            FortressSeats.DebugReset();
+                        }
+                    }
+
+                    GUILayout.Label($"席替え {FortressSeats.Shift} 回目", EditorStyles.miniLabel, GUILayout.ExpandWidth(false));
+                }
+
                 if (!canControl)
                 {
                     EditorGUILayout.LabelField("ネット対戦の Client では動かせません（Host で押してください）。", EditorStyles.miniLabel);
@@ -71,6 +91,7 @@ namespace MS2026.Fortress.EditorTools
                 case WavePhase.Combat: return "戦っている";
                 case WavePhase.Retreat: return "クリア・敵が逃げている";
                 case WavePhase.Break: return "合間";
+                case WavePhase.SeatChange: return "席替え";
                 case WavePhase.Finished: return "終わり";
                 default: return "—";
             }

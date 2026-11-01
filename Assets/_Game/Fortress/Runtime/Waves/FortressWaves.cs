@@ -219,7 +219,7 @@ namespace MS2026.Fortress
             if (previous == WavePhase.Break)
             {
                 // 合間が終わった時点では、もう次のウェーブの番号になっている。
-                BreakEnded?.Invoke(next == WavePhase.Announce ? WaveIndex - 1 : WaveIndex);
+                BreakEnded?.Invoke(next == WavePhase.Announce || next == WavePhase.SeatChange ? WaveIndex - 1 : WaveIndex);
             }
         }
 
@@ -268,6 +268,7 @@ namespace MS2026.Fortress
             go.hideFlags = HideFlags.HideInHierarchy | HideFlags.DontSave;
             UnityEngine.Object.DontDestroyOnLoad(go);
             go.AddComponent<FortressWaveRunner>();
+            go.AddComponent<FortressSeatMover>();
         }
     }
 }

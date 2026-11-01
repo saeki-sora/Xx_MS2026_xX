@@ -9,6 +9,7 @@ namespace MS2026.UI.Game
     /// <summary>
     /// 試合の始まり（全員を待っている間と、WAVE 1 の発表の前のヒントの段階）に、このPCのプレイヤーの砲台の上に「YOU」の矢印を出す（2026-10-24、初めての人向け）。
     /// 視点がPCごとに違う（回っている人もいる）ので、「自分の砲台はどれか」をはっきり見せる。各PCが自分のカメラで場所を計算する。
+    /// 席替え（ウェーブごとに隣の席へ跳ぶ。2026-10-31）で着地した後にも、決まりの秒数だけ出す。
     /// UIスタジオの「ウェーブの表示を入れる」が作る「WaveYouMarker」（画面いっぱいの枠）に付く。
     /// </summary>
     [AddComponentMenu("UI Studio/あなたの砲台の矢印 (WaveYouMarker)")]
@@ -50,7 +51,9 @@ namespace MS2026.UI.Game
             }
 
             var timing = WaveDisplayTiming.Current;
-            var show = FortressWaves.IsActive && timing.showYouMarker && WaveDisplayTiming.IsHintPhase(FortressWaves.Phase);
+            // 席替えで着地した後も少しの間出す（FortressSeats.YouMarkerVisible。席替えの決まりで切り替え・秒数を変えられる）。
+            var show = FortressWaves.IsActive &&
+                       ((timing.showYouMarker && WaveDisplayTiming.IsHintPhase(FortressWaves.Phase)) || FortressSeats.YouMarkerVisible);
             var player = LocalPlayer();
             var turret = show ? FindTurret(player) : null;
             var rig = FortressCameraRig.Active;

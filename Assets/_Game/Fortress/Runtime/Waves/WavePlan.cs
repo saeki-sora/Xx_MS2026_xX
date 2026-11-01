@@ -130,6 +130,10 @@ namespace MS2026.Fortress
         [Min(0.1f)]
         public float retreatSpeedMultiplier = 2.4f;
 
+        [Header("席替え")]
+        [Tooltip("ウェーブが1つ終わるたびに、全員の砲台が1つ隣の席へ跳んで移る（合間の後、次の発表の前）。カメラも自分の砲台に付いていく。")]
+        public WaveSeatRotation seatRotation = new WaveSeatRotation();
+
         // 演出（D-Drive の番号札。各PCで鳴らす。空なら鳴らさない）。要塞デザイナーでは折りたたみの中に出す。
         [Tooltip("発表が始まったとき（最終ウェーブ以外）。")]
         public FortressEffect onAnnounce = new FortressEffect { tintWithPlayerColor = false };
