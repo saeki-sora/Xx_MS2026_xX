@@ -128,8 +128,9 @@ namespace MS2026.Fortress
         /// <summary>
         /// 跳び始めてから t 秒の姿。jumpSeconds で次の席へ（横はなめらかに、高さは山なり）、
         /// 着地したら squash だけつぶれて squashSeconds で戻る（開始時の「ドスン」と同じ戻り方）。
+        /// hangPower が 1 より大きいと「ビュッと上がって頂点でふわっと止まり、ストンと落ちる」動きになる（<see cref="HangEase"/>）。
         /// </summary>
-        public static SeatJumpPose Evaluate(float t, float jumpSeconds, float squash, float squashSeconds)
+        public static SeatJumpPose Evaluate(float t, float jumpSeconds, float squash, float squashSeconds, float hangPower = 1f)
         {
             if (t <= 0f)
             {
@@ -140,6 +141,12 @@ namespace MS2026.Fortress
             if (t < jump)
             {
                 var p = t / jump;
+                if (hangPower > 1f)
+                {
+                    var h = HangEase(p, hangPower);
+                    return new SeatJumpPose(h, Mathf.Sin(Mathf.PI * h), 0f, false, false);
+                }
+
                 return new SeatJumpPose(EaseInOutCubic(p), Mathf.Sin(Mathf.PI * p), 0f, false, false);
             }
 
@@ -152,6 +159,37 @@ namespace MS2026.Fortress
             // 一気につぶれて、少しゆっくり戻る。
             var k = Mathf.Sin(Mathf.PI * u) * (1f - u * 0.5f);
             return new SeatJumpPose(1f, 0f, squash * k, true, false);
+        }
+
+        /// <summary>
+        /// 頂点（半分の所）で進みが止まる曲線（0→0.5→1）。power が大きいほど頂点の近くでゆっくりになり、始めと終わりは速い。
+        /// </summary>
+        public static float HangEase(float t, float power)
+        {
+            var x = Mathf.Clamp01(t) * 2f - 1f;
+            return 0.5f + 0.5f * Mathf.Sign(x) * Mathf.Pow(Mathf.Abs(x), Mathf.Max(1f, power));
+        }
+
+        /// <summary>
+        /// 着地の順番（0 = 最初）。自分の席から回る向きに数えて何番目の席に跳ぶか（自分が最初、次は隣…）。
+        /// 各PCで自分から数えるので、どのPCでも「自分が最初に着地」する（見た目だけ。時間の合計は同じ）。
+        /// </summary>
+        public static int LandingRank(int player, int localPlayer, int shift, int[] order, bool clockwise)
+        {
+            var count = order?.Length ?? 0;
+            if (count == 0)
+            {
+                return 0;
+            }
+
+            var mine = Array.IndexOf(order, SeatOf(player, shift, order, clockwise));
+            var local = Array.IndexOf(order, SeatOf(localPlayer, shift, order, clockwise));
+            if (mine < 0 || local < 0)
+            {
+                return Mod(player - localPlayer, count);
+            }
+
+            return Mod(clockwise ? mine - local : local - mine, count);
         }
 
         public static float EaseInOutCubic(float t)

@@ -34,7 +34,7 @@ namespace MS2026.Skills.EditorTools
                 case PlayerSkillState.Ready:
                     return slot.IsWaitingForRelease ? "使える（今のレーザーを離したら次で発動）" : "使える（次に撃つとスキル）";
                 case PlayerSkillState.Active:
-                    return "スキルを撃っている";
+                    return slot.IsWaitingForCutIn ? "カットイン中（このあとスキル）" : "スキルを撃っている";
                 default:
                     return slot.State.ToString();
             }

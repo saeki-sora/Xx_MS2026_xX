@@ -98,5 +98,52 @@ namespace MS2026.Fortress.Tests.EditMode
             Assert.IsTrue(rest.Finished);
             Assert.AreEqual(0f, rest.Squash, 1e-5f);
         }
+
+        [Test]
+        public void HangEase_FastStartSlowAtApex()
+        {
+            Assert.AreEqual(0f, FortressSeatMath.HangEase(0f, 2.1f), 1e-5f);
+            Assert.AreEqual(0.5f, FortressSeatMath.HangEase(0.5f, 2.1f), 1e-5f);
+            Assert.AreEqual(1f, FortressSeatMath.HangEase(1f, 2.1f), 1e-5f);
+            // 頂点の近くはほとんど進まない（ふわっと止まる）。始めは速い。
+            Assert.Less(FortressSeatMath.HangEase(0.55f, 2.1f) - 0.5f, 0.01f);
+            Assert.Greater(FortressSeatMath.HangEase(0.1f, 2.1f), 0.1f);
+            var apex = FortressSeatMath.Evaluate(0.575f, 1.15f, 0.25f, 0.3f, 2.1f);
+            Assert.AreEqual(1f, apex.Height01, 1e-4f);
+        }
+
+        [Test]
+        public void LandingRank_StartsFromLocalPlayerAndGoesAround()
+        {
+            var order = FortressSeatMath.ClockwiseOrder(Corners, new Vector2(0f, -2.5f));
+            // 2P の画面: 2P が最初、次は回る向きの隣の席へ跳ぶ人。
+            var ranks = new int[4];
+            for (var p = 0; p < 4; p++)
+            {
+                ranks[p] = FortressSeatMath.LandingRank(p, 1, 1, order, true);
+            }
+
+            Assert.AreEqual(0, ranks[1]);
+            CollectionAssert.AreEquivalent(new[] { 0, 1, 2, 3 }, ranks);
+            Assert.AreEqual(1, ranks[3], "2P が跳ぶ右下の、次（左下）へ跳ぶのは右下にいた 4P");
+        }
+
+        [Test]
+        public void WaveSeconds_AddsAnticipationStaggerHitStopAndFinale()
+        {
+            var settings = new WaveSeatRotation();
+            // 溜め 0.6 + ずらし 0.12×3 + 跳ぶ 0.9+0.25 + つぶれ 0.3 + ヒットストップ 0.06×4 = 2.65、締め 2。
+            Assert.AreEqual(2.65f, settings.TotalSeconds, 1e-4f);
+            Assert.AreEqual(4.65f, settings.WaveSeconds, 1e-4f);
+
+            settings.anticipation = settings.staggerLanding = settings.hangAtApex = settings.hitStop = false;
+            settings.youPillar = settings.gatherToCore = settings.okMarks = false;
+            // 前のまま: 跳ぶ 0.9 + つぶれ 0.3、カメラ 0.1+1.4 の方が長い。
+            Assert.AreEqual(1.2f, settings.TotalSeconds, 1e-4f);
+            Assert.AreEqual(1.5f + 2f, settings.WaveSeconds, 1e-4f);
+
+            settings.enabled = false;
+            Assert.AreEqual(0f, settings.WaveSeconds);
+        }
     }
 }

@@ -88,6 +88,13 @@ namespace MS2026.Fortress
         }
 
         /// <summary>
+        /// true の間、この砲台は回らず、握っていても熱が上がらない（スキルのカットイン中、スキル本体が始まるのを待っている間。2026-11-02）。
+        /// 撃っている状態（Firing）や太さはそのまま。スキル欄（MS2026.Skills.PlayerSkillSlot）が各PCで入れる。
+        /// Host の砲台が止まれば Client にも届くが、Client でも自分で止めて、届くまでの遅れの間に回って見えないようにする。
+        /// </summary>
+        public bool HoldForSkill { get; set; }
+
+        /// <summary>
         /// trueの間は自分で計算せず、<see cref="ApplySnapshot"/>で受け取った状態をそのまま見せる(ネット対戦のClient側)。
         /// </summary>
         public bool IsReplica { get; private set; }
@@ -267,7 +274,11 @@ namespace MS2026.Fortress
             if (_hasChargedThisGrip)
             {
                 ChargeProgress01 = 1f;
-                Heat += grip * grip * tuning.heatGainPerSecond * dt;
+                if (!HoldForSkill)
+                {
+                    Heat += grip * grip * tuning.heatGainPerSecond * dt;
+                }
+
                 CurrentThickness01 = tuning.EvaluateThickness01(grip);
                 CurrentThicknessMeters = tuning.EvaluateThicknessMeters(grip);
                 SetState(TurretState.Firing);
@@ -288,6 +299,14 @@ namespace MS2026.Fortress
         /// <summary>状態と、射出中のレーザーの強さに応じた倍率へ滑らかに追従しながら、砲台を回転させる。</summary>
         private void UpdateRotation(float dt)
         {
+            if (HoldForSkill)
+            {
+                // スキルのカットイン中はその場でぴたっと止める（なめらかに止めると、止まるまでに少し回ってしまう）。
+                CurrentRotationMultiplier = 0f;
+                CurrentRotationSpeed = 0f;
+                return;
+            }
+
             var targetMultiplier = autoRotate && !InputLocked ? ResolveTargetRotationMultiplier() : 0f;
             var blend = tuning.rotationResponse <= 0f ? 1f : 1f - Mathf.Exp(-tuning.rotationResponse * dt);
             CurrentRotationMultiplier = Mathf.Lerp(CurrentRotationMultiplier, targetMultiplier, blend);
@@ -304,8 +323,9 @@ namespace MS2026.Fortress
         /// </summary>
         private void TickReplica(float dt)
         {
-            if (!_hasReplicaPose)
+            if (!_hasReplicaPose || HoldForSkill)
             {
+                // カットイン中は止めておく（Host から「止まった」が届くまでの間も回らないように）。終われば届いた向きへ追いつく。
                 return;
             }
 

@@ -269,6 +269,8 @@ namespace MS2026.Fortress
             UnityEngine.Object.DontDestroyOnLoad(go);
             go.AddComponent<FortressWaveRunner>();
             go.AddComponent<FortressSeatMover>();
+            go.AddComponent<FortressSeatFx>();
+            go.AddComponent<FortressSeatOverlay>();
         }
     }
 }

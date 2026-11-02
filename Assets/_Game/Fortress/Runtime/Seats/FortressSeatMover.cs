@@ -7,18 +7,20 @@ namespace MS2026.Fortress
 {
     /// <summary>
     /// 席替えの係（起動時に <see cref="FortressWaves"/> の係と一緒に自動で作られる、見えないオブジェクト。2026-10-31）。
-    /// <see cref="FortressSeats.Shift"/> が1つ変わったら、全員の砲台を次の席へ「ピョン」と跳ばす（山なりに浮いて、着地でつぶれて戻る）。
+    /// <see cref="FortressSeats.Shift"/> が1つ変わったら、全員の砲台を次の席へ「ピョン」と跳ばす。
+    /// 溜め（しゃがんで震える）→ 跳ぶ（山なり・頂点でふわっと・空中で回る）→ 自分から順に着地（つぶれて戻る・ヒットストップ）。
     /// 各PCが自分で動かす（砲台の場所は通信しない。席替えの回数だけ Host から届く）。浮く向きは自分のカメラの画面の上。
-    /// 跳んでいる間は砲台を撃てない・回らない。カメラは少し遅れて次の席の視点へ移り（<see cref="FortressSeats.CameraShift"/>）、
-    /// 着地で自分の画面だけ揺れる。2つ以上離れた回数が届いたとき（途中から入った・テストで飛ばした）は跳ばずにその場へ置く。
+    /// 跳んでいる間は砲台を撃てない・回らない。カメラは少し遅れて次の席の視点へ移り（<see cref="FortressSeats.CameraShift"/>）、その間だけ少し引く。
+    /// 点線・影・光の尾・衝撃波などの見た目は <see cref="FortressSeatFx"/>、帯・画面の端などは <see cref="FortressSeatOverlay"/> が受け持つ。
+    /// 2つ以上離れた回数が届いたとき（途中から入った・テストで飛ばした）は跳ばずにその場へ置く。
     /// </summary>
     [AddComponentMenu("")]
     [DefaultExecutionOrder(110)]
     internal sealed class FortressSeatMover : MonoBehaviour
     {
+        private const float LaunchStretchSeconds = 0.18f;
         private static readonly WaveSeatRotation DefaultSettings = new WaveSeatRotation();
 
-        private readonly List<Mover> _movers = new List<Mover>();
         private readonly Vector2[] _capturedSeats = new Vector2[FortressSeats.SeatCount];
         private bool _hasCaptured;
         private SwarmSystem _swarm;
@@ -26,19 +28,14 @@ namespace MS2026.Fortress
         private bool _moving;
         private int _toShift;
         private float _time;
-        private bool _landed;
+        private float _hitStopLeft;
         private bool _cameraMoved;
         private bool _lockedInput;
-
-        private struct Mover
-        {
-            public LaserTurret Turret;
-            public Vector3 From;
-            public Vector3 To;
-            public Vector3 BaseScale;
-        }
+        private WaveSeatRotation _settings;
 
         private static WaveSeatRotation Settings => FortressSeats.Settings ?? DefaultSettings;
+
+        private static List<SeatJumper> Jumpers => FortressSeats.JumperList;
 
         private void OnDisable()
         {
@@ -105,105 +102,197 @@ namespace MS2026.Fortress
         private void BeginMove(int to)
         {
             EnsureSeats();
-            _movers.Clear();
+            _settings = Settings;
+            Jumpers.Clear();
+            var local = LocalPlayer();
             foreach (var turret in FindTurrets())
             {
                 var seat = FortressSeats.SeatOf(turret.playerIndex, to);
                 var position = turret.transform.position;
                 var landing = SeatPosition(seat);
-                _movers.Add(new Mover
+                Jumpers.Add(new SeatJumper
                 {
                     Turret = turret,
+                    Player = turret.playerIndex,
                     From = position,
                     To = new Vector3(landing.x, landing.y, position.z),
-                    BaseScale = turret.transform.localScale
+                    Ground = position,
+                    Rank = FortressSeatMath.LandingRank(turret.playerIndex, local, to, FortressSeats.Order, FortressSeats.Clockwise),
+                    BaseScale = turret.transform.localScale,
+                    BaseRotation = turret.transform.rotation
                 });
             }
 
             _moving = true;
             _toShift = to;
             _time = 0f;
-            _landed = false;
+            _hitStopLeft = 0f;
             _cameraMoved = false;
             FortressSeats.IsMoving = true;
+            FortressSeats.MoveTime = 0f;
+            FortressSeats.IsHitStopped = false;
             LockInput();
-            PlayEffect(Settings.onJump, false);
+            if (_settings.AnticipationTime > 0f)
+            {
+                foreach (var jumper in Jumpers)
+                {
+                    PlayEffect(_settings.onAnticipate, jumper, jumper.From, jumper.Rank == 0);
+                }
+            }
+
             FortressSeats.RaiseMoveStarted(to);
             TickMove(0f);
         }
 
         private void TickMove(float dt)
         {
-            var settings = Settings;
-            _time += Mathf.Max(0f, dt);
+            var settings = _settings ?? Settings;
             LockInput();
-            if (!_cameraMoved && _time >= settings.cameraDelaySeconds)
+
+            // 着地のヒットストップ: 砲台の動き（と席替えの演出）を一瞬止める。カメラ・敵・通信は止めない。
+            if (_hitStopLeft > 0f)
+            {
+                _hitStopLeft -= Mathf.Max(0f, dt);
+                FortressSeats.IsHitStopped = _hitStopLeft > 0f;
+                dt = 0f;
+            }
+
+            _time += Mathf.Max(0f, dt);
+            FortressSeats.MoveTime = _time;
+            if (!_cameraMoved && _time >= settings.CameraStartTime)
             {
                 _cameraMoved = true;
                 FortressSeats.CameraShift = _toShift;
+                var rig = FortressCameraRig.Active;
+                if (settings.cameraPullBack && settings.cameraPullAmount > 0f && rig != null)
+                {
+                    rig.AddModifier(new SeatPullBackModifier(settings.cameraPullAmount, settings.cameraBlendSeconds));
+                }
             }
 
-            var pose = FortressSeatMath.Evaluate(_time, settings.jumpSeconds, settings.landSquash, settings.landSquashSeconds);
             var up = ScreenUp();
-            var lift = up * (settings.jumpHeight * pose.Height01);
-            var grow = 1f + settings.jumpScale * pose.Height01;
-            var scale = new Vector3(grow * (1f + pose.Squash), grow * (1f - pose.Squash), 1f);
-            foreach (var mover in _movers)
+            var anticipation = settings.AnticipationTime;
+            var crouch = anticipation > 0f ? 1f - Mathf.Pow(1f - Mathf.Clamp01(_time / anticipation), 3f) : 0f;
+            var spinSign = FortressSeats.Clockwise ? -1f : 1f;
+            var hang = settings.hangAtApex ? settings.hangPower : 1f;
+            foreach (var jumper in Jumpers)
             {
-                if (mover.Turret == null)
+                if (jumper.Turret == null)
                 {
                     continue;
                 }
 
-                var t = mover.Turret.transform;
-                t.position = Vector3.Lerp(mover.From, mover.To, pose.Progress01) + lift;
-                t.localScale = Vector3.Scale(mover.BaseScale, scale);
+                var t = jumper.Turret.transform;
+                var flightTime = _time - (anticipation + settings.StaggerTime * jumper.Rank);
+                if (flightTime < 0f)
+                {
+                    // 溜め（順番待ちの砲台は、しゃがんだまま震えて待つ）。
+                    var squat = settings.crouchAmount * crouch;
+                    var shake = settings.crouchShake * crouch * (_hitStopLeft > 0f ? 0f : 1f);
+                    var jitter = shake > 0f ? (Vector3)(Random.insideUnitCircle * shake) : Vector3.zero;
+                    jumper.Ground = jumper.From;
+                    jumper.Height01 = 0f;
+                    t.position = jumper.From + jitter;
+                    t.localScale = Squashed(jumper.BaseScale, 1f, squat);
+                    continue;
+                }
+
+                if (!jumper.Launched)
+                {
+                    jumper.Launched = true;
+                    jumper.Flying = true;
+                    PlayEffect(settings.onJump, jumper, jumper.From, jumper.Rank == 0);
+                    FortressSeats.RaiseTurretLaunched(jumper);
+                }
+
+                var pose = FortressSeatMath.Evaluate(flightTime, settings.FlightSeconds, settings.landSquash, settings.landSquashSeconds, hang);
+                var ground = Vector3.Lerp(jumper.From, jumper.To, pose.Progress01);
+                var grow = 1f + settings.jumpScale * pose.Height01;
+                var squash = pose.Squash;
+                if (settings.anticipation && flightTime < LaunchStretchSeconds && !pose.Landed)
+                {
+                    squash -= settings.launchStretch * (1f - flightTime / LaunchStretchSeconds); // 跳ぶ瞬間に縦へ伸びる
+                }
+
+                jumper.Ground = ground;
+                jumper.Height01 = pose.Height01;
+                t.position = ground + up * (settings.jumpHeight * pose.Height01);
+                t.localScale = Squashed(jumper.BaseScale, grow, squash);
+                var spin = settings.spinInAir && settings.spinTurns > 0 && !pose.Landed ? spinSign * 360f * settings.spinTurns * pose.Progress01 : 0f;
+                t.rotation = jumper.BaseRotation * Quaternion.Euler(0f, 0f, spin);
+
+                if (!jumper.Landed && flightTime >= settings.FlightSeconds)
+                {
+                    jumper.Landed = true;
+                    jumper.Flying = false;
+                    jumper.Height01 = 0f;
+                    t.position = jumper.To;
+                    t.rotation = jumper.BaseRotation;
+                    Land(settings, jumper);
+                }
             }
 
-            if (!_landed && _time >= settings.jumpSeconds)
-            {
-                _landed = true;
-                Land(settings);
-            }
-
-            if (_time >= settings.TotalSeconds && _time >= settings.cameraDelaySeconds)
+            var motionEnd = settings.TotalSeconds - settings.HitStopTotal;
+            if (_time >= motionEnd && _time >= settings.CameraStartTime && _hitStopLeft <= 0f)
             {
                 FinishMove(true);
             }
         }
 
-        private void Land(WaveSeatRotation settings)
+        private static Vector3 Squashed(Vector3 baseScale, float grow, float squash)
         {
-            PlayEffect(settings.onLand, true);
+            return Vector3.Scale(baseScale, new Vector3(grow * (1f + squash), grow * (1f - squash), 1f));
+        }
+
+        private void Land(WaveSeatRotation settings, SeatJumper jumper)
+        {
+            // 着地の音は4基それぞれ鳴らす（順番に着地すると「ドドドドン」になる）。
+            PlayEffect(settings.onLand, jumper, jumper.To, true);
+            if (settings.hitStop && settings.hitStopSeconds > 0f)
+            {
+                _hitStopLeft = settings.hitStopSeconds;
+                FortressSeats.IsHitStopped = true;
+            }
+
             var rig = FortressCameraRig.Active;
             if (settings.shakeOnLand && settings.landShake != null && rig != null)
             {
-                rig.AddModifier(new SimpleShakeModifier(settings.landShake, 1f));
+                rig.AddModifier(new SimpleShakeModifier(settings.landShake, settings.StaggerTime > 0f ? 0.6f : 1f));
             }
+
+            FortressSeats.RaiseTurretLanded(jumper);
         }
 
         private void FinishMove(bool completed)
         {
-            foreach (var mover in _movers)
+            foreach (var jumper in Jumpers)
             {
-                if (mover.Turret == null)
+                if (jumper.Turret == null)
                 {
                     continue;
                 }
 
-                mover.Turret.transform.position = mover.To;
-                mover.Turret.transform.localScale = mover.BaseScale;
+                var t = jumper.Turret.transform;
+                t.position = jumper.To;
+                t.localScale = jumper.BaseScale;
+                t.rotation = jumper.BaseRotation;
             }
 
-            _movers.Clear();
+            Jumpers.Clear();
             _moving = false;
+            _hitStopLeft = 0f;
             _appliedShift = _toShift;
             FortressSeats.CameraShift = _toShift;
             FortressSeats.IsMoving = false;
+            FortressSeats.IsHitStopped = false;
+            FortressSeats.MoveTime = 0f;
+            FortressSeats.LastMoveCompleted = completed;
             UnlockInput();
             if (completed)
             {
-                FortressSeats.YouMarkerUntil = Time.unscaledTime + Settings.youMarkerSeconds;
+                var settings = _settings ?? Settings;
+                FortressSeats.FinaleStart = Time.unscaledTime;
+                FortressSeats.YouMarkerUntil = Time.unscaledTime + settings.youMarkerSeconds;
             }
 
             FortressSeats.RaiseMoveFinished(_toShift);
@@ -303,40 +392,22 @@ namespace MS2026.Fortress
             }
         }
 
-        // VFX は砲台ごと（プレイヤーの色）、SE は自分の砲台で1回だけ（4つ重なってうるさくならないように）。
-        private void PlayEffect(FortressEffect effect, bool atLanding)
+        // VFX は砲台ごと（プレイヤーの色）。SE は withSound のときだけ（跳ぶ音は自分の砲台で1回、着地の音は4基それぞれ）。
+        private static void PlayEffect(FortressEffect effect, SeatJumper jumper, Vector3 position, bool withSound)
         {
             if (effect == null || effect.IsEmpty)
             {
                 return;
             }
 
-            var local = LocalPlayer();
-            var played = false;
-            foreach (var mover in _movers)
+            FortressEffectPlayer.SpawnVfx(effect, position, Quaternion.identity, jumper.Player);
+            if (withSound)
             {
-                if (mover.Turret == null)
-                {
-                    continue;
-                }
-
-                var position = atLanding ? mover.To : mover.From;
-                var player = mover.Turret.playerIndex;
-                FortressEffectPlayer.SpawnVfx(effect, position, Quaternion.identity, player);
-                if (player == local)
-                {
-                    FortressEffectPlayer.PlaySound(effect, position);
-                    played = true;
-                }
-            }
-
-            if (!played)
-            {
-                FortressEffectPlayer.PlaySound(effect, Vector3.zero);
+                FortressEffectPlayer.PlaySound(effect, position);
             }
         }
 
-        private static Vector3 ScreenUp()
+        internal static Vector3 ScreenUp()
         {
             var rig = FortressCameraRig.Active;
             var camera = rig != null && rig.targetCamera != null ? rig.targetCamera : Camera.main;
@@ -350,7 +421,7 @@ namespace MS2026.Fortress
             return up.sqrMagnitude > 1e-6f ? up.normalized : Vector3.up;
         }
 
-        private static int LocalPlayer()
+        internal static int LocalPlayer()
         {
             var bootstrap = FortressNetworkBootstrap.Instance;
             if (bootstrap != null && bootstrap.LocalPlayerIndex >= 0)

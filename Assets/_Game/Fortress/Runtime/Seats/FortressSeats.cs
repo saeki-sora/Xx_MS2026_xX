@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace MS2026.Fortress
@@ -34,13 +35,35 @@ namespace MS2026.Fortress
         /// <summary>カメラが次の席の視点へ移る秒数。</summary>
         public static float CameraBlendSeconds => Settings != null ? Settings.cameraBlendSeconds : 1f;
 
-        /// <summary>砲台が跳んでいる最中か。</summary>
+        /// <summary>砲台が跳んでいる最中か（溜めの間も含む）。</summary>
         public static bool IsMoving { get; internal set; }
+
+        /// <summary>席替えの始め（溜めの始め）からの秒数。ヒットストップの間は進まない。動いていなければ 0。</summary>
+        public static float MoveTime { get; internal set; }
+
+        /// <summary>着地のヒットストップで、砲台の動き（と席替えの演出）が止まっている間か。</summary>
+        public static bool IsHitStopped { get; internal set; }
+
+        /// <summary>席替えの演出が使う1フレームの秒数（ヒットストップの間は 0）。</summary>
+        public static float FxDeltaTime => IsHitStopped && IsMoving ? 0f : Time.deltaTime;
+
+        /// <summary>跳んでいる砲台（席替えの間だけ中身がある。演出の係が場所・高さを読む）。</summary>
+        public static IReadOnlyList<SeatJumper> Jumpers => JumperList;
+
+        internal static readonly List<SeatJumper> JumperList = new List<SeatJumper>();
+
+        /// <summary>最後の席替えが最後まで動いたか（途中で打ち切った・その場に置いたときは false）。</summary>
+        public static bool LastMoveCompleted { get; internal set; }
 
         /// <summary>着地してから YOU の矢印を出している間か（このPCで数える）。</summary>
         public static bool YouMarkerVisible => Settings != null && Settings.showYouMarker && Time.unscaledTime < YouMarkerUntil;
 
+        /// <summary>席替えの締めが始まってからの秒数（YOU の矢印の弾み・光の柱に使う。始まっていなければ大きな値）。</summary>
+        public static float FinaleAge => Time.unscaledTime - FinaleStart;
+
         internal static float YouMarkerUntil { get; set; } = -1f;
+
+        internal static float FinaleStart { get; set; } = -1000f;
 
         /// <summary>席の並び（時計回り。席の場所が分かるまでは番号順）。</summary>
         public static int[] Order => _order ??= DefaultOrder();
@@ -48,8 +71,14 @@ namespace MS2026.Fortress
         /// <summary>席替えが始まった（新しい回数）。全員のPCで1回ずつ。</summary>
         public static event Action<int> MoveStarted;
 
-        /// <summary>全員が着地して、つぶれも戻った（新しい回数）。</summary>
+        /// <summary>全員が着地して、つぶれも戻った（新しい回数）。途中で打ち切ったときも来る（<see cref="LastMoveCompleted"/> が false）。</summary>
         public static event Action<int> MoveFinished;
+
+        /// <summary>1基が跳び始めた。</summary>
+        public static event Action<SeatJumper> TurretLaunched;
+
+        /// <summary>1基が着地した。</summary>
+        public static event Action<SeatJumper> TurretLanded;
 
         /// <summary>プレイヤー player が今座っている席（跳んでいる最中は行き先）。</summary>
         public static int SeatOf(int player) => FortressSeatMath.SeatOf(player, Shift, Order, Clockwise);
@@ -119,7 +148,11 @@ namespace MS2026.Fortress
             Shift = 0;
             CameraShift = 0;
             IsMoving = false;
+            MoveTime = 0f;
+            IsHitStopped = false;
+            JumperList.Clear();
             YouMarkerUntil = -1f;
+            FinaleStart = -1000f;
             if (_registeredSeats == null)
             {
                 _order = null;
@@ -129,6 +162,10 @@ namespace MS2026.Fortress
         internal static void RaiseMoveStarted(int shift) => MoveStarted?.Invoke(shift);
 
         internal static void RaiseMoveFinished(int shift) => MoveFinished?.Invoke(shift);
+
+        internal static void RaiseTurretLaunched(SeatJumper jumper) => TurretLaunched?.Invoke(jumper);
+
+        internal static void RaiseTurretLanded(SeatJumper jumper) => TurretLanded?.Invoke(jumper);
 
         // ───────── テスト用（要塞デザイナー。Host／オフラインだけ効く） ─────────
 
@@ -161,8 +198,40 @@ namespace MS2026.Fortress
             _order = null;
             MoveStarted = null;
             MoveFinished = null;
+            TurretLaunched = null;
+            TurretLanded = null;
             DebugRotateHandler = null;
             DebugResetHandler = null;
         }
+    }
+
+    /// <summary>席替えで跳んでいる1基の様子（<see cref="FortressSeats.Jumpers"/>）。</summary>
+    public sealed class SeatJumper
+    {
+        public LaserTurret Turret { get; internal set; }
+
+        public int Player { get; internal set; }
+
+        /// <summary>前の席・次の席の場所。</summary>
+        public Vector3 From { get; internal set; }
+
+        public Vector3 To { get; internal set; }
+
+        /// <summary>地面の上の今の場所（浮いた分を含まない。影の基準）。</summary>
+        public Vector3 Ground { get; internal set; }
+
+        /// <summary>浮いている高さ（0〜1）。</summary>
+        public float Height01 { get; internal set; }
+
+        /// <summary>着地の順番（0 = 最初。このPCの自分の砲台が 0）。</summary>
+        public int Rank { get; internal set; }
+
+        public bool Flying { get; internal set; }
+
+        public bool Landed { get; internal set; }
+
+        internal bool Launched;
+        internal Vector3 BaseScale;
+        internal Quaternion BaseRotation;
     }
 }

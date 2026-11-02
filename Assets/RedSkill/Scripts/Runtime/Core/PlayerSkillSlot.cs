@@ -29,6 +29,9 @@ namespace MS2026.Skills
     ///   から決めるので、どのPCでも同じになる。画面には <see cref="PlayerSkillGauge"/> で渡す。
     /// ・「使える」状態で次にレーザーを撃ち始めた瞬間（砲台の状態が Firing になった瞬間）にスキルを撃つ。
     ///   撃っている最中に使えるようになった場合は、そのレーザーを離して撃ち終わってからの「次の」撃ち始めで発動する。
+    /// ・カットイン（<see cref="SkillCutIn"/>、2026-11-02〜）が「撃ったとき」の設定なら、撃った瞬間にカットインの合図を出し、
+    ///   スキル本体はカットインが閉じ始めるまで待たせる（その間も状態は Active。砲台は回らず熱も上がらない）。
+    ///   「溜まったとき」の設定なら、使える状態になった瞬間に合図を出し、撃つときは待たせない。
     /// ・キャラに紐づけるときは <see cref="SetSkill"/> でスキルを差し替える（<see cref="PlayerSkillInstaller"/> が自動で行う）。
     /// ネット対戦: スマッシュボールの「割れた」・撃破数・砲台の状態は全PCに届くので、各PCがこの判断を自分で行う（通信は増やさない）。
     /// </summary>
@@ -57,6 +60,8 @@ namespace MS2026.Skills
         private bool _subscribed;
         private int _lastKills = -1;
         private int _gaugeKills;
+        private bool _waitingForCutIn;
+        private float _cutInWaitRemaining;
 
         /// <summary>どの砲台のスキル欄でも、状態が変わったときに呼ばれる（UIの表示などに使う）。</summary>
         public static event Action<PlayerSkillSlot> AnyStateChanged;
@@ -94,6 +99,9 @@ namespace MS2026.Skills
 
         /// <summary>使える状態だが、今のレーザーを離すまで待っているか（撃っている最中に溜まった場合）。</summary>
         public bool IsWaitingForRelease => IsReady && _waitForRelease;
+
+        /// <summary>撃ったが、カットイン中なのでスキル本体が始まるのを待っているか（状態は Active）。</summary>
+        public bool IsWaitingForCutIn => _waitingForCutIn;
 
         /// <summary>倒して溜めるゲージ（0=空、1=満タン）。使える状態の間は 1。</summary>
         public float Gauge01
@@ -150,6 +158,7 @@ namespace MS2026.Skills
 
         private void Update()
         {
+            UpdateCutInWait(Time.deltaTime);
             UpdateKillGauge();
         }
 
@@ -158,6 +167,7 @@ namespace MS2026.Skills
             ActiveSlots.Remove(this);
             PlayerSkillGauge.Clear(PlayerIndex);
             Subscribe(false);
+            StopCutInWait();
             if (_runner != null && _runner.IsActive)
             {
                 _runner.Cancel();
@@ -219,6 +229,7 @@ namespace MS2026.Skills
 
             SetState(PlayerSkillState.Ready);
             _runner.SetReadyVisual(true);
+            SkillCutIn.NotifyReady(this);
         }
 
         /// <summary>使える状態を取り消す（撃っている最中なら何もしない）。</summary>
@@ -254,6 +265,14 @@ namespace MS2026.Skills
                 return;
             }
 
+            if (_waitingForCutIn)
+            {
+                // まだスキル本体が始まっていない（カットイン中）。始めずに終わらせる。
+                StopCutInWait();
+                HandleRunnerFinished(_runner);
+                return;
+            }
+
             _runner.Cancel();
             HandleRunnerFinished(_runner);
         }
@@ -279,6 +298,7 @@ namespace MS2026.Skills
         private void ApplySkill(CharacterSkill newSkill)
         {
             var wasReady = State == PlayerSkillState.Ready;
+            StopCutInWait();
             if (_runner != null && _runner.IsActive)
             {
                 _runner.Cancel();
@@ -388,7 +408,57 @@ namespace MS2026.Skills
             }
 
             SetState(PlayerSkillState.Active);
+            SkillCutIn.NotifyActivated(this);
+            var wait = SkillCutIn.StartDelayFor(skill);
+            if (wait > 0f)
+            {
+                // カットインが閉じ始めるまでスキル本体を待たせる。その間、砲台は止めておく（設定でON のとき）。
+                _waitingForCutIn = true;
+                _cutInWaitRemaining = wait;
+                if (Turret != null)
+                {
+                    Turret.HoldForSkill = SkillCutIn.FreezeTurretWhileWaiting;
+                }
+
+                return;
+            }
+
             _runner.Activate();
+        }
+
+        private void UpdateCutInWait(float dt)
+        {
+            if (!_waitingForCutIn)
+            {
+                return;
+            }
+
+            _cutInWaitRemaining -= dt;
+            if (_cutInWaitRemaining > 0f)
+            {
+                return;
+            }
+
+            StopCutInWait();
+            if (State == PlayerSkillState.Active && _runner != null)
+            {
+                _runner.Activate();
+            }
+        }
+
+        private void StopCutInWait()
+        {
+            if (!_waitingForCutIn)
+            {
+                return;
+            }
+
+            _waitingForCutIn = false;
+            _cutInWaitRemaining = 0f;
+            if (Turret != null)
+            {
+                Turret.HoldForSkill = false;
+            }
         }
 
         // 自分の撃破数が増えた分だけゲージを溜め、満タンになったら使える状態にする。

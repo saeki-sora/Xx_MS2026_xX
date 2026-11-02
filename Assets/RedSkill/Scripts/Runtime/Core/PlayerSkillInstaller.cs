@@ -38,6 +38,11 @@ namespace MS2026.Skills
         [SkillLabel("砲台のキャラの絵の一覧")]
         public TurretPortraitTable turretPortraits;
 
+        [Header("カットイン")]
+        [Tooltip("スキルのカットインの設定（キャラごとの絵・技名・声、いつ出すか）。空ならカットインなし（スキルはすぐ始まる）。")]
+        [SkillLabel("カットインの設定")]
+        public SkillCutInSettings cutIn;
+
         [Header("テスト用")]
         [Tooltip("ONなら、ゲーム開始時から全員スキルを使える状態にする。")]
         [SkillLabel("最初から全員使える（テスト）")]
@@ -49,6 +54,8 @@ namespace MS2026.Skills
 
         private void Awake()
         {
+            // カットインを出す係（設定が空なら作らない）。スキル欄が合図を出す前に用意しておく。
+            SkillCutInDirector.Ensure(cutIn);
             InstallAll();
         }
 
