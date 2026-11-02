@@ -273,6 +273,58 @@ namespace MS2026.Fortress.EditorTools
             return true;
         }
 
+        /// <summary>
+        /// 歯車の腕（と、一緒に選んだ回る部分の中の見た目）を、回る部分の中の「横に動く台」（<see cref="GimmickMover"/>）へ入れる（2026-10-30）。
+        /// 歯車が回るのとは別に、決めた時刻に腕が横へずれる（ずれは歯車から見た向き。最初は棒の長さの向きに 1.5m 行ったり来たり）。
+        /// もう台があればそれを返す。
+        /// </summary>
+        public static GimmickMover MakeSlide(GimmickGear gear, IEnumerable<GameObject> alsoMove)
+        {
+            var rotor = gear.Rotor;
+            if (rotor == null)
+            {
+                return null;
+            }
+
+            var existing = rotor.GetComponentInChildren<GimmickMover>(true);
+            if (existing != null)
+            {
+                return existing;
+            }
+
+            var go = new GameObject(gear.name + "_スライド");
+            Undo.RegisterCreatedObjectUndo(go, "腕を横に動かせるようにする");
+            go.transform.SetParent(rotor, false);
+            var arms = new List<GimmickGearArm>();
+            gear.CollectArms(arms);
+            var targets = arms.Select(a => a.gameObject)
+                .Concat(alsoMove.Where(g => g != null && g.transform.IsChildOf(rotor) && g.transform != rotor && g.GetComponent<GimmickBehaviour>() == null))
+                .Distinct();
+            foreach (var target in targets)
+            {
+                if (PrefabUtility.IsPartOfPrefabInstance(target) && !PrefabUtility.IsOutermostPrefabInstanceRoot(target))
+                {
+                    continue;
+                }
+
+                Undo.SetTransformParent(target.transform, go.transform, "腕を横に動かせるようにする");
+            }
+
+            var mover = Undo.AddComponent<GimmickMover>(go);
+            mover.loop = MoverLoop.PingPong;
+            mover.firstMoveAt = gear.firstTurnAt;
+            mover.stops = new List<MoverStop>
+            {
+                new MoverStop { moveSeconds = 1.5f, waitSeconds = 6f },
+                new MoverStop { offset = new Vector2(1.5f, 0f), moveSeconds = 1.5f, waitSeconds = 6f }
+            };
+            mover.memo = "歯車の腕を時間で横へずらす台（歯車と一緒に回る）。ずれは歯車から見た向き。";
+            mover.CaptureHome();
+            EditorUtility.SetDirty(mover);
+            NavigationObstacle.NotifyChanged();
+            return mover;
+        }
+
         /// <summary>選んだ物を、歯車の回る部分の中へ入れる（一緒に回るようになる）。</summary>
         public static int MoveIntoRotor(GimmickGear gear, IEnumerable<GameObject> targets)
         {

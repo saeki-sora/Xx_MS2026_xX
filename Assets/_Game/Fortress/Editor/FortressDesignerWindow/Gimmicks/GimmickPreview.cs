@@ -154,9 +154,7 @@ namespace MS2026.Fortress.EditorTools
                     continue;
                 }
 
-                var t = mover.transform;
-                Vector2 position = t.position;
-                var angle = t.eulerAngles.z;
+                mover.ReadPose(out var position, out var angle);
                 if (mover.homeCaptured &&
                     (position - mover.homePosition).sqrMagnitude < 1e-8f &&
                     Mathf.Abs(Mathf.DeltaAngle(angle, mover.homeAngle)) < 1e-3f)

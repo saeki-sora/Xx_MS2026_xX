@@ -147,6 +147,7 @@ namespace MS2026.Fortress.EditorTools
             }
 
             DrawArms(gear);
+            DrawSlide(gear);
             DrawLooks(gear);
 
             EditorGUI.BeginChangeCheck();
@@ -292,6 +293,46 @@ namespace MS2026.Fortress.EditorTools
                     }
                 }
             }
+        }
+
+        /// <summary>腕を時間で横へずらす台（回る部分の中の <see cref="GimmickMover"/>）。無ければ作るボタン、あれば選ぶボタン。</summary>
+        private static void DrawSlide(GimmickGear gear)
+        {
+            EditorGUILayout.Space(4);
+            EditorGUILayout.LabelField("腕を時間で横に動かす", EditorStyles.miniBoldLabel);
+            var slide = gear.Rotor != null ? gear.Rotor.GetComponentInChildren<GimmickMover>(true) : null;
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (slide != null)
+                {
+                    EditorGUILayout.LabelField(new GUIContent($"{slide.name}: {slide.Describe()}", slide.memo), EditorStyles.miniLabel);
+                    if (GUILayout.Button(new GUIContent("動き方を変える", "横に動く台を選びます（下の「動く障害物」の欄で、止まる所・時刻・秒数を変えられます）。"), GUILayout.Width(100)))
+                    {
+                        Selection.activeGameObject = slide.gameObject;
+                    }
+
+                    return;
+                }
+
+                using (new EditorGUI.DisabledScope(Application.isPlaying))
+                {
+                    if (GUILayout.Button(new GUIContent("腕を横に動かせるようにする",
+                            "腕を「横に動く台」に入れます。歯車が回るのとは別に、決めた時刻に腕が横へずれます（最初は棒の長さの向きに 1.5m 行ったり来たり）。" +
+                            "腕の見た目（3D モデルなど）も一緒に動かすときは、歯車とその見た目を一緒に選んでから押してください。")))
+                    {
+                        GimmickPreview.Stop();
+                        var created = GimmickFactory.MakeSlide(gear, Selection.gameObjects);
+                        if (created != null)
+                        {
+                            Selection.activeGameObject = created.gameObject;
+                        }
+
+                        GUIUtility.ExitGUI();
+                    }
+                }
+            }
+
+            EditorGUILayout.LabelField("腕の見た目も一緒に動かすときは、歯車と見た目を一緒に選んでから押してください（後から足した腕は台の外です）。", EditorStyles.miniLabel);
         }
 
         private static void DrawMoveInto(GimmickGear gear)

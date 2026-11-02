@@ -144,7 +144,9 @@ namespace MS2026.Fortress.EditorTools
         private void DrawStops(GimmickMover mover)
         {
             EditorGUILayout.Space(2);
-            EditorGUILayout.LabelField("止まる所（ずれは出発点からの m。右が +X、上が +Y）", EditorStyles.miniBoldLabel);
+            EditorGUILayout.LabelField(mover.InGear
+                    ? "止まる所（ずれは出発点からの m。歯車の中なので歯車から見た向き: +X = 歯車の 0° の向き＝棒の長さの向き）"
+                    : "止まる所（ずれは出発点からの m。右が +X、上が +Y）", EditorStyles.miniBoldLabel);
             using (new EditorGUILayout.HorizontalScope())
             {
                 GUILayout.Label("", GUILayout.Width(64));

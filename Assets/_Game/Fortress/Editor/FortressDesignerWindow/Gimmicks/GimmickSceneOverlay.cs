@@ -193,8 +193,7 @@ namespace MS2026.Fortress.EditorTools
 
                 if (ShowGhosts && size.HasValue)
                 {
-                    var angle = mover.homeAngle + (i > 0 && stops[i] != null ? stops[i].angle : 0f);
-                    DrawGhostRect(position, size.Value, angle);
+                    DrawGhostRect(position, size.Value, mover.StopWorldAngle(i));
                 }
 
                 var discSize = HandleUtility.GetHandleSize(position) * 0.12f;
@@ -205,7 +204,8 @@ namespace MS2026.Fortress.EditorTools
                     if (EditorGUI.EndChangeCheck())
                     {
                         Undo.RecordObject(mover, "止まる所を動かす");
-                        stops[i].offset = new Vector2(Snap(moved.x - mover.homePosition.x), Snap(moved.y - mover.homePosition.y));
+                        var offset = mover.WorldToOffset(moved);
+                        stops[i].offset = new Vector2(Snap(offset.x), Snap(offset.y));
                         EditorUtility.SetDirty(mover);
                         mover.MarkChanged();
                         if (GimmickPreview.Active)

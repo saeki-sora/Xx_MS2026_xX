@@ -18,6 +18,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Game.unity
     guid: e81d0dffa6af43c4b9c9c62f1c41d0d9
   - enabled: 1
+    path: Assets/Scenes/Stages/Stage3_Gear.unity
+    guid: 20d7f710aa3603246920982bc66f4fba
+  - enabled: 1
     path: Assets/Scenes/Stages/Stage2_Bath.unity
     guid: b4128a795be8b904db08d53261083b9f
   - enabled: 1

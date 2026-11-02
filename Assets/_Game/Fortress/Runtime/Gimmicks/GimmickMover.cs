@@ -21,7 +21,7 @@ namespace MS2026.Fortress
     [Serializable]
     public sealed class MoverStop
     {
-        [Tooltip("出発点からのずれ（m。画面の右が +X、上が +Y）。")]
+        [Tooltip("出発点からのずれ（m。画面の右が +X、上が +Y。歯車の中では歯車から見た向きで、+X が歯車の 0° の向き＝棒の腕の長さの向き）。")]
         public Vector2 offset;
 
         [Tooltip("出発点の向きから回す角度（度。反時計回りが +）。")]
@@ -43,13 +43,15 @@ namespace MS2026.Fortress
     /// 決めた「止まる所」を順に動く。位置・向きは時刻（<see cref="GimmickClock"/>）だけで決まるので、全員のPCで同じ所にある。
     /// 動くと経路が自動で作り直され、敵は今までどおりそれに従う（敵の仕組みは変えていない）。
     /// 出発点（<see cref="homePosition"/>）は、エディタで物を動かすと自動で付いてくる（要塞デザイナー › 仕掛け タブ）。
+    /// 歯車の回る部分の中に置くと（<see cref="InGear"/>。例: 歯車の門の棒を時間で横へずらす、2026-10-30）、位置・向きを回る部分から見た値で持つので、
+    /// 歯車と一緒に回りながら動く。
     /// スマッシュボール（自分で浮いて動く）には付けない。
     /// </summary>
     [AddComponentMenu("Fortress/仕掛け/動く障害物")]
     [DisallowMultipleComponent]
     public sealed class GimmickMover : GimmickBehaviour
     {
-        [Tooltip("出発点（シーンに置いた位置。エディタで物を動かすと自動で合わせる）。")]
+        [Tooltip("出発点（シーンに置いた位置。歯車の中では回る部分から見た位置。エディタで物を動かすと自動で合わせる）。")]
         public Vector2 homePosition;
 
         [Tooltip("出発点の向き（度）。")]
@@ -103,13 +105,30 @@ namespace MS2026.Fortress
             base.OnEnable();
         }
 
+        /// <summary>歯車の回る部分の中にあるか（中なら、位置・向きは回る部分から見た値＝ローカルで持つ）。</summary>
+        public bool InGear => transform.parent != null && transform.parent.GetComponentInParent<GimmickGear>() != null;
+
         /// <summary>今の位置・向きを出発点にする。</summary>
         public void CaptureHome()
         {
-            homePosition = transform.position;
-            homeAngle = transform.eulerAngles.z;
+            ReadPose(out homePosition, out homeAngle);
             homeCaptured = true;
             _hasApplied = false;
+        }
+
+        /// <summary>今の位置・向き（歯車の中ならローカル、外なら世界）。出発点と比べるときに使う。</summary>
+        public void ReadPose(out Vector2 position, out float angle)
+        {
+            if (InGear)
+            {
+                position = transform.localPosition;
+                angle = transform.localEulerAngles.z;
+            }
+            else
+            {
+                position = transform.position;
+                angle = transform.eulerAngles.z;
+            }
         }
 
         /// <summary>止まる所・動き方を変えた後に呼ぶ（次の計算で作り直す）。</summary>
@@ -146,11 +165,29 @@ namespace MS2026.Fortress
             return GimmickMath.EvaluateMover(t, firstMoveAt, _stops, _legs, Repeats);
         }
 
-        /// <summary>止まる所 i の世界の位置。</summary>
+        /// <summary>止まる所 i の世界の位置（歯車の中なら、歯車の今の向きで）。</summary>
         public Vector3 StopWorldPosition(int i)
         {
             var offset = i > 0 && i < stops.Count && stops[i] != null ? stops[i].offset : Vector2.zero;
-            return new Vector3(homePosition.x + offset.x, homePosition.y + offset.y, transform.position.z);
+            var x = homePosition.x + offset.x;
+            var y = homePosition.y + offset.y;
+            return InGear
+                ? transform.parent.TransformPoint(new Vector3(x, y, transform.localPosition.z))
+                : new Vector3(x, y, transform.position.z);
+        }
+
+        /// <summary>止まる所 i の世界の向き（度）。</summary>
+        public float StopWorldAngle(int i)
+        {
+            var angle = homeAngle + (i > 0 && i < stops.Count && stops[i] != null ? stops[i].angle : 0f);
+            return InGear ? transform.parent.eulerAngles.z + angle : angle;
+        }
+
+        /// <summary>世界の位置を、出発点からのずれ（歯車の中なら回る部分から見たずれ）にする。</summary>
+        public Vector2 WorldToOffset(Vector3 world)
+        {
+            var position = InGear ? (Vector2)transform.parent.InverseTransformPoint(world) : (Vector2)world;
+            return position - homePosition;
         }
 
         public override bool IsMovingAt(float t) => PoseAt(t).Moving;
@@ -170,10 +207,18 @@ namespace MS2026.Fortress
                           Mathf.Abs(pose.Angle - _applied.Angle) > 1e-4f;
             if (changed)
             {
-                var z = transform.position.z;
-                transform.SetPositionAndRotation(
-                    new Vector3(homePosition.x + pose.X, homePosition.y + pose.Y, z),
-                    Quaternion.Euler(0f, 0f, homeAngle + pose.Angle));
+                var x = homePosition.x + pose.X;
+                var y = homePosition.y + pose.Y;
+                var rotation = Quaternion.Euler(0f, 0f, homeAngle + pose.Angle);
+                if (InGear)
+                {
+                    transform.SetLocalPositionAndRotation(new Vector3(x, y, transform.localPosition.z), rotation);
+                }
+                else
+                {
+                    transform.SetPositionAndRotation(new Vector3(x, y, transform.position.z), rotation);
+                }
+
                 _applied = pose;
                 _hasApplied = true;
                 NotifyNavigation();

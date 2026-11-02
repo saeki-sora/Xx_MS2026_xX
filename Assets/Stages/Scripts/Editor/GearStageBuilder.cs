@@ -267,14 +267,23 @@ namespace MS2026.Stages.EditorTools
                 gear.radius = GateRadius;
                 gear.memo = "棒の腕で通路をふさぐ門。棒が通路に沿うと通れる、横切るとふさぐ。";
 
+                // 棒は「横に動く台」の中に入れる（歯車と一緒に回り、さらに決めた時刻に横へずらせる。仕掛けタブ › 動く障害物 で止まる所を足す）。
+                var slide = new GameObject(name + "_スライド");
+                slide.transform.SetParent(gear.Rotor, false);
                 var arm = new GameObject("Arm_Bar");
-                arm.transform.SetParent(gear.Rotor, false);
+                arm.transform.SetParent(slide.transform, false);
                 var component = arm.AddComponent<GimmickGearArm>();
                 component.laserPassesThrough = true;
                 component.SetSize(BarLength, BarThickness);
 
                 GearStageModels.AttachProp(gear.Rotor, "見た目_歯車", "Gear_Gate", gear.transform.position, angle, set, materials);
-                GearStageModels.AttachProp(gear.Rotor, "見た目_棒", "Gate_Bar", gear.transform.position, angle, set, materials);
+                GearStageModels.AttachProp(slide.transform, "見た目_棒", "Gate_Bar", gear.transform.position, angle, set, materials);
+                var mover = slide.AddComponent<GimmickMover>();
+                mover.loop = MoverLoop.PingPong;
+                mover.firstMoveAt = GateFirstTurn;
+                mover.stops = new List<MoverStop> { new MoverStop { moveSeconds = 1.5f, waitSeconds = 6f } };
+                mover.memo = "門の棒を時間で横へずらす台（今は出発点だけ＝動かない）。止まる所を足すと、歯車から見た向き（+X = 棒の長さの向き）にずれる。";
+                mover.CaptureHome();
                 result.Add(gear);
             }
 
