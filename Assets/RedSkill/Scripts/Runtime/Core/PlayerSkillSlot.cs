@@ -137,6 +137,7 @@ namespace MS2026.Skills
             }
 
             Suppressor.Release();
+            SetHeatFrozen(false);
             _holdSuppressUntilRelease = false;
             if (State == PlayerSkillState.Active)
             {
@@ -385,11 +386,23 @@ namespace MS2026.Skills
             if (skill == null || !isActiveAndEnabled)
             {
                 Suppressor.Release();
+                SetHeatFrozen(false);
                 return;
             }
 
             var active = State == PlayerSkillState.Active && skill.replacesNormalLaser;
             Suppressor.Apply(active || _holdSuppressUntilRelease, active);
+
+            // スキル中（と、終わっても握り続けて普段のレーザーを隠している間）は、握っても熱をためない（設定でON のとき）。
+            SetHeatFrozen(skill.noHeatWhileActive && (State == PlayerSkillState.Active || _holdSuppressUntilRelease));
+        }
+
+        private void SetHeatFrozen(bool frozen)
+        {
+            if (Turret != null)
+            {
+                Turret.HeatGainScale = frozen ? 0f : 1f;
+            }
         }
     }
 }

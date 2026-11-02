@@ -69,6 +69,34 @@ namespace MS2026.Skills.Blue
         [SkillLabel("シェーダー（通常は触らない）")]
         public BlueSkillShaders shaders = new BlueSkillShaders();
 
+        [Header("変更前の見た目（2026-10-30 の水のシェーダー化より前）")]
+        [Tooltip("ON なら、渦の見た目・溜めの演出・消える時間を、下の「変更前の…」の値で動かす（水のシェーダー化・水の輪・吸い込まれて終わる演出などを入れる前の見た目）。\n" +
+                 "OFF なら上の「渦の見た目」「溜めの演出」「渦（エリア）」の値（今の見た目）。Play 中に切り替えてもよい。")]
+        [SkillLabel("変更前の見た目にする")]
+        public bool useBeforeLook;
+
+        [Tooltip("変更前の渦の見た目の値（「変更前の見た目にする」が ON のとき使う）。")]
+        [SkillLabel("変更前の渦の見た目")]
+        public BlueVortexLook beforeLook = new BlueVortexLook();
+
+        [Tooltip("変更前の溜め（使える状態）の演出の値（「変更前の見た目にする」が ON のとき使う）。")]
+        [SkillLabel("変更前の溜めの演出")]
+        public BlueChargeFx beforeCharge = new BlueChargeFx();
+
+        [Tooltip("変更前の、渦が縮んで消えるまでの時間（秒）。消えている間は敵の引き寄せも続く。")]
+        [SkillLabel("変更前の消える時間（秒）")]
+        [Range(0.05f, 3f)]
+        public float beforeCollapseSeconds = 0.6f;
+
+        /// <summary>今使う渦の見た目（「変更前の見た目にする」なら変更前の値）。見た目のコードはここから読む。</summary>
+        public BlueVortexLook Look => useBeforeLook && beforeLook != null ? beforeLook : look;
+
+        /// <summary>今使う溜めの演出（「変更前の見た目にする」なら変更前の値）。</summary>
+        public BlueChargeFx Charge => useBeforeLook && beforeCharge != null ? beforeCharge : charge;
+
+        /// <summary>今使う、渦が消えるまでの時間（「変更前の見た目にする」なら変更前の値）。</summary>
+        public float CollapseSeconds => useBeforeLook ? beforeCollapseSeconds : area.collapseSeconds;
+
         public BlueVortexSkill()
         {
             skillId = "blue_vortex";
@@ -359,7 +387,7 @@ namespace MS2026.Skills.Blue
         [Tooltip("渦が吸い込まれるように縮んで消えるまでの時間（秒）。")]
         [SkillLabel("消える時間（秒）")]
         [Range(0.05f, 3f)]
-        public float collapseSeconds = 0.6f;
+        public float collapseSeconds = 1f;
 
         [Tooltip("消える前の何秒間、ふちを点滅させて「もうすぐ消える」と知らせるか（0で点滅しない）。")]
         [SkillLabel("消える前の点滅（秒）")]
@@ -494,6 +522,152 @@ namespace MS2026.Skills.Blue
         [SkillLabel("明るさ")]
         [Range(0f, 4f)]
         public float intensity = 1.2f;
+
+        [Header("水のシェーダー（2D-Water-Shader をもとにした渦）")]
+        [Tooltip("ON なら、渦を水のシェーダー（MS2026/BlueSkill/WaterVortex）で描く: ゆがみの絵2枚を渦の形に流して、水面のゆらぎと白い泡を出す。\n" +
+                 "OFF なら前のコードだけで描く渦。元のシェーダー: 2D-Water-Shader（Stefan Jovanović, MIT ライセンス。Shaders/Water/LICENSE_2D-Water-Shader.txt）。")]
+        [SkillLabel("水のシェーダーで描く")]
+        public bool useWaterShader = true;
+
+        [Tooltip("水のゆがみの絵（大きいゆらぎ）。元のシェーダーの Displacement Texture。")]
+        [SkillLabel("ゆがみの絵")]
+        public Texture2D waterDisplacement;
+
+        [Tooltip("水のゆがみの絵（細かいゆらぎ）。元のシェーダーの Displacement Detail Texture。")]
+        [SkillLabel("細かいゆがみの絵")]
+        public Texture2D waterDisplacementDetail;
+
+        [Tooltip("ゆがみの絵が渦に沿って回る速さ（大きいほど水面の模様が速く回る）。")]
+        [SkillLabel("水の模様が回る速さ")]
+        [Range(-1f, 1f)]
+        public float waterFlowSpeed = 0.035f;
+
+        [Tooltip("細かいゆがみの絵が回る速さ。")]
+        [SkillLabel("細かい模様が回る速さ")]
+        [Range(-1f, 1f)]
+        public float waterDetailFlowSpeed = 0.017f;
+
+        [Tooltip("水の模様が中心へ吸い込まれる速さ（中心に近いほど速く見える）。")]
+        [SkillLabel("中心へ流れ込む速さ")]
+        [Range(0f, 2f)]
+        public float waterInflowSpeed = 0.25f;
+
+        [Tooltip("水のゆがみの強さ（元のシェーダーの 1 / Displacement Amount Divider）。")]
+        [SkillLabel("水のゆがみの強さ")]
+        [Range(0f, 0.3f)]
+        public float waterDistortion = 0.06f;
+
+        [Tooltip("泡の出にくさ（元のシェーダーの Foam Threshold × Divider）。小さいほど泡が増える。")]
+        [SkillLabel("泡の出にくさ")]
+        [Range(0f, 1.5f)]
+        public float waterFoamThreshold = 0.95f;
+
+        [Tooltip("泡の色（HDR）。")]
+        [SkillLabel("泡の色")]
+        [ColorUsage(true, true)]
+        public Color waterFoamColor = new Color(0.9f, 1.05f, 1.2f, 1f);
+
+        [Tooltip("泡の濃さ（元のシェーダーの Foam Alpha）。")]
+        [SkillLabel("泡の濃さ")]
+        [Range(0f, 1f)]
+        public float waterFoamAlpha = 0.6f;
+
+        [Tooltip("ふちの泡の幅（0で出さない）。")]
+        [SkillLabel("ふちの泡の幅")]
+        [Range(0f, 0.3f)]
+        public float waterEdgeFoam = 0.08f;
+
+        [Tooltip("水の模様を、1周に何回くり返すか。")]
+        [SkillLabel("模様のくり返し（1周）")]
+        [Range(1, 8)]
+        public int waterAngularRepeat = 3;
+
+        [Tooltip("水の模様の、中心→ふち方向の細かさ。")]
+        [SkillLabel("模様の細かさ（中心→ふち）")]
+        [Range(0.2f, 6f)]
+        public float waterRadialScale = 1.5f;
+
+        [Tooltip("水のシェーダーで描くときの、うず巻きの筋の強さ（0で筋なし＝水の模様だけ）。")]
+        [SkillLabel("うず巻きの筋の強さ")]
+        [Range(0f, 1.5f)]
+        public float waterArmStrength = 0.6f;
+
+        [Tooltip("渦の深さ: 中心の穴へ向かうほど暗くなる強さ（0で暗くしない）。")]
+        [SkillLabel("渦の深さ（中心の暗さ）")]
+        [Range(0f, 1f)]
+        public float waterDepth = 0.6f;
+
+        [Tooltip("水面のきらめき（模様の明るい所が光る）の強さ（0で出さない）。")]
+        [SkillLabel("水面のきらめき")]
+        [Range(0f, 3f)]
+        public float waterSheen = 0.35f;
+
+        [Tooltip("排水口の渦のような、細いうず巻きの溝の本数（0で出さない）。中心ほどきつく巻き、片側がツヤで光る。")]
+        [SkillLabel("うず巻きの溝の本数")]
+        [Range(0, 32)]
+        public int waterGrooveCount = 11;
+
+        [Tooltip("溝の巻きのきつさ（大きいほど中心のまわりでぐるぐる巻く）。")]
+        [SkillLabel("溝の巻きのきつさ")]
+        [Range(0f, 15f)]
+        public float waterGrooveTightness = 5f;
+
+        [Tooltip("溝に沿って光るツヤの強さ。")]
+        [SkillLabel("溝のツヤ")]
+        [Range(0f, 4f)]
+        public float waterGrooveShine = 0.55f;
+
+        [Tooltip("溝の影（へこんだ側が暗くなる）の強さ。")]
+        [SkillLabel("溝の影")]
+        [Range(0f, 1f)]
+        public float waterGrooveShade = 0.3f;
+
+        [Header("うがい薬の泡（水のシェーダーで描くときだけ）")]
+        [Tooltip("渦の中を流れる、うがい薬の丸い泡（ブクブク）の量（0で出さない）。流れに乗って回りながら中心へ吸い込まれ、中心に近いほど小さくなる。")]
+        [SkillLabel("うがい薬の泡の量")]
+        [Range(0f, 1f)]
+        public float gargleBubbleAmount = 0.35f;
+
+        [Tooltip("うがい薬の泡の大きさ（升目に対する割合）。")]
+        [SkillLabel("うがい薬の泡の大きさ")]
+        [Range(0.05f, 0.5f)]
+        public float gargleBubbleSize = 0.32f;
+
+        [Tooltip("うがい薬の泡の細かさ（1周に並ぶ升目の数。大きいほど小さい泡がたくさん）。")]
+        [SkillLabel("うがい薬の泡の細かさ")]
+        [Range(4, 40)]
+        public int gargleBubbleRepeat = 16;
+
+        [Tooltip("うがい薬の泡の色（HDR）。")]
+        [SkillLabel("うがい薬の泡の色")]
+        [ColorUsage(true, true)]
+        public Color gargleBubbleColor = new Color(0.55f, 0.9f, 1.2f, 1f);
+
+        [Header("消えるとき（中心へ吸い込まれる）")]
+        [Tooltip("消えるときに、水の模様が中心へ流れ込む速さの倍率（最後に向かって上がっていく）。")]
+        [SkillLabel("吸い込みの速さの倍率")]
+        [Range(1f, 20f)]
+        public float drainInflowBoost = 8f;
+
+        [Tooltip("消えるときに、中心の穴がどこまで広がるか（半径に対する割合）。水のシェーダーで描くときだけ。")]
+        [SkillLabel("消えるときの穴の広がり")]
+        [Range(0f, 0.95f)]
+        public float drainEyeSize = 0.3f;
+
+        [Tooltip("消えるときの縮み方。大きいほど最後まで大きいまま粘って、最後に一気に吸い込まれる。")]
+        [SkillLabel("縮み方（粘り）")]
+        [Range(1f, 6f)]
+        public float drainCurve = 3f;
+
+        [Tooltip("消え始めに、外から中心へ縮んでいく輪の色（HDR。アルファ0で出さない）。")]
+        [SkillLabel("吸い込まれる輪の色")]
+        [ColorUsage(true, true)]
+        public Color drainRingColor = new Color(0.4f, 0.85f, 1.4f, 1f);
+
+        [Tooltip("吸い込まれきった瞬間に中心から湧く、うがい薬の泡の数（0で出さない）。")]
+        [SkillLabel("最後に湧く泡（個）")]
+        [Range(0, 200)]
+        public int drainBubbleCount = 45;
 
         [Tooltip("内側にもう1枚、逆向きに回る渦を重ねる（奥行きが出る）。")]
         [SkillLabel("逆回りの渦を重ねる")]
@@ -677,6 +851,70 @@ namespace MS2026.Skills.Blue
         [SkillLabel("足元の小さな渦の濃さ")]
         [Range(0f, 1f)]
         public float miniVortexOpacity = 0.6f;
+
+        [Tooltip("ON なら、足元の小さな渦の代わりに、キャラのまわりをぐるぐる回る水の輪を出す（渦と同じ水のシェーダー。真ん中は空いていてキャラが見える）。\n" +
+                 "渦の見た目の「水のシェーダーで描く」が OFF のときは、足元の小さな渦になる。")]
+        [SkillLabel("まわりを回る水の輪")]
+        public bool waterRing = true;
+
+        [Tooltip("水の輪の外側の半径（m）。")]
+        [SkillLabel("水の輪の半径（m）")]
+        [Range(0.5f, 6f)]
+        public float waterRingRadius = 2.4f;
+
+        [Tooltip("水の輪の内側の空いている所の大きさ（外側の半径に対する割合）。大きいほど細い輪になる。")]
+        [SkillLabel("水の輪の内側の穴")]
+        [Range(0f, 0.9f)]
+        public float waterRingHole = 0.55f;
+
+        [Tooltip("水の輪の濃さ。")]
+        [SkillLabel("水の輪の濃さ")]
+        [Range(0f, 1f)]
+        public float waterRingOpacity = 1f;
+
+        [Tooltip("水の輪の明るさ（渦の「明るさ」の何倍か）。")]
+        [SkillLabel("水の輪の明るさ（倍）")]
+        [Range(0f, 4f)]
+        public float waterRingBrightness = 1.6f;
+
+        [Tooltip("水の輪が回る速さ（渦の「回る速さ」の何倍か）。")]
+        [SkillLabel("水の輪の回る速さ（倍）")]
+        [Range(0f, 6f)]
+        public float waterRingSpin = 1.5f;
+
+        [Tooltip("ON なら、水の輪の外側にもう1本、逆向きに回る細い水の輪を重ねる。")]
+        [SkillLabel("外側の逆回りの水の輪")]
+        public bool waterRingOuter = true;
+
+        [Tooltip("外側の輪の大きさ（内側の輪の半径の何倍か）。")]
+        [SkillLabel("外側の輪の大きさ（倍）")]
+        [Range(1f, 2.5f)]
+        public float outerRingScale = 1.35f;
+
+        [Tooltip("外側の輪の内側の穴（大きいほど細い輪）。")]
+        [SkillLabel("外側の輪の内側の穴")]
+        [Range(0f, 0.95f)]
+        public float outerRingHole = 0.78f;
+
+        [Tooltip("外側の輪の濃さ。")]
+        [SkillLabel("外側の輪の濃さ")]
+        [Range(0f, 1f)]
+        public float outerRingOpacity = 0.75f;
+
+        [Tooltip("水の輪から外へ水しぶきが吹き出す間隔（秒。0で出さない）。振りかぶり中は短くなる。")]
+        [SkillLabel("輪から吹き出すしぶきの間隔（秒）")]
+        [Range(0f, 3f)]
+        public float ringSplashInterval = 0.4f;
+
+        [Tooltip("1回に吹き出す水しぶきの数。")]
+        [SkillLabel("輪から吹き出すしぶきの数")]
+        [Range(0, 80)]
+        public int ringSplashCount = 16;
+
+        [Tooltip("ボトルのまわりのきらめきの数（個/秒）。")]
+        [SkillLabel("ボトルのまわりのきらめき（個/秒）")]
+        [Range(0f, 200f)]
+        public float sparkleRate = 50f;
 
         [Tooltip("ボトルのまわりを回りながら吸い込まれる水の粒の量（個/秒）。")]
         [SkillLabel("まわりを回る水の粒（個/秒）")]
@@ -886,6 +1124,10 @@ namespace MS2026.Skills.Blue
         [Tooltip("渦の本体のシェーダー（MS2026/BlueSkill/Vortex）。")]
         [SkillLabel("渦")]
         public Shader vortex;
+
+        [Tooltip("水のシェーダー版の渦（MS2026/BlueSkill/WaterVortex）。渦の見た目の「水のシェーダーで描く」が ON のとき使う。")]
+        [SkillLabel("渦（水のシェーダー）")]
+        public Shader waterVortex;
 
         [Tooltip("光・輪・トゲのシェーダー（MS2026/BlueSkill/Glow）。")]
         [SkillLabel("光・輪")]

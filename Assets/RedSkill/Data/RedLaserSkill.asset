@@ -20,6 +20,7 @@ MonoBehaviour:
   ignoreChargeWhileActive: 1
   replacesNormalLaser: 1
   hideNormalLaserUntilRelease: 1
+  noHeatWhileActive: 1
   timing:
     windupSeconds: 0.3
     fireSeconds: 3
@@ -260,6 +261,77 @@ MonoBehaviour:
     emberRadius: 2.6
     readyBurstSize: 6
     windupEmberMultiplier: 5
+  sparks:
+    enabled: 1
+    darkFrames:
+    - {fileID: 21300000, guid: cdf9726f31ae4f60a78c7095261f591d, type: 3}
+    - {fileID: 21300000, guid: be9d7df3c0324e9da12781168f13b7bd, type: 3}
+    - {fileID: 21300000, guid: c1d8f249df814443adbaeed28d8ab8bc, type: 3}
+    - {fileID: 21300000, guid: 03eb1abfbe1945e19fa0505db533fd19, type: 3}
+    - {fileID: 21300000, guid: a8b3309d35ac46d0be0fffdf3154b7fd, type: 3}
+    - {fileID: 21300000, guid: 2ffac22f13104566a50a9117c27a9826, type: 3}
+    lightFrames:
+    - {fileID: 21300000, guid: 15f290a3b55b4a3298731ca668ce1bf7, type: 3}
+    - {fileID: 21300000, guid: aa6ca25ec9c8429ea4a1cecfa198387f, type: 3}
+    - {fileID: 21300000, guid: e977a6be999c4c7ab0bec1f5f616d682, type: 3}
+    - {fileID: 21300000, guid: 495d823ecb9a4c97ad1174eb4b3b495e, type: 3}
+    - {fileID: 21300000, guid: cb344334896847e8bdb56f446fed7f30, type: 3}
+    - {fileID: 21300000, guid: 014709942c1c4058944d0d5985cfd665, type: 3}
+    darkTint: {r: 1, g: 1, b: 1, a: 1}
+    lightTint: {r: 1, g: 1, b: 1, a: 1}
+    size: 12
+    framesPerSecond: 12
+    count: 2
+    gapSeconds: {x: 0, y: 0.12}
+    forwardOffset: 0
+    jitter: 0.15
+    randomRotation: 1
+    windupSizeMultiplier: 1.5
+    windupSpeedMultiplier: 1.5
+    sortingOrder: 152
+  aura:
+    enabled: 1
+    color: {r: 2.4, g: 0.2, b: 0.1, a: 1}
+    radius: 2.4
+    glowStrength: 0.8
+    flameCount: 18
+    flameStrength: 1.3
+    flameFlicker: 10
+    ringStrength: 1.14
+    spinSpeed: 70
+    pulseFrequency: 1.5
+    pulseAmount: 0.102
+    outerFlameStrength: 1.3
+    outerFlameScale: 1.35
+    ringBurstInterval: 0.2
+    ringBurstScale: 1.9
+    boltRate: 8
+    emberRate: 70
+    emberColor: {r: 1, g: 0.25, b: 0.15, a: 1}
+    windupMultiplier: 2
+    fadeSeconds: 0.25
+    sortingOrder: 8
+  fireSmoke:
+    enabled: 1
+    frames:
+    - {fileID: 21300000, guid: 310a35388c3e4668848e712ebe53fd08, type: 3}
+    - {fileID: 21300000, guid: 245f1f5647694de6af3ef3be3c4f9008, type: 3}
+    - {fileID: 21300000, guid: 77a6400b8cd2437fb083d35542e101d9, type: 3}
+    - {fileID: 21300000, guid: b1bd199fc33c47608edca8eaf314247f, type: 3}
+    - {fileID: 21300000, guid: c60eb66a3ad64c1cbfc8e13cf7676e6f, type: 3}
+    - {fileID: 21300000, guid: c4111a2c9321486f81d4166cf8491f1c, type: 3}
+    - {fileID: 21300000, guid: 32a2d51bf26f44a2ad34bcef1e33488c, type: 3}
+    - {fileID: 21300000, guid: a29c45752fff48aab53276da52f03268, type: 3}
+    - {fileID: 21300000, guid: d6b10f7bf23d41dcb0acdebb5648e2cc, type: 3}
+    - {fileID: 21300000, guid: 96d1cde4870d4fde84355ec213b6a77c, type: 3}
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    size: 15
+    framesPerSecond: 12
+    standUp: 0
+    followTurret: 1
+    backOffset: 1.5
+    screenUpOffset: 0
+    sortingOrder: 9
   lightning:
     color: {r: 1, g: 0.16, b: 0.12, a: 1}
     brightness: 3.5

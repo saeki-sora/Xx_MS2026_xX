@@ -46,6 +46,10 @@ namespace MS2026.Skills
         [SkillLabel("終わっても離すまで普段のレーザーを出さない")]
         public bool hideNormalLaserUntilRelease = true;
 
+        [Tooltip("ONなら、スキルを撃っている間（と、終わっても握り続けて普段のレーザーを隠している間）は、握っても熱がたまらない（オーバーヒートしない）。")]
+        [SkillLabel("スキル中は熱がたまらない")]
+        public bool noHeatWhileActive = false;
+
         /// <summary>画面に出す名前（空ならファイル名）。</summary>
         public string DisplayName => string.IsNullOrWhiteSpace(displayName) ? name : displayName;
 

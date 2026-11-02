@@ -35,6 +35,18 @@ namespace MS2026.Skills.Red
         [SkillLabel("溜め（使える状態）の演出")]
         public RedLaserChargeFx charge = new RedLaserChargeFx();
 
+        [Tooltip("溜め（スキルを使える間〜撃つ前のため）の間、砲台の先端で繰り返す手描きの火花。")]
+        [SkillLabel("溜めの火花（砲台の先端）")]
+        public RedLaserSparkFx sparks = new RedLaserSparkFx();
+
+        [Tooltip("スキルを持っている間（使える状態〜撃つ前のため）、キャラのまわりに出る赤いオーラ。")]
+        [SkillLabel("スキルを持っている間のオーラ")]
+        public RedLaserAuraFx aura = new RedLaserAuraFx();
+
+        [Tooltip("スキルのレーザーを撃った瞬間に、砲台の先端で1回出す手描きの煙。")]
+        [SkillLabel("撃った瞬間の煙")]
+        public RedLaserFireSmokeFx fireSmoke = new RedLaserFireSmokeFx();
+
         [Tooltip("ビリビリ（赤い稲妻）。溜め中・撃っている間・当たった場所に出る。")]
         [SkillLabel("ビリビリ（稲妻）")]
         public RedLaserLightningFx lightning = new RedLaserLightningFx();
@@ -438,6 +450,227 @@ namespace MS2026.Skills.Red
         [SkillLabel("ため中の粒の倍率")]
         [Min(0f)]
         public float windupEmberMultiplier = 5f;
+    }
+
+    [Serializable]
+    public sealed class RedLaserSparkFx
+    {
+        [Tooltip("ONなら、スキルを使える間と撃つ前のための間、砲台の先端（レーザーが出る所）で手描きの火花のアニメを繰り返す。")]
+        [SkillLabel("火花を出す")]
+        public bool enabled = true;
+
+        [Tooltip("火花の濃い色の部分のコマ（順番に並べる）。素材: アニメ風手書きエフェクト素材集[火花]（NopiA）sparks_013_a。")]
+        [SkillLabel("火花のコマ（濃い色）")]
+        public Sprite[] darkFrames = Array.Empty<Sprite>();
+
+        [Tooltip("火花の明るい色の部分のコマ（濃い色と同じ数・同じ順番。重ねて出す）。素材: 同 sparks_013_b。")]
+        [SkillLabel("火花のコマ（明るい色）")]
+        public Sprite[] lightFrames = Array.Empty<Sprite>();
+
+        [Tooltip("濃い色のコマに掛ける色（白でそのまま）。")]
+        [SkillLabel("濃い色のコマに掛ける色")]
+        public Color darkTint = Color.white;
+
+        [Tooltip("明るい色のコマに掛ける色（白でそのまま）。")]
+        [SkillLabel("明るい色のコマに掛ける色")]
+        public Color lightTint = Color.white;
+
+        [Tooltip("火花の絵の大きさ（絵のふちの透明な所も含めた横幅、メートル）。火花そのものはこの6割くらい。")]
+        [SkillLabel("大きさ（m）")]
+        [Min(0.1f)]
+        public float size = 3.5f;
+
+        [Tooltip("1秒に進むコマ数（素材のおすすめは 8〜12）。")]
+        [SkillLabel("1秒のコマ数")]
+        [Range(1f, 30f)]
+        public float framesPerSecond = 12f;
+
+        [Tooltip("同時に出す火花の数（少しずつずらして出す）。")]
+        [SkillLabel("同時に出す数")]
+        [Range(1, 4)]
+        public int count = 2;
+
+        [Tooltip("1回出し終わってから次を出すまでの間（秒、この範囲でばらつく）。")]
+        [SkillLabel("次を出すまでの間（秒）")]
+        public Vector2 gapSeconds = new Vector2(0f, 0.12f);
+
+        [Tooltip("砲台の先端から、砲台の向きへずらす量（メートル）。")]
+        [SkillLabel("前へのずらし（m）")]
+        public float forwardOffset = 0f;
+
+        [Tooltip("1回ごとに出す場所をずらす大きさ（メートル）。")]
+        [SkillLabel("場所のばらつき（m）")]
+        [Min(0f)]
+        public float jitter = 0.15f;
+
+        [Tooltip("ONなら1回ごとに向き・裏返しをばらばらにする。OFFなら絵の上を砲台の向きにそろえる。")]
+        [SkillLabel("向きをばらばらにする")]
+        public bool randomRotation = true;
+
+        [Tooltip("撃つ前の「ため」で大きくなる倍率。")]
+        [SkillLabel("ため中の大きさの倍率")]
+        [Min(0f)]
+        public float windupSizeMultiplier = 1.5f;
+
+        [Tooltip("撃つ前の「ため」で速くなる倍率。")]
+        [SkillLabel("ため中の速さの倍率")]
+        [Min(0f)]
+        public float windupSpeedMultiplier = 1.5f;
+
+        [Tooltip("描く順番（大きいほど手前。レーザーは「レーザーの色・模様」の描く順番）。明るい色のコマはこの1つ上。")]
+        [SkillLabel("描く順番")]
+        public int sortingOrder = 152;
+    }
+
+    [Serializable]
+    public sealed class RedLaserAuraFx
+    {
+        [Tooltip("ONなら、スキルを持っている間（使える状態〜撃つ前のため）、キャラのまわりに赤いオーラを出す。")]
+        [SkillLabel("オーラを出す")]
+        public bool enabled = true;
+
+        [Tooltip("オーラの色（HDR: 1 より大きいと強く光る。足し算で光るので、明るい床では白っぽく見える）。")]
+        [SkillLabel("オーラの色")]
+        [ColorUsage(true, true)]
+        public Color color = new Color(2.4f, 0.2f, 0.1f, 1f);
+
+        [Tooltip("オーラの大きさ（キャラの中心からの半径、メートル）。")]
+        [SkillLabel("半径（m）")]
+        [Min(0.1f)]
+        public float radius = 2.6f;
+
+        [Tooltip("床に広がるやわらかい光の濃さ（0で出さない）。")]
+        [SkillLabel("床の光の濃さ")]
+        [Range(0f, 2f)]
+        public float glowStrength = 0.8f;
+
+        [Tooltip("まわりで揺らめく炎のトゲの本数（0で出さない）。")]
+        [SkillLabel("炎のトゲの本数")]
+        [Range(0, 32)]
+        public int flameCount = 18;
+
+        [Tooltip("炎のトゲの濃さ。")]
+        [SkillLabel("炎のトゲの濃さ")]
+        [Range(0f, 2f)]
+        public float flameStrength = 1.3f;
+
+        [Tooltip("炎のトゲの長さが変わる速さ（回/秒。大きいほどメラメラ）。")]
+        [SkillLabel("炎の揺らめきの速さ（回/秒）")]
+        [Min(0f)]
+        public float flameFlicker = 14f;
+
+        [Tooltip("ふちの輪の濃さ（0で出さない）。")]
+        [SkillLabel("ふちの輪の濃さ")]
+        [Range(0f, 2f)]
+        public float ringStrength = 1.1f;
+
+        [Tooltip("オーラが回る速さ（度/秒）。")]
+        [SkillLabel("回る速さ（度/秒）")]
+        public float spinSpeed = 70f;
+
+        [Tooltip("大きさ・明るさが脈打つ速さ（回/秒）。")]
+        [SkillLabel("脈の速さ（回/秒）")]
+        [Min(0f)]
+        public float pulseFrequency = 1.8f;
+
+        [Tooltip("大きさ・明るさが脈打つ大きさ（0〜1）。")]
+        [SkillLabel("脈の大きさ")]
+        [Range(0f, 1f)]
+        public float pulseAmount = 0.3f;
+
+        [Tooltip("外側で逆向きに回る、大きめの炎の濃さ（0で出さない）。")]
+        [SkillLabel("外側の炎の濃さ")]
+        [Range(0f, 2f)]
+        public float outerFlameStrength = 0.8f;
+
+        [Tooltip("外側の炎の大きさ（内側の何倍か）。")]
+        [SkillLabel("外側の炎の大きさの倍率")]
+        [Min(0.5f)]
+        public float outerFlameScale = 1.35f;
+
+        [Tooltip("キャラから広がる衝撃の輪を出す間隔（秒。0で出さない）。")]
+        [SkillLabel("広がる輪の間隔（秒）")]
+        [Min(0f)]
+        public float ringBurstInterval = 0.55f;
+
+        [Tooltip("広がる輪の大きさ（オーラの半径の何倍まで広がるか）。")]
+        [SkillLabel("広がる輪の大きさの倍率")]
+        [Min(0f)]
+        public float ringBurstScale = 2.4f;
+
+        [Tooltip("キャラのまわりを走る赤い稲妻の数（毎秒。色・太さは「ビリビリ（稲妻）」の設定）。")]
+        [SkillLabel("まわりの稲妻の数（毎秒）")]
+        [Min(0f)]
+        public float boltRate = 8f;
+
+        [Tooltip("オーラから外へ舞う火の粉の数（毎秒）。")]
+        [SkillLabel("火の粉の数（毎秒）")]
+        [Min(0f)]
+        public float emberRate = 70f;
+
+        [Tooltip("火の粉の色。")]
+        [SkillLabel("火の粉の色")]
+        public Color emberColor = new Color(1f, 0.25f, 0.15f, 1f);
+
+        [Tooltip("撃つ前の「ため」で、オーラが強く・大きくなる倍率。")]
+        [SkillLabel("ため中の倍率")]
+        [Min(0f)]
+        public float windupMultiplier = 2f;
+
+        [Tooltip("出てくる・消えるまでの時間（秒）。")]
+        [SkillLabel("出る・消える時間（秒）")]
+        [Min(0.01f)]
+        public float fadeSeconds = 0.25f;
+
+        [Tooltip("描く順番（大きいほど手前）。砲台のキャラの絵は 10 なので、それより小さいとキャラの後ろに出る。火の粉はこれと関係なくキャラの手前。")]
+        [SkillLabel("描く順番")]
+        public int sortingOrder = 8;
+    }
+
+    [Serializable]
+    public sealed class RedLaserFireSmokeFx
+    {
+        [Tooltip("ONなら、スキルのレーザーを撃った瞬間に、砲台の先端で煙のアニメを1回出す。")]
+        [SkillLabel("煙を出す")]
+        public bool enabled = true;
+
+        [Tooltip("煙のコマ（順番に並べる）。素材: NopiA_smoke_2dfxPack_free（NopiA）smoke_65。")]
+        [SkillLabel("煙のコマ")]
+        public Sprite[] frames = Array.Empty<Sprite>();
+
+        [Tooltip("絵に掛ける色（白でそのまま。素材は赤）。")]
+        [SkillLabel("絵の色")]
+        public Color tint = Color.white;
+
+        [Tooltip("煙の絵の大きさ（絵のふちの透明な所も含めた横幅、メートル）。煙そのものはこの8割くらい。")]
+        [SkillLabel("大きさ（m）")]
+        [Min(0.1f)]
+        public float size = 6f;
+
+        [Tooltip("1秒に進むコマ数（素材のおすすめは 8〜12）。")]
+        [SkillLabel("1秒のコマ数")]
+        [Range(1f, 30f)]
+        public float framesPerSecond = 12f;
+
+        [Tooltip("OFFなら床に寝かせ、角度を砲台のキャラの絵にそろえる（絵の上 = 向きと逆）。ONならカメラの方へ立てて出す。")]
+        [SkillLabel("カメラの方へ立てる")]
+        public bool standUp = false;
+
+        [Tooltip("ONなら、煙が出ている間も砲台の回転について行く（位置も角度も）。OFFなら撃った瞬間の場所・角度に残る。")]
+        [SkillLabel("砲台と一緒に回る")]
+        public bool followTurret = true;
+
+        [Tooltip("砲台の中心から、向いている方向と逆（後ろ）へずらす量（メートル）。マイナスで前。")]
+        [SkillLabel("後ろへのずらし（m）")]
+        public float backOffset = 1.5f;
+
+        [Tooltip("立てて出すとき、画面の上の方へずらす量（メートル。マイナスで下）。")]
+        [SkillLabel("画面の上へのずらし（m）")]
+        public float screenUpOffset = 0f;
+
+        [Tooltip("描く順番（大きいほど手前）。砲台のキャラの絵は 10 なので、それより小さいとキャラの後ろに出る（床より下にすると見えなくなる）。")]
+        [SkillLabel("描く順番")]
+        public int sortingOrder = 9;
     }
 
     [Serializable]

@@ -20,6 +20,7 @@ MonoBehaviour:
   ignoreChargeWhileActive: 1
   replacesNormalLaser: 1
   hideNormalLaserUntilRelease: 1
+  noHeatWhileActive: 0
   timing:
     windupSeconds: 0.35
     flightSeconds: 0.55
@@ -116,7 +117,7 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    collapseSeconds: 0.6
+    collapseSeconds: 1
     warnSeconds: 1
     affectWhileExpanding: 1
   debuff:
@@ -163,24 +164,53 @@ MonoBehaviour:
       m_ColorSpace: -1
       m_NumColorKeys: 5
       m_NumAlphaKeys: 4
-    foamColor: {r: 0.75, g: 1.25, b: 1.9, a: 1}
-    rimColor: {r: 0.35, g: 1.1, b: 2.4, a: 1}
-    eyeRingColor: {r: 1.6, g: 1.9, b: 2.6, a: 1}
+    foamColor: {r: 0.5, g: 0.85, b: 1.3, a: 1}
+    rimColor: {r: 0.33, g: 0.9, b: 1.95, a: 1}
+    eyeRingColor: {r: 0.9, g: 1.1, b: 1.5, a: 1}
     arms: 4
     twist: 4.5
     spinSpeed: 0.55
     armSharpness: 2.6
     turbulence: 0.45
     eyeSize: 0.17
-    opacity: 0.85
-    intensity: 1.2
+    opacity: 0.7
+    intensity: 0.75
+    useWaterShader: 1
+    waterDisplacement: {fileID: 2800000, guid: a9f5d798d66e4a4b95b66c16a2f8c005, type: 3}
+    waterDisplacementDetail: {fileID: 2800000, guid: eeb905aba4204218963d6c4c743ccab0, type: 3}
+    waterFlowSpeed: 0.035
+    waterDetailFlowSpeed: 0.017
+    waterInflowSpeed: 0.25
+    waterDistortion: 0.06
+    waterFoamThreshold: 0.95
+    waterFoamColor: {r: 0.9, g: 1.05, b: 1.2, a: 1}
+    waterFoamAlpha: 0.6
+    waterEdgeFoam: 0.1
+    waterAngularRepeat: 3
+    waterRadialScale: 1.5
+    waterArmStrength: 0.6
+    waterDepth: 0.6
+    waterSheen: 0.35
+    waterGrooveCount: 11
+    waterGrooveTightness: 5
+    waterGrooveShine: 0.55
+    waterGrooveShade: 0.3
+    gargleBubbleAmount: 0.35
+    gargleBubbleSize: 0.32
+    gargleBubbleRepeat: 16
+    gargleBubbleColor: {r: 0.55, g: 0.9, b: 1.2, a: 1}
+    drainInflowBoost: 8
+    drainEyeSize: 0.3
+    drainCurve: 3
+    drainRingColor: {r: 0.4, g: 0.85, b: 1.4, a: 1}
+    drainBubbleCount: 45
     counterLayer: 1
     spiralDropletRate: 55
     bubbleRate: 26
     rimSparkleRate: 40
     rippleInterval: 0.55
     trappedBubbleRate: 30
-    particleBrightness: 2.2
+    particleBrightness: 1.4
     particleColor: {r: 0.55, g: 0.85, b: 1, a: 1}
     floorLift: 0.03
     vortexRenderQueue: 2980
@@ -203,20 +233,33 @@ MonoBehaviour:
     sortingOrder: 160
     shadowOpacity: 0.4
   charge:
-    auraColor: {r: 0.25, g: 0.8, b: 2.2, a: 1}
-    auraScale: 2.1
+    auraColor: {r: 0.35, g: 1.1, b: 3, a: 1}
+    auraScale: 2.8
     pulseFrequency: 1.6
-    pulseAmount: 0.3
+    pulseAmount: 0.45
     miniVortexRadius: 1.7
     miniVortexOpacity: 0.6
-    orbitRate: 34
+    waterRing: 1
+    waterRingRadius: 2.8
+    waterRingHole: 0.5
+    waterRingOpacity: 1
+    waterRingBrightness: 1.6
+    waterRingSpin: 1.5
+    waterRingOuter: 1
+    outerRingScale: 1.35
+    outerRingHole: 0.78
+    outerRingOpacity: 0.75
+    ringSplashInterval: 0.4
+    ringSplashCount: 16
+    sparkleRate: 50
+    orbitRate: 90
     orbitRadius: 2.2
-    bubbleRate: 14
-    rippleInterval: 0.8
-    readyBurstSize: 5
+    bubbleRate: 40
+    rippleInterval: 0.4
+    readyBurstSize: 7
     windupMultiplier: 3
     particleColor: {r: 0.5, g: 0.85, b: 1, a: 1}
-    particleBrightness: 2.4
+    particleBrightness: 3.2
   burst:
     throwSplashCount: 26
     trailRate: 110
@@ -337,5 +380,118 @@ MonoBehaviour:
       colorParam: Color
   shaders:
     vortex: {fileID: 4800000, guid: 21231fa1621644ef9b472f939e4615c8, type: 3}
+    waterVortex: {fileID: 4800000, guid: c9cc5a88a39f4667b36416d7d76a2e06, type: 3}
     glow: {fileID: 4800000, guid: 5affbb20903e4d57bc5de4b50f8481d1, type: 3}
     particle: {fileID: 4800000, guid: 0027c23211bb4c259b7ad8a763ce170f, type: 3}
+  useBeforeLook: 1
+  beforeLook:
+    radialGradient:
+      serializedVersion: 2
+      key0: {r: 0.01, g: 0.02, b: 0.12, a: 0.95}
+      key1: {r: 0.08, g: 0.12, b: 0.55, a: 0.9}
+      key2: {r: 0.12, g: 0.35, b: 1.1, a: 0.75}
+      key3: {r: 0.25, g: 0.75, b: 1.6, a: 0}
+      key4: {r: 0.5, g: 1.1, b: 2, a: 0}
+      key5: {r: 0, g: 0, b: 0, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 14418
+      ctime2: 36044
+      ctime3: 55705
+      ctime4: 65535
+      ctime5: 0
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 32768
+      atime2: 55705
+      atime3: 65535
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_ColorSpace: -1
+      m_NumColorKeys: 5
+      m_NumAlphaKeys: 4
+    foamColor: {r: 0.75, g: 1.25, b: 1.9, a: 1}
+    rimColor: {r: 0.35, g: 1.1, b: 2.4, a: 1}
+    eyeRingColor: {r: 1.6, g: 1.9, b: 2.6, a: 1}
+    arms: 4
+    twist: 4.5
+    spinSpeed: 0.55
+    armSharpness: 2.6
+    turbulence: 0.45
+    eyeSize: 0.17
+    opacity: 0.85
+    intensity: 1.2
+    useWaterShader: 0
+    waterDisplacement: {fileID: 2800000, guid: a9f5d798d66e4a4b95b66c16a2f8c005, type: 3}
+    waterDisplacementDetail: {fileID: 2800000, guid: eeb905aba4204218963d6c4c743ccab0, type: 3}
+    waterFlowSpeed: 0.035
+    waterDetailFlowSpeed: 0.017
+    waterInflowSpeed: 0.25
+    waterDistortion: 0.06
+    waterFoamThreshold: 0.95
+    waterFoamColor: {r: 0.9, g: 1.05, b: 1.2, a: 1}
+    waterFoamAlpha: 0.6
+    waterEdgeFoam: 0.1
+    waterAngularRepeat: 3
+    waterRadialScale: 1.5
+    waterArmStrength: 0.6
+    waterDepth: 0.6
+    waterSheen: 0.35
+    waterGrooveCount: 11
+    waterGrooveTightness: 5
+    waterGrooveShine: 0.55
+    waterGrooveShade: 0.3
+    gargleBubbleAmount: 0.35
+    gargleBubbleSize: 0.32
+    gargleBubbleRepeat: 16
+    gargleBubbleColor: {r: 0.55, g: 0.9, b: 1.2, a: 1}
+    drainInflowBoost: 8
+    drainEyeSize: 0.3
+    drainCurve: 2
+    drainRingColor: {r: 0, g: 0, b: 0, a: 0}
+    drainBubbleCount: 0
+    counterLayer: 1
+    spiralDropletRate: 55
+    bubbleRate: 26
+    rimSparkleRate: 40
+    rippleInterval: 0.55
+    trappedBubbleRate: 30
+    particleBrightness: 2.2
+    particleColor: {r: 0.55, g: 0.85, b: 1, a: 1}
+    floorLift: 0.03
+    vortexRenderQueue: 2980
+    overlaySortingOrder: 150
+  beforeCharge:
+    auraColor: {r: 0.25, g: 0.8, b: 2.2, a: 1}
+    auraScale: 2.1
+    pulseFrequency: 1.6
+    pulseAmount: 0.3
+    miniVortexRadius: 1.7
+    miniVortexOpacity: 0.6
+    waterRing: 0
+    waterRingRadius: 2.8
+    waterRingHole: 0.5
+    waterRingOpacity: 1
+    waterRingBrightness: 1.6
+    waterRingSpin: 1.5
+    waterRingOuter: 0
+    outerRingScale: 1.35
+    outerRingHole: 0.78
+    outerRingOpacity: 0.75
+    ringSplashInterval: 0
+    ringSplashCount: 16
+    sparkleRate: 18
+    orbitRate: 34
+    orbitRadius: 2.2
+    bubbleRate: 14
+    rippleInterval: 0.8
+    readyBurstSize: 5
+    windupMultiplier: 3
+    particleColor: {r: 0.5, g: 0.85, b: 1, a: 1}
+    particleBrightness: 2.4
+  beforeCollapseSeconds: 0.6

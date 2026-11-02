@@ -13,6 +13,7 @@ namespace MS2026.Skills.Blue
     internal static class BlueFx
     {
         public const string VortexShaderName = "MS2026/BlueSkill/Vortex";
+        public const string WaterVortexShaderName = "MS2026/BlueSkill/WaterVortex";
         public const string GlowShaderName = "MS2026/BlueSkill/Glow";
         public const string ParticleShaderName = "MS2026/BlueSkill/Particle";
 

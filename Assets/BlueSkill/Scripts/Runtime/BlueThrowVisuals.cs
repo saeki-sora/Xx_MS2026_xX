@@ -84,6 +84,7 @@ namespace MS2026.Skills.Blue
         private readonly List<Vector3> _landings = new List<Vector3>(BlueMultiThrow.MaxCount);
         private readonly BlueGlow _aura;
         private readonly BlueVortexVisual _miniVortex;
+        private readonly BlueVortexVisual _outerRing;
         private readonly BlueRingPool _rings;
         private readonly BlueRingPool _ripples;
         private readonly ParticleSystem _droplets;
@@ -100,6 +101,8 @@ namespace MS2026.Skills.Blue
         private float _time;
         private float _windup01;
         private float _miniRotation;
+        private float _outerRotation;
+        private float _ringSplashTimer;
         private float _orbitCarry;
         private float _bubbleCarry;
         private float _sparkleCarry;
@@ -115,12 +118,12 @@ namespace MS2026.Skills.Blue
             _root.AddComponent<BillboardIgnore>();
             var parent = _root.transform;
             var shaders = definition.shaders;
-            var overlay = definition.look.overlaySortingOrder;
+            var overlay = definition.Look.overlaySortingOrder;
 
             _glowMaterial = BlueFx.CreateMaterial(shaders.glow, BlueFx.GlowShaderName, BlueFx.OverlayRenderQueue);
             // ボトル（SpriteRenderer = 3000）より先に描く光（ボトルの後ろに見える）。
             _behindGlowMaterial = BlueFx.CreateMaterial(shaders.glow, BlueFx.GlowShaderName, BlueFx.BehindSpriteRenderQueue);
-            _underGlowMaterial = BlueFx.CreateMaterial(shaders.glow, BlueFx.GlowShaderName, definition.look.vortexRenderQueue + 1);
+            _underGlowMaterial = BlueFx.CreateMaterial(shaders.glow, BlueFx.GlowShaderName, definition.Look.vortexRenderQueue + 1);
             _dropMaterial = BlueFx.CreateMaterial(shaders.particle, BlueFx.ParticleShaderName, BlueFx.OverlayRenderQueue);
             _bubbleMaterial = BlueFx.CreateMaterial(shaders.particle, BlueFx.ParticleShaderName, BlueFx.OverlayRenderQueue);
             _bubbleMaterial.SetFloat(BlueFx.ModeId, 1f);
@@ -128,7 +131,8 @@ namespace MS2026.Skills.Blue
 
             EnsureHeld(1);
             _aura = new BlueGlow(BlueFx.CreateRenderer(parent, "Aura", BlueFx.SharedQuad, _behindGlowMaterial, definition.bottle.sortingOrder - 1));
-            _miniVortex = new BlueVortexVisual(parent, "MiniVortex", shaders.vortex, definition.look, 0);
+            _miniVortex = new BlueVortexVisual(parent, "MiniVortex", shaders.vortex, shaders.waterVortex, definition.Look, 0);
+            _outerRing = new BlueVortexVisual(parent, "OuterWaterRing", shaders.vortex, shaders.waterVortex, definition.Look, 1);
             _rings = new BlueRingPool(parent, "Ring", _glowMaterial, overlay + 3, 8);
             _ripples = new BlueRingPool(parent, "Ripple", _underGlowMaterial, 2, 6);
 
@@ -188,12 +192,12 @@ namespace MS2026.Skills.Blue
                     return;
                 }
 
-                var charge = _def.charge;
+                var charge = _def.Charge;
                 var at = _turret.transform.position + new Vector3(0f, 0f, -0.05f);
                 if (charge.readyBurstSize > 0f)
                 {
                     _rings.Spawn(at, 0.5f, charge.readyBurstSize, 0.6f, charge.auraColor, 0.07f);
-                    _rings.Spawn(at, 0.3f, charge.readyBurstSize * 0.7f, 0.5f, _def.look.foamColor, 0.05f, 0.08f);
+                    _rings.Spawn(at, 0.3f, charge.readyBurstSize * 0.7f, 0.5f, _def.Look.foamColor, 0.05f, 0.08f);
                 }
 
                 for (var i = 0; i < 36; i++)
@@ -269,7 +273,7 @@ namespace MS2026.Skills.Blue
             var at = CenterHeld.Bottle.IsShown ? _centerPosition : HeldPosition(0f);
             HandSplash(at, _def.burst.throwSplashCount);
             var ground = count > 0 ? targets[0].z : _turret.transform.position.z;
-            _rings.Spawn(new Vector3(at.x, at.y, ground - 0.05f), 0.4f, 3f, 0.35f, _def.charge.auraColor, 0.07f);
+            _rings.Spawn(new Vector3(at.x, at.y, ground - 0.05f), 0.4f, 3f, 0.35f, _def.Charge.auraColor, 0.07f);
 
             _mode = Mode.Hidden;
             if (!keepHolding)
@@ -322,6 +326,7 @@ namespace MS2026.Skills.Blue
 
             _aura.Hide();
             _miniVortex.Hide();
+            _outerRing.Hide();
             _orbit.Clear();
             _dots.Clear();
         }
@@ -457,7 +462,7 @@ namespace MS2026.Skills.Blue
         private void TickHeld(float dt)
         {
             var settings = _def.bottle;
-            var charge = _def.charge;
+            var charge = _def.Charge;
             var windup = _mode == Mode.Windup ? _windup01 : 0f;
             var ease = windup * windup * (3f - 2f * windup);
             var strength = Mathf.Lerp(1f, charge.windupMultiplier, ease);
@@ -505,19 +510,31 @@ namespace MS2026.Skills.Blue
                 _aura.Hide();
             }
 
-            // 足元の小さな渦
-            var floor = _turret.transform.position + new Vector3(0f, 0f, -_def.look.floorLift);
+            // 足元の小さな渦（または、キャラのまわりを回る水の輪）
+            var floor = _turret.transform.position + new Vector3(0f, 0f, -_def.Look.floorLift);
             var dirSign = _def.debuff.clockwise ? 1f : -1f;
-            _miniRotation += dirSign * _def.look.spinSpeed * Mathf.PI * 2f * (1.5f + 4f * ease) * dt;
-            var miniRadius = charge.miniVortexRadius * pop * (1f + 0.25f * ease);
-            if (miniRadius > 0.01f)
+            var ring = UseWaterRing;
+            var spinScale = ring ? charge.waterRingSpin : 1.5f;
+            _miniRotation += dirSign * _def.Look.spinSpeed * Mathf.PI * 2f * (spinScale + 4f * ease) * dt;
+            var miniRadius = (ring ? charge.waterRingRadius : charge.miniVortexRadius) * pop * (1f + 0.25f * ease);
+            if (miniRadius > 0.01f && ring)
             {
-                _miniVortex.Draw(_def.look, floor, miniRadius, _miniRotation, _time, 1f + ease, _def.debuff.clockwise, ease * 0.4f,
+                // 振りかぶりでは輪が少し細く締まって速く回る。
+                _miniVortex.DrawRing(_def.Look, floor, miniRadius, charge.waterRingHole * (1f + 0.15f * ease), _miniRotation, _time, 1f + ease,
+                    _def.debuff.clockwise, charge.waterRingOpacity * _appear, charge.waterRingBrightness * (1f + 0.5f * ease), 0);
+                DrawOuterRing(floor, miniRadius, ease, dt);
+                EmitRingSplash(floor, miniRadius, strength, dt);
+            }
+            else if (miniRadius > 0.01f)
+            {
+                _miniVortex.Draw(_def.Look, floor, miniRadius, _miniRotation, _time, 1f + ease, _def.debuff.clockwise, ease * 0.4f,
                     charge.miniVortexOpacity * _appear, 1f + ease, 0);
+                _outerRing.Hide();
             }
             else
             {
                 _miniVortex.Hide();
+                _outerRing.Hide();
             }
 
             // まわりを回りながらボトルに吸い込まれる水の粒
@@ -540,7 +557,7 @@ namespace MS2026.Skills.Blue
             }
 
             // ボトルのまわりのきらめき
-            var sparkleCount = BlueFx.Accumulate(ref _sparkleCarry, 18f * strength * _appear * dt);
+            var sparkleCount = BlueFx.Accumulate(ref _sparkleCarry, charge.sparkleRate * strength * _appear * dt);
             for (var i = 0; i < sparkleCount; i++)
             {
                 var p = position + (Vector3)(UnityEngine.Random.insideUnitCircle * settings.length * (0.7f + 0.3f * (_heldCount - 1)));
@@ -561,6 +578,58 @@ namespace MS2026.Skills.Blue
             DrawMarkers(ease);
         }
 
+        /// <summary>水の輪の外側に重ねる、逆向きに回る細い水の輪。</summary>
+        private void DrawOuterRing(Vector3 floor, float innerRadius, float ease, float dt)
+        {
+            var charge = _def.Charge;
+            if (!charge.waterRingOuter || charge.outerRingOpacity <= 0f)
+            {
+                _outerRing.Hide();
+                return;
+            }
+
+            var dirSign = _def.debuff.clockwise ? 1f : -1f;
+            _outerRotation -= dirSign * _def.Look.spinSpeed * Mathf.PI * 2f * (charge.waterRingSpin * 0.7f + 3f * ease) * dt;
+            _outerRing.DrawRing(_def.Look, floor + new Vector3(0f, 0f, 0.003f), innerRadius * charge.outerRingScale, charge.outerRingHole, _outerRotation,
+                _time * 1.3f + 5f, 1f + ease, !_def.debuff.clockwise, charge.outerRingOpacity * _appear, charge.waterRingBrightness * (0.8f + 0.5f * ease), 1);
+        }
+
+        /// <summary>水の輪から外へ、ときどき水しぶきが吹き出す（輪に沿った向きに少し流れる）。小さな波の輪も一緒に出す。</summary>
+        private void EmitRingSplash(Vector3 floor, float radius, float strength, float dt)
+        {
+            var charge = _def.Charge;
+            if (charge.ringSplashInterval <= 0f || charge.ringSplashCount <= 0)
+            {
+                return;
+            }
+
+            _ringSplashTimer -= dt * strength;
+            if (_ringSplashTimer > 0f)
+            {
+                return;
+            }
+
+            _ringSplashTimer = charge.ringSplashInterval;
+            var dirSign = _def.debuff.clockwise ? -1f : 1f;
+            var baseAngle = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
+            for (var i = 0; i < charge.ringSplashCount; i++)
+            {
+                var angle = baseAngle + UnityEngine.Random.Range(-0.6f, 0.6f);
+                var outward = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+                var along = new Vector2(-outward.y, outward.x) * dirSign;
+                var start = floor + (Vector3)(outward * radius * UnityEngine.Random.Range(0.75f, 1f)) + new Vector3(0f, 0f, -0.05f);
+                var velocity = outward * UnityEngine.Random.Range(2f, 6f) + along * UnityEngine.Random.Range(1f, 4f);
+                BlueFx.Emit(_droplets, start, new Vector3(velocity.x, velocity.y, -UnityEngine.Random.Range(2f, 6f)),
+                    UnityEngine.Random.Range(0.1f, 0.24f), UnityEngine.Random.Range(0.35f, 0.7f), _def.burst.dropletColor);
+            }
+
+            var splashAt = floor + (Vector3)(new Vector2(Mathf.Cos(baseAngle), Mathf.Sin(baseAngle)) * radius * 0.9f) + new Vector3(0f, 0f, -0.04f);
+            _rings.Spawn(splashAt, 0.2f, radius * 0.9f, 0.45f, charge.auraColor * 0.7f, 0.06f);
+        }
+
+        /// <summary>足元の小さな渦の代わりに、まわりを回る水の輪を出すか（水のシェーダーで描くときだけ）。</summary>
+        private bool UseWaterRing => _def.Charge.waterRing && _def.Look.useWaterShader;
+
         private void TickHidden()
         {
             if (_appear > 0f)
@@ -574,8 +643,20 @@ namespace MS2026.Skills.Blue
                     item.MarkerCore.Hide();
                 }
 
-                _miniVortex.Draw(_def.look, _turret.transform.position + new Vector3(0f, 0f, -_def.look.floorLift), _def.charge.miniVortexRadius * _appear,
-                    _miniRotation, _time, 1f, _def.debuff.clockwise, 0f, _def.charge.miniVortexOpacity * _appear, 1f, 0);
+                var floor = _turret.transform.position + new Vector3(0f, 0f, -_def.Look.floorLift);
+                var charge = _def.Charge;
+                if (UseWaterRing)
+                {
+                    _miniVortex.DrawRing(_def.Look, floor, charge.waterRingRadius * _appear, charge.waterRingHole, _miniRotation, _time, 1f,
+                        _def.debuff.clockwise, charge.waterRingOpacity * _appear, charge.waterRingBrightness, 0);
+                    DrawOuterRing(floor, charge.waterRingRadius * _appear, 0f, 0f);
+                }
+                else
+                {
+                    _miniVortex.Draw(_def.Look, floor, charge.miniVortexRadius * _appear,
+                        _miniRotation, _time, 1f, _def.debuff.clockwise, 0f, charge.miniVortexOpacity * _appear, 1f, 0);
+                    _outerRing.Hide();
+                }
             }
             else
             {
@@ -585,6 +666,7 @@ namespace MS2026.Skills.Blue
                 }
 
                 _miniVortex.Hide();
+                _outerRing.Hide();
             }
 
             _aura.Hide();
@@ -641,7 +723,7 @@ namespace MS2026.Skills.Blue
 
                 if (burst.trailGlowSize > 0f)
                 {
-                    var color = _def.charge.auraColor;
+                    var color = _def.Charge.auraColor;
                     color.a *= 0.8f;
                     var size = burst.trailGlowSize * (1f + 0.15f * Mathf.Sin(_time * 30f + i));
                     flight.Trail.Show(position + new Vector3(0f, 0f, 0.02f), 0f, new Vector2(size, size));
@@ -721,7 +803,7 @@ namespace MS2026.Skills.Blue
                 }
 
                 var landing = _landings[k];
-                var floor = landing + new Vector3(0f, 0f, -_def.look.floorLift - 0.01f);
+                var floor = landing + new Vector3(0f, 0f, -_def.Look.floorLift - 0.01f);
                 item.Marker.Show(floor, 0f, new Vector2(diameter, diameter));
                 item.Marker.ApplyRing(_block, color, 0.9f, 0.025f, 28f, _time * 0.8f * (_def.debuff.clockwise ? -1f : 1f));
                 var coreSize = diameter * 0.18f * (1f + 0.2f * Mathf.Sin(_time * 7f + k));
@@ -763,8 +845,8 @@ namespace MS2026.Skills.Blue
 
         private void ApplyBrightness()
         {
-            _dropMaterial.SetFloat(BlueFx.IntensityId, _def.charge.particleBrightness);
-            _bubbleMaterial.SetFloat(BlueFx.IntensityId, _def.charge.particleBrightness);
+            _dropMaterial.SetFloat(BlueFx.IntensityId, _def.Charge.particleBrightness);
+            _bubbleMaterial.SetFloat(BlueFx.IntensityId, _def.Charge.particleBrightness);
         }
 
         private static float EaseOutBack(float t)
@@ -788,6 +870,7 @@ namespace MS2026.Skills.Blue
             }
 
             _miniVortex.Dispose();
+            _outerRing.Dispose();
             if (_root != null)
             {
                 BlueFx.Destroy(_root);

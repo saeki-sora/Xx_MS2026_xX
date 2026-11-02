@@ -87,6 +87,16 @@ namespace MS2026.Skills.Red
         private readonly RedLaserLightning _lightning;
         private readonly RedLaserTube _tube;
         private readonly Glow _tubeAura;
+        private readonly RedLaserChargeSparks _chargeSparks;
+        private readonly RedLaserFireSmoke _fireSmoke;
+        private readonly Glow _auraGlow;
+        private readonly Glow _auraFlames;
+        private readonly Glow _auraOuterFlames;
+        private float _auraAlpha;
+        private float _auraRingTimer;
+        private float _auraBoltCarry;
+        private float _auraTime;
+        private float _auraEmberCarry;
         private bool _firing;
         private float _fireTime;
         private float _tubeBoltCarry;
@@ -164,6 +174,11 @@ namespace MS2026.Skills.Red
             _lightning = new RedLaserLightning(_root.transform, _lightningMaterial, LightningPoolSize, order + 3);
             _tube = new RedLaserTube(definition, turret, _root.transform);
             _tubeAura = new Glow(CreateRenderer("TubeAura", SharedQuad, _radialMaterial, definition.tube.sortingOrder - 1));
+            _chargeSparks = new RedLaserChargeSparks(definition, _root.transform);
+            _fireSmoke = new RedLaserFireSmoke(definition, _root.transform);
+            _auraGlow = new Glow(CreateRenderer("AuraGlow", SharedQuad, _radialMaterial, definition.aura.sortingOrder));
+            _auraFlames = new Glow(CreateRenderer("AuraFlames", SharedQuad, _radialMaterial, definition.aura.sortingOrder));
+            _auraOuterFlames = new Glow(CreateRenderer("AuraOuterFlames", SharedQuad, _radialMaterial, definition.aura.sortingOrder));
             HideAll();
         }
 
@@ -258,6 +273,9 @@ namespace MS2026.Skills.Red
             _firing = true;
             _fireTime = 0f;
             _tube.Kick();
+            var fireZ = FirePoint.z;
+            var turretCenter = _turret.transform.position;
+            _fireSmoke.Play(new Vector3(turretCenter.x, turretCenter.y, fireZ), _tube.IsShown ? _tube.NozzleDirection : _turret.AimDirection);
             var muzzle = _def.muzzle;
             if (muzzle.fireBurstSize > 0f)
             {
@@ -315,6 +333,9 @@ namespace MS2026.Skills.Red
             }
 
             TickCharge(dt);
+            TickAura(dt);
+            _chargeSparks.Tick(dt, _charging, _windup01, FirePoint, _tube.IsShown ? _tube.NozzleDirection : _turret.AimDirection);
+            _fireSmoke.Tick(dt, new Vector3(_turret.transform.position.x, _turret.transform.position.y, FirePoint.z), _tube.IsShown ? _tube.NozzleDirection : _turret.AimDirection);
             TickTube(dt);
             TickRings(dt);
             _lightning.Tick(dt);
@@ -1120,6 +1141,102 @@ namespace MS2026.Skills.Red
             }
         }
 
+        /// <summary>
+        /// スキルを持っている間（使える状態〜撃つ前のため）、キャラ（砲台の中心）のまわりに出す赤いオーラ。
+        /// 床に広がるやわらかい光 ＋ メラメラ長さが変わる炎のトゲと、ふちの輪（回る）＋ 外側で逆に回る大きな炎
+        /// ＋ 一定間隔で広がる衝撃の輪 ＋ まわりを走る稲妻 ＋ 外へ舞う火の粉。撃つと消える。
+        /// </summary>
+        private void TickAura(float dt)
+        {
+            var aura = _def.aura;
+            var windingUp = _windup01 >= 0f;
+            var wanted = aura.enabled && (_charging || windingUp);
+            _auraAlpha = Mathf.MoveTowards(_auraAlpha, wanted ? 1f : 0f, dt / Mathf.Max(0.01f, aura.fadeSeconds));
+            if (_auraAlpha <= 0.001f)
+            {
+                _auraGlow.Hide();
+                _auraFlames.Hide();
+                _auraOuterFlames.Hide();
+                _auraTime = 0f;
+                _auraRingTimer = 0f;
+                return;
+            }
+
+            _auraTime += dt;
+            var windup = windingUp ? _windup01 : 0f;
+            var boost = Mathf.Lerp(1f, aura.windupMultiplier, windup);
+            var pulse = 1f + Mathf.Sin(_auraTime * aura.pulseFrequency * Mathf.PI * 2f) * aura.pulseAmount;
+            var center = _turret.transform.position;
+            var z = _turret.MuzzlePosition.z + ZOffset + 0.02f;
+            var radius = aura.radius * Mathf.Lerp(0.6f, 1f, _auraAlpha) * Mathf.Lerp(1f, 1.15f, windup);
+
+            // 床に広がるやわらかい光（板の 0.92 から外はシェーダーで消えるので、少し大きめの板にする）。
+            var glowSize = radius * 2f / 0.92f * (1f + (pulse - 1f) * 0.5f);
+            _auraGlow.Show(new Vector3(center.x, center.y, z), Quaternion.identity, new Vector3(glowSize, glowSize, 1f));
+            _auraGlow.Apply(_block, aura.color * (aura.glowStrength * _auraAlpha * pulse * boost),
+                new Vector4(0.92f, 1.6f, 0f, 0f),
+                Vector4.zero,
+                Vector4.zero);
+
+            // 炎のトゲ（長さを毎回くじ引きしてメラメラさせる）とふちの輪。回る。
+            var flameSize = radius * 2f / 0.92f * pulse;
+            var spin = _auraTime * aura.spinSpeed * Mathf.Deg2Rad;
+            _auraFlames.Show(new Vector3(center.x, center.y, z - 0.001f), Quaternion.identity, new Vector3(flameSize, flameSize, 1f));
+            _auraFlames.Apply(_block, aura.color * (_auraAlpha * boost),
+                new Vector4(0.5f, 3f, aura.flameCount, aura.flameStrength),
+                new Vector4(3f, spin, 0.72f, 0.06f),
+                new Vector4(aura.ringStrength * pulse, 0f, Mathf.Floor(_auraTime * Mathf.Max(0f, aura.flameFlicker)), 0.75f));
+
+            // 外側で逆向きに回る、大きめでまばらな炎
+            if (aura.outerFlameStrength > 0f && aura.flameCount > 0)
+            {
+                var outerSize = flameSize * aura.outerFlameScale;
+                _auraOuterFlames.Show(new Vector3(center.x, center.y, z - 0.002f), Quaternion.identity, new Vector3(outerSize, outerSize, 1f));
+                _auraOuterFlames.Apply(_block, aura.color * (aura.outerFlameStrength * _auraAlpha * boost),
+                    new Vector4(0.3f, 4f, Mathf.Max(3, Mathf.RoundToInt(aura.flameCount * 0.6f)), 1f),
+                    new Vector4(2.2f, -spin * 0.7f, 0.85f, 0.03f),
+                    new Vector4(0.5f * pulse, 0f, Mathf.Floor(_auraTime * Mathf.Max(0f, aura.flameFlicker) * 0.7f) + 17f, 0.85f));
+            }
+            else
+            {
+                _auraOuterFlames.Hide();
+            }
+
+            // 一定間隔でキャラから広がる衝撃の輪（ためでは間隔が短くなる）
+            if (wanted && aura.ringBurstInterval > 0f && aura.ringBurstScale > 0f)
+            {
+                _auraRingTimer -= dt * boost;
+                if (_auraRingTimer <= 0f)
+                {
+                    _auraRingTimer = aura.ringBurstInterval;
+                    SpawnRing(new Vector3(center.x, center.y, _turret.MuzzlePosition.z), radius * 2f * aura.ringBurstScale, 0.7f, aura.color * 0.8f);
+                }
+            }
+
+            // まわりを走る稲妻（オーラのふちから外へ、少し斜めに）
+            var bolts = Accumulate(ref _auraBoltCarry, aura.boltRate * boost * _auraAlpha * dt);
+            for (var i = 0; i < bolts; i++)
+            {
+                var angle = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
+                var twist = UnityEngine.Random.Range(-0.5f, 0.5f);
+                var from = (Vector2)center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius * UnityEngine.Random.Range(0.45f, 0.7f);
+                var to = (Vector2)center + new Vector2(Mathf.Cos(angle + twist), Mathf.Sin(angle + twist)) * radius * UnityEngine.Random.Range(1f, 1.4f);
+                SpawnBolt(from, to, UnityEngine.Random.Range(0.8f, 1.4f));
+                _chargeFlash = Mathf.Max(_chargeFlash, 0.5f);
+            }
+
+            // 外へ舞う火の粉（ためでは増える）
+            var count = Accumulate(ref _auraEmberCarry, aura.emberRate * boost * _auraAlpha * dt);
+            for (var i = 0; i < count; i++)
+            {
+                var angle = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
+                var dir = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+                var start = (Vector2)center + dir * radius * UnityEngine.Random.Range(0.5f, 0.9f);
+                var life = UnityEngine.Random.Range(0.5f, 0.9f);
+                Emit(_embers, start, dir * UnityEngine.Random.Range(0.8f, 1.8f), UnityEngine.Random.Range(0.08f, 0.18f), life, aura.emberColor);
+            }
+        }
+
         // ───────────── 衝撃の輪 ─────────────
 
         private void SpawnRing(Vector3 position, float size, float duration, Color color)
@@ -1209,12 +1326,20 @@ namespace MS2026.Skills.Red
             _speedLines.GetComponent<ParticleSystemRenderer>().sortingOrder = order + 2;
             _lightning.SortingOrder = order + 3;
             _tubeAura.SortingOrder = _def.tube.sortingOrder - 1;
+            _auraGlow.SortingOrder = _def.aura.sortingOrder;
+            _auraFlames.SortingOrder = _def.aura.sortingOrder;
+            _auraOuterFlames.SortingOrder = _def.aura.sortingOrder;
         }
 
         private void HideAll()
         {
             _tube.Hide();
             _tubeAura.Hide();
+            _chargeSparks.HideAll();
+            _fireSmoke.Hide();
+            _auraGlow.Hide();
+            _auraFlames.Hide();
+            _auraOuterFlames.Hide();
             _lightning.HideAll();
             _beamRenderer.enabled = false;
             _haloRenderer.enabled = false;

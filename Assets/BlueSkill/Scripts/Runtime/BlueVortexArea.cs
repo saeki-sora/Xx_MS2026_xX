@@ -173,7 +173,7 @@ namespace MS2026.Skills.Blue
                     break;
                 case Phase.Collapsing:
                     // 吸い込まれるように、引き寄せを強める
-                    pullBoost = 1f + 1.5f * Phase01(area.collapseSeconds);
+                    pullBoost = 1f + 1.5f * Phase01(_def.CollapseSeconds);
                     break;
                 case Phase.Lingering:
                     var linger = debuff.lingerSeconds;
@@ -279,7 +279,7 @@ namespace MS2026.Skills.Blue
 
                     break;
                 case Phase.Collapsing:
-                    if (_phaseTime >= area.collapseSeconds)
+                    if (_phaseTime >= _def.CollapseSeconds)
                     {
                         CollapseBurst();
                         SetPhase(Phase.Lingering);
@@ -306,6 +306,10 @@ namespace MS2026.Skills.Blue
         {
             _phase = next;
             _phaseTime = 0f;
+            if (next == Phase.Collapsing && _def != null)
+            {
+                DrainStart();
+            }
             if (next == Phase.Lingering || next == Phase.Done)
             {
                 FortressEffectPlayer.Stop(ref _loopVfx);
@@ -350,7 +354,7 @@ namespace MS2026.Skills.Blue
                 swarm.QueueBeam(center, center, Mathf.Max(0.05f, _radius), 0f, 0, _owner);
             }
 
-            var look = _def.look;
+            var look = _def.Look;
             _rings.Spawn(center + Vector3.forward * -0.02f, _radius * 0.4f, _radius * 2.15f, 0.45f, look.foamColor * 0.7f, 0.05f);
             for (var i = 0; i < 14; i++)
             {
@@ -385,13 +389,13 @@ namespace MS2026.Skills.Blue
 
         private void BuildVisuals()
         {
-            var look = _def.look;
+            var look = _def.Look;
             var shaders = _def.shaders;
             var parent = transform;
             var overlay = look.overlaySortingOrder;
 
-            _main = new BlueVortexVisual(parent, "Vortex", shaders.vortex, look, 0);
-            _counter = new BlueVortexVisual(parent, "VortexInner", shaders.vortex, look, 1);
+            _main = new BlueVortexVisual(parent, "Vortex", shaders.vortex, shaders.waterVortex, look, 0);
+            _counter = new BlueVortexVisual(parent, "VortexInner", shaders.vortex, shaders.waterVortex, look, 1);
 
             _glowMaterial = BlueFx.CreateMaterial(shaders.glow, BlueFx.GlowShaderName, BlueFx.OverlayRenderQueue);
             _underGlowMaterial = BlueFx.CreateMaterial(shaders.glow, BlueFx.GlowShaderName, look.vortexRenderQueue + 1);
@@ -423,8 +427,8 @@ namespace MS2026.Skills.Blue
         private void ApplyParticleBrightness()
         {
             _burstMaterial.SetFloat(BlueFx.IntensityId, _def.burst.particleBrightness);
-            _dropMaterial.SetFloat(BlueFx.IntensityId, _def.look.particleBrightness);
-            _bubbleMaterial.SetFloat(BlueFx.IntensityId, _def.look.particleBrightness);
+            _dropMaterial.SetFloat(BlueFx.IntensityId, _def.Look.particleBrightness);
+            _bubbleMaterial.SetFloat(BlueFx.IntensityId, _def.Look.particleBrightness);
         }
 
         /// <summary>落ちた瞬間の破裂。</summary>
@@ -483,8 +487,24 @@ namespace MS2026.Skills.Blue
             {
                 var p = center + (Vector3)(UnityEngine.Random.insideUnitCircle * radius * 0.7f);
                 BlueFx.Emit(_bubbles, p + lift, new Vector3(UnityEngine.Random.Range(-0.6f, 0.6f), UnityEngine.Random.Range(-0.6f, 0.6f), -UnityEngine.Random.Range(1f, 2.5f)),
-                    UnityEngine.Random.Range(0.15f, 0.4f), UnityEngine.Random.Range(0.7f, 1.4f), _def.look.particleColor);
+                    UnityEngine.Random.Range(0.15f, 0.4f), UnityEngine.Random.Range(0.7f, 1.4f), _def.Look.particleColor);
             }
+        }
+
+        /// <summary>消え始め: 外から中心へ縮んでいく輪（吸い込まれる合図）。</summary>
+        private void DrainStart()
+        {
+            var look = _def.Look;
+            if (look.drainRingColor.a <= 0.001f)
+            {
+                return;
+            }
+
+            var center = transform.position + new Vector3(0f, 0f, -0.04f);
+            var radius = BaseRadius;
+            var life = Mathf.Max(0.1f, _def.CollapseSeconds * 0.9f);
+            _rings.Spawn(center, radius * 2.3f, radius * 0.08f, life, look.drainRingColor, 0.05f);
+            _rings.Spawn(center, radius * 1.7f, radius * 0.05f, life * 0.8f, look.drainRingColor * 0.7f, 0.04f, life * 0.2f);
         }
 
         /// <summary>渦が縮みきって消える瞬間のしぶき。</summary>
@@ -497,7 +517,7 @@ namespace MS2026.Skills.Blue
             BlueFx.Shake(_def.cameraShake.onCollapse, _def.cameraShake.collapseStrength * _shakeScale, _def.cameraShake.ownerViewOnly, _owner);
             _endFlashAge = 0f;
             var lift = new Vector3(0f, 0f, -0.05f);
-            _rings.Spawn(center + lift, radius * 0.15f, radius * 1.8f, 0.5f, _def.look.rimColor, 0.06f);
+            _rings.Spawn(center + lift, radius * 0.15f, radius * 1.8f, 0.5f, _def.Look.rimColor, 0.06f);
             for (var i = 0; i < burst.collapseSplashCount; i++)
             {
                 var dir = BlueFx.RandomDirection();
@@ -506,12 +526,22 @@ namespace MS2026.Skills.Blue
                     UnityEngine.Random.Range(0.1f, 0.26f), UnityEngine.Random.Range(0.4f, 0.8f), burst.dropletColor);
             }
 
+            // 吸い込まれきった中心から、うがい薬の泡がブクブク湧く。
+            var look = _def.Look;
+            for (var i = 0; i < look.drainBubbleCount; i++)
+            {
+                var p = center + (Vector3)(UnityEngine.Random.insideUnitCircle * radius * 0.25f);
+                var drift = UnityEngine.Random.insideUnitCircle * 1.2f;
+                BlueFx.Emit(_bubbles, p + lift, new Vector3(drift.x, drift.y, -UnityEngine.Random.Range(1.5f, 4f)),
+                    UnityEngine.Random.Range(0.12f, 0.36f), UnityEngine.Random.Range(0.6f, 1.3f), look.particleColor);
+            }
+
             _spiral.Clear();
         }
 
         private void UpdateVisuals(float dt)
         {
-            var look = _def.look;
+            var look = _def.Look;
             var area = _def.area;
             var debuff = _def.debuff;
             var center = transform.position;
@@ -541,8 +571,9 @@ namespace MS2026.Skills.Blue
                     break;
                 case Phase.Collapsing:
                 {
-                    var t = Phase01(area.collapseSeconds);
-                    var ease = t * t;
+                    // 中心へ吸い込まれる: しばらく大きいまま流れ込みが速くなり（穴が広がる）、最後に一気に縮む。
+                    var t = Phase01(_def.CollapseSeconds);
+                    var ease = Mathf.Pow(t, Mathf.Max(1f, look.drainCurve));
                     _radius = baseRadius * (1f - ease);
                     spinMul = 1f + 4f * t;
                     suck = t;
@@ -597,7 +628,7 @@ namespace MS2026.Skills.Blue
             }
 
             var inner = Mathf.Max(0.05f, _radius * look.eyeSize);
-            var spiralSpeed = _phase == Phase.Collapsing ? 1f + 3f * Phase01(area.collapseSeconds) : 1f;
+            var spiralSpeed = _phase == Phase.Collapsing ? 1f + 3f * Phase01(_def.CollapseSeconds) : 1f;
             _spiral.Tick(dt, center + lift, inner, spiralSpeed);
         }
 
@@ -629,7 +660,7 @@ namespace MS2026.Skills.Blue
             {
                 var t = _endFlashAge / endLife;
                 var size = radius * 1.4f * Mathf.Lerp(0.3f, 1f, t);
-                var color = _def.look.rimColor;
+                var color = _def.Look.rimColor;
                 color.a *= (1f - t);
                 _endFlash.Show(center + new Vector3(0f, 0f, -0.1f), 0f, new Vector2(size, size));
                 _endFlash.Apply(_block, color, new Vector4(0.5f, 2f, 8f, 0.8f), new Vector4(5f, t * 2f, 0f, 0f), new Vector4(0f, 0f, 3.1f, 0.5f));
@@ -642,7 +673,7 @@ namespace MS2026.Skills.Blue
 
         private void EmitContinuous(float dt, Vector3 center, float amount, float visualDir)
         {
-            var look = _def.look;
+            var look = _def.Look;
             var radius = _radius;
             var color = look.particleColor;
 

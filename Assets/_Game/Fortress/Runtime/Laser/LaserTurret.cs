@@ -47,6 +47,9 @@ namespace MS2026.Fortress
             ? Mathf.Clamp01(Heat / tuning.overheatThreshold)
             : 0f;
 
+        /// <summary>握っている間に熱がたまる速さの倍率（1でふつう、0でたまらない）。スキルなどが一時的に変える（保存はしない）。</summary>
+        public float HeatGainScale { get; set; } = 1f;
+
         public float CurrentThickness01 { get; private set; }
         public float CurrentThicknessMeters { get; private set; }
         public bool IsFiring => State == TurretState.Firing;
@@ -267,7 +270,7 @@ namespace MS2026.Fortress
             if (_hasChargedThisGrip)
             {
                 ChargeProgress01 = 1f;
-                Heat += grip * grip * tuning.heatGainPerSecond * dt;
+                Heat += grip * grip * tuning.heatGainPerSecond * HeatGainScale * dt;
                 CurrentThickness01 = tuning.EvaluateThickness01(grip);
                 CurrentThicknessMeters = tuning.EvaluateThicknessMeters(grip);
                 SetState(TurretState.Firing);
