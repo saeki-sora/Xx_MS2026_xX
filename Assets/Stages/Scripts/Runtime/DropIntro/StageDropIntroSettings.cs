@@ -25,7 +25,7 @@ namespace MS2026.Stages
 
         [Tooltip("画面の上のふちから、さらにどれだけ外から落とすか（画面の高さに対する割合）。")]
         [Min(0f)]
-        public float startAboveScreen = 0.15f;
+        public float startAboveScreen = 0.5f;
 
         [Header("順番と間隔")]
         [Tooltip("障害物を落とし始めてから、最後の障害物が落ち始めるまでの秒数（数が多くても、この中に収める）。")]

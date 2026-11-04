@@ -7,6 +7,8 @@ namespace MS2026.Stages
     /// 位置と大きさは「元の値 + 演出の分」を毎フレーム書く。ほかの係（揺れ・目印への当てはめなど）が値を書き換えたら、
     /// それを新しい元の値として受け取る（演出の分が積み重なったり、ほかの係の動きを消したりしない）。
     /// 演出が終わったら元の値に戻す。
+    /// 位置は親から見た位置（localPosition）で覚えて比べる。親が動いても（浮遊するスマッシュボールの見た目など）
+    /// 「ほかの係が書き換えた」と取り違えず、演出の分が積み重なって見た目が置き去りにならない。
     /// </summary>
     internal sealed class StageDropTarget
     {
@@ -25,9 +27,9 @@ namespace MS2026.Stages
         public float Delay;
         public bool Landed;
 
-        private Vector3 _basePosition;
+        private Vector3 _baseLocalPosition;
         private Vector3 _baseScale;
-        private Vector3 _writtenPosition;
+        private Vector3 _writtenLocalPosition;
         private Vector3 _writtenScale;
         private bool _written;
 
@@ -40,19 +42,19 @@ namespace MS2026.Stages
             Radius = radius;
         }
 
-        /// <summary>着地する位置（今の元の位置）。</summary>
+        /// <summary>着地する位置（今の元の位置。ワールド座標）。</summary>
         public Vector3 LandingPosition
         {
             get
             {
                 Capture();
-                return _basePosition;
+                return ToWorld(_baseLocalPosition);
             }
         }
 
         public bool IsAlive => Transform != null;
 
-        /// <summary>元の値から offset だけずらし、大きさを scale 倍にして書く。</summary>
+        /// <summary>元の値から offset（ワールドでのずらし量）だけずらし、大きさを scale 倍にして書く。</summary>
         public void Apply(Vector3 offset, Vector3 scale)
         {
             if (Transform == null)
@@ -61,9 +63,10 @@ namespace MS2026.Stages
             }
 
             Capture();
-            _writtenPosition = _basePosition + offset;
+            var parent = Transform.parent;
+            _writtenLocalPosition = _baseLocalPosition + (parent != null ? parent.InverseTransformVector(offset) : offset);
             _writtenScale = Vector3.Scale(_baseScale, scale);
-            Transform.position = _writtenPosition;
+            Transform.localPosition = _writtenLocalPosition;
             Transform.localScale = _writtenScale;
             _written = true;
         }
@@ -73,9 +76,9 @@ namespace MS2026.Stages
         {
             if (Transform != null && _written)
             {
-                if ((Transform.position - _writtenPosition).sqrMagnitude < 1e-10f)
+                if ((Transform.localPosition - _writtenLocalPosition).sqrMagnitude < 1e-10f)
                 {
-                    Transform.position = _basePosition;
+                    Transform.localPosition = _baseLocalPosition;
                 }
 
                 if (Transform.localScale == _writtenScale)
@@ -95,10 +98,10 @@ namespace MS2026.Stages
                 return;
             }
 
-            var position = Transform.position;
-            if (!_written || (position - _writtenPosition).sqrMagnitude > 1e-10f)
+            var localPosition = Transform.localPosition;
+            if (!_written || (localPosition - _writtenLocalPosition).sqrMagnitude > 1e-10f)
             {
-                _basePosition = position;
+                _baseLocalPosition = localPosition;
             }
 
             var scale = Transform.localScale;
@@ -106,6 +109,12 @@ namespace MS2026.Stages
             {
                 _baseScale = scale;
             }
+        }
+
+        private Vector3 ToWorld(Vector3 localPosition)
+        {
+            var parent = Transform != null ? Transform.parent : null;
+            return parent != null ? parent.TransformPoint(localPosition) : localPosition;
         }
     }
 }
