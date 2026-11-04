@@ -28,6 +28,17 @@ MonoBehaviour:
   holeSoftness: 0.4
   focusHeight: 0.4
   wholeFadeSpeed: 6
+  killBurst:
+    enabled: 1
+    size: 0.9
+    lifeSeconds: 0.42
+    framesPerSecond: 12
+    dropCount: 6
+    starBrightness: 2.4
+    colorBrightness: 1.25
+    maxNewPerFrame: 16
+    maxActive: 220
+    lift: 0.45
   showHiddenEnemies: 1
   hiddenEnemyColor: {r: 0.35, g: 0.9, b: 1, a: 0.55}
   glowPerSecond: 2.5

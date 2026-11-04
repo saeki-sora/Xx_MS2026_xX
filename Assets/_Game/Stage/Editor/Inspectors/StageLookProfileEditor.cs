@@ -33,6 +33,20 @@ namespace MS2026.Stage.EditorTools
                 ("focusHeight", "透かす目印の高さ"),
                 ("wholeFadeSpeed", "「全体を薄く」の速さ")
             }),
+            ("撃破の破裂（アニメ調。Play 中だけ）", new[]
+            {
+                ("killBurst.enabled", "破裂を出す"),
+                ("killBurst.size", "大きさ"),
+                ("killBurst.lifeSeconds", "消えるまでの秒数"),
+                ("killBurst.framesPerSecond", "コマ数（1秒あたり。少ないほどカクッと）"),
+                ("killBurst.dropCount", "しずくの数"),
+                ("killBurst.starBrightness", "白い星の明るさ"),
+                ("killBurst.colorBrightness", "しずく・輪の明るさ"),
+                ("killBurst.maxNewPerFrame", "1フレームに出す最大数"),
+                ("killBurst.maxActive", "同時に出す最大数"),
+                ("killBurst.lift", "床からの高さ")
+            }),
+
             ("隠れた敵の影（シルエット）", new[]
             {
                 ("showHiddenEnemies", "隠れた敵を影で見せる"),

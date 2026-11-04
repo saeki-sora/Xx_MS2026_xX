@@ -32,6 +32,10 @@ namespace MS2026.Stage
         [Tooltip("「全体を薄く」の切り替わりの速さ。")]
         [Min(0.1f)] public float wholeFadeSpeed = 6f;
 
+        // ── 撃破の破裂（アニメ調） ──（見出しは StageLookProfileEditor が日本語で出す）
+        [Tooltip("敵を倒した所に出す、アニメ調の破裂（白い星・色のしずく・色の輪。コマ打ち）。")]
+        public MS2026.Fortress.KillBurstSettings killBurst = new MS2026.Fortress.KillBurstSettings();
+
         // ── 隠れた敵の影（シルエット） ──（見出しは StageLookProfileEditor が日本語で出す）
         [Tooltip("ONなら、背景オブジェクトの裏に隠れた敵を単色の影で透かして見せる。")]
         public bool showHiddenEnemies = true;
@@ -140,6 +144,11 @@ namespace MS2026.Stage
             }
 
             Shader.SetGlobalFloat(StageShaderIds.HoleSoftness, holeSoftness);
+            if (this == Current)
+            {
+                MS2026.Fortress.KillBurstLook.Settings = killBurst;
+            }
+
             Shader.SetGlobalColor(StageShaderIds.HeatGlowColor, glowColor);
             Shader.SetGlobalColor(StageShaderIds.HeatHotColor, hotColor);
             Shader.SetGlobalColor(StageShaderIds.ScorchColor, scorchColor);
