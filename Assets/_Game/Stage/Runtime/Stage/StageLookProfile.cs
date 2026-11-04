@@ -9,6 +9,10 @@ namespace MS2026.Stage
     [CreateAssetMenu(menuName = "Stage/Stage Look Profile", fileName = "StageLookProfile")]
     public sealed class StageLookProfile : ScriptableObject
     {
+        // ── 斜めの光の筋 ──（見出しは StageLookProfileEditor が日本語で出す）
+        [Tooltip("画面に斜めに差し込む光の筋（霧は使わない）。Play 中のゲームの画面だけ。")]
+        public MS2026.Fortress.LightRaysSettings lightRays = new MS2026.Fortress.LightRaysSettings();
+
         // ── 透け（手前の物が砲台・コアを隠したとき） ──（見出しは StageLookProfileEditor が日本語で出す）
         [Tooltip("砲台のまわりを透かす丸の半径（ワールド単位）。")]
         [Min(0f)] public float turretHoleRadius = 1.6f;
@@ -129,6 +133,12 @@ namespace MS2026.Stage
         /// <summary>全体（シェーダーのグローバル値）に関わる色・強さを反映する。</summary>
         public void ApplyGlobals()
         {
+            // 今のステージの設定のときだけ光の筋の設定を入れる（エディタで別のステージの設定を触っても、今の画面は変えない）。
+            if (this == Current)
+            {
+                MS2026.Fortress.LightRaysLook.Settings = lightRays;
+            }
+
             Shader.SetGlobalFloat(StageShaderIds.HoleSoftness, holeSoftness);
             Shader.SetGlobalColor(StageShaderIds.HeatGlowColor, glowColor);
             Shader.SetGlobalColor(StageShaderIds.HeatHotColor, hotColor);

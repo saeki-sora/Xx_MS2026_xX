@@ -57,6 +57,8 @@ namespace MS2026.Stage
             if (Active == this)
             {
                 Active = null;
+                MS2026.Fortress.LightRaysLook.Settings = null;
+
                 // 背景が無くなったら群衆の影の2回目の描画も止める（描画の負荷を元に戻す）。
                 Shader.SetGlobalFloat(StageShaderIds.SilhouetteEnabled, 0f);
                 Shader.SetGlobalFloat(StageShaderIds.GlossShift, 0f);

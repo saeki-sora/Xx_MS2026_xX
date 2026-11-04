@@ -11,6 +11,19 @@ namespace MS2026.Stage.EditorTools
     {
         private static readonly (string group, (string path, string label)[] fields)[] Groups =
         {
+            ("斜めの光の筋（Play 中のゲームの画面だけ）", new[]
+            {
+                ("lightRays.enabled", "光の筋を出す"),
+                ("lightRays.color", "光の色"),
+                ("lightRays.intensity", "明るさ"),
+                ("lightRays.angle", "傾き（度）"),
+                ("lightRays.density", "筋の多さ"),
+                ("lightRays.sharpness", "筋のくっきりさ"),
+                ("lightRays.reach", "光が届く長さ"),
+                ("lightRays.driftSpeed", "横に流れる速さ"),
+                ("lightRays.shimmer", "ゆらめき")
+            }),
+
             ("透け（手前の物が砲台・コアを隠したとき）", new[]
             {
                 ("turretHoleRadius", "砲台のまわりの透ける丸の半径"),

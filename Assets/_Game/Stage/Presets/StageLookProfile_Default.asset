@@ -12,6 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb9a2e4c50b23f146bd8df3334492c68, type: 3}
   m_Name: StageLookProfile_Default
   m_EditorClassIdentifier: MS2026.Stage.Runtime::MS2026.Stage.StageLookProfile
+  lightRays:
+    enabled: 1
+    color: {r: 1, g: 0.96, b: 0.86, a: 1}
+    intensity: 0.3
+    angle: 28
+    density: 9
+    sharpness: 3
+    reach: 2.4
+    driftSpeed: 0.25
+    shimmer: 0.15
   turretHoleRadius: 1.6
   coreHoleRadius: 2.4
   localTurretHoleScale: 1.3
