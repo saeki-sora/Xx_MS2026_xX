@@ -38,3 +38,18 @@ MonoBehaviour:
   bgm:
     value: 0
     type: 0
+  ambientMotes:
+    enabled: 1
+    dataCount: 36
+    bubbleCount: 6
+    steamCount: 0
+    dataColor: {r: 0.55, g: 1, b: 1, a: 0.8}
+    bubbleColor: {r: 0.9, g: 1, b: 1, a: 0.7}
+    steamColor: {r: 1, g: 1, b: 1, a: 0.12}
+    dataSize: 0.3
+    bubbleSize: {x: 0.28, y: 0.55}
+    steamSize: {x: 2, y: 3.4}
+    height: {x: 0.6, y: 2.4}
+    riseSpeed: 0.3
+    sway: 0.25
+    lifeSeconds: {x: 4, y: 9}

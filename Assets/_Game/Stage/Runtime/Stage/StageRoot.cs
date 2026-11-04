@@ -47,6 +47,8 @@ namespace MS2026.Stage
             current?.lighting.ApplyShaderGlobals();
             if (Application.isPlaying)
             {
+                // 空中をただよう環境の粒は、ステージごとの設定。
+                MS2026.Fortress.AmbientMotesLook.Settings = current != null ? current.ambientMotes : null;
                 SceneManager.activeSceneChanged += HandleActiveSceneChanged;
             }
         }
@@ -54,6 +56,11 @@ namespace MS2026.Stage
         private void OnDisable()
         {
             SceneManager.activeSceneChanged -= HandleActiveSceneChanged;
+            if (Active == this && current != null && MS2026.Fortress.AmbientMotesLook.Settings == current.ambientMotes)
+            {
+                MS2026.Fortress.AmbientMotesLook.Settings = null;
+            }
+
             if (Active == this)
             {
                 Active = null;

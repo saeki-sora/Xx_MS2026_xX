@@ -35,6 +35,9 @@ namespace MS2026.Stage
         [Tooltip("このステージが始まったときに流すBGM（D-Drive）。空なら何もしない。")]
         public BgmId bgm;
 
+        [Tooltip("空中をただよう環境の粒（データの粒＝0と1の文字・泡・湯気）。このステージだけの設定。Play 中のゲームの画面だけに出る。")]
+        public MS2026.Fortress.AmbientMoteSettings ambientMotes = new MS2026.Fortress.AmbientMoteSettings();
+
         public string Label => string.IsNullOrWhiteSpace(displayName) ? name : displayName;
     }
 }

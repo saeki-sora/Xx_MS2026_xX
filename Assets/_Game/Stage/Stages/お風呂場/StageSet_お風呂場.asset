@@ -13,7 +13,9 @@ MonoBehaviour:
   m_Name: "StageSet_\u304A\u98A8\u5442\u5834"
   m_EditorClassIdentifier: MS2026.Stage.Runtime::MS2026.Stage.StageSet
   displayName: "\u304A\u98A8\u5442\u5834"
-  memo: "Stage2_Bath\uFF08\u30B9\u30C6\u30FC\u30B82\u300C\u304A\u98A8\u5442\u5834\u300D\uFF09\u7528\u30022026-10-24 \u4F5C\u6210\u3002\u5149\u306F\u30B9\u30C6\u30FC\u30B81\uFF08\u305D\u308C\u307E\u3067\u306E Game\uFF09\u3068\u540C\u3058\u5024\u304B\u3089\u59CB\u3081\u305F\u3002"
+  memo: "Stage2_Bath\uFF08\u30B9\u30C6\u30FC\u30B82\u300C\u304A\u98A8\u5442\u5834\u300D\uFF09\u7528\u30022026-10-24
+    \u4F5C\u6210\u3002\u5149\u306F\u30B9\u30C6\u30FC\u30B81\uFF08\u305D\u308C\u307E\u3067\u306E
+    Game\uFF09\u3068\u540C\u3058\u5024\u304B\u3089\u59CB\u3081\u305F\u3002"
   thumbnail: {fileID: 0}
   stagePrefab: {fileID: 7412093350000000001, guid: 700eaaeda48249f793691326f8cac72c, type: 3}
   cameraPreset: {fileID: 0}
@@ -38,3 +40,18 @@ MonoBehaviour:
   bgm:
     value: 0
     type: 0
+  ambientMotes:
+    enabled: 1
+    dataCount: 0
+    bubbleCount: 22
+    steamCount: 9
+    dataColor: {r: 0.55, g: 1, b: 1, a: 0.8}
+    bubbleColor: {r: 0.9, g: 1, b: 1, a: 0.7}
+    steamColor: {r: 1, g: 1, b: 1, a: 0.12}
+    dataSize: 0.3
+    bubbleSize: {x: 0.28, y: 0.55}
+    steamSize: {x: 2, y: 3.4}
+    height: {x: 0.6, y: 2.4}
+    riseSpeed: 0.3
+    sway: 0.25
+    lifeSeconds: {x: 4, y: 9}
