@@ -671,6 +671,8 @@ namespace MS2026.Fortress
                 obstacleAwareness = _settings.obstacleAwareness,
                 wallContactRange = Mathf.Max(0.05f, _settings.wallContactRange),
                 wallSlide = _settings.wallSlide,
+                wallMomentumSlide = _settings.wallMomentumSlide,
+                wallShapeProbe = _settings.wallShapeProbe,
                 navOrigin = Navigation.Origin,
                 navCell = Navigation.CellSize,
                 navW = Navigation.Width,

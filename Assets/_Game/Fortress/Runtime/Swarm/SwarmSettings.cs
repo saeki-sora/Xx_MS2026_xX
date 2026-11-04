@@ -92,6 +92,18 @@ namespace MS2026.Fortress
         [Range(0f, 1f)]
         public float wallSlide = 0.9f;
 
+        [Tooltip("壁にぶつかった敵が、経路（いちばん短い道）ではなく、ぶつかった勢いのまま壁沿いに滑り続ける条件。" +
+                 "壁に沿った速さが全体の速さのこの割合より大きいと、経路と逆向きでも勢いの方へ流れる（斜めの障害物に当たったら斜面なりに流れる）。" +
+                 "小さいほど勢いを優先し、1でオフ（いつも経路どおり）。真正面からぶつかったときや、経路が壁から離れる向きを指す角では、いつも経路に従う。")]
+        [Range(0f, 1f)]
+        public float wallMomentumSlide = 0.3f;
+
+        [Tooltip("真正面から壁にぶつかった敵（勢いがどちらにも向いていない敵）が、当たった所の形を見る距離（ワールド単位）。" +
+                 "壁沿いに左右この距離の先を比べ、出っ張りの頂上からずれて当たった敵は、壁が遠のく側（低い側）へ滑る（出っ張りに当たった流れが二手に割れる）。" +
+                 "くぼみの中では働かない。0でオフ（真正面のときは経路どおり）。")]
+        [Range(0f, 4f)]
+        public float wallShapeProbe = 1.5f;
+
         [Header("コア到達")]
         [Tooltip("コアに着いた敵の扱い。")]
         public SwarmArrivalMode arrivalMode = SwarmArrivalMode.VanishAndDamage;

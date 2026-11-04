@@ -36,7 +36,9 @@ namespace MS2026.Fortress.EditorTools
             {
                 ("obstacleAwareness", "障害物を事前に避ける度合い（0=ぶつかってから避ける）"),
                 ("wallContactRange", "壁沿いに回り込み始める距離"),
-                ("wallSlide", "壁に沿って滑る強さ")
+                ("wallSlide", "壁に沿って滑る強さ"),
+                ("wallMomentumSlide", "勢いのまま壁沿いに流れる条件（小さいほど勢い優先・1=オフ）"),
+                ("wallShapeProbe", "真正面に当たったとき形を見る距離（0=オフ）")
             }),
             ("コア到達", new[]
             {
