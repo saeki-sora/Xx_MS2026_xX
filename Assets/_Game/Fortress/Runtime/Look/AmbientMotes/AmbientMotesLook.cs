@@ -74,7 +74,8 @@ namespace MS2026.Fortress
                 return;
             }
 
-            var go = new GameObject("[Look] Ambient Motes") { hideFlags = HideFlags.DontSave };
+            // DontSave は付けない（付けると Play を止めても消えずに残り、止まった粒を描き続けてしまう）。
+            var go = new GameObject("[Look] Ambient Motes");
             DontDestroyOnLoad(go);
             _instance = go.AddComponent<AmbientMotesRunner>();
         }
