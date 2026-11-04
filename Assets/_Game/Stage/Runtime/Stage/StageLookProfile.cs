@@ -98,6 +98,10 @@ namespace MS2026.Stage
         [Tooltip("溶けるときのふちの色。")]
         [ColorUsage(false, true)] public Color dissolveEdgeColor = new Color(3f, 1.2f, 0.25f);
 
+        // ── 画面のふちの靄（敵が出てくる所） ──（見出しは StageLookProfileEditor が日本語で出す）
+        [Tooltip("各カメラから見て、コアと反対側の画面の端（敵が出てくる所）だけを暗い靄にして、その中を夜の見え方にする。")]
+        public MS2026.Fortress.EdgeMistSettings edgeMist = new MS2026.Fortress.EdgeMistSettings();
+
         private static StageLookProfile _fallback;
 
         /// <summary>今のステージの設定。StageRoot が無いシーンでは既定値のコピー。</summary>
@@ -131,6 +135,11 @@ namespace MS2026.Stage
             Shader.SetGlobalColor(StageShaderIds.ScorchColor, scorchColor);
             Shader.SetGlobalColor(StageShaderIds.SilhouetteColor, hiddenEnemyColor);
             Shader.SetGlobalFloat(StageShaderIds.SilhouetteEnabled, showHiddenEnemies ? 1f : 0f);
+            // 今のステージの設定のときだけ靄の設定を入れる（エディタで別のステージの設定を触っても、今の画面は変えない）。
+            if (this == Current)
+            {
+                MS2026.Fortress.EdgeMistLook.Settings = edgeMist;
+            }
         }
     }
 }

@@ -41,6 +41,7 @@ Shader "MS2026/Fortress/SwarmSprite"
             #pragma target 4.5
 
             #include "Assets/_Game/Fortress/Runtime/Swarm/Shaders/SwarmSpriteCommon.hlsl"
+            #include "Assets/_Game/Fortress/Runtime/Look/EdgeMist/Shaders/FortressEdgeMist.hlsl"
 
             half4 frag(Varyings input) : SV_Target
             {
@@ -53,6 +54,19 @@ Shader "MS2026/Fortress/SwarmSprite"
                 color.rgb *= 1.0 - input.crowd.x * _FortressCrowdSheen.y;
                 color.rgb += _FortressCrowdSheenColor.rgb * (input.crowd.x * input.crowd.y * _FortressCrowdSheen.x);
                 color.rgb = color.rgb * (1.0 + input.beamLight) + input.beamLight * _FortressBeamEnemyOverlay;
+                // 画面のふちの靄の中だけ、左上と右上の縁に冷たい光を付けて、暗い靄の中でも敵の形が浮かぶようにする（FortressEdgeMist.hlsl）。
+                if (_FortressEdgeMistCore.w > 0.5 && _FortressEdgeMistRimWidth > 0.0)
+                {
+                    half mist = FortressEdgeMistAmount(GetNormalizedScreenSpaceUV(input.positionCS));
+                    if (mist > 0.001h)
+                    {
+                        float2 cell = float2(1.0 / _Cols, 1.0 / _Rows) * _FortressEdgeMistRimWidth;
+                        half upLeft = SAMPLE_TEXTURE2D_LOD(_MainTex, sampler_MainTex, input.uv + float2(-cell.x, cell.y), 0).a;
+                        half upRight = SAMPLE_TEXTURE2D_LOD(_MainTex, sampler_MainTex, input.uv + float2(cell.x, cell.y), 0).a;
+                        half rim = saturate(color.a - min(upLeft, upRight));
+                        color.rgb += _FortressEdgeMistRimColor.rgb * (rim * mist);
+                    }
+                }
                 // 爆弾の敵の点滅（SwarmBombMath）。被弾フラッシュ(白)はその上にかける。
                 color.rgb = lerp(color.rgb, _BlinkColor.rgb, saturate(input.blink));
                 color.rgb = lerp(color.rgb, half3(1, 1, 1), saturate(input.flash));

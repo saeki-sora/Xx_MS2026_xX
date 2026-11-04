@@ -53,6 +53,30 @@ namespace MS2026.Stage.EditorTools
                 ("darkenAtZeroHealth", "耐久0での暗さ"),
                 ("dissolveSeconds", "溶けて消える時間"),
                 ("dissolveEdgeColor", "溶けるふちの色")
+            }),
+            ("画面のふちの靄（敵が出てくる所。Play 中のゲームの画面だけ）", new[]
+            {
+                ("edgeMist.enabled", "靄を出す"),
+                ("edgeMist.start", "靄が始まる位置"),
+                ("edgeMist.softness", "濃くなるまでの幅"),
+                ("edgeMist.nearSideFade", "コアに近い側の端を弱める"),
+                ("edgeMist.cornerRoundness", "靄の形の四角さ（小さいほど角が丸い）"),
+                ("edgeMist.darkness", "靄の中の暗さ"),
+                ("edgeMist.mistColor", "靄の色"),
+                ("edgeMist.shadeTint", "靄の中の物に掛ける色"),
+                ("edgeMist.edgeBandColor", "靄の内側のふちの色"),
+                ("edgeMist.edgeBandStrength", "内側のふちの色の濃さ"),
+                ("edgeMist.wobble", "ふちのゆらぎ"),
+                ("edgeMist.wobbleScale", "ゆらぎの細かさ"),
+                ("edgeMist.flowSpeed", "ゆらぎの流れる速さ"),
+                ("edgeMist.keepLights", "光る物を明るいまま残す量"),
+                ("edgeMist.keepThreshold", "光る物とみなす明るさ"),
+                ("edgeMist.keepSoftness", "光る物とみなす幅"),
+                ("edgeMist.beamGlow", "ビームが靄を照らす明るさ"),
+                ("edgeMist.beamGlowRange", "ビームが靄を照らす範囲"),
+                ("edgeMist.beamReveal", "光だまりで元の色を見せる量"),
+                ("edgeMist.enemyRimColor", "靄の中の敵の縁の光の色"),
+                ("edgeMist.enemyRimWidth", "縁の光の太さ")
             })
         };
 

@@ -40,3 +40,25 @@ MonoBehaviour:
   darkenAtZeroHealth: 0.45
   dissolveSeconds: 0.7
   dissolveEdgeColor: {r: 3, g: 1.2, b: 0.25, a: 1}
+  edgeMist:
+    enabled: 1
+    start: 0.502
+    softness: 0.523
+    nearSideFade: 0.585
+    cornerRoundness: 2.6
+    darkness: 0.642
+    mistColor: {r: 0.02, g: 0.025, b: 0.075, a: 1}
+    shadeTint: {r: 0.084905505, g: 0.22813775, b: 1, a: 1}
+    edgeBandColor: {r: 0.32, g: 0.16, b: 0.62, a: 1}
+    edgeBandStrength: 0.1
+    wobble: 0.489
+    wobbleScale: 2.75
+    flowSpeed: 0.183
+    keepLights: 0.9
+    keepThreshold: 0.95
+    keepSoftness: 0.6
+    beamGlow: 1.2
+    beamGlowRange: 1.6
+    beamReveal: 0.6
+    enemyRimColor: {r: 0.75, g: 0.9, b: 2.4, a: 1}
+    enemyRimWidth: 0.08
