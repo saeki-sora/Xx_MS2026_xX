@@ -41,6 +41,11 @@ MonoBehaviour:
     lift: 0.45
   showHiddenEnemies: 1
   hiddenEnemyColor: {r: 0.35, g: 0.9, b: 1, a: 0.55}
+  coreBreakSlowMotion:
+    enabled: 1
+    slowScale: 0.2
+    holdSeconds: 0.7
+    recoverSeconds: 1.1
   glowPerSecond: 2.5
   coolPerSecond: 0.7
   scorchPerSecond: 0.3

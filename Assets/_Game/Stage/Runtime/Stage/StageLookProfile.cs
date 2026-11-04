@@ -43,6 +43,10 @@ namespace MS2026.Stage
         [Tooltip("影の色（アルファ＝濃さ）。")]
         public Color hiddenEnemyColor = new Color(0.35f, 0.9f, 1f, 0.55f);
 
+        // ── コアが壊れた瞬間のスローモーション ──（見出しは StageLookProfileEditor が日本語で出す）
+        [Tooltip("コアが壊れた瞬間に、自分の画面だけ時間を一瞬ゆっくりにする（試合はそこで終わるので遊びには影響しない）。")]
+        public MS2026.Fortress.CoreBreakSlowMotionSettings coreBreakSlowMotion = new MS2026.Fortress.CoreBreakSlowMotionSettings();
+
         // ── 熱（レーザーが当たった所） ──（見出しは StageLookProfileEditor が日本語で出す）
         [Tooltip("当て続けたときに光る速さ（1秒あたり。1で1秒で真っ赤）。")]
         [Min(0f)] public float glowPerSecond = 2.5f;
@@ -150,6 +154,11 @@ namespace MS2026.Stage
             }
 
             Shader.SetGlobalColor(StageShaderIds.HeatGlowColor, glowColor);
+            if (this == Current)
+            {
+                MS2026.Fortress.CoreBreakSlowMotion.Settings = coreBreakSlowMotion;
+            }
+
             Shader.SetGlobalColor(StageShaderIds.HeatHotColor, hotColor);
             Shader.SetGlobalColor(StageShaderIds.ScorchColor, scorchColor);
             Shader.SetGlobalColor(StageShaderIds.SilhouetteColor, hiddenEnemyColor);

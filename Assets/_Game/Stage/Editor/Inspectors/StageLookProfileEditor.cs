@@ -52,6 +52,14 @@ namespace MS2026.Stage.EditorTools
                 ("showHiddenEnemies", "隠れた敵を影で見せる"),
                 ("hiddenEnemyColor", "影の色（アルファ＝濃さ）")
             }),
+            ("コアが壊れた瞬間のスローモーション（Play 中だけ）", new[]
+            {
+                ("coreBreakSlowMotion.enabled", "スローモーションにする"),
+                ("coreBreakSlowMotion.slowScale", "ゆっくりの速さ（1=ふつう）"),
+                ("coreBreakSlowMotion.holdSeconds", "ゆっくりのまま見せる秒数"),
+                ("coreBreakSlowMotion.recoverSeconds", "ふつうの速さへ戻る秒数")
+            }),
+
             ("熱（レーザーが当たった所）", new[]
             {
                 ("glowPerSecond", "光る速さ"),
