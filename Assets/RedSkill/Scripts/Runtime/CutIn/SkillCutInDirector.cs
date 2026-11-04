@@ -10,8 +10,9 @@ namespace MS2026.Skills
     /// <summary>
     /// カットインを画面に出す係（シーンに1つ。スキルを配る係が <see cref="Ensure"/> で作る）。
     /// スキル欄からの合図（<see cref="SkillCutIn.Cue"/>）を受けて、自分（このPCのプレイヤー）なら画面の左に大きい窓、
-    /// ほかの人なら HUD の「ほかの3人の欄」のうちその人の欄のそばに小さい窓を出す。
-    /// 同じ場所にもう窓が出ていたら、その窓を閉じて新しい窓を開く（後から撃った人に切り替える）。
+    /// ほかの人なら HUD の「ほかの3人の欄」のうちその人の欄の丸いアイコンから飛び出す小さい窓を出す。
+    /// 同じ場所（大きい窓どうし・同じ人の小さい窓）にもう窓が出ていたら、その窓を閉じて新しい窓を開く（後から撃った人に切り替える）。
+    /// 別の人の小さい窓どうしは閉じず、後から開いた窓が上に重なる。
     /// 自分専用の Canvas（画面に重ねる型、HUD と同じ 1920×1080 基準）に描くので、HUD のプレハブは触らない。
     /// 時間は Time.unscaledDeltaTime で進める（ヒットストップなどで止まらない）。
     /// </summary>
@@ -204,11 +205,14 @@ namespace MS2026.Skills
                 return;
             }
 
+            // 小さい窓: 欄の丸いアイコン（欄の左端の、高さと同じ直径の丸）の中心から右へ開く。上下は欄の真ん中で、画面からはみ出さないようにする。
             var small = _settings.small;
             var row = RowRect(live.Player);
-            var rect = new Rect(row.xMax + small.gap, row.center.y - small.size.y * 0.5f, small.size.x, small.size.y);
+            var icon = new Vector2(row.xMin + row.height * 0.5f, row.center.y);
+            var y = Mathf.Clamp(icon.y - small.size.y * 0.5f + small.offset.y, 0f, Mathf.Max(0f, screen.y - small.size.y));
+            var rect = new Rect(icon.x + small.offset.x, y, small.size.x, small.size.y);
             var smallAnchor = rect.position + Vector2.Scale(small.faceAnchor, rect.size);
-            live.Window.Place(SkillCutInMath.SmallShapes(rect, small.slant), smallAnchor, small.pictureHeight * rect.height);
+            live.Window.Place(SkillCutInMath.SmallShapes(rect, small.slant, icon), smallAnchor, small.pictureHeight * rect.height, row.height * 0.5f);
         }
 
         /// <summary>その人の「ほかの3人の欄」（HUD の OtherPlayers/Other1〜3）の位置。見つからなければ設定の位置。</summary>

@@ -5,13 +5,21 @@ namespace MS2026.Skills
 {
     /// <summary>
     /// カットイン1回分（窓1つ）。部品（絵・白い光・稲妻2本・技名）を作り、<see cref="Tick"/> で動かす。消え終わったら自分で部品を消す。
+    /// 小さい窓では、欄の丸いアイコンの上に出す顔（色の輪・光つき）も持ち、窓はそのアイコンに吸い込まれて消える（設定による）。
     /// 形と動きの計算は <see cref="SkillCutInMath"/>、置き場所（大きい窓か、どの欄のそばの小さい窓か）は <see cref="SkillCutInDirector"/> が決める。
     /// </summary>
     internal sealed class SkillCutInWindow
     {
+        // 窓が吸い込まれたあと、アイコンの顔が光って消えるまでの秒数。
+        private const float IconTail = 0.3f;
+        private const float IconRingWidth = 6f;
+        private const float IconWhiteWidth = 4f;
+        private const float IconGlowWidth = 24f;
+
         private readonly SkillCutInSettings _settings;
         private readonly SkillCutInEntry _entry;
         private readonly bool _big;
+        private readonly bool _shrink;
         private readonly GameObject _root;
         private readonly CutInQuadGraphic _picture;
         private readonly CutInQuadGraphic _flash;
@@ -19,13 +27,22 @@ namespace MS2026.Skills
         private readonly CutInBoltGraphic _line;
         private readonly Text _text;
         private readonly RectTransform _textRect;
+        private readonly CutInDiscGraphic _iconGlow;
+        private readonly CutInDiscGraphic _iconWhite;
+        private readonly CutInDiscGraphic _iconRing;
+        private readonly CutInDiscGraphic _iconFace;
+        private readonly CutInDiscGraphic _iconBurst;
         private Shadow[] _textEffects;
 
         private SkillCutInMath.Shapes _shapes;
         private Rect _pictureRect;
         private Vector2 _anchor;
+        private Vector2 _iconCenter;
+        private float _iconRadius;
+        private Rect _iconPictureRect;
         private float _time;
         private float _closeAt = -1f;
+        private float _sinceDone;
         private float _nextJitter;
         private bool _closeSoundPlayed;
 
@@ -34,6 +51,7 @@ namespace MS2026.Skills
             _settings = settings;
             _entry = entry;
             _big = big;
+            _shrink = !big && settings.small.end == SkillCutInSmallEnd.ShrinkToIcon;
 
             _root = new GameObject(big ? "CutIn (Big)" : "CutIn (Small)", typeof(RectTransform));
             var rect = (RectTransform)_root.transform;
@@ -81,6 +99,17 @@ namespace MS2026.Skills
                 _textRect.pivot = Vector2.zero;
                 _textRect.sizeDelta = new Vector2(10f, 10f);
             }
+
+            // 欄の丸いアイコンの上の顔（窓より手前。窓はここへ吸い込まれる）。
+            if (!big && settings.small.iconFace)
+            {
+                _iconGlow = Add<CutInDiscGraphic>("IconGlow");
+                _iconWhite = Add<CutInDiscGraphic>("IconWhite");
+                _iconRing = Add<CutInDiscGraphic>("IconRing");
+                _iconFace = Add<CutInDiscGraphic>("IconFace");
+                _iconFace.Sprite = entry.picture;
+                _iconBurst = Add<CutInDiscGraphic>("IconBurst");
+            }
         }
 
         /// <summary>消え終わったか。</summary>
@@ -95,14 +124,25 @@ namespace MS2026.Skills
         /// <summary>
         /// 置き場所を決める（毎フレーム呼んでよい。画面の大きさや HUD の欄が動いても追いかける）。
         /// <paramref name="shapes"/> は窓の形、<paramref name="anchor"/> は顔を置く場所、<paramref name="pictureHeight"/> は絵の高さ。
+        /// 小さい窓では <paramref name="iconRadius"/> に欄の丸いアイコンの半径を渡す（中心は <see cref="SkillCutInMath.Shapes.Pivot"/>）。
         /// </summary>
-        public void Place(SkillCutInMath.Shapes shapes, Vector2 anchor, float pictureHeight)
+        public void Place(SkillCutInMath.Shapes shapes, Vector2 anchor, float pictureHeight, float iconRadius = 0f)
         {
             _shapes = shapes;
             _anchor = anchor;
             var sprite = _entry.picture;
             var size = sprite != null ? sprite.rect.size : Vector2.one;
             _pictureRect = SkillCutInMath.PictureRect(size, _entry.face, anchor, pictureHeight * _entry.faceScale, SkillCutInMath.Bounds(shapes.Open));
+
+            if (_iconFace != null)
+            {
+                var small = _settings.small;
+                _iconCenter = shapes.Pivot;
+                _iconRadius = iconRadius * small.iconFaceSize;
+                var d = _iconRadius * 2f;
+                var cover = new Rect(_iconCenter.x - _iconRadius, _iconCenter.y - _iconRadius, d, d);
+                _iconPictureRect = SkillCutInMath.PictureRect(size, _entry.face, _iconCenter, d * small.iconPictureHeight * _entry.faceScale, cover);
+            }
         }
 
         /// <summary>次のカットインに切り替えるので閉じる（開いている途中なら、開ききってから閉じる）。</summary>
@@ -122,8 +162,14 @@ namespace MS2026.Skills
             }
 
             _time += dt;
-            var pose = SkillCutInMath.Evaluate(_settings.motion, _shapes, _time, _closeAt);
+            var pose = SkillCutInMath.Evaluate(_settings.motion, _shapes, _time, _closeAt, _shrink);
+            if (pose.Done)
+            {
+                _sinceDone += dt;
+            }
+
             Apply(pose);
+            ApplyIcon(pose);
 
             if (pose.Closing && !_closeSoundPlayed)
             {
@@ -135,7 +181,8 @@ namespace MS2026.Skills
                 }
             }
 
-            if (pose.Done)
+            // アイコンの顔があるときは、窓が吸い込まれたあと顔が光って消えるまで待つ。
+            if (pose.Done && (_iconFace == null || _sinceDone >= IconTail))
             {
                 Destroy();
             }
@@ -152,8 +199,18 @@ namespace MS2026.Skills
 
         private void Apply(SkillCutInMath.Pose pose)
         {
+            // 吸い込まれるときは、窓全体（角・絵・技名）を行き先を中心に縮める。
+            var pivot = _shapes.Pivot;
+            if (!Mathf.Approximately(pose.Scale, 1f))
+            {
+                pose.BottomLeft = pivot + (pose.BottomLeft - pivot) * pose.Scale;
+                pose.TopLeft = pivot + (pose.TopLeft - pivot) * pose.Scale;
+                pose.TopRight = pivot + (pose.TopRight - pivot) * pose.Scale;
+                pose.BottomRight = pivot + (pose.BottomRight - pivot) * pose.Scale;
+            }
+
             _picture.SetCorners(pose.BottomLeft, pose.TopLeft, pose.TopRight, pose.BottomRight);
-            _picture.PictureRect = SkillCutInMath.ScaleAround(_pictureRect, _anchor, pose.Zoom);
+            _picture.PictureRect = SkillCutInMath.ScaleAround(SkillCutInMath.ScaleAround(_pictureRect, _anchor, pose.Zoom), pivot, pose.Scale);
             _picture.Sprite = pose.Later && _entry.laterPicture != null ? _entry.laterPicture : _entry.picture;
             _picture.color = new Color(1f, 1f, 1f, pose.Alpha);
 
@@ -184,13 +241,51 @@ namespace MS2026.Skills
 
             if (_text != null)
             {
+                var height = _shapes.Open[1].y - _shapes.Open[0].y;
                 var basePos = _big
                     ? Vector2.Scale(_settings.text.bigPosition, ((RectTransform)_root.transform).rect.size)
-                    : new Vector2(_shapes.Open[0].x + 12f, _shapes.Open[0].y + 6f);
-                _textRect.anchoredPosition = basePos + new Vector2(-pose.TextSlide * _text.fontSize, 0f);
+                    : _shapes.Open[0] + new Vector2(height * 0.12f, height * 0.1f);
+                var pos = basePos + new Vector2(-pose.TextSlide * _text.fontSize, 0f);
+                _textRect.anchoredPosition = pivot + (pos - pivot) * pose.Scale;
+                _textRect.localScale = new Vector3(pose.Scale, pose.Scale, 1f);
                 _text.color = new Color(1f, 1f, 1f, pose.TextAlpha);
                 SetEffectAlpha(pose.TextAlpha);
             }
+        }
+
+        // 欄のアイコンの上の顔: 出た瞬間に弾み、窓が吸い込まれたら少し膨らんで光の輪を出し、消える。
+        private void ApplyIcon(SkillCutInMath.Pose pose)
+        {
+            if (_iconFace == null)
+            {
+                return;
+            }
+
+            SkillCutInMath.IconFace(_time, pose, _sinceDone, IconTail, out var scale, out var alpha);
+            var r = _iconRadius * scale;
+            var c = _iconCenter;
+            var col = _entry.color;
+            var glow = col;
+            glow.a = 0.8f;
+            var clear = col;
+            clear.a = 0f;
+            var inner = Mathf.Max(0.5f, r - IconRingWidth);
+            _iconGlow.SetRing(c, r + IconWhiteWidth, r + IconWhiteWidth + IconGlowWidth, glow, clear);
+            _iconWhite.SetRing(c, r, r + IconWhiteWidth, Color.white, Color.white);
+            _iconRing.SetRing(c, inner, r, col, col);
+            _iconFace.SetDisc(c, inner);
+            _iconFace.PictureRect = SkillCutInMath.ScaleAround(_iconPictureRect, c, scale);
+            var tint = new Color(1f, 1f, 1f, alpha);
+            _iconGlow.color = tint;
+            _iconWhite.color = tint;
+            _iconRing.color = tint;
+            _iconFace.color = tint;
+
+            // 窓が吸い込まれた瞬間に、キャラの色の輪が広がって消える。
+            var u = pose.Done ? Mathf.Clamp01(_sinceDone / IconTail) : 0f;
+            var burst = _iconRadius * Mathf.Lerp(0.9f, 2.4f, SkillCutInMath.EaseOut(u));
+            _iconBurst.SetRing(c, burst, burst + IconRingWidth, col, col);
+            _iconBurst.color = new Color(1f, 1f, 1f, pose.Done ? 1f - u : 0f);
         }
 
         private void SetEffectAlpha(float alpha)
@@ -210,6 +305,9 @@ namespace MS2026.Skills
             var rect = (RectTransform)go.transform;
             rect.SetParent(_root.transform, false);
             Stretch(rect);
+            // 自作の Graphic（CutInQuadGraphic など）は、AddComponent しても CanvasRenderer が自動で付かない
+            // （RequireComponent が効かない）ので先に付ける。付いていないと何も描かれない。
+            go.AddComponent<CanvasRenderer>();
             var graphic = go.AddComponent<T>();
             graphic.raycastTarget = false;
             return graphic;

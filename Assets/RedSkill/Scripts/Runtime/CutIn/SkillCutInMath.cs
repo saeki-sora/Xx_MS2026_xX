@@ -39,8 +39,14 @@ namespace MS2026.Skills
             /// <summary>技名の横のずれ（0 = 定位置、1 = 文字の高さ1つ分左）。</summary>
             public float TextSlide;
 
+            /// <summary>窓全体の大きさ（<see cref="Shapes.Pivot"/> を中心に。1 = 元の大きさ。吸い込まれて消えるときに 1 → 0）。</summary>
+            public float Scale;
+
             /// <summary>閉じ始めたか（閉じる音を鳴らす合図）。</summary>
             public bool Closing;
+
+            /// <summary>閉じる動きの進み具合（閉じる前は 0、消え終わると 1）。</summary>
+            public float CloseProgress;
 
             /// <summary>消え終わったか。</summary>
             public bool Done;
@@ -55,20 +61,24 @@ namespace MS2026.Skills
 
             /// <summary>開くときに窓が伸び始める左の端の x。</summary>
             public float StartX;
+
+            /// <summary>吸い込まれて消えるときの行き先（小さい窓では欄の丸いアイコンの中心）。</summary>
+            public Vector2 Pivot;
         }
 
         /// <summary>
         /// 時刻 <paramref name="t"/>（秒）の様子。<paramref name="closeAt"/> が正なら、その時刻から（見せる時間の途中でも）閉じ始める
         /// （次のカットインに切り替わるときに使う）。
+        /// <paramref name="shrinkOnClose"/> なら、閉じるときは帯・線にならず、開いた形のまま <see cref="Shapes.Pivot"/> へ縮んで消える。
         /// </summary>
-        public static Pose Evaluate(SkillCutInMotion motion, Shapes shapes, float t, float closeAt)
+        public static Pose Evaluate(SkillCutInMotion motion, Shapes shapes, float t, float closeAt, bool shrinkOnClose = false)
         {
             var open = Mathf.Max(0.01f, motion.openSeconds);
             var hold = Mathf.Max(0f, motion.holdSeconds);
             var close = Mathf.Max(0.01f, motion.closeSeconds);
             var closeStart = closeAt >= 0f ? Mathf.Min(closeAt, open + hold) : open + hold;
 
-            var pose = new Pose { Alpha = 1f, Zoom = 1f };
+            var pose = new Pose { Alpha = 1f, Zoom = 1f, Scale = 1f };
             var corners = new Vector2[4];
 
             if (t < closeStart && t < open)
@@ -90,11 +100,24 @@ namespace MS2026.Skills
                 var sinceOpen = t - open;
                 pose.Flash = motion.flash * Mathf.Clamp01(1f - sinceOpen / 0.14f);
             }
+            else if (shrinkOnClose)
+            {
+                // 閉じる: 開いた形のまま、行き先（欄のアイコン）へ吸い込まれるように縮む。
+                pose.Closing = true;
+                var u = Mathf.Clamp01((t - closeStart) / close);
+                pose.CloseProgress = u;
+                CopyTo(shapes.Open, corners);
+                pose.Scale = 1f - EaseIn(u);
+                pose.Alpha = Mathf.Lerp(1f, 0.3f, u);
+                pose.EdgeAlpha = Mathf.Clamp01(1f - u / 0.15f);
+                pose.Done = u >= 1f;
+            }
             else
             {
                 // 閉じる: 開いた形 → 目の高さの帯 → 横一本の線 → 消える。
                 pose.Closing = true;
                 var u = Mathf.Clamp01((t - closeStart) / close);
+                pose.CloseProgress = u;
                 if (u < 0.45f)
                 {
                     LerpShape(shapes.Open, shapes.Band, EaseIn(u / 0.45f), corners);
@@ -168,8 +191,11 @@ namespace MS2026.Skills
             };
         }
 
-        /// <summary>小さい窓の形。<paramref name="window"/> は窓の外枠（右のふちは上の端が <paramref name="slant"/> だけ左に寄る）。</summary>
-        public static Shapes SmallShapes(Rect window, float slant)
+        /// <summary>
+        /// 小さい窓の形。<paramref name="window"/> は窓の外枠（右のふちは上の端が <paramref name="slant"/> だけ左に寄る）。
+        /// <paramref name="pivot"/> は吸い込まれて消えるときの行き先（欄の丸いアイコンの中心）。
+        /// </summary>
+        public static Shapes SmallShapes(Rect window, float slant, Vector2 pivot)
         {
             var cy = window.center.y;
             var bh = window.height * 0.12f;
@@ -192,8 +218,37 @@ namespace MS2026.Skills
                     new Vector2(window.xMin, cy - lh), new Vector2(window.xMin, cy + lh),
                     new Vector2(window.xMax, cy + lh + tilt), new Vector2(window.xMax, cy - lh + tilt)
                 },
-                StartX = window.xMin
+                StartX = window.xMin,
+                Pivot = pivot
             };
+        }
+
+        /// <summary>
+        /// 欄のアイコンの上に出す顔の丸の、大きさの倍率と濃さ（<paramref name="t"/> は窓が出てからの秒数、<paramref name="pose"/> は窓の今の様子）。
+        /// 出た瞬間にポンと大きく弾んでから落ち着き、窓が吸い込まれ終わったあと <paramref name="tail"/> 秒かけて消える。
+        /// </summary>
+        public static void IconFace(float t, Pose pose, float sinceDone, float tail, out float scale, out float alpha)
+        {
+            const float pop = 0.08f, settle = 0.11f;
+            if (t < pop)
+            {
+                var s = EaseOut(t / pop);
+                scale = Mathf.Lerp(1f, 1.25f, s);
+                alpha = s;
+            }
+            else
+            {
+                scale = Mathf.Lerp(1.25f, 1f, EaseOut((t - pop) / settle));
+                alpha = 1f;
+            }
+
+            // 窓が吸い込まれた瞬間に少し膨らみ、そのあと消える。
+            if (pose.Done)
+            {
+                var u = tail > 0f ? Mathf.Clamp01(sinceDone / tail) : 1f;
+                scale *= 1f + 0.15f * Mathf.Sin(Mathf.PI * Mathf.Min(1f, u * 2f));
+                alpha *= 1f - EaseIn(u);
+            }
         }
 
         /// <summary>

@@ -81,7 +81,23 @@ namespace MS2026.Skills
         public float bandTilt = 0.13f;
     }
 
-    /// <summary>ほかの人が撃ったときに、その人の HUD の欄（ほかの3人の欄）のそばに出る小さい窓。数字は HUD と同じ 1920×1080 の画面での大きさ。</summary>
+    /// <summary>小さい窓の消え方。</summary>
+    public enum SkillCutInSmallEnd
+    {
+        /// <summary>欄の丸いアイコンに吸い込まれるように縮んで消える。</summary>
+        [InspectorName("欄のアイコンに吸い込まれる")]
+        ShrinkToIcon,
+
+        /// <summary>大きい窓と同じく、細い帯につぶれて横一本の稲妻になって消える。</summary>
+        [InspectorName("大きい窓と同じ（帯→線）")]
+        Line
+    }
+
+    /// <summary>
+    /// ほかの人が撃ったときに、その人の HUD の欄（ほかの3人の欄）から飛び出す小さい窓（2026-11-03 の比較ページの B）。
+    /// 欄の丸いアイコンの中心から右へ稲妻が走って斜めの窓が開き、最後はアイコンに吸い込まれて消える。開いている間、アイコンにもその人の顔が出る。
+    /// 数字は HUD と同じ 1920×1080 の画面での大きさ。
+    /// </summary>
     [Serializable]
     public sealed class SkillCutInSmallWindow
     {
@@ -89,26 +105,44 @@ namespace MS2026.Skills
         [SkillLabel("出す")]
         public bool show = true;
 
-        [Tooltip("窓の幅と高さ。")]
+        [Tooltip("窓の幅と高さ。高さが欄の間隔（90）より大きいと上下の欄に少しかぶる（後から撃った人の窓が上に重なる）。")]
         [SkillLabel("大きさ")]
-        public Vector2 size = new Vector2(360f, 112f);
+        public Vector2 size = new Vector2(560f, 192f);
 
-        [Tooltip("HUD の欄の右の端から、窓の左の端までのすき間。")]
-        [SkillLabel("欄とのすき間")]
-        public float gap = 10f;
+        [Tooltip("窓の左の端は欄の丸いアイコンの中心、上下は欄の真ん中。そこからのずれ。")]
+        [SkillLabel("位置のずれ")]
+        public Vector2 offset = Vector2.zero;
 
         [Tooltip("窓の右のふちの傾き（上の端が下の端よりどれだけ左にあるか）。")]
         [SkillLabel("右のふちの傾き")]
-        public float slant = 30f;
+        public float slant = 52f;
 
         [Tooltip("顔を置く場所（窓の左下が (0, 0)、右上が (1, 1)）。")]
         [SkillLabel("顔を置く場所")]
-        public Vector2 faceAnchor = new Vector2(0.3f, 0.5f);
+        public Vector2 faceAnchor = new Vector2(0.33f, 0.48f);
 
         [Tooltip("絵の高さ（窓の高さの何倍か）。")]
         [SkillLabel("絵の大きさ（窓の高さの倍）")]
         [Range(1f, 8f)]
-        public float pictureHeight = 3.4f;
+        public float pictureHeight = 3f;
+
+        [Tooltip("消え方。")]
+        [SkillLabel("消え方")]
+        public SkillCutInSmallEnd end = SkillCutInSmallEnd.ShrinkToIcon;
+
+        [Tooltip("ONなら、窓が出ている間、欄の丸いアイコンの上にもその人の顔（キャラの色の輪つき）を出す。")]
+        [SkillLabel("欄のアイコンにも顔を出す")]
+        public bool iconFace = true;
+
+        [Tooltip("アイコンの上に出す顔の丸の大きさ（欄の高さの何倍か）。")]
+        [SkillLabel("アイコンの顔の大きさ（欄の高さの倍）")]
+        [Range(0.5f, 2f)]
+        public float iconFaceSize = 1.15f;
+
+        [Tooltip("アイコンの顔の丸での、絵の高さ（丸の直径の何倍か）。大きいほど顔が大きく映る。")]
+        [SkillLabel("アイコンの顔の寄り（直径の倍）")]
+        [Range(1f, 10f)]
+        public float iconPictureHeight = 5.2f;
 
         [Tooltip("HUD に「ほかの3人の欄」（OtherPlayers/Other1〜3）が見つからないときに使う、1段目の欄の位置（画面の左下から）と大きさ。")]
         [SkillLabel("欄が見つからないときの1段目（位置）")]
@@ -116,7 +150,7 @@ namespace MS2026.Skills
 
         [Tooltip("欄が見つからないときの、欄1つの大きさ。")]
         [SkillLabel("欄が見つからないときの欄の大きさ")]
-        public Vector2 fallbackRowSize = new Vector2(89f, 81f);
+        public Vector2 fallbackRowSize = new Vector2(320f, 80f);
 
         [Tooltip("欄が見つからないときの、段と段の間隔（下へ）。")]
         [SkillLabel("欄が見つからないときの段の間隔")]
@@ -155,7 +189,7 @@ namespace MS2026.Skills
         [Tooltip("小さい窓での太さ・ギザギザの倍率。")]
         [SkillLabel("小さい窓での大きさ（倍）")]
         [Range(0.1f, 1f)]
-        public float smallScale = 0.4f;
+        public float smallScale = 0.6f;
     }
 
     /// <summary>技名の文字。</summary>
@@ -176,7 +210,7 @@ namespace MS2026.Skills
 
         [Tooltip("小さい窓での文字の大きさ。")]
         [SkillLabel("大きさ（小さい窓）")]
-        public int smallSize = 26;
+        public int smallSize = 42;
 
         [Tooltip("大きい窓での文字の左下の位置（画面の左下が (0, 0)、右上が (1, 1)）。")]
         [SkillLabel("位置（大きい窓）")]

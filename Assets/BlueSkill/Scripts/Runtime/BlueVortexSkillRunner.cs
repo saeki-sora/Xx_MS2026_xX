@@ -14,7 +14,8 @@ namespace MS2026.Skills.Blue
     /// 投げ方（<see cref="BlueVortexSkill.multi"/>）:
     /// ・1本だけ（元の動き）／まとめて一気に: 投げたボトルが全部落ちたらスロットに終了を知らせる。
     /// ・1本ずつ順番に: 1回の溜めで「ボトルの数」だけ投げられる。投げた瞬間にスロットに終了を知らせ、まだ残っていれば
-    ///   すぐ「使える」に戻す（<see cref="PlayerSkillSlot.GrantCharge"/>）。握ったままなら一度離して、次の攻撃で次の1本を投げる。
+    ///   すぐ「使える」に戻す（<see cref="PlayerSkillSlot.GrantFollowUpCharge"/>。同じ溜めの続きなのでカットインは出ない）。
+    ///   握ったままなら一度離して、次の攻撃で次の1本を投げる。
     ///   飛んでいるボトルは別に動くので、残りのボトルは持ったまま。
     /// 落ちる場所は投げた瞬間の砲台の向きと <see cref="BlueVortexSkill.target"/> の設定で決まる（<see cref="PredictLandings"/>）。
     /// 「握って飛距離を決める」（<see cref="BlueVortexSkill.gripDistance"/>）を使うときは、振りかぶりの代わりに握っている間構えて（Aiming）
@@ -368,8 +369,9 @@ namespace MS2026.Skills.Blue
                 NotifyFinished();
                 if (_bottlesLeft > 0 && Slot != null)
                 {
+                    // 同じ溜めの続きなので、カットインは出さない（1回の溜めでカットインは最初の1本だけ）。
                     _rearming = true;
-                    Slot.GrantCharge();
+                    Slot.GrantFollowUpCharge();
                     _rearming = false;
                 }
             }
