@@ -14,7 +14,8 @@
         "Unity.TextMeshPro",
         "Unity.Netcode.Runtime",
         "Unity.Collections",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "Unity.Mathematics"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
