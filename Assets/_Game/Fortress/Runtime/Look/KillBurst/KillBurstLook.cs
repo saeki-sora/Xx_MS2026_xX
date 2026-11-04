@@ -75,7 +75,8 @@ namespace MS2026.Fortress
                 return;
             }
 
-            var go = new GameObject("[Look] Kill Bursts") { hideFlags = HideFlags.DontSave };
+            // DontSave は付けない（付けると Play を止めても消えずに残り、止まった破裂を描き続けてしまう）。
+            var go = new GameObject("[Look] Kill Bursts");
             DontDestroyOnLoad(go);
             _instance = go.AddComponent<KillBurstRunner>();
         }
