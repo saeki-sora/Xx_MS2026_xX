@@ -53,6 +53,19 @@ body{background:var(--bg);color:var(--ink);font-family:var(--round);font-size:15
 .boss-bar{height:9px;border-radius:9px;background:var(--line);overflow:hidden}
 .boss-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#b48cff,#ff7eb6);transition:width .3s}
 .boss small{font-size:11.5px;color:var(--mute)}
+.result{position:fixed;inset:0;z-index:4;background:var(--bg);display:flex;flex-direction:column;gap:14px;max-width:480px;margin:0 auto;
+  padding-top:calc(22px + env(safe-area-inset-top,0px));padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));
+  padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+.r-eyebrow{font-size:13px;letter-spacing:.08em;color:var(--accent);margin:0}
+.r-outcome{font-weight:800;font-size:22px;line-height:1.35;margin:0}
+.r-name{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px;margin:0}
+.r-list{margin:0;display:flex;flex-direction:column;gap:10px}
+.r-list div{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:8px}
+.r-list dt{color:var(--mute);font-size:14px}
+.r-list dd{margin:0;font-weight:800;font-size:18px;font-variant-numeric:tabular-nums}
+.r-rank{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.r-rank b{font-size:18px}
+.r-close{margin-top:auto;font:inherit;font-weight:800;font-size:16px;color:var(--bg);background:var(--me);border:0;border-radius:999px;padding:12px;cursor:pointer}
 .offline{font-size:13px;color:var(--bg);background:var(--bad);border-radius:10px;padding:6px 10px;text-align:center}
 @media (prefers-reduced-motion:reduce){.exit .pulse{animation:none;display:none}}
 </style>
@@ -86,6 +99,19 @@ body{background:var(--bg);color:var(--ink);font-family:var(--round);font-size:15
   </div>
 </div>
 <p class="toast" id="toast" hidden></p>
+<section class="result" id="result" hidden aria-labelledby="r-outcome">
+  <p class="r-eyebrow">試合のあと</p>
+  <p class="r-outcome" id="r-outcome"></p>
+  <p class="r-name"><i class="dot"></i><span id="r-name"></span> の戦績</p>
+  <dl class="r-list">
+    <div><dt>送った</dt><dd id="r-sent"></dd></div>
+    <div><dt>倒された</dt><dd id="r-killed"></dd></div>
+    <div><dt>コアにかじりついた</dt><dd id="r-bites"></dd></div>
+    <div><dt>最後まで生きのびた</dt><dd id="r-survived"></dd></div>
+  </dl>
+  <div class="r-rank" id="r-rank"></div>
+  <button type="button" class="r-close" id="r-close">閉じる</button>
+</section>
 <script>
 (function(){
   var COLORS=['#ff7eb6','#b48cff','#ff9a4d','#f0f0f0'];
@@ -106,6 +132,9 @@ body{background:var(--bg);color:var(--ink);font-family:var(--round);font-size:15
   var coolEnd=0, coolTotal=8, timeLeft=-1, timeAt=0, toastT=0, sending=false;
   var flies=[];
   var lastBossDone=null;
+  var result=null;
+  var closedMatch=parseInt(load('ms2026.spectator.closed'),10)||0;
+  el('r-close').addEventListener('click',function(){if(result){closedMatch=result.match;save('ms2026.spectator.closed',String(closedMatch));}el('result').hidden=true;});
   var exitPts=[];
 
   // 色
@@ -161,6 +190,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--round);font-size:15
 
   function apply(j){
     shared=j.s||{};
+    result=j.result||null;
     if(j.me){
       me=j.me;el('name').textContent=me.name;
       coolTotal=me.cooldownTotal||coolTotal;
@@ -170,7 +200,32 @@ body{background:var(--bg);color:var(--ink);font-family:var(--round);font-size:15
     }
     if(shared.stage!==mapKey){mapKey=shared.stage;buildMap(shared.exits||[]);lastBossDone=null;}
     updateBoss();
+    updateResult();
     timeLeft=typeof shared.timeLeft==='number'?shared.timeLeft:-1;timeAt=performance.now();
+  }
+
+  function updateResult(){
+    var box=el('result');
+    var show=!!(result&&me&&shared&&shared.phase!=='play'&&result.match!==closedMatch);
+    box.hidden=!show;
+    if(!show)return;
+    el('r-outcome').textContent=shared.outcome==='germs'?'コアがやられた！ 菌の勝ち！':shared.outcome==='teeth'?'歯は守られた！ 4人の勝ち':'試合が終わりました';
+    el('r-name').textContent=me.name;
+    el('r-sent').textContent=result.sends+'回・'+result.germs+'体';
+    el('r-killed').textContent=result.killed+'体';
+    el('r-bites').textContent=result.bites+'回';
+    el('r-survived').textContent=result.survived+'体';
+    var rank=el('r-rank');
+    while(rank.firstChild)rank.removeChild(rank.firstChild);
+    var line=document.createElement('span');
+    line.textContent='かじりついた回数は、観客 '+result.of+' 人の中で ';
+    var b=document.createElement('b');b.textContent=result.rank+' 位';line.appendChild(b);
+    rank.appendChild(line);
+    if(result.topName){
+      var top=document.createElement('span');
+      top.textContent='いちばんかじった菌: '+result.topName+'（'+result.topBites+'回）';
+      rank.appendChild(top);
+    }
   }
 
   function updateBoss(){

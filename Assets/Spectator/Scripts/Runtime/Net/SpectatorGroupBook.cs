@@ -257,6 +257,9 @@ namespace MS2026.Spectator
 
         public SpectatorScore Score(int owner) => _scores.TryGetValue(owner, out var score) ? score : default;
 
+        /// <summary>この試合の成績（owner → 成績）。</summary>
+        public IEnumerable<KeyValuePair<int, SpectatorScore>> Scores => _scores;
+
         /// <summary>受付の PC（0 = Host 自身、1〜 = Client の番号 + 1）と観客の番号から、成績の見分けを作る。</summary>
         public static int OwnerKey(int source, int number) => source * 65536 + (number & 0xFFFF);
 

@@ -410,6 +410,69 @@ namespace MS2026.Spectator.Tests
             Assert.AreEqual(1, book.Score(ownerLocal).Sends);
         }
 
+        // ---- 試合のあとの戦績 ----
+
+        [Test]
+        public void Results_RankByBitesTiesShareRank_AndSkipNonSenders()
+        {
+            var scores = new System.Collections.Generic.Dictionary<int, SpectatorScore>
+            {
+                [SpectatorGroupBook.OwnerKey(0, 1)] = new SpectatorScore { Sends = 2, Germs = 40, Killed = 30, Bites = 5 },
+                [SpectatorGroupBook.OwnerKey(0, 2)] = new SpectatorScore { Sends = 1, Germs = 20, Killed = 18, Bites = 2 },
+                [SpectatorGroupBook.OwnerKey(2, 7)] = new SpectatorScore { Sends = 3, Germs = 60, Killed = 50, Bites = 5 },
+                [SpectatorGroupBook.OwnerKey(0, 9)] = new SpectatorScore { Sends = 0 }
+            };
+
+            var cards = SpectatorResults.Build(scores, 42);
+            Assert.AreEqual(3, cards.Count, "送っていない人には出さない");
+            var byNumber = new System.Collections.Generic.Dictionary<int, SpectatorResultCard>();
+            foreach (var pair in cards)
+            {
+                byNumber[pair.Value.Number] = pair.Value;
+                Assert.AreEqual(42, pair.Value.MatchId);
+                Assert.AreEqual(3, pair.Value.Of);
+            }
+
+            Assert.AreEqual(1, byNumber[1].Rank);
+            Assert.AreEqual(1, byNumber[7].Rank, "同じ回数は同じ順位");
+            Assert.AreEqual(3, byNumber[2].Rank);
+            Assert.AreEqual(5, byNumber[1].Survived);
+            Assert.AreEqual(5, byNumber[1].TopBites);
+            Assert.AreEqual(7, byNumber[1].TopNumber, "同じ回数なら倒された数が多い方を「いちばん」にする");
+            Assert.AreEqual(2, SpectatorResults.SourceOf(SpectatorGroupBook.OwnerKey(2, 7)));
+            Assert.AreEqual(7, SpectatorResults.NumberOf(SpectatorGroupBook.OwnerKey(2, 7)));
+        }
+
+        [Test]
+        public void Results_NoBitesMeansNoTop()
+        {
+            var scores = new System.Collections.Generic.Dictionary<int, SpectatorScore>
+            {
+                [1] = new SpectatorScore { Sends = 1, Germs = 20, Killed = 20 }
+            };
+
+            var cards = SpectatorResults.Build(scores, 1);
+            Assert.AreEqual(0, cards[0].Value.TopNumber);
+            Assert.AreEqual(1, cards[0].Value.Rank);
+            Assert.AreEqual(0, cards[0].Value.Survived);
+        }
+
+        [Test]
+        public void Api_StateIncludesMyResultCardAfterTheMatch()
+        {
+            var api = MakeApi(new[] { 0.0 }, SpectatorPhase.End);
+            var before = Text(api.Handle(new SpectatorRequest { Path = "/api/state", Query = SpectatorHttp.ParseForm("id=aaaaaaaa") }));
+            StringAssert.DoesNotContain("\"result\"", before);
+
+            api.Results.Replace(new[] { new SpectatorResultCard { MatchId = 5, Number = 1, Sends = 2, Germs = 40, Killed = 30, Bites = 4, Rank = 1, Of = 3, TopNumber = 1, TopBites = 4 } });
+            var after = Text(api.Handle(new SpectatorRequest { Path = "/api/state", Query = SpectatorHttp.ParseForm("id=aaaaaaaa") }));
+            StringAssert.Contains("\"result\":{\"match\":5,\"sends\":2,\"germs\":40,\"killed\":30,\"bites\":4,\"survived\":6,\"rank\":1,\"of\":3", after);
+            StringAssert.Contains("\"topName\":\"" + SpectatorNames.Make(1) + "\"", after);
+
+            var other = Text(api.Handle(new SpectatorRequest { Path = "/api/state", Query = SpectatorHttp.ParseForm("id=bbbbbbbb") }));
+            StringAssert.DoesNotContain("\"result\"", other, "送っていない人にはカードが無い");
+        }
+
         // ---- 地図 ----
 
         [Test]

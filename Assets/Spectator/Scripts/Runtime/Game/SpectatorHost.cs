@@ -39,6 +39,8 @@ namespace MS2026.Spectator
         private SpectatorHostStatus _hostStatus;
         private float _hostStatusAt = -100f;
         private float _statusTimer;
+        private bool _cardsSent;
+        private int _matchId;
         private SpectatorApi _api;
         private SpectatorHttpServer _server;
         private SwarmSystem _swarm;
@@ -134,6 +136,7 @@ namespace MS2026.Spectator
             SpectatorRelay.OrderReceived += OnRelayOrder;
             SpectatorRelay.ResultReceived += OnRelayResult;
             SpectatorRelay.StatusReceived += OnRelayStatus;
+            SpectatorRelay.CardsReceived += OnRelayCards;
             _stage.Refresh();
             UpdateBoard();
         }
@@ -192,6 +195,7 @@ namespace MS2026.Spectator
             {
                 _boardTimer = BoardInterval;
                 UpdateBoard();
+                DeliverCardsIfEnded();
             }
 
             _scanTimer -= Time.unscaledDeltaTime;
@@ -213,6 +217,8 @@ namespace MS2026.Spectator
             }
 
             _matchKey = key;
+            _cardsSent = false;
+            _matchId = UnityEngine.Random.Range(1, int.MaxValue);
             _book.Clear();
             _budget.Reset();
             _spawnBaseline = _swarm != null ? _swarm.Stats.totalSpawned : 0;
@@ -263,6 +269,60 @@ namespace MS2026.Spectator
             }
 
             return true;
+        }
+
+        // ───────── 試合のあとの戦績 ─────────
+
+        /// <summary>
+        /// Host・オフライン: 試合が終わったら 1 回だけ、送った人全員の戦績を作り、
+        /// この PC で受け付けた人の分は自分の棚へ、Client で受け付けた人の分はその Client へ届ける。
+        /// </summary>
+        private void DeliverCardsIfEnded()
+        {
+            if (_cardsSent || !FortressNet.HasSimulationAuthority || ReadPhase(out _) != SpectatorPhase.End)
+            {
+                return;
+            }
+
+            _cardsSent = true;
+            var all = SpectatorResults.Build(_book.Scores, _matchId);
+            if (all.Count == 0)
+            {
+                return;
+            }
+
+            var bySource = new Dictionary<int, List<SpectatorResultCard>>();
+            foreach (var pair in all)
+            {
+                var source = SpectatorResults.SourceOf(pair.Key);
+                if (!bySource.TryGetValue(source, out var list))
+                {
+                    list = new List<SpectatorResultCard>();
+                    bySource.Add(source, list);
+                }
+
+                list.Add(pair.Value);
+            }
+
+            foreach (var pair in bySource)
+            {
+                if (pair.Key == 0)
+                {
+                    _api.Results.Replace(pair.Value);
+                }
+                else
+                {
+                    SpectatorRelay.SendCards((ulong)(pair.Key - 1), _matchId, pair.Value);
+                }
+            }
+
+            Debug.Log($"[Spectator] 試合が終わったので、観客 {all.Count} 人に戦績を届けた");
+        }
+
+        private void OnRelayCards(List<SpectatorResultCard> cards)
+        {
+            _api.Results.Replace(cards);
+            Debug.Log($"[Spectator] Host から観客 {cards.Count} 人分の戦績が届いた");
         }
 
         // ───────── Host への取り次ぎ ─────────
@@ -429,6 +489,7 @@ namespace MS2026.Spectator
                 .Key("poolMax").Num(Mathf.Max(1, status.PoolMax)).Append(',')
                 .Key("bossLeft").Num(status.BossesLeft).Append(',')
                 .Key("bossDone").Num(status.BossesDone).Append(',')
+                .Key("outcome").Str(FortressMatch.Outcome == MatchOutcome.Clear ? "teeth" : FortressMatch.Outcome == MatchOutcome.GameOver ? "germs" : "").Append(',')
                 .Key("exits");
             _stage.AppendExitsJson(sb);
             sb.Append('}');
@@ -498,6 +559,7 @@ namespace MS2026.Spectator
             SpectatorRelay.OrderReceived -= OnRelayOrder;
             SpectatorRelay.ResultReceived -= OnRelayResult;
             SpectatorRelay.StatusReceived -= OnRelayStatus;
+            SpectatorRelay.CardsReceived -= OnRelayCards;
             SpectatorRelay.Unregister();
             Unhook();
             _server?.Dispose();

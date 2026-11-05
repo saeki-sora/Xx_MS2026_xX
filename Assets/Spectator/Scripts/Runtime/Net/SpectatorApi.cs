@@ -69,6 +69,9 @@ namespace MS2026.Spectator
 
         public SpectatorRoster Roster => _roster;
 
+        /// <summary>最後の試合の戦績（試合のあと、状態を聞かれたらその人の分を付けて返す）。</summary>
+        public SpectatorResultShelf Results { get; } = new SpectatorResultShelf();
+
         public SpectatorBoard Board
         {
             get => _board;
@@ -126,6 +129,11 @@ namespace MS2026.Spectator
             {
                 sb.Key("me");
                 AppendMe(sb, me);
+                if (Results.TryGet(me.Number, out var card))
+                {
+                    sb.Append(',').Key("result");
+                    AppendCard(sb, card);
+                }
             }
             else
             {
@@ -226,6 +234,22 @@ namespace MS2026.Spectator
                 .Key("cooldown").Num(me.CooldownRemaining).Append(',')
                 .Key("cooldownTotal").Num(_roster.CooldownSeconds).Append(',')
                 .Key("sent").Num(me.Sent)
+                .Append('}');
+        }
+
+        private static void AppendCard(StringBuilder sb, SpectatorResultCard card)
+        {
+            sb.Append('{')
+                .Key("match").Num(card.MatchId).Append(',')
+                .Key("sends").Num(card.Sends).Append(',')
+                .Key("germs").Num(card.Germs).Append(',')
+                .Key("killed").Num(card.Killed).Append(',')
+                .Key("bites").Num(card.Bites).Append(',')
+                .Key("survived").Num(card.Survived).Append(',')
+                .Key("rank").Num(card.Rank).Append(',')
+                .Key("of").Num(card.Of).Append(',')
+                .Key("topName").Str(card.TopNumber > 0 ? SpectatorNames.Make(card.TopNumber) : "").Append(',')
+                .Key("topBites").Num(card.TopBites)
                 .Append('}');
         }
 
