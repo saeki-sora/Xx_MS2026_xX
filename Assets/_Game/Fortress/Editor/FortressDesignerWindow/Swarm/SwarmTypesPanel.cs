@@ -61,6 +61,13 @@ namespace MS2026.Fortress.EditorTools
             ("bomb.blinkSwell", "点滅でふくらむ割合")
         };
 
+        private static readonly (string path, string label)[] SpiralFields =
+        {
+            ("spiral.radius", "輪の半径"),
+            ("spiral.turnsPerSecond", "回る速さ（周/秒）"),
+            ("spiral.mixDirections", "右回り・左回りをばらばらにする")
+        };
+
         private readonly Dictionary<EnemyTypeDefinition, SerializedObject> _serialized =
             new Dictionary<EnemyTypeDefinition, SerializedObject>();
 
@@ -129,6 +136,7 @@ namespace MS2026.Fortress.EditorTools
                     EditorGUILayout.LabelField("群衆の設定", EditorStyles.miniBoldLabel);
                     DrawFields(serialized, SwarmFields);
                     DrawBomb(serialized);
+                    DrawSpiral(serialized, definition);
                 }
                 else
                 {
@@ -163,6 +171,39 @@ namespace MS2026.Fortress.EditorTools
             {
                 DrawFields(serialized, BombFields);
             }
+        }
+
+        private static void DrawSpiral(SerializedObject serialized, EnemyTypeDefinition definition)
+        {
+            EditorGUILayout.Space(4);
+            EditorGUILayout.LabelField("螺旋（くるくる回りながら近づく）", EditorStyles.miniBoldLabel);
+            var toggle = serialized.FindProperty("spiral.enabled");
+            if (toggle == null)
+            {
+                return;
+            }
+
+            EditorGUILayout.PropertyField(toggle, new GUIContent("螺旋で進む", toggle.tooltip));
+            if (!toggle.boolValue)
+            {
+                return;
+            }
+
+            using (new EditorGUI.IndentLevelScope())
+            {
+                DrawFields(serialized, SpiralFields);
+            }
+
+            // 値を変えた直後でも合うよう、反映してから読む。
+            serialized.ApplyModifiedProperties();
+            var spiral = definition.spiral;
+            var lap = definition.moveSpeed / spiral.turnsPerSecond;
+            var shape = spiral.MakesLoops(definition.moveSpeed)
+                ? "輪を描きながら近づきます。"
+                : "回る速さが近づく速さ（移動速度）より遅いので、輪にならず波打つだけです。輪にしたいときは、半径か回る速さを上げるか、移動速度を下げてください。";
+            EditorGUILayout.HelpBox(
+                $"近づく速さ {definition.moveSpeed:0.##} m/秒（移動速度）＋ 回る速さ {spiral.CircleSpeed:0.##} m/秒。1 周するごとに {lap:0.##} m 近づきます。{shape}",
+                MessageType.None);
         }
 
         private static void DrawFields(SerializedObject serialized, (string path, string label)[] fields)

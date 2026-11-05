@@ -17,6 +17,8 @@ MonoBehaviour:
   description: "\u4F7F\u3048\u308B\u72B6\u614B\u306E\u9593\u306F\u9752\u3044\u3046\u304C\u3044\u85AC\u306E\u30DC\u30C8\u30EB\u3092\u6301\u3061\u3001\u6B21\u306E\u653B\u6483\u3067\u5411\u3044\u3066\u3044\u308B\u65B9\u5411\u3078\u6295\u3052\u308B\u3002\u843D\u3061\u305F\u5834\u6240\u3067\u7834\u88C2\u3057\u3066\u6C34\u306E\u6E26\uFF08\u30C7\u30D0\u30D5\u30A8\u30EA\u30A2\uFF09\u3092\u5E83\u3052\u3001\u4E2D\u306E\u6575\u3092\u305D\u306E\u5834\u306B\u3068\u3069\u3081\u3066\u3050\u308B\u3050\u308B\u5DFB\u304D\u8FBC\u307F\u3001\u53D7\u3051\u308B\u30C0\u30E1\u30FC\u30B8\u3092\u5897\u3084\u3057\u3001\u5C11\u3057\u305A\u3064\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u308B\u3002"
   themeColor: {r: 0.2, g: 0.55, b: 1, a: 1}
   chargeBySmashBall: 1
+  chargeByKills: 1
+  killsToCharge: 120
   ignoreChargeWhileActive: 1
   replacesNormalLaser: 1
   hideNormalLaserUntilRelease: 1
@@ -38,6 +40,39 @@ MonoBehaviour:
     showMarker: 1
     markerColor: {r: 0.35, g: 0.85, b: 1.6, a: 0.55}
     markerDots: 14
+  gripDistance:
+    mode: 2
+    minDistance: 3
+    maxDistance: 18
+    secondsToMax: 1
+    curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 1
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    gripSpeedInfluence: 0
+    autoThrowSeconds: 0
+    freezeWhileLoosening: 1
+    releaseDrop: 0.2
   multi:
     mode: 2
     count: 3
@@ -94,7 +129,7 @@ MonoBehaviour:
     pullSpeed: 0.7
     pullInnerRadius: 0.3
     damageTakenMultiplier: 1.5
-    tickDamage: 0
+    tickDamage: 1.5
     tickInterval: 0.5
     tickFlash: 1
     lingerSeconds: 0.4

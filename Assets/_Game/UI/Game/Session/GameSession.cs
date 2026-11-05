@@ -239,6 +239,7 @@ namespace MS2026.UI.Game
             Discovery?.Tick(now);
             TickNetwork(now);
             TickAuto(now);
+            TickPractice(now, Time.unscaledDeltaTime);
             TickCountdown(now);
             TickGripReady(Time.unscaledDeltaTime);
             TickInput();

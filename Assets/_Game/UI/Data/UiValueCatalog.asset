@@ -50,6 +50,24 @@ MonoBehaviour:
     sampleText: 
     sampleColor: {r: 1, g: 1, b: 1, a: 1}
     category: "\u81EA\u5206"
+  - key: local.skillGauge
+    label: "\u81EA\u5206\u306E\u30B9\u30AD\u30EB\u306E\u30B2\u30FC\u30B8\uFF08\u5272\u5408\uFF09"
+    description: "\u6575\u3092\u5012\u3057\u3066\u5149\u306E\u7C92\u3092\u96C6\u3081\u308B\u3068\u6E9C\u307E\u308B\u30020=\u7A7A\u30011=\u6E80\u30BF\u30F3\uFF08\u30B9\u30AD\u30EB\u304C\u4F7F\u3048\u308B\uFF09\u3002"
+    kind: 1
+    range: {x: 0, y: 1}
+    sampleNumber: 0.65
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u81EA\u5206"
+  - key: local.skillReady
+    label: "\u81EA\u5206\u306E\u30B9\u30AD\u30EB\u304C\u4F7F\u3048\u308B"
+    description: "\u30B2\u30FC\u30B8\u304C\u6E80\u30BF\u30F3\u3001\u307E\u305F\u306F\u30B9\u30DE\u30C3\u30B7\u30E5\u30DC\u30FC\u30EB\u3092\u5272\u3063\u3066\u30B9\u30AD\u30EB\u304C\u4F7F\u3048\u308B\u9593\u3060\u3051ON\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u81EA\u5206"
   - key: local.overheated
     label: "\u81EA\u5206\u304C\u30AA\u30FC\u30D0\u30FC\u30D2\u30FC\u30C8\u4E2D"
     description: "\u6483\u3066\u306A\u3044\u9593\u3060\u3051ON\u3002"

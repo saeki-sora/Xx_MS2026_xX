@@ -33,6 +33,16 @@ namespace MS2026.Skills
         [SkillLabel("スマッシュボールを割ると溜まる")]
         public bool chargeBySmashBall = true;
 
+        [Tooltip("ONなら、この砲台のプレイヤーが敵を倒して光の粒を集め、左下のゲージが満タンになったときにも使えるようになる。" +
+                 "ゲージはスキルが使えない（溜まっていない）間だけ溜まり、満タンで撃つと空に戻る。")]
+        [SkillLabel("敵を倒して粒を集めると溜まる")]
+        public bool chargeByKills = true;
+
+        [Tooltip("ゲージが満タンになるまでに倒す敵の数（自分のレーザーが最後に当たった敵）。")]
+        [SkillLabel("満タンまでに倒す数")]
+        [Min(1)]
+        public int killsToCharge = 50;
+
         [Tooltip("ONなら、スキルを撃っている最中に割ったスマッシュボールでは次のスキルが溜まらない（連発を防ぐ）。")]
         [SkillLabel("スキル中は溜まらない")]
         public bool ignoreChargeWhileActive = true;

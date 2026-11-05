@@ -14,39 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: DDrive.Runtime::DDrive.Runtime.Loading.ScenePreloadList
   sceneName: Game
   entries:
-  - Type: 1
-    Id: 830934790130038943
-    DisplayName: DestructRegen
-  - Type: 3
-    Id: 865915282325765272
-    DisplayName: DestructHit
-  - Type: 1
-    Id: 1777448812509017777
-    DisplayName: DestructHit
   - Type: 3
     Id: 2734424051633896882
     DisplayName: CoreShatter
-  - Type: 1
-    Id: 2842824340120649094
-    DisplayName: DestructStage
   - Type: 2
     Id: 3399067870436138849
     DisplayName: CyberRun
   - Type: 1
-    Id: 6116545328458876446
-    DisplayName: SmashBreak
-  - Type: 3
-    Id: 9076089593357038298
-    DisplayName: SmashBreak
-  - Type: 1
     Id: 9819440828055015967
     DisplayName: "\u548C\u592A\u9F13\u3067\u30C9\u30F3"
-  - Type: 3
-    Id: 12177394001233572784
-    DisplayName: DestructRegen
-  - Type: 3
-    Id: 16382477502686203062
-    DisplayName: DestructStage
   - Type: 1
     Id: 17972745566154370587
     DisplayName: CoreShatter

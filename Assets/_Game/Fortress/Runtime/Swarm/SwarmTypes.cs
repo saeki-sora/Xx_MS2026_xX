@@ -55,6 +55,20 @@ namespace MS2026.Fortress
         public float blinkSpeedUp;
         public float blinkSpeedUpDistance;
         public float blinkSwell;
+
+        /// <summary>1 なら盾持ちのお供（<see cref="EnemyShieldSettings.escortType"/>）。行き先が渡されている間は盾持ちのまわりの場所へ向かう。</summary>
+        public int followsShield;
+
+        // 螺旋で進む敵（EnemySpiralSettings）。spiralRadius=0 の種類はまっすぐ進む。
+        /// <summary>回る輪の半径。0 なら回らない。</summary>
+        public float spiralRadius;
+        /// <summary>回る角速度（ラジアン/秒）。</summary>
+        public float spiralAngularSpeed;
+        /// <summary>1 なら回る向きを1体ずつばらばらにする。</summary>
+        public int spiralMixDirections;
+
+        /// <summary>この種類が出しうる速さ（近づく速さ＋回る速さ）。速度の上限・Clientの先読みの上限の基準。</summary>
+        public float TopSpeed => maxSpeed + spiralRadius * spiralAngularSpeed;
     }
 
     /// <summary>爆弾の敵が爆発した理由。</summary>

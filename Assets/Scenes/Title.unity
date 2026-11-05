@@ -129,6 +129,7 @@ GameObject:
   m_Component:
   - component: {fileID: 10877401}
   - component: {fileID: 10877400}
+  - component: {fileID: 10877402}
   m_Layer: 0
   m_Name: Background
   m_TagString: Untagged
@@ -201,6 +202,23 @@ Transform:
   - {fileID: 436990918}
   m_Father: {fileID: 305972123}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &10877402
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 10877399}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d83d01607fd8da64fa5fc680973ac97c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MS2026.Title.Runtime::MS2026.Title.TitleColorAdjust
+  brightness: 1
+  contrast: 1
+  saturation: 1
+  midtones: 1
+  tint: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &25560266
 GameObject:
   m_ObjectHideFlags: 0
@@ -211,6 +229,7 @@ GameObject:
   m_Component:
   - component: {fileID: 25560268}
   - component: {fileID: 25560267}
+  - component: {fileID: 25560269}
   m_Layer: 0
   m_Name: CharacterRight
   m_TagString: Untagged
@@ -282,6 +301,23 @@ Transform:
   - {fileID: 876345014}
   m_Father: {fileID: 305972123}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &25560269
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 25560266}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d83d01607fd8da64fa5fc680973ac97c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MS2026.Title.Runtime::MS2026.Title.TitleColorAdjust
+  brightness: 1
+  contrast: 1
+  saturation: 1
+  midtones: 1
+  tint: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &69568757
 GameObject:
   m_ObjectHideFlags: 0
@@ -374,7 +410,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 1849349437}
+  - {fileID: 2100000, guid: 7b69e3657d965e841a790424de5b5aac, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -488,6 +524,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 178309927}
+  - component: {fileID: 178309928}
   m_Layer: 0
   m_Name: PasteStream
   m_TagString: Untagged
@@ -511,83 +548,23 @@ Transform:
   - {fileID: 1341164743}
   m_Father: {fileID: 1297605040}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!21 &180518661
-Material:
-  serializedVersion: 8
+--- !u!114 &178309928
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: 'Title_SpriteFX [ShaderFX D785150D]'
-  m_Shader: {fileID: 4800000, guid: 6b3c5d25235dc2b44bc67ecca4b4d03f, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 1
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _DissolveAmount: 0
-    - _DissolveEdgeWidth: 0.08
-    - _DissolveNoiseScale: 12
-    - _FXDissolveToggle: 0
-    - _FXEmissionIntensity: 1
-    - _FXEmissionPulseSpeed: 0
-    - _FXEmissionToggle: 0
-    - _FXFireToggle: 0
-    - _FXFrostToggle: 0
-    - _FXGlitchToggle: 0
-    - _FXHitFlashToggle: 0
-    - _FXHologramToggle: 0
-    - _FXRimToggle: 0
-    - _FXUVScrollToggle: 0
-    - _FireIntensity: 2
-    - _FireNoiseScale: 24
-    - _FireScrollSpeed: 1.5
-    - _FrostAmount: 0.7
-    - _FrostSparkleThreshold: 0.85
-    - _GlitchAmount: 0
-    - _GlitchBlockSize: 10
-    - _GlitchRGBSplit: 0.025
-    - _GlitchSpeed: 16
-    - _HitFlashAmount: 0
-    - _HologramFlickerIntensity: 0.15
-    - _HologramFlickerSpeed: 6
-    - _HologramFresnelPower: 2.5
-    - _HologramScanlineDensity: 60
-    - _HologramScanlineSpeed: 4
-    - _RimIntensity: 1.2
-    - _RimPower: 3
-    - _UVScrollPatternScale: 30
-    - _UVScrollSharpness: 0.6
-    - _UVScrollSpeed: 1
-    m_Colors:
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _DissolveEdgeColor: {r: 1, g: 0.54999995, b: 0.049999982, a: 1}
-    - _FXEmissionColor: {r: 1, g: 1, b: 1, a: 1}
-    - _FireColor: {r: 1, g: 0.45, b: 0.049999982, a: 1}
-    - _FrostColor: {r: 0.65, g: 0.85, b: 1, a: 1}
-    - _FrostSparkleColor: {r: 0.9, g: 0.97999996, b: 1, a: 1}
-    - _HitFlashColor: {r: 1, g: 1, b: 1, a: 1}
-    - _HologramColor: {r: 0.19999996, g: 0.9, b: 1, a: 1}
-    - _RimColor: {r: 0.35, g: 0.95, b: 1, a: 1}
-    - _UVScrollColor: {r: 1, g: 0.7, b: 0.09999997, a: 1}
-    - _UVScrollDirection: {r: 0, g: 1, b: 0, a: 0}
-  m_BuildTextureStacks: []
-  m_AllowLocking: 1
+  m_GameObject: {fileID: 178309926}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d83d01607fd8da64fa5fc680973ac97c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MS2026.Title.Runtime::MS2026.Title.TitleColorAdjust
+  brightness: 1
+  contrast: 1
+  saturation: 1
+  midtones: 1
+  tint: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &305972121
 GameObject:
   m_ObjectHideFlags: 0
@@ -625,6 +602,8 @@ MonoBehaviour:
   gripReleaseThreshold: 0.2
   opening: {fileID: 1297605039}
   background: {fileID: 10877400}
+  backgroundLoop: {fileID: 0}
+  backgroundBeforeTint: {r: 0.25, g: 0.18, b: 0.35, a: 1}
   afterOpening:
   - {fileID: 436095638}
   - {fileID: 365031081}
@@ -688,6 +667,7 @@ GameObject:
   m_Component:
   - component: {fileID: 365031082}
   - component: {fileID: 365031081}
+  - component: {fileID: 365031083}
   m_Layer: 0
   m_Name: CharacterLeft
   m_TagString: Untagged
@@ -759,6 +739,23 @@ Transform:
   - {fileID: 902699125}
   m_Father: {fileID: 305972123}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &365031083
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 365031080}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d83d01607fd8da64fa5fc680973ac97c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MS2026.Title.Runtime::MS2026.Title.TitleColorAdjust
+  brightness: 1
+  contrast: 1
+  saturation: 1
+  midtones: 1
+  tint: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &370010037
 GameObject:
   m_ObjectHideFlags: 0
@@ -835,6 +832,7 @@ GameObject:
   m_Component:
   - component: {fileID: 436095639}
   - component: {fileID: 436095638}
+  - component: {fileID: 436095640}
   m_Layer: 0
   m_Name: Logo
   m_TagString: Untagged
@@ -906,6 +904,23 @@ Transform:
   - {fileID: 833883008}
   m_Father: {fileID: 305972123}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &436095640
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 436095637}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d83d01607fd8da64fa5fc680973ac97c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MS2026.Title.Runtime::MS2026.Title.TitleColorAdjust
+  brightness: 1
+  contrast: 1
+  saturation: 1
+  midtones: 1
+  tint: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &436990917
 GameObject:
   m_ObjectHideFlags: 0
@@ -917,6 +932,7 @@ GameObject:
   - component: {fileID: 436990918}
   - component: {fileID: 436990920}
   - component: {fileID: 436990919}
+  - component: {fileID: 436990921}
   m_Layer: 0
   m_Name: SpriteBefore
   m_TagString: Untagged
@@ -981,7 +997,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  - {fileID: 2100000, guid: 7b69e3657d965e841a790424de5b5aac, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1004,8 +1020,8 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 1
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: ce5ae135eb5ae9d4c936bbae8df8b471, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Sprite: {fileID: 21300000, guid: 0af47119f14b4f8687e023666aa07aa9, type: 3}
+  m_Color: {r: 0.25, g: 0.18, b: 0.35, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -1014,6 +1030,23 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &436990921
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 436990917}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d83d01607fd8da64fa5fc680973ac97c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MS2026.Title.Runtime::MS2026.Title.TitleColorAdjust
+  brightness: 1
+  contrast: 1
+  saturation: 1
+  midtones: 1
+  tint: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &544680227
 GameObject:
   m_ObjectHideFlags: 0
@@ -1089,7 +1122,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  - {fileID: 2100000, guid: 7b69e3657d965e841a790424de5b5aac, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1219,6 +1252,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 738340849}
+  - component: {fileID: 738340850}
   m_Layer: 0
   m_Name: Toothpaste
   m_TagString: Untagged
@@ -1243,6 +1277,23 @@ Transform:
   - {fileID: 1797922365}
   m_Father: {fileID: 1297605040}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &738340850
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 738340848}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d83d01607fd8da64fa5fc680973ac97c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MS2026.Title.Runtime::MS2026.Title.TitleColorAdjust
+  brightness: 1
+  contrast: 1
+  saturation: 1
+  midtones: 1
+  tint: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &780789681
 GameObject:
   m_ObjectHideFlags: 0
@@ -1318,7 +1369,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  - {fileID: 2100000, guid: 7b69e3657d965e841a790424de5b5aac, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1443,7 +1494,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 1849349437}
+  - {fileID: 2100000, guid: 7b69e3657d965e841a790424de5b5aac, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -6404,7 +6455,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 180518661}
+  - {fileID: 2100000, guid: 7b69e3657d965e841a790424de5b5aac, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -6529,7 +6580,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 180518661}
+  - {fileID: 2100000, guid: 7b69e3657d965e841a790424de5b5aac, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -6933,7 +6984,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  - {fileID: 2100000, guid: 7b69e3657d965e841a790424de5b5aac, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -11812,6 +11863,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1419449618}
   - component: {fileID: 1419449617}
+  - component: {fileID: 1419449619}
   m_Layer: 0
   m_Name: PressStart
   m_TagString: Untagged
@@ -11883,6 +11935,23 @@ Transform:
   - {fileID: 69568758}
   m_Father: {fileID: 305972123}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1419449619
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1419449616}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d83d01607fd8da64fa5fc680973ac97c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MS2026.Title.Runtime::MS2026.Title.TitleColorAdjust
+  brightness: 1
+  contrast: 1
+  saturation: 1
+  midtones: 1
+  tint: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &1614068310
 GameObject:
   m_ObjectHideFlags: 0
@@ -16867,83 +16936,6 @@ Transform:
   - {fileID: 780789682}
   m_Father: {fileID: 738340849}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!21 &1849349437
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 'Title_SpriteFX [ShaderFX 2C89B952]'
-  m_Shader: {fileID: 4800000, guid: 6b3c5d25235dc2b44bc67ecca4b4d03f, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 1
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _DissolveAmount: 0
-    - _DissolveEdgeWidth: 0.12
-    - _DissolveNoiseScale: 6
-    - _FXDissolveToggle: 0
-    - _FXEmissionIntensity: 1
-    - _FXEmissionPulseSpeed: 0
-    - _FXEmissionToggle: 0
-    - _FXFireToggle: 0
-    - _FXFrostToggle: 0
-    - _FXGlitchToggle: 0
-    - _FXHitFlashToggle: 0
-    - _FXHologramToggle: 0
-    - _FXRimToggle: 0
-    - _FXUVScrollToggle: 0
-    - _FireIntensity: 2
-    - _FireNoiseScale: 24
-    - _FireScrollSpeed: 1.5
-    - _FrostAmount: 0.7
-    - _FrostSparkleThreshold: 0.85
-    - _GlitchAmount: 0
-    - _GlitchBlockSize: 14
-    - _GlitchRGBSplit: 0.03
-    - _GlitchSpeed: 18
-    - _HitFlashAmount: 0
-    - _HologramFlickerIntensity: 0.15
-    - _HologramFlickerSpeed: 6
-    - _HologramFresnelPower: 2.5
-    - _HologramScanlineDensity: 60
-    - _HologramScanlineSpeed: 4
-    - _RimIntensity: 1.5
-    - _RimPower: 3
-    - _UVScrollPatternScale: 30
-    - _UVScrollSharpness: 0.6
-    - _UVScrollSpeed: 1
-    m_Colors:
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _DissolveEdgeColor: {r: 0.3, g: 0.95, b: 1, a: 1}
-    - _FXEmissionColor: {r: 1, g: 1, b: 1, a: 1}
-    - _FireColor: {r: 1, g: 0.45, b: 0.049999982, a: 1}
-    - _FrostColor: {r: 0.65, g: 0.85, b: 1, a: 1}
-    - _FrostSparkleColor: {r: 0.9, g: 0.97999996, b: 1, a: 1}
-    - _HitFlashColor: {r: 1, g: 1, b: 1, a: 1}
-    - _HologramColor: {r: 0.19999996, g: 0.9, b: 1, a: 1}
-    - _RimColor: {r: 0.29999998, g: 0.9, b: 1, a: 1}
-    - _UVScrollColor: {r: 1, g: 0.7, b: 0.09999997, a: 1}
-    - _UVScrollDirection: {r: 0, g: 1, b: 0, a: 0}
-  m_BuildTextureStacks: []
-  m_AllowLocking: 1
 --- !u!1 &1900718323
 GameObject:
   m_ObjectHideFlags: 0
@@ -17019,7 +17011,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  - {fileID: 2100000, guid: 7b69e3657d965e841a790424de5b5aac, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -17042,7 +17034,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 4c2e2b91443c5de4a88fc3460efb54e2, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 0af47119f14b4f8687e023666aa07aa9, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

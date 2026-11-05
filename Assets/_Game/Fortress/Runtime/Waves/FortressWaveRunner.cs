@@ -43,11 +43,14 @@ namespace MS2026.Fortress
         private int _lastCountdownTick = -1;
         private int _lastWarningSecond = -1;
         private bool _hashWarned;
+        private int _seatExtra;
 
         private void OnEnable()
         {
             FortressWaves.DebugSkipHandler = DebugSkip;
             FortressWaves.DebugJumpHandler = DebugJump;
+            FortressSeats.DebugRotateHandler = DebugRotateSeats;
+            FortressSeats.DebugResetHandler = DebugResetSeats;
         }
 
         private void OnDisable()
@@ -135,6 +138,8 @@ namespace MS2026.Fortress
             _readyClients.Clear();
             _hashWarned = false;
             _sentKills = -1;
+            _seatExtra = 0;
+            FortressSeats.ResetForMatch(_plan.seatRotation);
             _wasAuthority = FortressNet.HasSimulationAuthority;
             if (_wasAuthority)
             {
@@ -176,6 +181,7 @@ namespace MS2026.Fortress
             _director = null;
             _plan = null;
             FortressWaves.ResetState();
+            FortressSeats.ResetForMatch(null);
         }
 
         private void BecomeReplica()
@@ -231,6 +237,14 @@ namespace MS2026.Fortress
                                            _flow.Phase != WavePhase.Finished));
             FortressWaves.EndKind = _flow.EndKind;
             FortressWaves.PlayerMask = ComputePlayerMask();
+            FortressSeats.SetShift(SeatShift());
+        }
+
+        // 席替えの回数: ウェーブの番号と同じ（合間が終わって次のウェーブの番号になった瞬間に1つ進む）＋テスト用に足した分。
+        private int SeatShift()
+        {
+            var rotate = _plan != null && _plan.seatRotation != null && _plan.seatRotation.enabled;
+            return (rotate ? _flow.WaveIndex : 0) + _seatExtra;
         }
 
         private void Apply(WaveFlowSignal signal)
@@ -342,6 +356,30 @@ namespace MS2026.Fortress
             Apply(signal);
         }
 
+        private void DebugRotateSeats()
+        {
+            if (_flow == null || !FortressNet.HasSimulationAuthority)
+            {
+                return;
+            }
+
+            _seatExtra++;
+            FortressSeats.SetShift(SeatShift());
+            _forceSend = true;
+        }
+
+        private void DebugResetSeats()
+        {
+            if (_flow == null || !FortressNet.HasSimulationAuthority)
+            {
+                return;
+            }
+
+            _seatExtra -= FortressSeats.Shift;
+            FortressSeats.SetShift(SeatShift());
+            _forceSend = true;
+        }
+
         // ───────── Client ─────────
 
         private void TickReplica(float dt)
@@ -397,8 +435,8 @@ namespace MS2026.Fortress
                 BeginBreakRunner();
             }
 
-            // 合間（歯みがきタイムなど）の間は撃てない・回らない（握るのはイベントのため）。
-            LaserTurret.InputLocked = next == WavePhase.Break;
+            // 合間（歯みがきタイムなど）の間は撃てない・回らない（握るのはイベントのため）。席替えの間も（跳んで移っている）。
+            LaserTurret.InputLocked = next == WavePhase.Break || next == WavePhase.SeatChange;
             WaveRetreat.SetRetreatLook(next == WavePhase.Retreat);
             _lastCountdownTick = -1;
             PlayPhaseEffect(next);
@@ -563,7 +601,7 @@ namespace MS2026.Fortress
             _registered = null;
         }
 
-        // 送る中身: byte 段階, byte ウェーブ番号, byte ウェーブの数, byte 終わり方, byte 印(bit0 時計が動いている), byte プレイヤー,
+        // 送る中身: byte 段階, byte ウェーブ番号, byte ウェーブの数, byte 終わり方, byte 印(bit0 時計が動いている), byte プレイヤー, byte 席替えの回数,
         // int 倒した数, int 目標, float 段階の残り, float 段階の長さ, float 試合の残り, float 制限時間, uint 計画の指紋,
         // byte 合間の様子の数 + float × その数。
         private void SendStateIfNeeded()
@@ -590,7 +628,7 @@ namespace MS2026.Fortress
 
             var runner = FortressWaves.BreakRunner;
             var stateCount = runner != null ? runner.State.Length : 0;
-            var size = 6 + sizeof(int) * 2 + sizeof(float) * 4 + sizeof(uint) + 1 + sizeof(float) * stateCount;
+            var size = 7 + sizeof(int) * 2 + sizeof(float) * 4 + sizeof(uint) + 1 + sizeof(float) * stateCount;
             using var writer = new FastBufferWriter(size, Allocator.Temp);
             writer.WriteValueSafe((byte)FortressWaves.Phase);
             writer.WriteValueSafe((byte)Mathf.Clamp(FortressWaves.WaveIndex, 0, 255));
@@ -598,6 +636,7 @@ namespace MS2026.Fortress
             writer.WriteValueSafe((byte)FortressWaves.EndKind);
             writer.WriteValueSafe((byte)(FortressWaves.ClockRunning ? 1 : 0));
             writer.WriteValueSafe((byte)FortressWaves.PlayerMask);
+            writer.WriteValueSafe((byte)FortressSeats.Shift);
             writer.WriteValueSafe(FortressWaves.KillsInWave);
             writer.WriteValueSafe(FortressWaves.TargetKills);
             writer.WriteValueSafe(FortressWaves.PhaseRemaining);
@@ -627,6 +666,7 @@ namespace MS2026.Fortress
             reader.ReadValueSafe(out byte endKind);
             reader.ReadValueSafe(out byte flags);
             reader.ReadValueSafe(out byte playerMask);
+            reader.ReadValueSafe(out byte seatShift);
             reader.ReadValueSafe(out int kills);
             reader.ReadValueSafe(out int target);
             reader.ReadValueSafe(out float phaseRemaining);
@@ -657,6 +697,7 @@ namespace MS2026.Fortress
             FortressWaves.EndKind = (WaveEndKind)endKind;
             FortressWaves.ClockRunning = (flags & 1) != 0;
             FortressWaves.PlayerMask = playerMask;
+            FortressSeats.SetShift(seatShift);
             FortressWaves.KillsInWave = kills;
             FortressWaves.TargetKills = target;
             FortressWaves.PhaseRemaining = phaseRemaining;

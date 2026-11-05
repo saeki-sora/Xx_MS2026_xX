@@ -17,6 +17,8 @@ MonoBehaviour:
   description: "\u30B9\u30AD\u30EB\u7389\u3092\u58CA\u3059\u3068\u3001\u7832\u53F0\u306E\u5411\u304D\u306B\u77E2\u3092\u653E\u3064\u3002\u77E2\u306F\u58C1\u3067\u8DF3\u306D\u8FD4\u308A\u3001\u4E00\u5B9A\u6642\u9593\u3067\u6D88\u6EC5\u3059\u308B\u3002"
   themeColor: {r: 0.98, g: 0.84, b: 0.2, a: 1}
   chargeBySmashBall: 1
+  chargeByKills: 1
+  killsToCharge: 120
   ignoreChargeWhileActive: 1
   replacesNormalLaser: 1
   hideNormalLaserUntilRelease: 1

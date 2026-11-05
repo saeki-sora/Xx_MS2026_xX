@@ -315,6 +315,8 @@ namespace MS2026.UI.Game
             LobbyPhase.InGame => "試合中",
             LobbyPhase.Returning => "ロビーに戻っています",
             LobbyPhase.CharacterSelect => "キャラクター選択中",
+            LobbyPhase.StageRoulette => "ステージ抽選中",
+            LobbyPhase.Practice => "あそびかたの練習中",
             _ => "準備OKを待っています"
         };
     }

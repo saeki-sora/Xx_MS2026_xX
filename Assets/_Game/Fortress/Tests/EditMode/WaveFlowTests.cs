@@ -119,6 +119,35 @@ namespace MS2026.Fortress.Tests.EditMode
         }
 
         [Test]
+        public void SeatChangeComesBetweenBreakAndAnnounce()
+        {
+            var config = Config();
+            config.seatChangeSeconds = 2f;
+            var flow = StartedFlow(config);
+            flow.Tick(0.1f, Kills(10));
+            flow.Tick(2f, Kills(10));
+            Assert.AreEqual(WavePhase.Break, flow.Phase);
+            var signal = flow.Tick(5f, Kills(10));
+            Assert.AreEqual(WavePhase.SeatChange, flow.Phase, "合間の後は、発表の前に席替え");
+            Assert.AreEqual(1, flow.WaveIndex, "席替えの間は、もう次のウェーブの番号（席が回る）");
+            Assert.IsTrue((signal & WaveFlowSignal.EndBreak) != 0);
+            flow.Tick(1.9f, Kills(10));
+            Assert.AreEqual(WavePhase.SeatChange, flow.Phase, "跳んで YOU が消えるまで発表しない");
+            flow.Tick(0.2f, Kills(10));
+            Assert.AreEqual(WavePhase.Announce, flow.Phase);
+
+            flow.Tick(3f, Kills(10));
+            flow.Skip(10);
+            flow.Skip(30);
+            Assert.AreEqual(WavePhase.Break, flow.Phase);
+            flow.Skip(30);
+            Assert.AreEqual(WavePhase.SeatChange, flow.Phase, "テストで合間を飛ばしても席替えは通る");
+            flow.Skip(30);
+            Assert.AreEqual(WavePhase.Announce, flow.Phase);
+            Assert.AreEqual(2, flow.WaveIndex);
+        }
+
+        [Test]
         public void FinalWaveTargetClearsWithoutRetreat()
         {
             var flow = StartedFlow(Config());

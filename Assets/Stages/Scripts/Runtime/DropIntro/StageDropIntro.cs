@@ -40,6 +40,7 @@ namespace MS2026.Stages
         private StageDropIntroSettings _settings;
         private Step _step = Step.Done;
         private bool _isTest;
+        private bool _needsCollect;
         private bool _lockedTurrets;
         private float _holdStart;
         private float _readyAt = -1f;
@@ -144,19 +145,31 @@ namespace MS2026.Stages
 
             _settings = settings;
             _isTest = isTest;
-            Collect();
-            if (_targets.Count == 0)
-            {
-                return;
-            }
-
+            _targets.Clear();
             _active = this;
             _step = Step.Holding;
             _holdStart = Time.unscaledTime;
             _readyAt = -1f;
             _time = 0f;
-            // 試しの再生は幕を待たない。
-            if (isTest)
+            // 集めるのは、このフレームの最後（LateUpdate）。ステージがゲームより後に読み込まれたときは、
+            // 当てはめ（ステージの目印の Awake）がステージのほかの物の準備より先に来るので、
+            // ここで集めると背景の物（StageProp の登録は OnEnable）がまだ見つからない。LateUpdate なら描く前に隠せる。
+            _needsCollect = true;
+            Began?.Invoke();
+        }
+
+        // 集めて、隠す（試しの再生は幕を待たずにすぐ落とす）。落とす物が無ければ終わる。
+        private void CollectAndHide()
+        {
+            _needsCollect = false;
+            Collect();
+            if (_targets.Count == 0)
+            {
+                Finish(false);
+                return;
+            }
+
+            if (_isTest)
             {
                 StartPlaying();
             }
@@ -164,8 +177,35 @@ namespace MS2026.Stages
             {
                 HideAll();
             }
+        }
 
-            Began?.Invoke();
+        // 隠している間に、あとから準備ができた背景の物があれば足す（読み込みの順番が変わっても漏れないように）。
+        private void CollectLateProps()
+        {
+            var scene = gameObject.scene;
+            foreach (var prop in StageProp.All)
+            {
+                if (prop == null || prop.gameObject.scene != scene || prop.role == StagePropRole.Floor || prop.visualRoot == null ||
+                    IsTracked(prop.visualRoot) || IsSkipped(prop.transform) || !HasRenderer(prop.visualRoot))
+                {
+                    continue;
+                }
+
+                _targets.Add(new StageDropTarget(prop.visualRoot, StageDropKind.Prop, IsFlat(prop.visualRoot), -1, RadiusOf(prop.visualRoot)));
+            }
+        }
+
+        private bool IsTracked(Transform transform)
+        {
+            foreach (var target in _targets)
+            {
+                if (target.Transform == transform)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void OnDisable()
@@ -184,6 +224,15 @@ namespace MS2026.Stages
 
         private void LateUpdate()
         {
+            if (_needsCollect && _step != Step.Done)
+            {
+                CollectAndHide();
+                if (_step == Step.Done || _isTest)
+                {
+                    return;
+                }
+            }
+
             switch (_step)
             {
                 case Step.Holding:
@@ -198,6 +247,7 @@ namespace MS2026.Stages
         private void TickHolding()
         {
             LockTurrets();
+            CollectLateProps();
             HideAll();
             var now = Time.unscaledTime;
             if (now - _holdStart > _settings.maxWaitSeconds)

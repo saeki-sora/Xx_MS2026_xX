@@ -304,7 +304,10 @@ Shader "ShaderFX/Uber"
 
                 #if defined(_FX_DISSOLVE)
                 {
-                    float edge = 1.0 - saturate((dissolveNoise - dissolveAmount) / max(_DissolveEdgeWidth, 0.0001));
+                    float edgeWidth = max(_DissolveEdgeWidth, 0.0001);
+                    float edge = 1.0 - saturate((dissolveNoise - dissolveAmount) / edgeWidth);
+                    // 消える量が 0 のときはふちを光らせない（ノイズの小さい所だけ光って、まだらに白く見えるため）。消え始めに合わせて光らせる。
+                    edge *= saturate(dissolveAmount / edgeWidth);
                     color += _DissolveEdgeColor.rgb * edge;
                 }
                 #endif

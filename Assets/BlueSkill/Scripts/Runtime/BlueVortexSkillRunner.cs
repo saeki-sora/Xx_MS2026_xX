@@ -14,9 +14,12 @@ namespace MS2026.Skills.Blue
     /// 投げ方（<see cref="BlueVortexSkill.multi"/>）:
     /// ・1本だけ（元の動き）／まとめて一気に: 投げたボトルが全部落ちたらスロットに終了を知らせる。
     /// ・1本ずつ順番に: 1回の溜めで「ボトルの数」だけ投げられる。投げた瞬間にスロットに終了を知らせ、まだ残っていれば
-    ///   すぐ「使える」に戻す（<see cref="PlayerSkillSlot.GrantCharge"/>）。握ったままなら一度離して、次の攻撃で次の1本を投げる。
+    ///   すぐ「使える」に戻す（<see cref="PlayerSkillSlot.GrantFollowUpCharge"/>。同じ溜めの続きなのでカットインは出ない）。
+    ///   握ったままなら一度離して、次の攻撃で次の1本を投げる。
     ///   飛んでいるボトルは別に動くので、残りのボトルは持ったまま。
     /// 落ちる場所は投げた瞬間の砲台の向きと <see cref="BlueVortexSkill.target"/> の設定で決まる（<see cref="PredictLandings"/>）。
+    /// 「握って飛距離を決める」（<see cref="BlueVortexSkill.gripDistance"/>）を使うときは、振りかぶりの代わりに握っている間構えて（Aiming）
+    /// 距離を伸ばし、離した瞬間に投げる。
     /// ネット対戦: 全PCが自分で同じように動かす（見た目・効果音・揺れは各PC、敵への効果は <see cref="BlueVortexField"/> が結果を決めるPCだけでかける）。
     /// </summary>
     // スキルを別の設定ファイルに差し替えるとき、古い係の削除はフレームの最後なので、同じ砲台に一時的に2つ付くことがある（DisallowMultipleComponent にしない）。
@@ -27,6 +30,9 @@ namespace MS2026.Skills.Blue
         {
             Idle,
             Windup,
+
+            /// <summary>握って飛距離を決めている（「握って飛距離を決める」を使うとき。離したら投げる）。</summary>
+            Aiming,
 
             /// <summary>投げたボトルが落ちるのを待っている（1本だけ／まとめて一気に のとき。落ちたら終了）。</summary>
             Flight
@@ -55,6 +61,8 @@ namespace MS2026.Skills.Blue
         private float _phaseTime;
         private int _awaitingLandings;
         private int _bottlesLeft;
+        private float _gripProgress;
+        private float _gripReference;
         private bool _rearming;
         private bool _rotationOverridden;
         private float _savedRotationScale;
@@ -79,6 +87,31 @@ namespace MS2026.Skills.Blue
         /// <summary>最後に投げたときの、全部のボトルの落ちる場所（左から右の順）。</summary>
         public IReadOnlyList<Vector3> CurrentTargets => _targets;
 
+        /// <summary>握って飛距離を決めている最中か。</summary>
+        public bool IsAiming => _phase == Phase.Aiming;
+
+        /// <summary>
+        /// 今投げたときの距離の、近い→遠いの割合（0〜1。カーブをかける前）。
+        /// 「握って飛距離を決める」を使わないときは 0。ゲージなどの表示に使う。
+        /// </summary>
+        public float GripDistance01 => GripMode ? definition.gripDistance.Ratio01(_gripProgress) : 0f;
+
+        /// <summary>今投げたときの、真ん中の1本の落ちる距離（m）。</summary>
+        public float ThrowDistance
+        {
+            get
+            {
+                if (definition == null)
+                {
+                    return 0f;
+                }
+
+                return GripMode ? definition.gripDistance.Distance(GripDistance01) : definition.target.distance;
+            }
+        }
+
+        private bool GripMode => definition != null && definition.gripDistance != null && definition.gripDistance.Enabled;
+
         internal void Configure(BlueVortexSkill skill)
         {
             definition = skill;
@@ -87,15 +120,16 @@ namespace MS2026.Skills.Blue
         /// <summary>今投げたらボトルが落ちる場所（まとめて投げるときは真ん中の1本）。</summary>
         public Vector3 PredictLanding()
         {
-            return definition != null && Turret != null ? definition.PredictLanding(Turret) : transform.position;
+            var landings = PredictLandings();
+            return landings[(landings.Count - 1) / 2];
         }
 
-        /// <summary>次の攻撃で投げる全部のボトルが落ちる場所（左から右の順）。</summary>
+        /// <summary>次の攻撃で投げる全部のボトルが落ちる場所（左から右の順）。握って飛距離を決めている間は、今の距離での場所。</summary>
         public IReadOnlyList<Vector3> PredictLandings()
         {
             if (definition != null && Turret != null)
             {
-                definition.PredictLandings(Turret, _predicted);
+                definition.PredictLandings(Turret, _predicted, ThrowDistance);
             }
             else
             {
@@ -149,7 +183,16 @@ namespace MS2026.Skills.Blue
             }
 
             OverrideRotation(true);
-            if (definition.timing.windupSeconds > 0f)
+            _gripProgress = 0f;
+            _gripReference = Turret.CurrentThickness01;
+            if (GripMode)
+            {
+                // 握っている間ずっと振りかぶって構え、離したら投げる（UpdateAiming）。
+                SetPhase(Phase.Aiming);
+                _visuals.BeginWindup();
+                FortressEffectPlayer.PlayOnce(definition.sounds.onWindup, _visuals.BottlePosition, Turret.transform.rotation, Turret.playerIndex);
+            }
+            else if (definition.timing.windupSeconds > 0f)
             {
                 SetPhase(Phase.Windup);
                 _visuals.BeginWindup();
@@ -213,6 +256,10 @@ namespace MS2026.Skills.Blue
                     Throw();
                 }
             }
+            else if (_phase == Phase.Aiming)
+            {
+                UpdateAiming(dt);
+            }
 
             LandDueBottles();
             if (_phase == Phase.Flight && _awaitingLandings <= 0)
@@ -240,11 +287,47 @@ namespace MS2026.Skills.Blue
             }
         }
 
+        /// <summary>
+        /// 握って飛距離を決めている間。握っている間は距離を伸ばし（最大で止まる／往復）、
+        /// 離した（オーバーヒートも含む）・ゆるめた（「ゆるめたら投げる」）・「自動で投げる」の時間がたった・設定で「使わない」に変えたら投げる。
+        /// 握力は離してもすぐ 0 にならず、砲台が「離した」になるまで少しかかるので、ゆるめ始めた瞬間に距離を止め（往復で
+        /// 離した後に動いてしまわないように）、ある程度下がったら完全に離すのを待たずに投げる。
+        /// 握る強さは、ネット対戦でも全PCに届いている「レーザーの太さ」（握る強さで決まる 0〜1）を使うので、全PCで同じように投げる
+        /// （届く間隔ぶんのずれはある）。
+        /// </summary>
+        private void UpdateAiming(float dt)
+        {
+            var grip = definition.gripDistance;
+            _phaseTime += dt;
+
+            // 「さっきまでの強さ」: 握力の一番強いところを覚えて、ゆっくり下げていく。
+            var strength = Turret.CurrentThickness01;
+            _gripReference = Mathf.Max(strength, _gripReference - BlueGripDistance.ReferenceDecayPerSecond * dt);
+            var drop = _gripReference - strength;
+
+            var released = !Turret.IsFiring || (grip.releaseDrop > 0f && drop >= grip.releaseDrop);
+            var timedOut = grip.autoThrowSeconds > 0f && _phaseTime >= grip.autoThrowSeconds;
+            if (released || timedOut || !grip.Enabled)
+            {
+                Throw();
+                return;
+            }
+
+            var loosening = grip.freezeWhileLoosening && drop > BlueGripDistance.LoosenMargin;
+            if (!loosening)
+            {
+                _gripProgress = grip.Wrap(_gripProgress + grip.Advance(strength, dt));
+            }
+
+            _visuals.UpdateWindup(GripDistance01);
+        }
+
         private void Throw()
         {
-            // 落ちる場所は投げた瞬間の向きで決める。
+            // 落ちる場所は投げた瞬間の向き（と、握って決めた距離）で決める。
             _targets.Clear();
             _targets.AddRange(PredictLandings());
+            _gripProgress = 0f;
             OverrideRotation(false);
 
             var oneByOne = definition.multi.mode == BlueThrowMode.OneByOne;
@@ -286,8 +369,9 @@ namespace MS2026.Skills.Blue
                 NotifyFinished();
                 if (_bottlesLeft > 0 && Slot != null)
                 {
+                    // 同じ溜めの続きなので、カットインは出さない（1回の溜めでカットインは最初の1本だけ）。
                     _rearming = true;
-                    Slot.GrantCharge();
+                    Slot.GrantFollowUpCharge();
                     _rearming = false;
                 }
             }
@@ -335,6 +419,7 @@ namespace MS2026.Skills.Blue
             _inAir.Clear();
             _awaitingLandings = 0;
             _bottlesLeft = 0;
+            _gripProgress = 0f;
             OverrideRotation(false);
             _visuals?.StopAll();
             SetPhase(Phase.Idle);

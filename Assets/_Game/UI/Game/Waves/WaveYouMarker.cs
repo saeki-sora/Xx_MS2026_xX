@@ -9,6 +9,7 @@ namespace MS2026.UI.Game
     /// <summary>
     /// 試合の始まり（全員を待っている間と、WAVE 1 の発表の前のヒントの段階）に、このPCのプレイヤーの砲台の上に「YOU」の矢印を出す（2026-10-24、初めての人向け）。
     /// 視点がPCごとに違う（回っている人もいる）ので、「自分の砲台はどれか」をはっきり見せる。各PCが自分のカメラで場所を計算する。
+    /// 席替え（ウェーブごとに隣の席へ跳ぶ。2026-10-31）で着地した後にも、決まりの秒数だけ出す。
     /// UIスタジオの「ウェーブの表示を入れる」が作る「WaveYouMarker」（画面いっぱいの枠）に付く。
     /// </summary>
     [AddComponentMenu("UI Studio/あなたの砲台の矢印 (WaveYouMarker)")]
@@ -50,7 +51,9 @@ namespace MS2026.UI.Game
             }
 
             var timing = WaveDisplayTiming.Current;
-            var show = FortressWaves.IsActive && timing.showYouMarker && WaveDisplayTiming.IsHintPhase(FortressWaves.Phase);
+            // 席替えで着地した後も少しの間出す（FortressSeats.YouMarkerVisible。席替えの決まりで切り替え・秒数を変えられる）。
+            var show = FortressWaves.IsActive &&
+                       ((timing.showYouMarker && WaveDisplayTiming.IsHintPhase(FortressWaves.Phase)) || FortressSeats.YouMarkerVisible);
             var player = LocalPlayer();
             var turret = show ? FindTurret(player) : null;
             var rig = FortressCameraRig.Active;
@@ -69,7 +72,7 @@ namespace MS2026.UI.Game
             }
 
             marker.gameObject.SetActive(true);
-            var bob = Mathf.Abs(Mathf.Sin(Time.unscaledTime * 4f)) * 18f;
+            var bob = Mathf.Abs(Mathf.Sin(Time.unscaledTime * 4f)) * 18f + SeatDrop();
             // 上に出すと画面の上の札（WAVE・コアのバー）に重なるときは、砲台の下に出して上を指す。
             var below = local.y + offset + marker.sizeDelta.y * 0.5f > _rect.rect.height * 0.5f - topReserved;
             marker.anchoredPosition = local + new Vector2(0f, below ? -(offset + bob) : offset + bob);
@@ -87,6 +90,19 @@ namespace MS2026.UI.Game
                     graphic.color = new Color(color.r, color.g, color.b, graphic.color.a);
                 }
             }
+        }
+
+        // 席替えの「YOU の光の柱」が ON なら、着地の後に矢印が上から弾んで落ちてくる（2026-11-02。砲台から離れる量の px）。
+        private static float SeatDrop()
+        {
+            var settings = FortressSeats.Settings;
+            if (settings == null || !settings.youPillar || !FortressSeats.YouMarkerVisible)
+            {
+                return 0f;
+            }
+
+            var u = Mathf.Clamp01(FortressSeats.FinaleAge / 0.55f);
+            return (1f - u) * (1f - u) * 420f * Mathf.Abs(Mathf.Cos(u * Mathf.PI * 2.5f));
         }
 
         private static int LocalPlayer()

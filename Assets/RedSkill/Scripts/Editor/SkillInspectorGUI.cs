@@ -24,8 +24,8 @@ namespace MS2026.Skills.EditorTools
 
         private const BindingFlags FieldFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
 
-        /// <summary>対象の全項目を描く（m_Script は灰色で一番上）。</summary>
-        public static void DrawAll(SerializedObject serializedObject)
+        /// <summary>対象の全項目を描く（m_Script は灰色で一番上）。<paramref name="skip"/> の名前の項目は描かない（自分で描くとき用）。</summary>
+        public static void DrawAll(SerializedObject serializedObject, params string[] skip)
         {
             serializedObject.Update();
             var targetType = serializedObject.targetObject.GetType();
@@ -41,6 +41,11 @@ namespace MS2026.Skills.EditorTools
                         EditorGUILayout.PropertyField(iterator);
                     }
 
+                    continue;
+                }
+
+                if (skip != null && Array.IndexOf(skip, iterator.name) >= 0)
+                {
                     continue;
                 }
 

@@ -41,6 +41,7 @@ namespace MS2026.Fortress.Cameras
         private readonly CameraModifierStack _modifiers = new CameraModifierStack();
         private LocalViewerResolver _viewerResolver;
         private bool _initialized;
+        private int _currentSlot = ViewerIndex.Overview;
 
         /// <summary>シーンで有効なリグ(1つだけ置く想定)。演出やデバッグ機能はここから辿る。</summary>
         public static FortressCameraRig Active { get; private set; }
@@ -152,20 +153,30 @@ namespace MS2026.Fortress.Cameras
             var viewer = ViewerResolver.Resolve(fallbackViewer, out var sourceLabel);
             ViewerSourceLabel = sourceLabel;
 
+            // プリセットの P1〜P4 は「席」の視点。席替えをしたら、そのプレイヤーが今座っている席の視点を使う（FortressSeats）。
+            var slot = ViewerIndex.IsPlayer(viewer) ? FortressSeats.CameraSeatOf(viewer) : viewer;
             if (!_initialized)
             {
                 CurrentViewer = viewer;
-                BaseView = preset.GetView(viewer);
+                _currentSlot = slot;
+                BaseView = preset.GetView(slot);
                 _initialized = true;
             }
             else if (viewer != CurrentViewer)
             {
                 _blend.Begin(BaseView, viewerSwitchBlendSeconds, blendCurve);
                 CurrentViewer = viewer;
+                _currentSlot = slot;
                 ViewerChanged?.Invoke(viewer);
             }
+            else if (slot != _currentSlot)
+            {
+                // 席替え: 次の席の視点へ、席替えの決まりの秒数で移る。
+                _blend.Begin(BaseView, FortressSeats.CameraBlendSeconds, blendCurve);
+                _currentSlot = slot;
+            }
 
-            BaseView = _blend.Evaluate(preset.GetView(viewer), deltaTime);
+            BaseView = _blend.Evaluate(preset.GetView(slot), deltaTime);
             CurrentView = _modifiers.Apply(BaseView, deltaTime);
             ApplyToCamera(CurrentView);
             EnemyScreenAlign.Apply(preset.enemiesFaceScreen, targetCamera);

@@ -18,12 +18,12 @@ namespace MS2026.Title.EditorTools
     internal static class TitleSceneBuilder
     {
         private const string MenuPath = "Tools/タイトル/タイトルシーンを組み立てる";
-        private const string ScenePath = "Assets/Scenes/Title.unity";
+        internal const string ScenePath = "Assets/Scenes/Title.unity";
         private const string Root = "Assets/Title";
         private const string SpriteDir = Root + "/Sprites";
-        private const string MaterialDir = Root + "/Materials";
+        internal const string MaterialDir = Root + "/Materials";
         private const string EffectDir = Root + "/Effects";
-        private const string RootName = "[Title]";
+        internal const string RootName = "[Title]";
         private const string ModelName = "Model";
         // キャラの立ち絵（2026-10-22: 左 = 赤、右 = 黄色）。無ければ仮のキューブ。
         // 大きさ = 絵の高さ（画面の高さは 10.8）、ずれ = キャラの位置から絵の真ん中まで（足元が画面の下近く、ロゴにかからない所）。
@@ -231,6 +231,9 @@ namespace MS2026.Title.EditorTools
             {
                 if (leftover != null) Undo.DestroyObjectImmediate(leftover);
             }
+
+            // 配置物ごとの色の調整（「数値を引き継ぐ」なら、この後で調整した値に戻る）。
+            TitleColorAdjustSetup.Ensure(root.transform, false);
 
             if (keptValues != null)
             {

@@ -169,6 +169,7 @@ namespace MS2026.Fortress
             }
 
             lineRenderer.GetPositions(_glowBuffer);
+            var length = Vector3.Distance(_glowBuffer[0], _glowBuffer[count - 1]);
             for (var i = 0; i < _glowLines.Length; i++)
             {
                 // 内側ほど細く、外側ほど太く。内側の層ほど濃い。
@@ -181,9 +182,35 @@ namespace MS2026.Fortress
                 line.widthCurve = lineRenderer.widthCurve;
                 line.widthMultiplier = lineRenderer.widthMultiplier * scale;
                 var c = new Color(color.r, color.g, color.b, glowAlpha * (1f - t * 0.6f));
-                line.startColor = c;
-                line.endColor = c;
+                // 点が2つだけ（うねりなし）だと色が線全体で混ざってしまうので、そのときはぼかさない。
+                if (HasImpact || count <= 2)
+                {
+                    line.startColor = c;
+                    line.endColor = c;
+                }
+                else
+                {
+                    // 届く距離の先では、光の太さぶんかけて薄くして消す（四角く途切れない）。
+                    var fade = _turret.CurrentThicknessMeters * scale / Mathf.Max(0.01f, length);
+                    line.colorGradient = TipFadeGradient(c, Mathf.Clamp(fade, 0.01f, 0.5f));
+                }
             }
+        }
+
+        private Gradient _tipFadeGradient;
+        private readonly GradientColorKey[] _tipFadeColorKeys = new GradientColorKey[2];
+        private readonly GradientAlphaKey[] _tipFadeAlphaKeys = new GradientAlphaKey[3];
+
+        private Gradient TipFadeGradient(Color color, float fade)
+        {
+            _tipFadeGradient ??= new Gradient();
+            _tipFadeColorKeys[0] = new GradientColorKey(color, 0f);
+            _tipFadeColorKeys[1] = new GradientColorKey(color, 1f);
+            _tipFadeAlphaKeys[0] = new GradientAlphaKey(color.a, 0f);
+            _tipFadeAlphaKeys[1] = new GradientAlphaKey(color.a, 1f - fade);
+            _tipFadeAlphaKeys[2] = new GradientAlphaKey(0f, 1f);
+            _tipFadeGradient.SetKeys(_tipFadeColorKeys, _tipFadeAlphaKeys);
+            return _tipFadeGradient;
         }
 
         private void ApplyWobble(Vector3 origin, Vector3 end)

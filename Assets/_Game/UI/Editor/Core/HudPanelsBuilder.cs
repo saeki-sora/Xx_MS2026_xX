@@ -11,7 +11,8 @@ namespace MS2026.UI.EditorTools
     /// <summary>
     /// ゲーム中HUD（画面 Hud）に、チームの絵を使った3つの部品を入れる（2026-10-17、ユーザーの見本画像どおりの配置）。
     /// ・上の中央「CoreBar」: 歯のアイコン ＋ 紺の枠のバー（ピンク→水色）＋ 中央に「100%」。コアの体力（core.hp01）。
-    /// ・左下「PlayerPanel」: 自分のキャラの絵・「1P」の札・しまのゲージ（自分の熱 local.heat。濃い赤のしま＝空、ピンクのしま＝溜まった分）。
+    /// ・左下「PlayerPanel」: 自分のキャラの絵・「1P」の札・しまのゲージ（自分のスキルのゲージ local.skillGauge。濃い赤のしま＝空、ピンクのしま＝溜まった分）。
+    ///   （2026-10-31: 前は自分の熱 local.heat だったが、敵を倒して集めた光の粒のゲージに入れ替え。満タンでスキルが使える。ユーザー依頼）
     /// ・その上「OtherPlayers」: ほかの3人の丸いアイコン（other.1〜3。番号の小さい順）。灰色のアイコンの上に、つながっている人だけ番号（その人の色）とオーバーヒートの灯りを出す。
     ///   （2026-10-17: 最初は「アイコン＋熱のバー」の行だったが、バーが邪魔なのでアイコンだけの絵に差し替え。ユーザー依頼）
     /// UIの位置は全プレイヤー共通（ユーザー決定 2026-10-17。カメラの向きは P1〜P4 で違っても、HUD は同じ位置）。
@@ -115,7 +116,7 @@ namespace MS2026.UI.EditorTools
             if (interactive)
             {
                 EditorUtility.DisplayDialog("プレイヤーのパネルとコアのバー",
-                    "ゲーム中HUD に入れました。\n\n・上の中央: コアの体力（歯のアイコン＋バー＋割合）\n・左下: 自分のパネル（しまのゲージ＝自分の熱）\n・その上: ほかの3人の丸いアイコン（つながっている人だけ番号が出ます）\n\n" +
+                    "ゲーム中HUD に入れました。\n\n・上の中央: コアの体力（歯のアイコン＋バー＋割合）\n・左下: 自分のパネル（しまのゲージ＝スキルのゲージ。敵を倒して集めた光の粒で溜まる）\n・その上: ほかの3人の丸いアイコン（つながっている人だけ番号が出ます）\n\n" +
                     "前のコアの札と左上の4人の熱は隠しました（消してはいません）。\nUIスタジオの「値」ページで「サンプル値で表示」をONにすると、再生しなくても見た目を確かめられます。", "OK");
             }
 
@@ -190,7 +191,8 @@ namespace MS2026.UI.EditorTools
             B.AddMotion(root.gameObject, UiMotionTrigger.OnShow, UiPreset.SlideFadeInLeft, 0.45f);
             var body = H.Body(root, PanelSize, PanelScale);
 
-            // しまのゲージ（枠の穴の後ろ）。濃い赤のしま＝空、ピンクのしま＝溜まった分（左から伸びる）。
+            // しまのゲージ（枠の穴の後ろ）。スキルのゲージ: 濃い赤のしま＝空、ピンクのしま＝集めた光の粒（左から伸びる）。
+            // 粒が砲台に吸い込まれるのに合わせて、少しゆっくり伸ばす。
             var gaugeBack = H.Picture(body, "GaugeBack", "Hud_PlayerGaugeBack.png", Color.white);
             Px(gaugeBack.rectTransform, PanelSize, 284f, 122f, 666f, 135f);
             var gaugeFill = H.Picture(body, "GaugeFill", "Hud_PlayerGaugeFill.png", Color.white);
@@ -199,14 +201,14 @@ namespace MS2026.UI.EditorTools
             gaugeFill.fillMethod = Image.FillMethod.Horizontal;
             gaugeFill.fillOrigin = (int)Image.OriginHorizontal.Left;
             var bindFill = gaugeFill.gameObject.AddComponent<UiBindFill>();
-            bindFill.key = FortressUiKeys.LocalHeat;
+            bindFill.key = FortressUiKeys.LocalSkillGauge;
             bindFill.fill = gaugeFill;
-            bindFill.smoothSeconds = 0.08f;
+            bindFill.smoothSeconds = 0.25f;
 
-            // 枠・キャラの絵・「1P」の札（1枚の絵）。オーバーヒートした瞬間に揺れる。
+            // 枠・キャラの絵・「1P」の札（1枚の絵）。スキルが使えるようになった瞬間に弾む。
             var frame = H.Picture(body, "Frame", "Hud_PlayerFrame.png", Color.white);
             Px(frame.rectTransform, PanelSize, 0f, 0f, 1000f, 320f);
-            B.AddMotion(body.gameObject, UiMotionTrigger.OnValueUp, UiPreset.ShakeHard, 0.35f, 0f, FortressUiKeys.LocalOverheated);
+            B.AddMotion(body.gameObject, UiMotionTrigger.OnValueUp, UiPreset.PunchScale, 0.35f, 0f, FortressUiKeys.LocalSkillReady);
         }
 
         // ───────── その上: ほかの3人 ─────────

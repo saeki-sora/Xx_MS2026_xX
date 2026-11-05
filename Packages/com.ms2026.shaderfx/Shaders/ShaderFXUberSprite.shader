@@ -85,6 +85,15 @@ Shader "ShaderFX/Uber Sprite"
         _UVScrollSpeed("UV Scroll Speed", Range(0, 10)) = 1
         _UVScrollPatternScale("UV Scroll Pattern Scale", Range(1, 64)) = 30
         _UVScrollSharpness("UV Scroll Sharpness", Range(0.5, 0.99)) = 0.6
+
+        // 色の調整（明るさ・コントラストなど）。プロファイルのモジュールではなく、個体ごとに
+        // MaterialPropertyBlock で入れる（タイトルの TitleColorAdjust など）。_ColorAdjustOn が 0 なら何もしない。
+        [HideInInspector] _ColorAdjustOn("Color Adjust On", Float) = 0
+        [HideInInspector] _ColorAdjustBrightness("Color Adjust Brightness", Float) = 1
+        [HideInInspector] _ColorAdjustContrast("Color Adjust Contrast", Float) = 1
+        [HideInInspector] _ColorAdjustSaturation("Color Adjust Saturation", Float) = 1
+        [HideInInspector] _ColorAdjustGamma("Color Adjust Gamma", Float) = 1
+        [HideInInspector] _ColorAdjustTint("Color Adjust Tint", Color) = (1, 1, 1, 1)
     }
 
     SubShader
@@ -151,7 +160,32 @@ Shader "ShaderFX/Uber Sprite"
             float _UVScrollSpeed;
             float _UVScrollPatternScale;
             float _UVScrollSharpness;
+            float _ColorAdjustOn;
+            float _ColorAdjustBrightness;
+            float _ColorAdjustContrast;
+            float _ColorAdjustSaturation;
+            float _ColorAdjustGamma;
+            float4 _ColorAdjustTint;
         CBUFFER_END
+
+        // 色の調整。見た目どおりに効くよう、sRGB に近い値（0〜1 の絵の具の値）に直してから調整し、元に戻す。
+        float3 ShaderFXColorAdjust(float3 color)
+        {
+            float3 c = max(color, 0.0);
+            #if !defined(UNITY_COLORSPACE_GAMMA)
+            c = pow(c, 1.0 / 2.2);
+            #endif
+            c = pow(c, 1.0 / max(_ColorAdjustGamma, 0.01));
+            c *= _ColorAdjustBrightness;
+            c = (c - 0.5) * _ColorAdjustContrast + 0.5;
+            float luma = dot(c, float3(0.2126, 0.7152, 0.0722));
+            c = lerp(luma.xxx, c, _ColorAdjustSaturation);
+            c = max(c * _ColorAdjustTint.rgb, 0.0);
+            #if !defined(UNITY_COLORSPACE_GAMMA)
+            c = pow(c, 2.2);
+            #endif
+            return c;
+        }
 
         struct Attributes
         {
@@ -255,6 +289,10 @@ Shader "ShaderFX/Uber Sprite"
             half4 col = texColor * input.color;
             float3 color = col.rgb;
 
+            // 色の調整は絵そのものだけに掛ける（この後のリムライト・フラッシュなどの光は調整しない）。
+            UNITY_BRANCH
+            if (_ColorAdjustOn > 0.5) color = ShaderFXColorAdjust(color);
+
             #if defined(_FX_RIM)
             {
                 float rim = ShaderFXSpriteRimFactor(sampleUV, texColor.a);
@@ -264,7 +302,10 @@ Shader "ShaderFX/Uber Sprite"
 
             #if defined(_FX_DISSOLVE)
             {
-                float edge = 1.0 - saturate((dissolveNoise - dissolveAmount) / max(_DissolveEdgeWidth, 0.0001));
+                float edgeWidth = max(_DissolveEdgeWidth, 0.0001);
+                float edge = 1.0 - saturate((dissolveNoise - dissolveAmount) / edgeWidth);
+                // 消える量が 0 のときはふちを光らせない（ノイズの小さい所だけ光って、まだらに白く見えるため）。消え始めに合わせて光らせる。
+                edge *= saturate(dissolveAmount / edgeWidth);
                 color += _DissolveEdgeColor.rgb * edge;
             }
             #endif
@@ -330,7 +371,6 @@ Shader "ShaderFX/Uber Sprite"
                 color = lerp(color, _UVScrollColor.rgb * 1.3, streak);
             }
             #endif
-
             return half4(color, col.a);
         }
         ENDHLSL

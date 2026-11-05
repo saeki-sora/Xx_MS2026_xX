@@ -18,7 +18,7 @@ namespace MS2026.Title.EditorTools
         private static readonly Type[] CopiedTypes =
         {
             typeof(TitleScreenController), typeof(TitleOpening), typeof(TitleElementMotion), typeof(TitleSpriteFit),
-            typeof(TitleCameraMotion), typeof(ParticleSystem),
+            typeof(TitleCameraMotion), typeof(TitleColorAdjust), typeof(ParticleSystem),
         };
 
         [Serializable]

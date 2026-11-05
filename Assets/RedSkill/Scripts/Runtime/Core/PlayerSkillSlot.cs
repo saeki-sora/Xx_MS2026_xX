@@ -24,10 +24,18 @@ namespace MS2026.Skills
     /// <summary>
     /// 砲台1台ぶんの「スキル欄」。どのスキルを持っているか・使えるか・いつ撃つかを受け持つ（スキルの中身は持たない）。
     /// ・スマッシュボールを自分が割る（または <see cref="GrantCharge"/>）と「使える」になり、溜めの見た目が出る。
+    /// ・敵を倒して光の粒を集め、ゲージ（左下）が満タンになっても「使える」になる（スキルの「敵を倒して粒を集めると溜まる」がONのとき）。
+    ///   ゲージは「まだ使えない」間だけ溜まり、満タンで撃つと空に戻る。溜まる量は Host が数えて全員に配る撃破数（<see cref="EnemyKillCounter"/>）
+    ///   から決めるので、どのPCでも同じになる。画面には <see cref="PlayerSkillGauge"/> で渡す。
     /// ・「使える」状態で次にレーザーを撃ち始めた瞬間（砲台の状態が Firing になった瞬間）にスキルを撃つ。
     ///   撃っている最中に使えるようになった場合は、そのレーザーを離して撃ち終わってからの「次の」撃ち始めで発動する。
+    /// ・カットイン（<see cref="SkillCutIn"/>、2026-11-02〜）が「撃ったとき」の設定なら、撃った瞬間にカットインの合図を出し、
+    ///   スキル本体はカットインが閉じ始めるまで待たせる（その間も状態は Active。砲台は回らず熱も上がらない）。
+    ///   「溜まったとき」の設定なら、使える状態になった瞬間に合図を出し、撃つときは待たせない。
+    ///   1回の溜めで何回か撃てるスキル（青の「1本ずつ順番に」）は、2回目以降を <see cref="GrantFollowUpCharge"/> で使える状態に戻すので、
+    ///   カットインは最初の1回だけ出る。
     /// ・キャラに紐づけるときは <see cref="SetSkill"/> でスキルを差し替える（<see cref="PlayerSkillInstaller"/> が自動で行う）。
-    /// ネット対戦: スマッシュボールの「割れた」と砲台の状態は全PCに届くので、各PCがこの判断を自分で行う（通信は増やさない）。
+    /// ネット対戦: スマッシュボールの「割れた」・撃破数・砲台の状態は全PCに届くので、各PCがこの判断を自分で行う（通信は増やさない）。
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(LaserTurret))]
@@ -52,6 +60,12 @@ namespace MS2026.Skills
         private bool _pendingCharge;
         private bool _holdSuppressUntilRelease;
         private bool _subscribed;
+        private int _lastKills = -1;
+        private int _gaugeKills;
+        private bool _waitingForCutIn;
+        private float _cutInWaitRemaining;
+        private bool _followUp;
+        private bool _pendingFollowUp;
 
         /// <summary>どの砲台のスキル欄でも、状態が変わったときに呼ばれる（UIの表示などに使う）。</summary>
         public static event Action<PlayerSkillSlot> AnyStateChanged;
@@ -90,6 +104,25 @@ namespace MS2026.Skills
         /// <summary>使える状態だが、今のレーザーを離すまで待っているか（撃っている最中に溜まった場合）。</summary>
         public bool IsWaitingForRelease => IsReady && _waitForRelease;
 
+        /// <summary>撃ったが、カットイン中なのでスキル本体が始まるのを待っているか（状態は Active）。</summary>
+        public bool IsWaitingForCutIn => _waitingForCutIn;
+
+        /// <summary>倒して溜めるゲージ（0=空、1=満タン）。使える状態の間は 1。</summary>
+        public float Gauge01
+        {
+            get
+            {
+                if (State == PlayerSkillState.Ready)
+                {
+                    return 1f;
+                }
+
+                return skill != null && skill.chargeByKills ? Mathf.Clamp01((float)_gaugeKills / KillsToCharge) : 0f;
+            }
+        }
+
+        private int KillsToCharge => skill != null ? Mathf.Max(1, skill.killsToCharge) : 1;
+
         /// <summary>そのプレイヤー番号の砲台のスキル欄を探す（無ければ null）。</summary>
         public static PlayerSkillSlot Find(int playerIndex)
         {
@@ -127,10 +160,18 @@ namespace MS2026.Skills
             }
         }
 
+        private void Update()
+        {
+            UpdateCutInWait(Time.deltaTime);
+            UpdateKillGauge();
+        }
+
         private void OnDisable()
         {
             ActiveSlots.Remove(this);
+            PlayerSkillGauge.Clear(PlayerIndex);
             Subscribe(false);
+            StopCutInWait();
             if (_runner != null && _runner.IsActive)
             {
                 _runner.Cancel();
@@ -166,6 +207,20 @@ namespace MS2026.Skills
         /// <summary>スキルを使える状態にする（スマッシュボールを割ったときと同じ）。</summary>
         public void GrantCharge()
         {
+            GrantCharge(false);
+        }
+
+        /// <summary>
+        /// 同じ溜めの続きとして、もう一度使える状態にする（青の「1本ずつ順番に」の2本目以降など）。
+        /// 溜まったときのカットインも、撃ったときのカットイン（とスキル本体の待ち・砲台の停止）も出さない。カットインは溜め1回につき最初の1回だけ。
+        /// </summary>
+        public void GrantFollowUpCharge()
+        {
+            GrantCharge(true);
+        }
+
+        private void GrantCharge(bool followUp)
+        {
             if (skill == null || _runner == null)
             {
                 return;
@@ -187,17 +242,24 @@ namespace MS2026.Skills
             {
                 // スキル中に溜まった場合（連発を許す設定）は、今のスキルが終わってから Ready にする。
                 _pendingCharge = true;
+                _pendingFollowUp = followUp;
                 return;
             }
 
+            _followUp = followUp;
             SetState(PlayerSkillState.Ready);
             _runner.SetReadyVisual(true);
+            if (!followUp)
+            {
+                SkillCutIn.NotifyReady(this);
+            }
         }
 
         /// <summary>使える状態を取り消す（撃っている最中なら何もしない）。</summary>
         public void ClearCharge()
         {
             _pendingCharge = false;
+            _followUp = false;
             if (State != PlayerSkillState.Ready)
             {
                 return;
@@ -227,6 +289,14 @@ namespace MS2026.Skills
                 return;
             }
 
+            if (_waitingForCutIn)
+            {
+                // まだスキル本体が始まっていない（カットイン中）。始めずに終わらせる。
+                StopCutInWait();
+                HandleRunnerFinished(_runner);
+                return;
+            }
+
             _runner.Cancel();
             HandleRunnerFinished(_runner);
         }
@@ -245,13 +315,14 @@ namespace MS2026.Skills
             if (_pendingCharge)
             {
                 _pendingCharge = false;
-                GrantCharge();
+                GrantCharge(_pendingFollowUp);
             }
         }
 
         private void ApplySkill(CharacterSkill newSkill)
         {
             var wasReady = State == PlayerSkillState.Ready;
+            StopCutInWait();
             if (_runner != null && _runner.IsActive)
             {
                 _runner.Cancel();
@@ -261,6 +332,7 @@ namespace MS2026.Skills
             DestroyRunner();
             skill = newSkill;
             _pendingCharge = false;
+            _followUp = false;
 
             if (skill == null)
             {
@@ -354,8 +426,116 @@ namespace MS2026.Skills
 
             _runner.SetReadyVisual(false);
             _holdSuppressUntilRelease = false;
+            if (_gaugeKills >= KillsToCharge)
+            {
+                // 満タンのゲージで撃った。空に戻して、また倒して溜める（スマッシュボールで溜まった分なら、途中までのゲージはそのまま）。
+                _gaugeKills = 0;
+            }
+
             SetState(PlayerSkillState.Active);
+
+            // 同じ溜めの続き（青の2本目以降など）は、カットインを出さずにすぐ撃つ。
+            var followUp = _followUp;
+            _followUp = false;
+            if (followUp)
+            {
+                _runner.Activate();
+                return;
+            }
+
+            SkillCutIn.NotifyActivated(this);
+            var wait = SkillCutIn.StartDelayFor(skill);
+            if (wait > 0f)
+            {
+                // カットインが閉じ始めるまでスキル本体を待たせる。その間、砲台は止めておく（設定でON のとき）。
+                _waitingForCutIn = true;
+                _cutInWaitRemaining = wait;
+                if (Turret != null)
+                {
+                    Turret.HoldForSkill = SkillCutIn.FreezeTurretWhileWaiting;
+                }
+
+                return;
+            }
+
             _runner.Activate();
+        }
+
+        private void UpdateCutInWait(float dt)
+        {
+            if (!_waitingForCutIn)
+            {
+                return;
+            }
+
+            _cutInWaitRemaining -= dt;
+            if (_cutInWaitRemaining > 0f)
+            {
+                return;
+            }
+
+            StopCutInWait();
+            if (State == PlayerSkillState.Active && _runner != null)
+            {
+                _runner.Activate();
+            }
+        }
+
+        private void StopCutInWait()
+        {
+            if (!_waitingForCutIn)
+            {
+                return;
+            }
+
+            _waitingForCutIn = false;
+            _cutInWaitRemaining = 0f;
+            if (Turret != null)
+            {
+                Turret.HoldForSkill = false;
+            }
+        }
+
+        // 自分の撃破数が増えた分だけゲージを溜め、満タンになったら使える状態にする。
+        private void UpdateKillGauge()
+        {
+            var kills = EnemyKillCounter.ByPlayer(PlayerIndex);
+            if (_lastKills < 0 || kills < _lastKills)
+            {
+                // 最初のフレーム、または新しい試合（撃破数が0に戻った）。ここから数え直す。
+                if (_lastKills >= 0)
+                {
+                    _gaugeKills = 0;
+                }
+
+                _lastKills = kills;
+                PublishGauge();
+                return;
+            }
+
+            var gained = kills - _lastKills;
+            _lastKills = kills;
+            if (gained > 0 && skill != null && skill.chargeByKills && State == PlayerSkillState.Empty)
+            {
+                _gaugeKills = Mathf.Min(_gaugeKills + gained, KillsToCharge);
+                if (_gaugeKills >= KillsToCharge)
+                {
+                    GrantCharge();
+                }
+            }
+
+            PublishGauge();
+        }
+
+        private void PublishGauge()
+        {
+            if (skill == null)
+            {
+                PlayerSkillGauge.Clear(PlayerIndex);
+                return;
+            }
+
+            PlayerSkillGauge.Set(PlayerIndex, Gauge01, State == PlayerSkillState.Ready);
         }
 
         private void SetState(PlayerSkillState next)

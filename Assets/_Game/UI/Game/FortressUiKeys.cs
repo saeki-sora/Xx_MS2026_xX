@@ -17,6 +17,8 @@ namespace MS2026.UI.Game
         public const string LocalCharge = "local.charge";
         public const string LocalThickness = "local.thickness";
         public const string LocalGrip = "local.grip";
+        public const string LocalSkillGauge = "local.skillGauge";
+        public const string LocalSkillReady = "local.skillReady";
 
         public const string CoreHp = "core.hp";
         public const string CoreHp01 = "core.hp01";
@@ -126,6 +128,8 @@ namespace MS2026.UI.Game
                 (LocalCharge, "自分のチャージ（割合）", "溜め撃ちがONのとき、溜まり具合。", UiValueKind.Number, "自分", Vector2.up, 0.3f),
                 (LocalThickness, "自分のレーザーの太さ（割合）", "握る強さで変わる太さ。", UiValueKind.Number, "自分", Vector2.up, 0.5f),
                 (LocalGrip, "自分の握力（割合）", "センサーの値（その人の0〜100%）。", UiValueKind.Number, "自分", Vector2.up, 0.5f),
+                (LocalSkillGauge, "自分のスキルのゲージ（割合）", "敵を倒して光の粒を集めると溜まる。0=空、1=満タン（スキルが使える）。", UiValueKind.Number, "自分", Vector2.up, 0.65f),
+                (LocalSkillReady, "自分のスキルが使える", "ゲージが満タン、またはスマッシュボールを割ってスキルが使える間だけON。", UiValueKind.Bool, "自分", Vector2.up, 0),
                 (CoreHp, "コアのHP", "残りHP（数）。", UiValueKind.Number, "コア", new Vector2(0, 100), 70),
                 (CoreHp01, "コアのHP（割合）", "1=満タン、0=壊れた。", UiValueKind.Number, "コア", Vector2.up, 0.7f),
                 (CoreDestroyed, "コアが壊れた", "壊れたらON（負け）。", UiValueKind.Bool, "コア", Vector2.up, 0),

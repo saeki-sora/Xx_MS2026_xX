@@ -179,7 +179,68 @@ namespace MS2026.Title.EditorTools
                         }
                     }
                 }
+
+                EditorGUILayout.Space(4);
+                EditorGUILayout.LabelField("⑤ 色の調整（配置物ごと。1 = そのまま）", EditorStyles.boldLabel);
+                DrawColorAdjusts(controller);
             }
+        }
+
+        private static void DrawColorAdjusts(TitleScreenController controller)
+        {
+            var adjusts = controller.GetComponentsInChildren<TitleColorAdjust>(true);
+            if (adjusts.Length < TitleColorAdjustSetup.TargetPaths.Length)
+            {
+                EditorGUILayout.HelpBox(adjusts.Length == 0
+                    ? "まだ色の調整が付いていません。"
+                    : "色の調整が付いていない配置物があります。", MessageType.Info);
+                using (new EditorGUI.DisabledScope(EditorApplication.isPlaying))
+                {
+                    if (GUILayout.Button("色の調整を付ける（Tools/タイトル/色の調整を付ける と同じ）"))
+                    {
+                        var (added, swapped) = TitleColorAdjustSetup.Ensure(controller.transform, true);
+                        if (added + swapped > 0) UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(controller.gameObject.scene);
+                        GUIUtility.ExitGUI();
+                    }
+                }
+            }
+
+            foreach (var adjust in adjusts)
+            {
+                using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+                {
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        DrawSelectButton(adjust, ColorAdjustLabel(controller, adjust));
+                        GUILayout.FlexibleSpace();
+                        using (new EditorGUI.DisabledScope(adjust.IsNeutral))
+                        {
+                            if (GUILayout.Button("元に戻す", EditorStyles.miniButton, GUILayout.Width(64)))
+                            {
+                                Undo.RecordObject(adjust, "色の調整を元に戻す");
+                                adjust.ResetValues();
+                                EditorUtility.SetDirty(adjust);
+                            }
+                        }
+                    }
+                    DrawFields(adjust,
+                        ("brightness", "明るさ"),
+                        ("contrast", "コントラスト"),
+                        ("saturation", "鮮やかさ"),
+                        ("midtones", "中間の明るさ"),
+                        ("tint", "色味"));
+                    if (adjust.name == "SpriteBefore") DrawFields(controller, ("backgroundBeforeTint", "暗くする色（ループの絵に掛ける）"));
+                    TitleColorAdjustGUI.DrawUnsupportedFix(adjust);
+                }
+            }
+        }
+
+        // 一覧での名前（[Title] から見た場所。「Sprite」など同じ名前が多いので）。
+        private static string ColorAdjustLabel(TitleScreenController controller, TitleColorAdjust adjust)
+        {
+            var label = adjust.name;
+            for (var t = adjust.transform.parent; t != null && t != controller.transform; t = t.parent) label = t.name + "/" + label;
+            return label;
         }
 
         private static void DrawElement(TitleElementMotion element)
@@ -201,9 +262,9 @@ namespace MS2026.Title.EditorTools
             }
         }
 
-        private static void DrawSelectButton(Component component)
+        private static void DrawSelectButton(Component component, string label = null)
         {
-            if (GUILayout.Button(component.name, EditorStyles.linkLabel))
+            if (GUILayout.Button(label ?? component.name, EditorStyles.linkLabel))
             {
                 Selection.activeObject = component.gameObject;
                 EditorGUIUtility.PingObject(component.gameObject);

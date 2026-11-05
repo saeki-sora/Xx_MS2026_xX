@@ -132,6 +132,8 @@ namespace MS2026.UI.Game
                     UiValues.Set(FortressUiKeys.LocalCharge, turret.ChargeProgress01);
                     UiValues.Set(FortressUiKeys.LocalThickness, turret.CurrentThickness01);
                     UiValues.Set(FortressUiKeys.LocalGrip, grip);
+                    UiValues.Set(FortressUiKeys.LocalSkillGauge, PlayerSkillGauge.Fill01(p));
+                    UiValues.Set(FortressUiKeys.LocalSkillReady, PlayerSkillGauge.IsReady(p));
                 }
             }
         }

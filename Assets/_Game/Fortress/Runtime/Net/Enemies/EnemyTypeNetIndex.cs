@@ -28,6 +28,13 @@ namespace MS2026.Fortress.Net
                 foreach (var type in director.AllEnemyTypes())
                 {
                     unique.Add(type);
+
+                    // 盾持ちのお供は時間割に書かれず、盾持ちと一緒に湧くので、ここで足す。
+                    var escort = type != null && type.shield != null && type.shield.hasShield ? type.shield.escortType : null;
+                    if (escort != null)
+                    {
+                        unique.Add(escort);
+                    }
                 }
             }
 

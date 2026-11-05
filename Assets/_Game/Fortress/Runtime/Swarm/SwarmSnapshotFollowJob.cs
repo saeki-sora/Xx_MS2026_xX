@@ -47,7 +47,7 @@ namespace MS2026.Fortress
         {
             var id = netId[i];
             var velocity = snapVel[id];
-            var cap = types[typeIdx[i]].maxSpeed * MaxSpeedFactor;
+            var cap = types[typeIdx[i]].TopSpeed * MaxSpeedFactor;
             var speedSq = math.lengthsq(velocity);
             if (speedSq > cap * cap)
             {
