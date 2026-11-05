@@ -38,7 +38,7 @@ namespace MS2026.Fortress.EditorTools
             EditorGUILayout.LabelField("仕掛け（歯車・動く障害物）", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
                 "決まった時刻に回る歯車と、決まった所を行き来する障害物を作ります。時刻は試合の始め（WAVE 1 の発表）が 0 秒で、" +
-                "合間（歯みがきタイムなど）も進みます。動くと敵の経路が作り直され、敵はいつもどおりそれに従ってコアへ向かいます。" +
+                "合間（歯みがきタイムなど）も進みます（WAVE CLEAR の後、残りの敵が逃げている間だけ止まります）。動くと敵の経路が作り直され、敵はいつもどおりそれに従ってコアへ向かいます。" +
                 "全員のPCで同じ時刻に同じ形になります（通信は時計だけ）。",
                 MessageType.None);
 

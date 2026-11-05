@@ -6,6 +6,8 @@
 OBJ は Y が上（Maya と同じ）なので、(gx, gy, h) → OBJ (-gx, h, gy) に直す。Unity の OBJ の取り込みが X を反転するので、
 ステージ背景スタジオの「Mayaの向きを床に合わせる」（-90°回す）でちょうどゲームの座標に戻る。
 面の向きは「外向きの向き」を渡して、その向きになるように頂点の順を自動で直す。
+見た目はほかのステージ（今の時代の洗面台・つやのある淡い色のプラスチック・ミント色のタイル）に合わせる（2026-11-05）。
+敵が歩く所（床・門の歯車・棒・真ん中の大歯車）は高さ 0 より下（FLOOR）に置く。砲台・キャラの絵・敵は高さ 0 にあるので、上に重なって見える。
 """
 import math
 import os
@@ -14,17 +16,21 @@ import zlib
 
 OUT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 
+# 名前は最初の版のまま（取り込み設定・マテリアルのつながりを切らないため）。色は GearStageModels.cs の Specs と同じにする。
 MATERIALS = {
     # 名前: (色 RGB 0-1, 説明)
-    "G3_Floor": ((0.70, 0.74, 0.92), "通り道の床タイル"),
-    "G3_Gold": ((0.88, 0.64, 0.27), "歯車の金"),
-    "G3_Brass": ((0.42, 0.29, 0.13), "暗い真鍮"),
-    "G3_Steel": ((0.17, 0.18, 0.30), "壁の紺色の金属"),
-    "G3_Panel": ((0.26, 0.20, 0.42), "壁の上の板（紫）"),
-    "G3_GlowCyan": ((0.25, 0.90, 1.00), "光る線（水色）"),
-    "G3_GlowPink": ((1.00, 0.35, 0.85), "光る線（桃色）"),
-    "G3_Hazard": ((1.00, 0.48, 0.12), "動く壁の橙"),
+    "G3_Floor": ((0.77, 0.96, 0.92), "通り道の床（ミント色のタイル）"),
+    "G3_Gold": ((1.00, 0.73, 0.95), "歯車（桃色のプラスチック）"),
+    "G3_Brass": ((0.99, 1.00, 0.90), "歯車の内側・棒の線（白いプラスチック）"),
+    "G3_Steel": ((0.76, 0.83, 1.00), "壁の横・歯車の軸・門の棒（水色のプラスチック）"),
+    "G3_Panel": ((0.88, 0.82, 1.00), "壁の上の板（うす紫）"),
+    "G3_GlowCyan": ((0.63, 1.00, 0.76), "ふちの線（ミント）"),
+    "G3_GlowPink": ((1.00, 0.55, 0.85), "湧き位置の通路の線（桃色）"),
+    "G3_Hazard": ((1.00, 0.80, 0.42), "動く壁（たまご色）"),
 }
+
+# 床の上の面の高さ（m）。砲台・キャラの絵・敵（高さ 0）より少し下。
+FLOOR = -0.15
 
 
 def to_obj(p):
@@ -155,17 +161,17 @@ def gear_outline(cx, cy, radius, depth, teeth):
     return pts
 
 
-def gear(m, radius, teeth, depth, height, hub_r, glow_r=None, base=0.0):
+def gear(m, radius, teeth, depth, height, hub_r, glow_r=None, base=0.0, hub_h=0.16):
     prism(m, gear_outline(0, 0, radius, depth, teeth), 0, 0, base, base + height, "G3_Gold", "G3_Gold", bottom=True)
-    # 内側の一段低い板（暗い真鍮）と、軸
+    # 内側の一段高い板（白）と、軸
     ring(m, 0, 0, hub_r * 1.6, radius - depth - 0.25, base + height, base + height + 0.03, "G3_Brass")
-    cylinder(m, 0, 0, hub_r, base, base + height + 0.16, "G3_Steel", "G3_Steel", n=32)
+    cylinder(m, 0, 0, hub_r, base, base + height + hub_h, "G3_Steel", "G3_Steel", n=32)
     if glow_r:
         ring(m, 0, 0, glow_r - 0.07, glow_r + 0.07, base + height + 0.03, base + height + 0.05, "G3_GlowCyan")
 
 
 def walled_block(m, x0, x1, y0, y1, height, trim="G3_GlowCyan", plate="G3_Panel", body="G3_Steel"):
-    box(m, x0, x1, y0, y1, 0.0, height, body)
+    box(m, x0, x1, y0, y1, FLOOR, height, body)
     inset = 0.1
     box(m, x0 + inset, x1 - inset, y0 + inset, y1 - inset, height, height + 0.06, plate)
     w = 0.12
@@ -212,11 +218,11 @@ def make_static():
     m = Mesh()
     tile = 0.5  # 2m で1枚のタイル
     m.begin("Floor_Main")
-    box(m, -17.5, 17.5, -12.5, 7.5, -0.4, 0.0, "G3_Steel", "G3_Floor", uv_scale=tile)
+    box(m, -17.5, 17.5, -12.5, 7.5, FLOOR - 0.4, FLOOR, "G3_Steel", "G3_Floor", uv_scale=tile)
     m.begin("Floor_LaneTop")
-    box(m, 1, 7, 7.5, 12, -0.4, 0.0, "G3_Steel", "G3_Floor", uv_scale=tile)
+    box(m, 1, 7, 7.5, 12, FLOOR - 0.4, FLOOR, "G3_Steel", "G3_Floor", uv_scale=tile)
     m.begin("Floor_LaneBottom")
-    box(m, -7, -1, -17, -12.5, -0.4, 0.0, "G3_Steel", "G3_Floor", uv_scale=tile)
+    box(m, -7, -1, -17, -12.5, FLOOR - 0.4, FLOOR, "G3_Steel", "G3_Floor", uv_scale=tile)
     for name, (x0, x1, y0, y1) in ISLANDS.items():
         m.begin(name)
         walled_block(m, x0, x1, y0, y1, 1.0)
@@ -228,19 +234,20 @@ def make_static():
         walled_block(m, x0, x1, y0, y1, 1.4, trim="G3_GlowPink", plate="G3_Brass")
     for name, (x, y) in PORTALS.items():
         m.begin(name)
-        cylinder(m, x, y, 1.9, 0.0, 0.03, "G3_Steel", "G3_Panel")
-        ring(m, x, y, 1.3, 1.7, 0.03, 0.07, "G3_GlowPink")
+        cylinder(m, x, y, 1.9, FLOOR, FLOOR + 0.03, "G3_Steel", "G3_Panel")
+        ring(m, x, y, 1.3, 1.7, FLOOR + 0.03, FLOOR + 0.07, "G3_GlowPink")
     m.begin("Deco_PlazaRing")
-    ring(m, CORE[0], CORE[1], 3.8, 3.95, 0.0, 0.05, "G3_GlowCyan", n=96)
+    ring(m, CORE[0], CORE[1], 3.8, 3.95, FLOOR, FLOOR + 0.05, "G3_GlowCyan", n=96)
     m.write(os.path.join(OUT, "Stage03_Static.obj"))
 
 
 def make_parts():
     parts = {
         # 名前: 作り方
-        "Gear_Gate": lambda m: gear(m, 2.0, 16, 0.22, 0.18, 0.45, glow_r=1.2),
+        # 敵が上を歩く歯車は低く（いちばん上でも高さ -0.03。砲台・キャラの絵・敵が上に見える）
+        "Gear_Gate": lambda m: gear(m, 2.0, 16, 0.22, 0.07, 0.45, glow_r=1.2, base=FLOOR, hub_h=0.05),
         "Gear_Small": lambda m: gear(m, 1.5, 12, 0.2, 0.2, 0.35, glow_r=0.9),
-        "Gear_Core": lambda m: gear(m, 3.6, 24, 0.3, 0.12, 0.9, glow_r=2.5),
+        "Gear_Core": lambda m: gear(m, 3.6, 24, 0.3, 0.06, 0.9, glow_r=2.5, base=FLOOR, hub_h=0.04),
         "Gear_Big3": lambda m: gear(m, 3.0, 18, 0.32, 0.5, 0.6, glow_r=1.9),
         "Gear_Big4": lambda m: gear(m, 4.0, 24, 0.36, 0.55, 0.8, glow_r=2.6),
         "Gear_Big45": lambda m: gear(m, 4.5, 28, 0.38, 0.6, 0.9, glow_r=3.0),
@@ -251,20 +258,20 @@ def make_parts():
         make(m)
         m.write(os.path.join(OUT, name + ".obj"))
 
-    # 歯車の棒（腕の見た目。長さ 4.6・太さ 0.7）。真ん中（半径 1.25）は砲台が乗るので空ける（当たり判定は 1 本の棒のまま）。
+    # 歯車の棒（腕の見た目。長さ 4.6・太さ 0.7）。高さ 0 より下なので、真ん中の砲台・キャラの絵の下を通る。
     m = Mesh()
     m.begin("Gate_Bar")
-    for x0, x1 in ((-2.3, -1.25), (1.25, 2.3)):
-        box(m, x0, x1, -0.35, 0.35, 0.18, 0.85, "G3_Brass", bottom=True)
-        box(m, x0 + 0.1, x1 - 0.1, -0.12, 0.12, 0.85, 0.92, "G3_GlowCyan")
-    for x in (-2.3, -1.45, 1.25, 2.1):
-        box(m, x, x + 0.2, -0.4, 0.4, 0.18, 0.95, "G3_Gold")
+    # 歯車の内側（白）の上でも目立つように水色の棒、真ん中に白い線、両はしは桃色
+    box(m, -2.3, 2.3, -0.35, 0.35, FLOOR, -0.035, "G3_Steel", bottom=True)
+    box(m, -2.15, 2.15, -0.12, 0.12, -0.035, -0.025, "G3_Brass")
+    for x in (-2.3, 2.1):
+        box(m, x, x + 0.2, -0.4, 0.4, FLOOR, -0.02, "G3_Gold")
     m.write(os.path.join(OUT, "Gate_Bar.obj"))
 
     # 動く壁（1.6 × 1.6、高さ 1.04 = 島の上の板の下に隠れる）
     m = Mesh()
     m.begin("Piston")
-    box(m, -0.8, 0.8, -0.8, 0.8, 0.0, 1.0, "G3_Hazard", bottom=True)
+    box(m, -0.8, 0.8, -0.8, 0.8, FLOOR, 1.0, "G3_Hazard", bottom=True)
     for y in (-0.45, 0.05):
         box(m, -0.7, 0.7, y, y + 0.3, 1.0, 1.04, "G3_Steel")
     m.write(os.path.join(OUT, "Piston.obj"))
@@ -294,17 +301,19 @@ def png(path, width, height, pixel):
 
 def make_tile():
     size = 256
+    cell = size // 2  # 2m の絵に 1m のタイルを 2×2 枚
+
     def pixel(x, y):
-        # 1枚のタイル: 明るい面・ふちの溝・内側の細い線
-        edge = min(x, y, size - 1 - x, size - 1 - y)
+        # 洗面所のタイル: ミント色の面・白い目地・角の丸み・左上のつや
+        lx, ly = x % cell, y % cell
+        edge = min(lx, ly, cell - 1 - lx, cell - 1 - ly)
+        if edge < 3:
+            return (250, 252, 250)
         if edge < 5:
-            return (96, 104, 150)
-        if edge < 9:
-            return (150, 158, 205)
-        if 40 <= edge < 43:
-            return (196, 204, 238)
-        shade = 222 - int(10 * (x + y) / (2 * size))
-        return (shade - 22, shade - 12, min(255, shade + 14))
+            return (214, 238, 232)
+        shine = max(0.0, 1.0 - (lx + ly) / (cell * 0.9))
+        base = (196, 244, 233)
+        return tuple(min(255, int(c + (255 - c) * 0.35 * shine)) for c in base)
     png(os.path.join(OUT, "TX_G3_FloorTile.png"), size, size, pixel)
 
 

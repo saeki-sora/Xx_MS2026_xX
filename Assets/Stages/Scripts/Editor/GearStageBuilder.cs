@@ -39,6 +39,9 @@ namespace MS2026.Stages.EditorTools
         private static readonly Vector2 NavAreaCenter = new Vector2(0f, -2.5f);
         private static readonly Vector2 NavAreaSize = new Vector2(36f, 29f);
 
+        // スマッシュボールを最初に置く所（上の通路の真ん中。浮いて動き回り、浮いている間は敵の壁にならない）
+        private static readonly Vector2 SmashBallPosition = new Vector2(0f, 4.5f);
+
         private static readonly (string id, Vector2 position)[] SpawnPoints =
         {
             ("Spawn_Top", new Vector2(4f, 10.5f)),
@@ -87,9 +90,11 @@ namespace MS2026.Stages.EditorTools
             new Vector2(-8f, 1f), new Vector2(9f, 1f), new Vector2(-9f, -6f), new Vector2(8f, -6f)
         };
 
-        private const float GateFirstTurn = 8f;
+        // 門が回る間隔は、湧いた敵が開いている門まで歩き切れる長さにする（2026-11-05）。8 秒ごとだと、敵が門へ向かう途中で
+        // 開く門が反対側に入れ替わって引き返すのをくり返し、門のあたりで止まり続けた（群れの動きを手元でまねて確かめた: 20 秒で詰まりが半分以下）。
+        private const float GateFirstTurn = 20f;
         private const float GateTurnSeconds = 1.5f;
-        private const float GateWaitSeconds = 8f;
+        private const float GateWaitSeconds = 20f;
         private const float GateRadius = 2f;
         private const float BarLength = 4.6f;
         private const float BarThickness = 0.7f;
@@ -108,6 +113,7 @@ namespace MS2026.Stages.EditorTools
                   "・外まわりの通路と、コアのある広場へ入る左右の通路（壁はビームを通す）\n" +
                   "・通路の 4 か所に、決まった時刻に 90° 回って道を開け閉めする歯車の門\n" +
                   "・左右の通路に、出たり引っ込んだりする動く壁\n" +
+                  "・スマッシュボール（ステージ1 から写す。浮いて動き回る）\n" +
                   "・上と下の湧き位置、コア・砲台 4 台の目印（砲台は歯車の門の上）、カメラの視点（ステージ2 から写す）\n" +
                   "・ステージ背景スタジオの背景（仮の 3D モデル: 床・壁・歯車）\n\n" +
                   "ルーレットにステージ3として足します。";
@@ -161,6 +167,7 @@ namespace MS2026.Stages.EditorTools
             var director = CopyFrom<EnemySpawnDirector>(source, scene, content.transform, "EnemySpawnDirector", report);
             CopyFrom<FortressMatchRules>(source, scene, null, "[Fortress] Match Rules", report);
             var stageSet = SetUpStageRoot(source, report);
+            report.Add($"背景のマテリアル {GearStageModels.SyncStageMaterials(stageSet)} 個の色・つやを、今の見た目（淡い色のプラスチック）に合わせた。");
 
             if (field != null)
             {
@@ -206,6 +213,7 @@ namespace MS2026.Stages.EditorTools
             var gates = BuildGates(gimmicks.transform, stageSet, materials);
             BuildDecoGears(gimmicks.transform, gates, stageSet, materials);
             BuildPistons(obstacles.transform, stageSet, materials);
+            CopySmashBall(source, obstacles.transform, report);
             report.Add($"歯車の門 {Gates.Length} 個: {GateFirstTurn:0}秒から {GateTurnSeconds + GateWaitSeconds:0.#}秒ごとに 90° 回る（最初は左上・右下が開き、右上・左下が閉じている）。");
             report.Add("動く壁 2 個: 左右の通路に出たり引っ込んだりする（通れる幅 4m → 1.8m）。見た目だけの歯車: 真ん中の大歯車・島の上の小歯車 4・背景の大歯車 4。");
 
@@ -374,6 +382,23 @@ namespace MS2026.Stages.EditorTools
             }
         }
 
+        /// <summary>Stage1 のスマッシュボール（設定・演出ごと）を写して、上の通路に置く（ステージ2 と同じ作り）。浮いて動く範囲は経路の範囲に合わせる設定のまま。</summary>
+        private static void CopySmashBall(Scene source, Transform parent, List<string> report)
+        {
+            var original = FindIn<SmashBallModule>(source).FirstOrDefault();
+            if (original == null)
+            {
+                report.Add("Stage1 にスマッシュボールが無かったので、置かなかった。");
+                return;
+            }
+
+            var copy = Object.Instantiate(original.gameObject);
+            copy.name = "SmashBall_0";
+            copy.transform.SetParent(parent, false);
+            copy.transform.position = new Vector3(SmashBallPosition.x, SmashBallPosition.y, 0f);
+            report.Add($"Stage1 のスマッシュボールを写して SmashBall_0 を {SmashBallPosition} に置いた。");
+        }
+
         private static GimmickGear NewGear(Transform parent, string name, Vector2 position, float z, float angle)
         {
             var go = new GameObject(name);
@@ -408,7 +433,7 @@ namespace MS2026.Stages.EditorTools
 
             plan = AssetDatabase.LoadAssetAtPath<WavePlan>(WavePlanPath);
             plan.memo = "仮のレベルデザイン（Claude 2026-10-29）。Stage2 の計画（目標 120/250/400/530/700）を写し、" +
-                        "左側の湧き位置の行を上（Spawn_Top）、右側の行を下（Spawn_Bottom）にした。歯車の門は 8 秒から 9.5 秒ごとに回る（仕掛けタブ）。";
+                        $"左側の湧き位置の行を上（Spawn_Top）、右側の行を下（Spawn_Bottom）にした。歯車の門は {GateFirstTurn:0} 秒から {GateTurnSeconds + GateWaitSeconds:0.#} 秒ごとに回る（仕掛けタブ）。";
             for (var w = 0; w < plan.waves.Count; w++)
             {
                 var wave = plan.waves[w];

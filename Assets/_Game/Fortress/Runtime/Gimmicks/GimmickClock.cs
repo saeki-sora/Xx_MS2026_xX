@@ -136,14 +136,17 @@ namespace MS2026.Fortress
             return list;
         }
 
-        /// <summary>仕掛けの時計が進む段階か（ウェーブの計画があるとき）。</summary>
+        /// <summary>
+        /// 仕掛けの時計が進む段階か（ウェーブの計画があるとき）。
+        /// 撤退（WAVE CLEAR の後、残りの敵が画面の外へ逃げる間）は止める（2026-11-05）。逃げる道は撤退の始めに 1 回だけ計算されるので、
+        /// その間に門が閉じると、敵が閉じた棒に向かって押し続けて動かなくなる（敵の仕組みは変えず、仕掛けの側で合わせる）。
+        /// </summary>
         public static bool RunsInPhase(WavePhase phase)
         {
             switch (phase)
             {
                 case WavePhase.Announce:
                 case WavePhase.Combat:
-                case WavePhase.Retreat:
                 case WavePhase.Break:
                     return true;
                 default:

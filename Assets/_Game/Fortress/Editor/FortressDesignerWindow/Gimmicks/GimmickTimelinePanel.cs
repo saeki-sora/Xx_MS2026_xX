@@ -93,7 +93,7 @@ namespace MS2026.Fortress.EditorTools
 
         private void DrawPlayControls()
         {
-            var state = GimmickClock.Running ? (GimmickClock.Paused ? "止めています（テスト）" : "進んでいます") : "止まっています（試合の前後・始まりの演出中）";
+            var state = GimmickClock.Running ? (GimmickClock.Paused ? "止めています（テスト）" : "進んでいます") : "止まっています（試合の前後・始まりの演出中・敵が逃げている間）";
             EditorGUILayout.LabelField("仕掛けの時計", $"{GimmickClock.Time:0.0}秒　{state}　速さ ×{GimmickClock.Speed:0.#}");
             if (!GimmickClock.CanControl)
             {

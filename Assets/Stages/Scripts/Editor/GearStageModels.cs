@@ -45,20 +45,22 @@ namespace MS2026.Stages.EditorTools
             }
         }
 
-        // 名前: 色・金属っぽさ・つや・光る色（0 なら光らない）
+        // 名前: 色・金属っぽさ・つや・光る色（0 なら光らない）。
+        // ほかのステージ（今の時代の洗面台）に合わせて、つやのある淡い色のプラスチック（ステージ1 の plastic_* と同じ金属 0・つや 0.8）にした（2026-11-05）。
+        // 名前は最初の版のまま（OBJ の usemtl・取り込み設定のつながりを切らないため）: Gold = 歯車（桃色）、Brass = 白、Steel = 水色、Panel = うす紫。
         private static readonly (string name, Color color, float metallic, float smoothness, Color emission)[] Specs =
         {
-            ("G3_Floor", new Color(0.70f, 0.74f, 0.92f), 0.1f, 0.55f, Color.black),
-            ("G3_Gold", new Color(0.88f, 0.64f, 0.27f), 0.85f, 0.6f, Color.black),
-            ("G3_Brass", new Color(0.42f, 0.29f, 0.13f), 0.8f, 0.45f, Color.black),
-            ("G3_Steel", new Color(0.17f, 0.18f, 0.30f), 0.6f, 0.5f, Color.black),
-            ("G3_Panel", new Color(0.26f, 0.20f, 0.42f), 0.3f, 0.45f, Color.black),
-            ("G3_GlowCyan", new Color(0.25f, 0.90f, 1.00f), 0f, 0.3f, new Color(0.25f, 0.9f, 1f) * 2.2f),
-            ("G3_GlowPink", new Color(1.00f, 0.35f, 0.85f), 0f, 0.3f, new Color(1f, 0.35f, 0.85f) * 2.2f),
-            ("G3_Hazard", new Color(1.00f, 0.48f, 0.12f), 0.2f, 0.5f, new Color(1f, 0.4f, 0.05f) * 0.35f),
+            ("G3_Floor", new Color(0.77f, 0.96f, 0.92f), 0f, 0.8f, Color.black),
+            ("G3_Gold", new Color(1.00f, 0.73f, 0.95f), 0f, 0.8f, Color.black),
+            ("G3_Brass", new Color(0.99f, 1.00f, 0.90f), 0f, 0.8f, Color.black),
+            ("G3_Steel", new Color(0.76f, 0.83f, 1.00f), 0f, 0.8f, Color.black),
+            ("G3_Panel", new Color(0.88f, 0.82f, 1.00f), 0f, 0.8f, Color.black),
+            ("G3_GlowCyan", new Color(0.63f, 1.00f, 0.76f), 0f, 0.8f, new Color(0.63f, 1f, 0.76f) * 0.35f),
+            ("G3_GlowPink", new Color(1.00f, 0.55f, 0.85f), 0f, 0.8f, new Color(1f, 0.55f, 0.85f) * 0.4f),
+            ("G3_Hazard", new Color(1.00f, 0.80f, 0.42f), 0f, 0.8f, Color.black),
         };
 
-        /// <summary>取り込みの設定とマテリアルをそろえる（何度呼んでもよい）。</summary>
+        /// <summary>取り込みの設定とマテリアルをそろえる（何度呼んでもよい。今あるマテリアルの色・つやも Specs に合わせ直す）。</summary>
         public static Materials Prepare(string modelFolder, string materialFolder, List<string> report)
         {
             StageAssets.EnsureFolder(materialFolder);
@@ -69,26 +71,24 @@ namespace MS2026.Stages.EditorTools
             {
                 var path = $"{materialFolder}/{name}.mat";
                 var material = AssetDatabase.LoadAssetAtPath<Material>(path);
-                if (material == null)
+                var created = material == null;
+                if (created)
                 {
                     material = new Material(shader) { name = name };
-                    material.SetColor("_BaseColor", color);
-                    material.SetFloat("_Metallic", metallic);
-                    material.SetFloat("_Smoothness", smoothness);
                     if (name == "G3_Floor" && tile != null)
                     {
                         material.SetTexture("_BaseMap", tile);
-                        material.SetColor("_BaseColor", Color.white);
                     }
+                }
 
-                    if (emission.maxColorComponent > 0f)
-                    {
-                        material.EnableKeyword("_EMISSION");
-                        material.SetColor("_EmissionColor", emission);
-                        material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
-                    }
-
+                ApplySpec(material, name == "G3_Floor" && material.GetTexture("_BaseMap") != null, color, metallic, smoothness, emission);
+                if (created)
+                {
                     AssetDatabase.CreateAsset(material, path);
+                }
+                else
+                {
+                    EditorUtility.SetDirty(material);
                 }
 
                 materials.ByName[name] = material;
@@ -105,6 +105,64 @@ namespace MS2026.Stages.EditorTools
 
             report.Add($"3D モデル（{modelFolder}）の取り込み設定を {count} 個直した。マテリアルは {materialFolder}。");
             return materials;
+        }
+
+        /// <summary>
+        /// ステージの背景（StageSet）のフォルダにある、専用シェーダーへ切り替えた後のマテリアル（G3_*_Stage など）の色・つやも Specs に合わせる。
+        /// 背景はもうあると作り直さないので、見た目の色を変えたときはこれで追いつかせる。直した数を返す。
+        /// </summary>
+        public static int SyncStageMaterials(StageSet set)
+        {
+            if (set == null)
+            {
+                return 0;
+            }
+
+            var count = 0;
+            var folder = StageAssetFactory.FolderOf(set);
+            foreach (var guid in AssetDatabase.FindAssets("t:Material", new[] { folder }))
+            {
+                var material = AssetDatabase.LoadAssetAtPath<Material>(AssetDatabase.GUIDToAssetPath(guid));
+                if (material == null)
+                {
+                    continue;
+                }
+
+                foreach (var (name, color, metallic, smoothness, emission) in Specs)
+                {
+                    if (!material.name.StartsWith(name + "_"))
+                    {
+                        continue;
+                    }
+
+                    var textured = material.HasProperty("_BaseMap") && material.GetTexture("_BaseMap") != null;
+                    ApplySpec(material, textured, color, metallic, smoothness, emission);
+                    EditorUtility.SetDirty(material);
+                    count++;
+                    break;
+                }
+            }
+
+            AssetDatabase.SaveAssets();
+            return count;
+        }
+
+        /// <summary>色・金属っぽさ・つや・光る色を入れる。絵（タイル）があるときは、絵の色をそのまま出す（色は白）。</summary>
+        private static void ApplySpec(Material material, bool textured, Color color, float metallic, float smoothness, Color emission)
+        {
+            material.SetColor("_BaseColor", textured ? Color.white : color);
+            material.SetFloat("_Metallic", metallic);
+            material.SetFloat("_Smoothness", smoothness);
+            material.SetColor("_EmissionColor", emission);
+            if (emission.maxColorComponent > 0f)
+            {
+                material.EnableKeyword("_EMISSION");
+                material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
+            }
+            else
+            {
+                material.DisableKeyword("_EMISSION");
+            }
         }
 
         private static Texture2D PrepareTile()
