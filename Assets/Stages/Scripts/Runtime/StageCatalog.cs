@@ -29,6 +29,11 @@ namespace MS2026.Stages
         [Tooltip("ON なら、ルーレットで前回と同じステージは選ばない（ルーレットに出るステージが 2 つ以上のとき）。")]
         public bool avoidRepeat = true;
 
+        [Tooltip("（仮）ルーレットは回るが、必ずこのステージで止まる（上の一覧の何番目か。1 が一番上。0 で OFF＝ランダム）。\n" +
+                 "ユーザー決定 2026-11-05「今は仮で、ルーレットの結果を1しか出ないように」。ステージがそろったら 0 に戻す。")]
+        [Min(0)]
+        public int fixedStageNumber;
+
         [Tooltip("ステージ抽選のルーレットの設定。")]
         public StageRouletteSettings roulette = new StageRouletteSettings();
 
@@ -131,6 +136,13 @@ namespace MS2026.Stages
         /// <summary>ルーレットで選ぶ（ランダム）。選べるステージが無ければ -1。previous は前回のステージ（無ければ -1）。</summary>
         public int PickRandom(int previous)
         {
+            // （仮）止まるステージを決めてあるときは、それを選ぶ（ルーレットの見た目はそのまま回る）。
+            var fixedIndex = fixedStageNumber - 1;
+            if (fixedStageNumber > 0 && IsInRoulette(fixedIndex))
+            {
+                return fixedIndex;
+            }
+
             var eligible = new bool[Count];
             for (var i = 0; i < eligible.Length; i++)
             {

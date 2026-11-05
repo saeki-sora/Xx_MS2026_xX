@@ -18,6 +18,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 889f228d605a57b418646c933b59b0a6, type: 2}
   defaultStageIndex: 1
   avoidRepeat: 1
+  fixedStageNumber: 1
   roulette:
     enabled: 1
     spinSeconds: 3.6
