@@ -29,3 +29,8 @@ MonoBehaviour:
   spriteScale: 0.95
   spriteOffset: {x: 0, y: 30}
   icon: {fileID: 21300000, guid: fa2e8e67fa5a40c4b858989c9d8d20f7, type: 3}
+  buttonOn: {fileID: 21300000, guid: 0bdc398d718a80f429927a8447321806, type: 3}
+  buttonOff: {fileID: 21300000, guid: 971173239280eaa41a07242660a3bf7e, type: 3}
+  rowBase: {fileID: 21300000, guid: 4466da2499436e440ae5ae85bd1804b3, type: 3}
+  mainBase: {fileID: 21300000, guid: b4eecc18e542f81439776b037a516207, type: 3}
+  skillVideo: {fileID: 0}

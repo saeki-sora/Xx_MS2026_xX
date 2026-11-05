@@ -60,6 +60,22 @@ namespace MS2026.CharacterSelect
         [Tooltip("画面の下の丸（1P〜4P）に出す顔の絵（色はかけず絵のまま）。空なら立ち絵（立ち絵の色つき）を使い、それも空なら名前の1文字目。")]
         public Sprite icon;
 
+        [Header("キャラ選択の画面の絵")]
+        [Tooltip("画面の下に並ぶキャラのボタン（自分のカーソルが乗っているとき。大きく光る絵）。")]
+        public Sprite buttonOn;
+
+        [Tooltip("画面の下に並ぶキャラのボタン（ふだん）。")]
+        public Sprite buttonOff;
+
+        [Tooltip("右に並ぶ「ほかの人の欄」の土台（このキャラのミニキャラ入り）。このキャラを選んでいる人の欄に使う。")]
+        public Sprite rowBase;
+
+        [Tooltip("自分の大きい区画の土台（キャラの色ごとの絵）。空なら区画に入れてある絵のまま。\n区画の「土台の色の決め方」が「キャラの色」のときだけ使う。")]
+        public Sprite mainBase;
+
+        [Tooltip("右のモニターで流すスキルの動画（mp4 など。音は出さず、くり返し流す）。空なら立ち絵と「動画は準備中」を出す。")]
+        public UnityEngine.Video.VideoClip skillVideo;
+
         /// <summary>画面に出す名前（空ならアセットの名前）。</summary>
         public string DisplayName => string.IsNullOrEmpty(displayName) ? name : displayName;
 

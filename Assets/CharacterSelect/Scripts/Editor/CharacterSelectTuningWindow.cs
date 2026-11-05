@@ -9,7 +9,7 @@ namespace MS2026.CharacterSelect.EditorTools
 {
     /// <summary>
     /// メニュー「Tools/キャラ選択/見た目と数値の調整」: キャラ選択の見た目と数値を1か所で変える画面。
-    /// ・キャラ: 名前・色・立ち絵・下の丸の顔・スキル・能力（キャラのファイルを直接書き換える）
+    /// ・キャラ: 名前・色・立ち絵・ボタン・欄の土台・スキルの動画・スキル・能力（キャラのファイルを直接書き換える）
     /// ・画像の差し替え: 仮の絵を、ボタンで選んだ画像ファイルで上書き（使っている所は全部その絵になる）／仮の絵に戻す
     /// ・数値: よく触る数値を、4つの区画・4つの丸の分などまとめて変える（開いているキャラ選択のシーンの物を書き換える）
     /// </summary>
@@ -93,7 +93,12 @@ namespace MS2026.CharacterSelect.EditorTools
                 Field(serialized, "displayName", "名前");
                 Field(serialized, "spriteTint", "色（立ち絵にかける色。仮のキューブはこの色）");
                 Field(serialized, "sprite", "立ち絵（2Dの絵）");
-                Field(serialized, "icon", "下の丸の顔（空なら立ち絵）");
+                Field(serialized, "icon", "ミニキャラの顔（今の画面では使っていない）");
+                Field(serialized, "buttonOn", "下のボタン（カーソルが乗ったとき）");
+                Field(serialized, "buttonOff", "下のボタン（ふだん）");
+                Field(serialized, "rowBase", "ほかの人の欄の土台（ミニキャラ入り）");
+                Field(serialized, "mainBase", "自分の区画の土台（キャラの色にするときだけ）");
+                Field(serialized, "skillVideo", "スキルの動画（空なら「準備中」）");
                 Field(serialized, "skillName", "スキル名");
                 Field(serialized, "skillDescription", "スキルの説明");
                 Field(serialized, "stats", "能力の棒グラフ");
@@ -204,7 +209,7 @@ namespace MS2026.CharacterSelect.EditorTools
             }
             else
             {
-                EditorGUILayout.HelpBox("4つの区画・4つの丸などは、まとめて同じ値になります。変えたらシーンを保存してください。\n" +
+                EditorGUILayout.HelpBox("3つの欄・キャラのボタンなどは、まとめて同じ値になります。変えたらシーンを保存してください。\n" +
                                         "シーンを組み立て直すときは「数値を引き継いで作り直す」を選ぶと、ここで変えた値が残ります。再生中に変えた値は、止めると元に戻ります。", MessageType.Info);
                 Section("ルール", controllers,
                     ("allowSameCharacter", "同じキャラを選べる"),
@@ -231,29 +236,44 @@ namespace MS2026.CharacterSelect.EditorTools
                     ("width", "線の太さ"),
                     ("texture", "歯磨き粉の絵"),
                     ("textureU", "しまの太さ（絵の横の範囲。狭いほど太い）"));
-                Section("区画（READY! など）", FindAll<PlayerPanel>(),
+                Section("自分の区画（READY! など）", FindAll<MainPlayerPanel>(),
+                    ("baseColorMode", "土台の色の決め方"),
+                    ("baseBySeat", "席ごとの土台の絵（1P〜4P）"),
                     ("stampSlamSeconds", "READY! を叩きつける秒数"),
                     ("stampSlamScale", "叩きつける前の大きさ"),
-                    ("areaTintAlpha", "区画の色の濃さ"),
-                    ("patternAlpha", "ドット柄の濃さ"),
-                    ("infoPanelAlpha", "説明の板の濃さ"),
+                    ("blockedAlpha", "選べないキャラの立ち絵の濃さ"),
                     ("bobPixels", "立ち絵のふわふわの幅"),
                     ("bobSpeed", "立ち絵のふわふわの速さ"));
-                Section("下の丸", FindAll<PlayerCircle>(),
-                    ("decidedRingScale", "READY のときの縁の太さ"),
-                    ("ringColor", "えらび中の縁の色"),
-                    ("inactiveAlpha", "参加していない丸の濃さ"));
-                Section("登場・GO!", FindAll<CharacterSelectView>(),
-                    ("entranceSeconds", "区画が滑り込む秒数"),
-                    ("entranceStagger", "区画どうしの出るずれ（秒）"),
-                    ("entranceDistance", "滑り込む距離（0 で動かない）"),
+                Section("スキル動画のモニター", FindAll<SkillMonitor>(),
+                    ("openSeconds", "決定して開く秒数"),
+                    ("closeSeconds", "取り消して閉じる秒数"),
+                    ("openAngle", "開ききる角度"),
+                    ("placeholderFormat", "動画が無いときの文字（{0} = スキル名）"));
+                Section("ほかの人の欄", FindAll<OtherPlayerRow>(),
+                    ("selectingColor", "「えらび中…」の色"),
+                    ("inactiveAlpha", "参加していない人の欄の濃さ"));
+                Section("キャラのボタン・札・矢印", FindAll<CharacterButtonRow>(),
+                    ("badgeOffset", "札の位置（ボタンの左上から）"),
+                    ("badgeSpacing", "札を横に並べる間隔"),
+                    ("arrowOffset", "矢印の位置（ボタンの右から）"),
+                    ("arrowBobPixels", "矢印の揺れ幅"),
+                    ("followSpeed", "札・矢印が移る速さ"),
+                    ("lockedTint", "ほかの人が決めたキャラのボタンの色"));
+                Section("キャラのボタン1つ", FindAll<CharacterButton>(),
+                    ("offSize", "ふだんの大きさ"),
+                    ("onSize", "カーソルが乗ったときの大きさ"),
+                    ("resizeSpeed", "大きさが替わる速さ"));
+                Section("決定のゲージ", FindAll<PushGauge>(),
+                    ("waitingPulseSpeed", "「他の社員を待ってね…」の明滅の速さ"));
+                Section("登場・ほかの人の欄・GO!", FindAll<CharacterSelectView>(),
+                    ("entranceSeconds", "画面の部分が滑り込む秒数"),
+                    ("entranceStagger", "部分どうしの出るずれ（秒）"),
+                    ("entranceDistance", "左右から滑り込む距離（0 で動かない）"),
+                    ("rowsStartAt", "モニターがどれだけ開いたら欄を出すか"),
+                    ("rowSeconds", "欄が滑り込む秒数"),
+                    ("rowStagger", "欄どうしの出るずれ（秒）"),
+                    ("rowSlideDistance", "欄が滑り込む距離"),
                     ("fadeOutSeconds", "1台で試すときのフェードの秒数"));
-                Section("漂う泡・2進数・キラキラ", FindAll<CharacterSelectAmbient>(),
-                    ("bubbleCount", "泡の数"),
-                    ("bubbleColor", "泡の色"),
-                    ("digitCount", "2進数の数"),
-                    ("digitColor", "2進数の色"),
-                    ("sparkleCount", "キラキラの数"));
                 if (GUILayout.Button("シーンを保存", GUILayout.Height(26f)))
                 {
                     EditorSceneManager.SaveOpenScenes();

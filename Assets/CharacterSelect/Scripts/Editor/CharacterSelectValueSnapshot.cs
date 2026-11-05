@@ -16,8 +16,9 @@ namespace MS2026.CharacterSelect.EditorTools
     {
         private static readonly Type[] Types =
         {
-            typeof(CharacterSelectController), typeof(CharacterSelectView), typeof(PlayerPanel), typeof(PlayerCircle), typeof(PlayerTag), typeof(StatBar),
-            typeof(CharacterSwapFx), typeof(PasteStroke), typeof(CharacterSelectAmbient), typeof(CharacterSelectBurst), typeof(CharacterSelectGlitch), typeof(CharacterSelectScroll)
+            typeof(CharacterSelectController), typeof(CharacterSelectView), typeof(MainPlayerPanel), typeof(OtherPlayerRow), typeof(CharacterButtonRow), typeof(CharacterButton),
+            typeof(SkillMonitor), typeof(PushGauge), typeof(StatBar),
+            typeof(CharacterSwapFx), typeof(PasteStroke), typeof(CharacterSelectBurst), typeof(CharacterSelectGlitch)
         };
 
         private readonly Dictionary<string, string> _json = new Dictionary<string, string>();

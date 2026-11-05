@@ -230,6 +230,22 @@ namespace MS2026.CharacterSelect
             return IsOnline && seat == _session.LocalSeat;
         }
 
+        /// <summary>
+        /// この画面で「自分」として左に大きく出す席。ネット対戦ならこのPCの席、1台で試すとき（4人とも自分）は 1P。
+        /// </summary>
+        public int MainSeat
+        {
+            get
+            {
+                if (IsOnline && CharacterSelectBoard.IsValidSeat(_session.LocalSeat))
+                {
+                    return _session.LocalSeat;
+                }
+
+                return 0;
+            }
+        }
+
         /// <summary>長く握るまでの進み具合（0〜1。このPCのプレイヤーだけ。ほかの人は 0）。</summary>
         public float HoldProgress(int seat)
         {
