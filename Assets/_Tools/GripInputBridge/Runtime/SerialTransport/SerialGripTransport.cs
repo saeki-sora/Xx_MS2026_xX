@@ -92,7 +92,11 @@ namespace MS2026.GripInputBridge.Transports
             _serialPort = new SerialPort(_config.serialPortName, _config.baudRate)
             {
                 ReadTimeout = 500,
-                NewLine = "\n"
+                NewLine = "\n",
+
+                // 「受け取る準備ができた」の合図（DTR）を出す。USB をマイコンが直接受け持つボード（Leonardo・Pro Micro・ESP32-S3・Pico など）は、
+                // これが無いと何も送ってこない（Arduino IDE のシリアルモニタは出すので、そこでは値が見える）。Uno は開いたときの再起動だけで、害は無い。
+                DtrEnable = true
             };
 
             var openSucceeded = TryOpenPort();
@@ -107,6 +111,12 @@ namespace MS2026.GripInputBridge.Transports
 
         /// <summary>COMポートを開けて受信を始められたか。falseなら(ポートが無い・使用中など)この入力元からは何も届かない。</summary>
         public bool IsPortOpen => _isRunning;
+
+        /// <summary>ポートを開けなかった理由（開けた・まだ試していなければ null）。ポートさがしの表示用。</summary>
+        public string OpenError { get; private set; }
+
+        /// <summary>ポートを開けなかったのが「ほかのソフトが使っている（アクセス拒否）」ためか。</summary>
+        public bool OpenErrorWasAccessDenied { get; private set; }
 
         /// <summary>このトランスポートが開いているポートの名前。</summary>
         public string PortName => _config.serialPortName;
@@ -250,6 +260,9 @@ namespace MS2026.GripInputBridge.Transports
             }
             catch (Exception ex)
             {
+                OpenError = ex.Message;
+                OpenErrorWasAccessDenied = ex is UnauthorizedAccessException;
+
                 // ここで例外を握りつぶさずログに残す(設計書13.2セルフチェック項目)。自動でさがすときは、さがす側がまとめて知らせる。
                 if (_logOpenError)
                 {

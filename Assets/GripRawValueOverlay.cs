@@ -8,6 +8,7 @@ using UnityEngine.InputSystem;
 /// 自作コントローラーから届いた「生の値」を画面の左上に出すデバッグ表示。<see cref="ArduinoSerialReader"/> が自分のGameObjectに付ける
 /// （手で付けなくてよい）。この部品が有効な間だけ描く（無効なら OnGUI も呼ばれないので負荷は無い）。
 /// 出すもの: ポート・状態、届いた1行そのまま（見えない文字は \r などで表示）、1秒あたりの行数、読めなかった行、
+/// 使うポートが決まるまでは、試したポートごとの様子（Bluetooth などの機器の種類・開けたか・何が届いたか）と次に確かめること、
 /// プレイヤーごとの「届いた値(0-1023)・センサー変換後(raw)・最終の握力(grip)・接続状態」。
 /// LAN で握力を配る使い方（起動オプション -grip-sensor N）のときは、自分のセンサー番号・放送の送り/受けの様子・LAN の4人分の値も出す。
 /// </summary>
@@ -26,6 +27,9 @@ public sealed class GripRawValueOverlay : MonoBehaviour
     private const float LineHeight = 30f;
     private const float Padding = 12f;
     private const float RateIntervalSeconds = 0.5f;
+
+    // 「次に確かめること」は長いので2行に折り返して出す。
+    private const int HintLines = 2;
 
     // 握力入力ブリッジのウィンドウと同じプレイヤー色。
     private static readonly Color[] PlayerColors =
@@ -52,6 +56,7 @@ public sealed class GripRawValueOverlay : MonoBehaviour
     private float _relayAcceptedPerSecond;
     private readonly List<(string text, bool warning)> _relayLines = new List<(string, bool)>();
     private GUIStyle _warning;
+    private GUIStyle _warningWrap;
 
     private void OnEnable()
     {
@@ -100,7 +105,11 @@ public sealed class GripRawValueOverlay : MonoBehaviour
 
         var hasSerial = reader.TryGetSerialDiagnostics(out var port, out var diagnostics);
         CollectRelayLines();
+        var portReports = hasSerial ? null : reader.PortReports;
+        var portHint = hasSerial ? null : reader.PortHint;
+        var portLineCount = portReports != null ? 1 + portReports.Count : 0;
         var lineCount = 4 + (hasSerial ? 3 : 0) + (hasSerial && diagnostics.LastRejectedLine != null ? 1 : 0) + _relayLines.Count +
+                        portLineCount + (portHint != null ? HintLines : 0) +
                         MS2026.GripInputBridge.GripInputBridgeConstants.PlayerCount;
         var panel = new Rect(Padding, Padding, PanelWidth, Padding * 2f + LineHeight * lineCount);
         DrawRect(panel, new Color(0f, 0f, 0f, 0.75f));
@@ -128,6 +137,24 @@ public sealed class GripRawValueOverlay : MonoBehaviour
                 GUI.Label(new Rect(x, y, width, LineHeight), $"読めなかった行: {GripSerialDiagnostics.ToVisibleText(diagnostics.LastRejectedLine)}", _mono);
                 y += LineHeight;
             }
+        }
+
+        // 使うポートが決まっていない間: 試したポートごとの様子（機器の種類・開けたか・何が届いたか）と、次に確かめること。
+        if (portReports != null)
+        {
+            GUI.Label(new Rect(x, y, width, LineHeight), $"ポートごとの様子（{reader.BaudRateInUse}bps で試しています）:", _label);
+            y += LineHeight;
+            foreach (var report in portReports)
+            {
+                GUI.Label(new Rect(x + 20f, y, width - 20f, LineHeight), report.ToText(), report.State == GripPortState.Readable ? _label : _mono);
+                y += LineHeight;
+            }
+        }
+
+        if (portHint != null)
+        {
+            GUI.Label(new Rect(x, y, width, LineHeight * HintLines), "→ " + portHint, _warningWrap);
+            y += LineHeight * HintLines;
         }
 
         foreach (var (text, warning) in _relayLines)
@@ -289,6 +316,7 @@ public sealed class GripRawValueOverlay : MonoBehaviour
         _title = new GUIStyle(_label) { fontStyle = FontStyle.Bold, fontSize = 22 };
         _warning = new GUIStyle(_label);
         _warning.normal.textColor = new Color(1f, 0.55f, 0.35f);
+        _warningWrap = new GUIStyle(_warning) { wordWrap = true };
         _mono = new GUIStyle(_label);
         var monoFont = Font.CreateDynamicFontFromOSFont(new[] { "Consolas", "MS Gothic", "Courier New" }, 20);
         if (monoFont != null)

@@ -304,6 +304,18 @@ public sealed class ArduinoSerialReader : MonoBehaviour
     private bool _warnedNotFound;
     private float _installedAt;
     private bool _warnedSilentPort;
+    private System.Collections.Generic.List<GripPortReport> _lastPortReports;
+    private string _lastLoggedPortSummary;
+
+    /// <summary>
+    /// ポートさがしで試した各ポートの様子（さがしている間は今の様子、見つからなかった後はそのときの様子）。
+    /// 使うポートが決まっていれば null（生の値の表示用）。
+    /// </summary>
+    public System.Collections.Generic.IReadOnlyList<GripPortReport> PortReports =>
+        _transport != null ? null : _search != null ? _search.GetReports() : _lastPortReports;
+
+    /// <summary>前のポートさがしで見つからなかったとき、次に何を確かめればよいかの一言（無ければ null。生の値の表示用）。</summary>
+    public string PortHint => _transport != null || _config == null ? null : GripPortReport.Hint(_lastPortReports, _config.baudRate);
 
     // 使えなくなったポートを閉じてから、さがし直すまでの秒数（閉じ終わる前に同じポートを開こうとして失敗しないように）。
     private const float ReopenDelaySeconds = 1f;
@@ -344,8 +356,9 @@ public sealed class ArduinoSerialReader : MonoBehaviour
     private void BeginPortSearch(bool firstTime)
     {
         // 自動さがしが OFF のとき（挿し直しを待つ間）は、設定したポートだけを試す。
-        var ports = GripPortCandidates.Build(_config.serialPortName, SerialGripTransport.GetAvailablePortNames(), autoFindPort);
-        _search = new SerialGripPortSearch(_config, ports, Mathf.RoundToInt(portSearchSeconds * 1000f), false);
+        var available = SerialGripTransport.GetAvailablePortNames();
+        var ports = GripPortCandidates.Build(_config.serialPortName, available, autoFindPort);
+        _search = new SerialGripPortSearch(_config, ports, Mathf.RoundToInt(portSearchSeconds * 1000f), false, available);
         _retryAt = -1f;
         if (firstTime)
         {
@@ -373,20 +386,27 @@ public sealed class ArduinoSerialReader : MonoBehaviour
 
         var found = _search.Result;
         var hasData = _search.ResultHasData;
-        var tried = _search.DescribePorts();
+        var reports = _search.GetReports();
         _search.Dispose();
         _search = null;
         if (found != null)
         {
+            _lastPortReports = null;
             Install(found, hasData);
             return;
         }
 
-        if (!_warnedNotFound)
+        // 見つからなかったときの各ポートの様子（F8 に出す。ログには最初の1回と、様子が変わったときに出す）。
+        _lastPortReports = reports;
+        var summary = GripPortReport.Summarize(reports);
+        if (!_warnedNotFound || summary != _lastLoggedPortSummary)
         {
             _warnedNotFound = true;
-            Debug.LogWarning($"[ArduinoSerialReader] 握力デバイスから値が届くポートがありませんでした（試したポート: {tried}）。{FallbackDescription}。" +
-                             (portRetrySeconds > 0f ? $"{portRetrySeconds:0.#}秒ごとにさがし直します。" : string.Empty));
+            _lastLoggedPortSummary = summary;
+            var hint = GripPortReport.Hint(reports, _config.baudRate);
+            Debug.LogWarning($"[ArduinoSerialReader] 握力デバイスから値が届くポートがありませんでした（試したポート: {summary}）。{FallbackDescription}。" +
+                             (portRetrySeconds > 0f ? $"{portRetrySeconds:0.#}秒ごとにさがし直します。" : string.Empty) +
+                             (hint != null ? "\n→ " + hint : string.Empty));
         }
 
         _retryAt = portRetrySeconds > 0f ? Time.unscaledTime + portRetrySeconds : -1f;
@@ -628,6 +648,10 @@ public sealed class ArduinoSerialReader : MonoBehaviour
     }
 
     public string DeviceStatusText => "実機通信が無効（Scripting Define Symbols に MS2026_GRIP_SERIAL_ENABLED が無い）";
+
+    public System.Collections.Generic.IReadOnlyList<GripPortReport> PortReports => null;
+
+    public string PortHint => null;
 
     public int BaudRateInUse => baudRate;
 #endif

@@ -24,6 +24,8 @@ namespace MS2026.GripInputBridge.Transports
             public string port;
             public GripDeviceConfig config;
             public Task<SerialGripTransport> opening;
+            public bool present;
+            public string devicePath;
         }
 
         private readonly List<Candidate> _candidates = new List<Candidate>();
@@ -31,11 +33,16 @@ namespace MS2026.GripInputBridge.Transports
         private readonly int _timeoutMs;
         private bool _disposed;
 
+        // さがし終わったときの各ポートの様子（終わった後は、閉じたポートを読まずにこれを返す）。
+        private List<GripPortReport> _finalReports;
+
         /// <param name="config">ポート名以外の設定（速さ・センサー特性など）。ポートごとに写しを作って使う。メインスレッドで呼ぶこと。</param>
         /// <param name="ports">試すポート（先頭ほど優先。<see cref="GripPortCandidates.Build"/>）。</param>
         /// <param name="timeoutMs">値が届くのを待つ時間（Arduino Uno はポートを開くと再起動するので 2000 以上）。</param>
         /// <param name="logFirstPortError">先頭のポートを開けなかったときにエラーを出すか。</param>
-        public SerialGripPortSearch(GripDeviceConfig config, IReadOnlyList<string> ports, int timeoutMs, bool logFirstPortError)
+        /// <param name="availablePorts">このPCに今あるポート（表示で「このPCに無い」を見分けるため。null なら全部あるとみなす）。</param>
+        public SerialGripPortSearch(GripDeviceConfig config, IReadOnlyList<string> ports, int timeoutMs, bool logFirstPortError,
+            IReadOnlyCollection<string> availablePorts = null)
         {
             if (config == null)
             {
@@ -43,6 +50,7 @@ namespace MS2026.GripInputBridge.Transports
             }
 
             _timeoutMs = Math.Max(0, timeoutMs);
+            var devicePaths = SerialPortDevicePaths.Read();
             for (var i = 0; i < ports.Count; i++)
             {
                 var portConfig = Object.Instantiate(config);
@@ -52,7 +60,9 @@ namespace MS2026.GripInputBridge.Transports
                 {
                     port = ports[i],
                     config = portConfig,
-                    opening = Task.Run(() => new SerialGripTransport(portConfig, logError))
+                    opening = Task.Run(() => new SerialGripTransport(portConfig, logError)),
+                    present = availablePorts == null || ContainsPort(availablePorts, ports[i]),
+                    devicePath = devicePaths.TryGetValue(ports[i], out var path) ? path : null
                 });
             }
 
@@ -78,6 +88,70 @@ namespace MS2026.GripInputBridge.Transports
             }
 
             return names.Count > 0 ? string.Join(", ", names) : "（COMポートがありません）";
+        }
+
+        /// <summary>試しているポートごとの今の様子（さがし終わった後は、終わったときの様子）。F8 の表示・ログ用。</summary>
+        public List<GripPortReport> GetReports()
+        {
+            if (_finalReports != null)
+            {
+                return _finalReports;
+            }
+
+            var reports = new List<GripPortReport>(_candidates.Count);
+            foreach (var candidate in _candidates)
+            {
+                reports.Add(Report(candidate));
+            }
+
+            return reports;
+        }
+
+        private static GripPortReport Report(Candidate candidate)
+        {
+            if (!candidate.present)
+            {
+                return new GripPortReport(candidate.port, GripPortState.NotPresent, candidate.devicePath);
+            }
+
+            var task = candidate.opening;
+            if (task.Status != TaskStatus.RanToCompletion)
+            {
+                return task.IsCompleted
+                    ? new GripPortReport(candidate.port, GripPortState.OpenFailed, candidate.devicePath, task.Exception?.GetBaseException().Message)
+                    : new GripPortReport(candidate.port, GripPortState.Opening, candidate.devicePath);
+            }
+
+            var transport = task.Result;
+            if (!transport.IsPortOpen)
+            {
+                return new GripPortReport(candidate.port, GripPortState.OpenFailed, candidate.devicePath, transport.OpenError,
+                    transport.OpenErrorWasAccessDenied);
+            }
+
+            if (transport.HasReceivedData)
+            {
+                return new GripPortReport(candidate.port, GripPortState.Readable, candidate.devicePath);
+            }
+
+            var diagnostics = transport.GetDiagnostics();
+            return diagnostics.LinesReceived > 0
+                ? new GripPortReport(candidate.port, GripPortState.Unreadable, candidate.devicePath, linesReceived: diagnostics.LinesReceived,
+                    lastRejectedLine: diagnostics.LastRejectedLine ?? diagnostics.LastLine)
+                : new GripPortReport(candidate.port, GripPortState.Silent, candidate.devicePath);
+        }
+
+        private static bool ContainsPort(IReadOnlyCollection<string> ports, string port)
+        {
+            foreach (var candidate in ports)
+            {
+                if (string.Equals(candidate?.Trim(), port, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>メインスレッドから毎フレーム呼ぶ。</summary>
@@ -135,6 +209,8 @@ namespace MS2026.GripInputBridge.Transports
 
         private void Finish(Candidate chosen, bool hasData)
         {
+            // 閉じる前に、各ポートの様子を控えておく（見つからなかったときの表示・ログ用）。
+            _finalReports = GetReports();
             IsDone = true;
             Result = chosen != null ? OpenedTransport(chosen) : null;
             ResultHasData = Result != null && hasData;
