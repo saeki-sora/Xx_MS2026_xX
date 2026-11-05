@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text;
+using System.Threading;
 
 namespace MS2026.Spectator
 {
@@ -27,6 +28,9 @@ namespace MS2026.Spectator
         public string StageKey = "";
 
         public int ExitCount;
+
+        /// <summary>いま観客が出してよい菌の残り（試合の上限）。これより多くは受け付けない。</summary>
+        public int Allowance;
 
         /// <summary>全員に同じ部分の JSON（地図・残り時間など）。</summary>
         public string SharedJson = "{}";
@@ -54,6 +58,7 @@ namespace MS2026.Spectator
         private readonly Stopwatch _clock = Stopwatch.StartNew();
         private readonly Func<double> _now;
         private volatile SpectatorBoard _board = new SpectatorBoard();
+        private int _queuedGerms;
         private volatile byte[] _page = Encoding.UTF8.GetBytes("<!doctype html><meta charset=utf-8><p>観客ページを準備しています</p>");
 
         public SpectatorApi(SpectatorRoster roster, Func<double> now = null)
@@ -79,7 +84,16 @@ namespace MS2026.Spectator
         }
 
         /// <summary>積まれた「送る」を1つ取り出す（ゲームの係が毎フレーム呼ぶ）。</summary>
-        public bool TryDequeue(out SpectatorOrder order) => _orders.TryDequeue(out order);
+        public bool TryDequeue(out SpectatorOrder order)
+        {
+            if (!_orders.TryDequeue(out order))
+            {
+                return false;
+            }
+
+            Interlocked.Add(ref _queuedGerms, -SpectatorConfig.GermsPerSend);
+            return true;
+        }
 
         public SpectatorResponse Handle(SpectatorRequest request)
         {
@@ -145,6 +159,11 @@ namespace MS2026.Spectator
                 return Reply(false, "exit", null);
             }
 
+            if (board.Allowance - Volatile.Read(ref _queuedGerms) < SpectatorConfig.GermsPerSend)
+            {
+                return Reply(false, "busy", null);
+            }
+
             if (color >= 0)
             {
                 _roster.SetColor(id, color);
@@ -159,6 +178,7 @@ namespace MS2026.Spectator
                     return Reply(false, "cooldown", me);
             }
 
+            Interlocked.Add(ref _queuedGerms, SpectatorConfig.GermsPerSend);
             _orders.Enqueue(new SpectatorOrder
             {
                 SpectatorId = id,

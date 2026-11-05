@@ -47,6 +47,12 @@ body{background:var(--bg);color:var(--ink);font-family:var(--round);font-size:15
 .cool-bar{height:6px;border-radius:6px;background:var(--line);overflow:hidden}
 .cool-bar i{display:block;height:100%;width:0;background:var(--me)}
 .toast{position:fixed;left:50%;top:44%;transform:translate(-50%,-50%);max-width:90%;text-align:center;font-weight:800;font-size:15px;background:rgba(6,9,14,.94);border:2px solid var(--me);border-radius:999px;padding:8px 18px;pointer-events:none;z-index:5}
+.boss{border:1px solid var(--line);border-radius:14px;padding:9px 12px;display:flex;flex-direction:column;gap:6px;background:var(--panel)}
+.boss-row{display:flex;justify-content:space-between;font-weight:800;font-size:14px}
+.boss-num{font-variant-numeric:tabular-nums;color:var(--mute)}
+.boss-bar{height:9px;border-radius:9px;background:var(--line);overflow:hidden}
+.boss-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#b48cff,#ff7eb6);transition:width .3s}
+.boss small{font-size:11.5px;color:var(--mute)}
 .offline{font-size:13px;color:var(--bg);background:var(--bad);border-radius:10px;padding:6px 10px;text-align:center}
 @media (prefers-reduced-motion:reduce){.exit .pulse{animation:none;display:none}}
 </style>
@@ -73,6 +79,11 @@ body{background:var(--bg);color:var(--ink);font-family:var(--round);font-size:15
     <div class="cool-bar"><i id="coolbar"></i></div>
     <span id="cooltxt">出口をえらんで送る</span>
   </div>
+  <div class="boss" id="boss" hidden>
+    <div class="boss-row"><span>ボス菌まで</span><span class="boss-num" id="bossnum"></span></div>
+    <div class="boss-bar"><i id="bossbar"></i></div>
+    <small id="bosstxt">みんなで送った数がたまると、ボス菌が1体出る</small>
+  </div>
 </div>
 <p class="toast" id="toast" hidden></p>
 <script>
@@ -94,6 +105,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--round);font-size:15
   var shared=null, me=null, mapKey=null, fails=0;
   var coolEnd=0, coolTotal=8, timeLeft=-1, timeAt=0, toastT=0, sending=false;
   var flies=[];
+  var lastBossDone=null;
   var exitPts=[];
 
   // 色
@@ -156,8 +168,21 @@ body{background:var(--bg);color:var(--ink);font-family:var(--round);font-size:15
     }else if(j.full){
       el('name').textContent='いまは満員です';
     }
-    if(shared.stage!==mapKey){mapKey=shared.stage;buildMap(shared.exits||[]);}
+    if(shared.stage!==mapKey){mapKey=shared.stage;buildMap(shared.exits||[]);lastBossDone=null;}
+    updateBoss();
     timeLeft=typeof shared.timeLeft==='number'?shared.timeLeft:-1;timeAt=performance.now();
+  }
+
+  function updateBoss(){
+    var box=el('boss');
+    if(!shared||typeof shared.poolMax!=='number'||shared.phase==='wait'&&!shared.stage){box.hidden=true;return;}
+    box.hidden=false;
+    var left=shared.bossLeft||0;
+    el('bossnum').textContent=left>0?(shared.pool+' / '+shared.poolMax):'出しきった';
+    el('bossbar').style.width=(left>0?Math.min(100,shared.pool/shared.poolMax*100):100)+'%';
+    el('bosstxt').textContent=left>0?('みんなで送った数がたまると、ボス菌が1体出る（この試合あと'+left+'体）'):'この試合のボス菌はもう全部出た！';
+    if(lastBossDone!==null&&shared.bossDone>lastBossDone)showToast('みんなのボス菌が出撃！');
+    lastBossDone=shared.bossDone;
   }
 
   function send(i){
@@ -176,6 +201,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--round);font-size:15
         if(r.reason==='cooldown')showToast('もう少し待ってね');
         else if(r.reason==='not_playing')showToast(shared.msg||'いまは送れません');
         else if(r.reason==='stage'){showToast('地図を新しくしました');mapKey=null;}
+        else if(r.reason==='busy')showToast('いまは菌が多すぎるみたい。少し待ってね');
         else showToast('送れませんでした');
       }
     },function(){sending=false;coolEnd=before;showToast('送れませんでした。もう一度タップしてね');});

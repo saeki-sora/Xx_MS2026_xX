@@ -17,6 +17,7 @@ namespace MS2026.Spectator
         private readonly List<Vector2> _mapPoints = new List<Vector2>();
         private EnemySpawnDirector _director;
         private EnemyTypeDefinition _germ;
+        private EnemyTypeDefinition _boss;
 
         /// <summary>このステージの見分け（シーン名・出口の数・読み込みごとに変わる番号）。</summary>
         public string Key { get; private set; } = "";
@@ -26,6 +27,9 @@ namespace MS2026.Spectator
         public int ExitCount => _exits.Count;
 
         public string GermName => _germ != null ? _germ.name : "";
+
+        /// <summary>ボスに使う種類（このステージのウェーブでいちばん HP が多い群衆の種類）。ふつうの菌と同じなら、菌をたくさん出してボスの代わりにする。</summary>
+        public bool HasDistinctBoss => _boss != null && _boss != _germ;
 
         /// <summary>湧き位置の係を探し直す（見つかっていて、まだあれば何もしない）。</summary>
         public void Refresh()
@@ -44,6 +48,7 @@ namespace MS2026.Spectator
             _exits.Clear();
             _mapPoints.Clear();
             _germ = null;
+            _boss = null;
             Key = "";
             if (_director == null)
             {
@@ -73,6 +78,13 @@ namespace MS2026.Spectator
                 .GroupBy(e => e.enemyType)
                 .OrderByDescending(g => g.Count())
                 .Select(g => g.Key)
+                .FirstOrDefault();
+
+            _boss = entries
+                .Where(e => e.enemyType != null && e.enemyType.simulationMode == EnemySimulationMode.Swarm)
+                .Select(e => e.enemyType)
+                .Distinct()
+                .OrderByDescending(t => t.maxHealth)
                 .FirstOrDefault();
 
             var core = Object.FindFirstObjectByType<CoreCrystalController>();
@@ -127,8 +139,8 @@ namespace MS2026.Spectator
 
         public string ExitId(int index) => index >= 0 && index < _exits.Count && _exits[index] != null ? _exits[index].ResolvedId : "";
 
-        /// <summary>その出口から count 体を出す（Host・オフラインだけ）。出せた数を返す。</summary>
-        public int Spawn(int exitIndex, int count)
+        /// <summary>その出口から count 体を出す（Host・オフラインだけ）。印 tag を付ける（0 なら付けない）。出せた数を返す。</summary>
+        public int Spawn(int exitIndex, int count, int tag)
         {
             if (!IsReady || exitIndex < 0 || exitIndex >= _exits.Count || _exits[exitIndex] == null)
             {
@@ -141,7 +153,25 @@ namespace MS2026.Spectator
                 return 0;
             }
 
-            return swarm.SpawnBurst(_germ, _exits[exitIndex].transform.position, 0.5f, count);
+            return swarm.SpawnBurst(_germ, _exits[exitIndex].transform.position, 0.5f, count, tag);
+        }
+
+        /// <summary>ボスを出す（別の種類が無ければ、ふつうの菌を fallbackCount 体）。出せた数を返す。</summary>
+        public int SpawnBoss(int exitIndex, int fallbackCount, int tag)
+        {
+            if (!IsReady || exitIndex < 0 || exitIndex >= _exits.Count || _exits[exitIndex] == null)
+            {
+                return 0;
+            }
+
+            var swarm = SwarmSystem.Current;
+            if (swarm == null)
+            {
+                return 0;
+            }
+
+            var at = _exits[exitIndex].transform.position;
+            return HasDistinctBoss ? (swarm.Spawn(_boss, at, tag) ? 1 : 0) : swarm.SpawnBurst(_germ, at, 0.8f, fallbackCount, tag);
         }
     }
 }

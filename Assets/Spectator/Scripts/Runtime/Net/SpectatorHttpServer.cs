@@ -59,6 +59,9 @@ namespace MS2026.Spectator
             }
 
             _running = true;
+
+            // スクリプトの読み直し（エディタ）でも必ず閉じる。閉じないと番号が Unity の中に開いたまま残る。
+            AppDomain.CurrentDomain.DomainUnload += OnDomainUnload;
             _acceptThread = new Thread(AcceptLoop) { IsBackground = true, Name = "Spectator HTTP accept" };
             _acceptThread.Start();
             return true;
@@ -174,8 +177,11 @@ namespace MS2026.Spectator
             }
         }
 
+        private void OnDomainUnload(object sender, EventArgs e) => Dispose();
+
         public void Dispose()
         {
+            AppDomain.CurrentDomain.DomainUnload -= OnDomainUnload;
             _running = false;
             try
             {

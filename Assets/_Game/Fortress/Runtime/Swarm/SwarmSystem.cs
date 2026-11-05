@@ -88,6 +88,9 @@ namespace MS2026.Fortress
 
             /// <summary>通信用の番号。-1ならHost(またはオフライン)として追加時に振る。Clientでは届いた番号。</summary>
             public int id;
+
+            /// <summary>印（0 なら無し）。配列に入ったとき <see cref="TaggedSpawnAdded"/> で知らせる。</summary>
+            public int tag;
         }
 
         private SwarmSettings _settings;
@@ -225,9 +228,16 @@ namespace MS2026.Fortress
         // ---------------------------------------------------------------
 
         /// <summary>敵を1体湧かせる（盾持ちならお供も一緒に）。上限に達していれば false。</summary>
-        public bool Spawn(EnemyTypeDefinition definition, Vector2 position)
+        public bool Spawn(EnemyTypeDefinition definition, Vector2 position) => Spawn(definition, position, 0);
+
+        /// <summary>
+        /// 敵を1体湧かせ、印（tag、0 以外）を付ける。実際に配列へ入って通信の番号が決まったとき
+        /// <see cref="TaggedSpawnAdded"/> に (印, 番号) が届く（Host・オフラインだけ。お供には印は付かない）。
+        /// 観客の菌（Assets/Spectator）が自分の群れを追いかけるのに使う。
+        /// </summary>
+        public bool Spawn(EnemyTypeDefinition definition, Vector2 position, int tag)
         {
-            if (!SpawnOne(definition, position))
+            if (!SpawnOne(definition, position, tag))
             {
                 return false;
             }
@@ -236,7 +246,10 @@ namespace MS2026.Fortress
             return true;
         }
 
-        private bool SpawnOne(EnemyTypeDefinition definition, Vector2 position)
+        /// <summary>印つきの敵が配列に入り、通信の番号が決まった（印, 番号）。<see cref="AgentsRemoved"/> の番号で消えたのが分かる。</summary>
+        public event System.Action<int, int> TaggedSpawnAdded;
+
+        private bool SpawnOne(EnemyTypeDefinition definition, Vector2 position, int tag = 0)
         {
             Initialize();
 
@@ -264,7 +277,8 @@ namespace MS2026.Fortress
                 speed = 1f + UnityEngine.Random.Range(-1f, 1f) * definition.swarm.speedVariance,
                 animStart = UnityEngine.Random.value * Mathf.Max(1, definition.swarm.frameCount),
                 face = new float2(Mathf.Cos(angle), Mathf.Sin(angle)),
-                id = -1
+                id = -1,
+                tag = tag
             });
 
             _stats.totalSpawned++;
@@ -272,12 +286,12 @@ namespace MS2026.Fortress
         }
 
         /// <summary>中心の周りに円状にばらけて count 体を一斉に湧かせる。ストレステスト用。</summary>
-        public int SpawnBurst(EnemyTypeDefinition definition, Vector2 center, float radius, int count)
+        public int SpawnBurst(EnemyTypeDefinition definition, Vector2 center, float radius, int count, int tag = 0)
         {
             var spawned = 0;
             for (var i = 0; i < count; i++)
             {
-                if (!Spawn(definition, center + UnityEngine.Random.insideUnitCircle * radius))
+                if (!Spawn(definition, center + UnityEngine.Random.insideUnitCircle * radius, tag))
                 {
                     break;
                 }
@@ -443,9 +457,14 @@ namespace MS2026.Fortress
                     continue;
                 }
 
-                if (!Storage.TryAdd(spawn.position, spawn.type, spawn.hp, spawn.speed, spawn.animStart, spawn.face, id) && spawn.id < 0)
+                var added = Storage.TryAdd(spawn.position, spawn.type, spawn.hp, spawn.speed, spawn.animStart, spawn.face, id);
+                if (!added && spawn.id < 0)
                 {
                     ReleaseNetId(id);
+                }
+                else if (added && spawn.tag != 0)
+                {
+                    TaggedSpawnAdded?.Invoke(spawn.tag, id);
                 }
             }
 

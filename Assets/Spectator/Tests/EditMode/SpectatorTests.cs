@@ -148,7 +148,7 @@ namespace MS2026.Spectator.Tests
         private static SpectatorApi MakeApi(double[] clock, string phase = SpectatorPhase.Play)
         {
             var api = new SpectatorApi(new SpectatorRoster(10, 8), () => clock[0]);
-            api.Board = new SpectatorBoard { Phase = phase, StageKey = "Stage1:3:1", ExitCount = 3, SharedJson = "{\"phase\":\"" + phase + "\"}" };
+            api.Board = new SpectatorBoard { Phase = phase, StageKey = "Stage1:3:1", ExitCount = 3, Allowance = 1000, SharedJson = "{\"phase\":\"" + phase + "\"}" };
             return api;
         }
 
@@ -214,6 +214,145 @@ namespace MS2026.Spectator.Tests
             Assert.AreEqual("\"a\\\"b\\u003cc\\u003e\\\\\"", text);
             Assert.AreEqual("1.5", new StringBuilder().Num(1.5).ToString());
             Assert.AreEqual("0", new StringBuilder().Num(double.NaN).ToString());
+        }
+
+        [Test]
+        public void Api_RefusesWhenMatchLimitIsUsedUp_CountingQueuedOrders()
+        {
+            var api = MakeApi(new[] { 0.0 });
+            var board = api.Board;
+            api.Board = new SpectatorBoard { Phase = board.Phase, StageKey = board.StageKey, ExitCount = 3, Allowance = SpectatorConfig.GermsPerSend + 5, SharedJson = "{}" };
+            api.Handle(new SpectatorRequest { Path = "/api/state", Query = SpectatorHttp.ParseForm("id=aaaaaaaa") });
+            api.Handle(new SpectatorRequest { Path = "/api/state", Query = SpectatorHttp.ParseForm("id=bbbbbbbb") });
+            StringAssert.Contains("\"ok\":true", Text(api.Handle(Post("/api/send", "id=aaaaaaaa&exit=0&stage=Stage1%3A3%3A1"))));
+            StringAssert.Contains("\"busy\"", Text(api.Handle(Post("/api/send", "id=bbbbbbbb&exit=0&stage=Stage1%3A3%3A1"))), "積まれている分も数える");
+            Assert.IsTrue(api.TryDequeue(out _));
+            StringAssert.Contains("\"ok\":true", Text(api.Handle(Post("/api/send", "id=bbbbbbbb&exit=0&stage=Stage1%3A3%3A1"))), "取り出した後は、また上限の中");
+        }
+
+        // ---- 上限とボス ----
+
+        [Test]
+        public void Budget_GrowsWithWaveAndShrinksWithSpectators()
+        {
+            var budget = new SpectatorBudget { Ratio = 0.15f, StartAllowance = 60 };
+            Assert.AreEqual(60, budget.Allowance);
+            budget.SetWaveSpawned(1000);
+            Assert.AreEqual(210, budget.Allowance);
+            budget.AddSpectatorSpawned(200);
+            Assert.AreEqual(10, budget.Allowance);
+            budget.AddSpectatorSpawned(100);
+            Assert.AreEqual(0, budget.Allowance, "マイナスにはならない");
+            budget.Reset();
+            Assert.AreEqual(60, budget.Allowance);
+        }
+
+        [Test]
+        public void Budget_BossEveryPoolMax_UpToMaxBosses()
+        {
+            var budget = new SpectatorBudget { PoolMax = 3, MaxBosses = 2 };
+            Assert.IsFalse(budget.AddToPool());
+            Assert.IsFalse(budget.AddToPool());
+            Assert.IsTrue(budget.AddToPool());
+            Assert.AreEqual(0, budget.Pool);
+            Assert.AreEqual(1, budget.BossesLeft);
+
+            budget.AddToPool();
+            budget.AddToPool();
+            Assert.IsTrue(budget.AddToPool());
+            Assert.AreEqual(0, budget.BossesLeft);
+            Assert.IsFalse(budget.AddToPool(), "出し切ったらたまらない");
+            Assert.AreEqual(0, budget.Pool);
+
+            budget.RefundBoss();
+            Assert.AreEqual(1, budget.BossesLeft);
+            Assert.IsTrue(budget.AddToPool(), "出せなかったボスは次の 1 回で出し直す");
+        }
+
+        // ---- 群れの帳簿 ----
+
+        [Test]
+        public void Book_TracksCenterSpreadAndAlive()
+        {
+            var book = new SpectatorGroupBook();
+            var tag = book.NewTag();
+            book.AddGroup(tag, 7, 2, false, 0);
+            book.OnAssigned(tag, 100);
+            book.OnAssigned(tag, 101);
+            book.OnAssigned(999, 102); // 知らない印は無視
+
+            book.BeginScan();
+            book.Accumulate(100, 0f, 0f);
+            book.Accumulate(101, 4f, 0f);
+            book.Accumulate(55, 50f, 50f); // 観客の菌でない
+            book.EndScan(1);
+
+            var list = new System.Collections.Generic.List<SpectatorGroupState>();
+            book.Snapshot(list, 10);
+            Assert.AreEqual(1, list.Count);
+            Assert.AreEqual(7, list[0].Number);
+            Assert.AreEqual(2, list[0].ColorIndex);
+            Assert.AreEqual(2, list[0].Alive);
+            Assert.AreEqual(2f, list[0].X, 1e-5f);
+            Assert.AreEqual(3f, list[0].Radius, 1e-4f, "中心から 2 離れた 2 体 → 2 × 1.5");
+
+            book.OnRemoved(100, SpectatorRemoval.Killed);
+            book.OnRemoved(101, SpectatorRemoval.ReachedCore);
+            book.EndScan(2);
+            book.Snapshot(list, 10);
+            Assert.AreEqual(0, list.Count, "全員いなくなった群れは消える");
+            Assert.AreEqual(0, book.GroupCount);
+            Assert.AreEqual(1, book.Score(7).Killed);
+            Assert.AreEqual(1, book.Score(7).Bites);
+        }
+
+        [Test]
+        public void Book_DropsGroupsThatNeverAppeared_AndPutsBossFirst()
+        {
+            var book = new SpectatorGroupBook();
+            var never = book.NewTag();
+            book.AddGroup(never, 1, 0, false, 0);
+            book.Prune(1);
+            Assert.AreEqual(1, book.GroupCount, "まだ待つ");
+            book.Prune(SpectatorGroupBook.UnassignedTimeout + 0.1);
+            Assert.AreEqual(0, book.GroupCount, "番号が付かないまま時間切れ");
+
+            var a = book.NewTag();
+            var boss = book.NewTag();
+            book.AddGroup(a, 2, 0, false, 10);
+            book.AddGroup(boss, 0, 0, true, 10);
+            book.OnAssigned(a, 1);
+            book.OnAssigned(boss, 2);
+            book.BeginScan();
+            book.Accumulate(1, 1f, 1f);
+            book.Accumulate(2, 2f, 2f);
+            book.EndScan(10);
+            var list = new System.Collections.Generic.List<SpectatorGroupState>();
+            book.Snapshot(list, 10);
+            Assert.IsTrue(list[0].Boss);
+            Assert.AreEqual(2, list[1].Number);
+
+            book.OnRemoved(2, SpectatorRemoval.Killed);
+            Assert.AreEqual(0, book.Score(0).Killed, "ボスは成績に入れない");
+        }
+
+        [Test]
+        public void Book_ReusedNetIdMovesToNewGroup()
+        {
+            var book = new SpectatorGroupBook();
+            var first = book.NewTag();
+            var second = book.NewTag();
+            book.AddGroup(first, 1, 0, false, 0);
+            book.AddGroup(second, 2, 0, false, 0);
+            book.OnAssigned(first, 5);
+            book.OnAssigned(second, 5); // 消えた知らせを取りこぼして番号が使い回された
+            book.BeginScan();
+            book.Accumulate(5, 1f, 1f);
+            book.EndScan(1);
+            var list = new System.Collections.Generic.List<SpectatorGroupState>();
+            book.Snapshot(list, 10);
+            Assert.AreEqual(1, list.Count);
+            Assert.AreEqual(2, list[0].Number);
         }
 
         // ---- 地図 ----
