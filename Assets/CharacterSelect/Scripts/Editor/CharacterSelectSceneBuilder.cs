@@ -495,10 +495,11 @@ namespace MS2026.CharacterSelect.EditorTools
             view.gauge = BuildGauge(bottom);
             // 会場は握るだけなので押す手段は無い（飾り。ユーザー決定 2026-11-05）。
             NewUiImage("OptionButton", bottom, "option_button.png", 1584f, 990f, 336f, 90f);
-            // 1台で試すときだけ出す仮のキー（上の帯の下、右寄せ）。
-            view.devKeysText = NewText("DevKeys", header, "仮のキー：A", 20, SubInk, FontStyle.Bold);
-            view.devKeysText.alignment = TextAnchor.MiddleRight;
-            PlaceTL(view.devKeysText.rectTransform, 1000f, 124f, 880f, 32f);
+            // 1台で試すときだけ出す仮のキー（下の帯の、操作の説明と設定の間）。
+            view.devKeysText = NewText("DevKeys", bottom, "仮のキー：A", 18, SubInk, FontStyle.Bold);
+            view.devKeysText.alignment = TextAnchor.MiddleLeft;
+            PlaceTL(view.devKeysText.rectTransform, 560f, 1008f, 1000f, 64f);
+
 
             // 全員決定のときに画面いっぱいに光る板と、真ん中から弾ける泡とキラキラ。
             view.screenFlash = NewImage("ScreenFlash", root, null, new Color(1f, 1f, 1f, 0f));

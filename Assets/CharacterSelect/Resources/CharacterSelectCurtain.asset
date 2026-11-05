@@ -83,6 +83,7 @@ MonoBehaviour:
   dropSeconds: 1.1
   holdSeconds: 0.2
   revealSeconds: 0.9
+  useForGameStart: 1
   playOnStandalone: 1
   sortingOrder: 950
   onCover:

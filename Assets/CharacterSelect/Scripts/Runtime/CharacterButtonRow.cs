@@ -29,7 +29,7 @@ namespace MS2026.CharacterSelect
         public Vector2 badgeOffset = new Vector2(34f, -58f);
 
         [Tooltip("同じボタンに何人もいるときの札の間隔（ピクセル）。")]
-        public float badgeSpacing = 44f;
+        public float badgeSpacing = 52f;
 
         [Tooltip("矢印の位置（自分のボタンの右の端からのずれ。ピクセル）。")]
         public Vector2 arrowOffset = new Vector2(-32f, 0f);
