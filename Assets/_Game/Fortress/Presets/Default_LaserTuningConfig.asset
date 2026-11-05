@@ -125,3 +125,16 @@ MonoBehaviour:
     enabled: 1
     flowSpeedWeak: 1.5
     flowSpeedStrong: 7
+  beamLight:
+    enabled: 1
+    floorIntensity: 2.5
+    floorRange: 2.8
+    lightHeight: 0.8
+    impactBoost: 1.6
+    surfaceColorInfluence: 0.4
+    enemyStrength: 0.8
+    enemyRadius: 1.3
+    enemyColorOverlay: 0.35
+    colorSaturation: 1.3
+    weakGripBrightness: 0.45
+    fadeSpeed: 14
