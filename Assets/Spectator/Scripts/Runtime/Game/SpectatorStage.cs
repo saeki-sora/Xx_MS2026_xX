@@ -137,6 +137,25 @@ namespace MS2026.Spectator
             sb.Append(']');
         }
 
+        /// <summary>出口の名前から並びの番号（無ければ -1）。Host への取り次ぎは名前で届く。</summary>
+        public int IndexOfExit(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return -1;
+            }
+
+            for (var i = 0; i < _exits.Count; i++)
+            {
+                if (_exits[i] != null && _exits[i].ResolvedId == id)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
         public string ExitId(int index) => index >= 0 && index < _exits.Count && _exits[index] != null ? _exits[index].ResolvedId : "";
 
         /// <summary>その出口から count 体を出す（Host・オフラインだけ）。印 tag を付ける（0 なら付けない）。出せた数を返す。</summary>

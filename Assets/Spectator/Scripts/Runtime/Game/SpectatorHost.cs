@@ -14,12 +14,16 @@ namespace MS2026.Spectator
     /// ・観客が送った分を取り出し、この PC が Host（かオフライン）なら印つきで菌を出す
     /// ・印つきの菌を追いかけ、群れの中心・広がり・残りの数を 1 秒に 5 回、全員の PC に配る（名前札と光の輪）
     /// ・試合ごとの上限（ウェーブの菌の 15% 上乗せまで）と、ボスのたまり（15 回で 1 体、1 試合 2 体まで。上限が 1 試合およそ 20 回分なので、1 試合に 1 回は見られる数）
-    /// M2 でも Client の PC からは送れない（M3 で Host へ取り次ぐ）。
+    /// ・Host でない PC は、受け付けた「送る」を Host へ取り次ぐ（印刷した QR がどの PC を指していてもよい）。
+    ///   Host は出せたかを返し、出せなかったらその人の待ち時間を返す。Host は上限の残りとボスのたまりを 1 秒 4 回配る。
     /// </summary>
     [AddComponentMenu("")]
     internal sealed class SpectatorHost : MonoBehaviour
     {
         private const float BoardInterval = 0.25f;
+        private const float StatusInterval = 0.25f;
+        private const float StatusStaleSeconds = 2f;
+        private const double ForwardTimeout = 3.0;
         private const float ScanInterval = 0.2f;
         private const int BossFallbackGerms = 40;
         private const string PageResource = "Spectator/SpectatorPage";
@@ -30,6 +34,11 @@ namespace MS2026.Spectator
         private readonly SpectatorGroupBook _book = new SpectatorGroupBook();
         private readonly SpectatorBudget _budget = new SpectatorBudget();
         private readonly List<SpectatorGroupState> _groups = new List<SpectatorGroupState>();
+        private readonly SpectatorForwardBook _forward = new SpectatorForwardBook();
+        private readonly List<string> _expired = new List<string>();
+        private SpectatorHostStatus _hostStatus;
+        private float _hostStatusAt = -100f;
+        private float _statusTimer;
         private SpectatorApi _api;
         private SpectatorHttpServer _server;
         private SwarmSystem _swarm;
@@ -48,6 +57,11 @@ namespace MS2026.Spectator
         public int SpectatorCount => _api != null ? _api.Roster.Count : 0;
 
         private static double Now => Time.realtimeSinceStartupAsDouble;
+
+        /// <summary>この PC は通信中の Client（自分では菌を出さず、Host に頼む）。</summary>
+        private static bool IsRelayClient => FortressNet.IsNetworked && !FortressNet.HasSimulationAuthority;
+
+        private bool HostStatusFresh => Time.unscaledTime - _hostStatusAt < StatusStaleSeconds;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
@@ -117,6 +131,9 @@ namespace MS2026.Spectator
             }
 
             Debug.Log($"[Spectator] 観客ページを開きました: {SpectatorAddresses.Urls(_port)}");
+            SpectatorRelay.OrderReceived += OnRelayOrder;
+            SpectatorRelay.ResultReceived += OnRelayResult;
+            SpectatorRelay.StatusReceived += OnRelayStatus;
             _stage.Refresh();
             UpdateBoard();
         }
@@ -131,10 +148,43 @@ namespace MS2026.Spectator
             _stage.Refresh();
             Hook(SwarmSystem.Current);
             CheckNewMatch();
+            SpectatorRelay.EnsureMessaging();
 
+            var relay = IsRelayClient;
             while (_api.TryDequeue(out var order))
             {
-                Carry(order);
+                if (relay)
+                {
+                    Forward(order);
+                }
+                else
+                {
+                    CarryLocal(order);
+                }
+            }
+
+            // 返事が来ないまま時間が過ぎた取り次ぎは、待ち時間を返す（Host が落ちた等）。
+            _forward.Expire(Now, ForwardTimeout, _expired);
+            foreach (var id in _expired)
+            {
+                _api.Roster.Refund(id);
+            }
+
+            _statusTimer -= Time.unscaledDeltaTime;
+            if (_statusTimer <= 0f)
+            {
+                _statusTimer = StatusInterval;
+                if (FortressNet.IsNetworked && FortressNet.HasSimulationAuthority)
+                {
+                    SpectatorRelay.SendStatus(new SpectatorHostStatus
+                    {
+                        Allowance = _budget.Allowance,
+                        Pool = _budget.Pool,
+                        PoolMax = _budget.PoolMax,
+                        BossesLeft = _budget.BossesLeft,
+                        BossesDone = _budget.BossesSpawned
+                    });
+                }
             }
 
             _boardTimer -= Time.unscaledDeltaTime;
@@ -172,32 +222,90 @@ namespace MS2026.Spectator
 
         // ───────── 菌を出す ─────────
 
-        private void Carry(SpectatorOrder order)
+        /// <summary>この PC が受け付けた分を、この PC で出す（Host・オフライン）。出せなければ待ち時間を返す。</summary>
+        private void CarryLocal(SpectatorOrder order)
         {
-            if (order.StageKey != _stage.Key || !FortressNet.HasSimulationAuthority)
+            // ステージが変わった・Host でなくなった・上限、なら出さない。待ち時間を返して、もう一度送れるようにする。
+            if (order.StageKey != _stage.Key || !TrySpawnFor(0, order.Number, order.ColorIndex, order.ExitIndex))
             {
-                // ステージが変わった・Host でなくなった。待ち時間を返して、もう一度送れるようにする。
                 _api.Roster.Refund(order.SpectatorId);
-                return;
+            }
+        }
+
+        /// <summary>
+        /// Host・オフラインで、観客 1 人分の菌を出す。source は受付の PC（0 = 自分、1〜 = Client の通信番号 + 1）。
+        /// 戦闘中でない・上限を超える・出口が無い、なら false。
+        /// </summary>
+        private bool TrySpawnFor(int source, int number, int colorIndex, int exitIndex)
+        {
+            if (!FortressNet.HasSimulationAuthority || ReadPhase(out _) != SpectatorPhase.Play || !_budget.CanSpawn(SpectatorConfig.GermsPerSend))
+            {
+                return false;
             }
 
             var tag = _book.NewTag();
-            _book.AddGroup(tag, order.Number, order.ColorIndex, false, Now);
-            var spawned = _stage.Spawn(order.ExitIndex, SpectatorConfig.GermsPerSend, tag);
+            var owner = SpectatorGroupBook.OwnerKey(source, number);
+            _book.AddGroup(tag, number, colorIndex, false, Now, owner);
+            var spawned = _stage.Spawn(exitIndex, SpectatorConfig.GermsPerSend, tag);
             if (spawned <= 0)
             {
-                _api.Roster.Refund(order.SpectatorId);
-                return;
+                return false;
             }
 
             _budget.AddSpectatorSpawned(spawned);
-            _book.RecordSend(order.Number, spawned);
-            Debug.Log($"[Spectator] {order.Name} が出口 {_stage.ExitId(order.ExitIndex)} から {_stage.GermName} を {spawned} 体送り込んだ（ボスまで {_budget.Pool + 1}/{_budget.PoolMax}）");
+            _book.RecordSend(owner, spawned);
+            var from = source == 0 ? "" : $"（PC {source - 1} から取り次ぎ）";
+            Debug.Log($"[Spectator] {SpectatorNames.Make(number)}{from} が出口 {_stage.ExitId(exitIndex)} から {_stage.GermName} を {spawned} 体送り込んだ（ボスまで {_budget.Pool + 1}/{_budget.PoolMax}）");
 
             if (_budget.AddToPool())
             {
                 SpawnBoss();
             }
+
+            return true;
+        }
+
+        // ───────── Host への取り次ぎ ─────────
+
+        /// <summary>Client: 受け付けた分を Host に頼む。Host の様子が分からない・送れないなら、すぐ待ち時間を返す。</summary>
+        private void Forward(SpectatorOrder order)
+        {
+            if (order.StageKey != _stage.Key || !HostStatusFresh)
+            {
+                _api.Roster.Refund(order.SpectatorId);
+                return;
+            }
+
+            var seq = _forward.Add(order.SpectatorId, Now);
+            if (!SpectatorRelay.SendOrder(seq, order.Number, order.ColorIndex, _stage.ExitId(order.ExitIndex)))
+            {
+                _forward.TryComplete(seq, out _);
+                _api.Roster.Refund(order.SpectatorId);
+            }
+        }
+
+        /// <summary>Host: Client から頼まれた。出口は名前で探し、出せたかを返す。</summary>
+        private void OnRelayOrder(ulong sender, uint seq, int number, int colorIndex, string exitId)
+        {
+            var exit = _stage.IndexOfExit(exitId);
+            var source = (int)System.Math.Min(sender + 1, 30000UL);
+            var ok = exit >= 0 && TrySpawnFor(source, number, colorIndex, exit);
+            SpectatorRelay.SendResult(sender, seq, ok);
+        }
+
+        /// <summary>Client: Host の返事。出せなかったなら、その人の待ち時間を返す。</summary>
+        private void OnRelayResult(uint seq, bool ok)
+        {
+            if (_forward.TryComplete(seq, out var spectatorId) && !ok)
+            {
+                _api.Roster.Refund(spectatorId);
+            }
+        }
+
+        private void OnRelayStatus(SpectatorHostStatus status)
+        {
+            _hostStatus = status;
+            _hostStatusAt = Time.unscaledTime;
         }
 
         private void SpawnBoss()
@@ -305,6 +413,9 @@ namespace MS2026.Spectator
             }
 
             var phase = ReadPhase(out var message);
+            var status = IsRelayClient
+                ? _hostStatus
+                : new SpectatorHostStatus { Allowance = _budget.Allowance, Pool = _budget.Pool, PoolMax = _budget.PoolMax, BossesLeft = _budget.BossesLeft, BossesDone = _budget.BossesSpawned };
             var sb = new StringBuilder(512);
             sb.Append('{')
                 .Key("phase").Str(phase).Append(',')
@@ -314,10 +425,10 @@ namespace MS2026.Spectator
                 .Key("wave").Num(FortressWaves.IsActive ? FortressWaves.WaveNumber : 0).Append(',')
                 .Key("waveCount").Num(FortressWaves.WaveCount).Append(',')
                 .Key("germs").Num(SpectatorConfig.GermsPerSend).Append(',')
-                .Key("pool").Num(_budget.Pool).Append(',')
-                .Key("poolMax").Num(_budget.PoolMax).Append(',')
-                .Key("bossLeft").Num(_budget.BossesLeft).Append(',')
-                .Key("bossDone").Num(_budget.BossesSpawned).Append(',')
+                .Key("pool").Num(status.Pool).Append(',')
+                .Key("poolMax").Num(Mathf.Max(1, status.PoolMax)).Append(',')
+                .Key("bossLeft").Num(status.BossesLeft).Append(',')
+                .Key("bossDone").Num(status.BossesDone).Append(',')
                 .Key("exits");
             _stage.AppendExitsJson(sb);
             sb.Append('}');
@@ -327,7 +438,7 @@ namespace MS2026.Spectator
                 Phase = phase,
                 StageKey = _stage.Key,
                 ExitCount = _stage.ExitCount,
-                Allowance = _budget.Allowance,
+                Allowance = status.Allowance,
                 SharedJson = sb.ToString()
             };
         }
@@ -347,9 +458,9 @@ namespace MS2026.Spectator
                 return SpectatorPhase.End;
             }
 
-            if (FortressNet.IsNetworked && !FortressNet.HasSimulationAuthority)
+            if (IsRelayClient && !HostStatusFresh)
             {
-                message = "このPCからはまだ送れません（作業中）";
+                message = "ゲームの Host とつながるのを待っています";
                 return SpectatorPhase.Wait;
             }
 
@@ -384,6 +495,10 @@ namespace MS2026.Spectator
 
         private void OnDestroy()
         {
+            SpectatorRelay.OrderReceived -= OnRelayOrder;
+            SpectatorRelay.ResultReceived -= OnRelayResult;
+            SpectatorRelay.StatusReceived -= OnRelayStatus;
+            SpectatorRelay.Unregister();
             Unhook();
             _server?.Dispose();
             _server = null;

@@ -47,6 +47,7 @@ namespace MS2026.Spectator
         private sealed class Group
         {
             public int Tag;
+            public int Owner;
             public int Number;
             public int ColorIndex;
             public bool Boss;
@@ -91,25 +92,28 @@ namespace MS2026.Spectator
             return tag;
         }
 
-        public void AddGroup(int tag, int number, int colorIndex, bool boss, double now)
+        /// <summary>
+        /// 群れを覚える。owner は成績をまとめる見分け（受付の PC が違えば同じ番号でも別の人。省くと番号そのもの）。
+        /// </summary>
+        public void AddGroup(int tag, int number, int colorIndex, bool boss, double now, int owner = -1)
         {
             if (tag == 0 || _byTag.ContainsKey(tag))
             {
                 return;
             }
 
-            var group = new Group { Tag = tag, Number = number, ColorIndex = colorIndex, Boss = boss, CreatedAt = now };
+            var group = new Group { Tag = tag, Owner = owner >= 0 ? owner : number, Number = number, ColorIndex = colorIndex, Boss = boss, CreatedAt = now };
             _byTag.Add(tag, group);
             _groups.Add(group);
         }
 
-        /// <summary>出した数を成績に足す（ボスは数えない）。</summary>
-        public void RecordSend(int number, int germs)
+        /// <summary>出した数を成績に足す（ボスは数えない）。owner は <see cref="AddGroup"/> と同じ見分け。</summary>
+        public void RecordSend(int owner, int germs)
         {
-            var score = Score(number);
+            var score = Score(owner);
             score.Sends++;
             score.Germs += germs;
-            _scores[number] = score;
+            _scores[owner] = score;
         }
 
         /// <summary>印つきの菌が配列に入り、通信の番号が決まった。</summary>
@@ -146,7 +150,7 @@ namespace MS2026.Spectator
                 return;
             }
 
-            var score = Score(group.Number);
+            var score = Score(group.Owner);
             if (reason == SpectatorRemoval.Killed)
             {
                 score.Killed++;
@@ -156,7 +160,7 @@ namespace MS2026.Spectator
                 score.Bites++;
             }
 
-            _scores[group.Number] = score;
+            _scores[group.Owner] = score;
         }
 
         public void BeginScan()
@@ -251,7 +255,10 @@ namespace MS2026.Spectator
             }
         }
 
-        public SpectatorScore Score(int number) => _scores.TryGetValue(number, out var score) ? score : default;
+        public SpectatorScore Score(int owner) => _scores.TryGetValue(owner, out var score) ? score : default;
+
+        /// <summary>受付の PC（0 = Host 自身、1〜 = Client の番号 + 1）と観客の番号から、成績の見分けを作る。</summary>
+        public static int OwnerKey(int source, int number) => source * 65536 + (number & 0xFFFF);
 
         /// <summary>新しい試合・ステージ。群れも成績も忘れる。</summary>
         public void Clear()
@@ -292,6 +299,9 @@ namespace MS2026.Spectator
         public int BossesLeft => Math.Max(0, MaxBosses - BossesSpawned);
 
         public int Allowance => Math.Max(0, StartAllowance + (int)(Ratio * WaveSpawned) - SpectatorSpawned);
+
+        /// <summary>あと count 体出してよいか。</summary>
+        public bool CanSpawn(int count) => Allowance >= count;
 
         public void Reset()
         {

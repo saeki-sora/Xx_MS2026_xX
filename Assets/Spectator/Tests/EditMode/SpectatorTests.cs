@@ -365,6 +365,51 @@ namespace MS2026.Spectator.Tests
             Assert.AreEqual(2, list[0].Number);
         }
 
+        // ---- Host への取り次ぎ ----
+
+        [Test]
+        public void Forward_CompletesOnceAndExpiresUnanswered()
+        {
+            var book = new SpectatorForwardBook();
+            var a = book.Add("aaaaaaaa", 0);
+            var b = book.Add("bbbbbbbb", 1);
+            Assert.AreNotEqual(0u, a);
+            Assert.AreNotEqual(a, b);
+
+            Assert.IsTrue(book.TryComplete(a, out var who));
+            Assert.AreEqual("aaaaaaaa", who);
+            Assert.IsFalse(book.TryComplete(a, out _), "同じ返事は 2 回数えない");
+
+            var expired = new System.Collections.Generic.List<string>();
+            book.Expire(3.5, 3.0, expired);
+            Assert.AreEqual(0, expired.Count, "まだ 2.5 秒");
+            book.Expire(4.5, 3.0, expired);
+            CollectionAssert.AreEqual(new[] { "bbbbbbbb" }, expired);
+            Assert.AreEqual(0, book.Count);
+            Assert.IsFalse(book.TryComplete(b, out _), "時間切れの後に返事が来ても数えない");
+        }
+
+        [Test]
+        public void Book_SameNumberFromDifferentReceptionPcIsSeparatePerson()
+        {
+            var book = new SpectatorGroupBook();
+            var local = book.NewTag();
+            var remote = book.NewTag();
+            var ownerLocal = SpectatorGroupBook.OwnerKey(0, 3);
+            var ownerRemote = SpectatorGroupBook.OwnerKey(2, 3);
+            Assert.AreNotEqual(ownerLocal, ownerRemote);
+            book.AddGroup(local, 3, 0, false, 0, ownerLocal);
+            book.AddGroup(remote, 3, 1, false, 0, ownerRemote);
+            book.RecordSend(ownerLocal, 20);
+            book.RecordSend(ownerRemote, 20);
+            book.OnAssigned(local, 10);
+            book.OnAssigned(remote, 11);
+            book.OnRemoved(11, SpectatorRemoval.Killed);
+            Assert.AreEqual(0, book.Score(ownerLocal).Killed);
+            Assert.AreEqual(1, book.Score(ownerRemote).Killed);
+            Assert.AreEqual(1, book.Score(ownerLocal).Sends);
+        }
+
         // ---- 地図 ----
 
         [Test]
