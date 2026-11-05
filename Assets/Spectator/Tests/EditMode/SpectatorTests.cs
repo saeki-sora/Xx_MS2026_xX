@@ -269,6 +269,16 @@ namespace MS2026.Spectator.Tests
             Assert.IsTrue(budget.AddToPool(), "出せなかったボスは次の 1 回で出し直す");
         }
 
+        [Test]
+        public void Budget_DefaultBossFitsInOneMatch()
+        {
+            // 1 試合でウェーブが出す菌はおよそ 2000〜3000 体（Stage1・Stage2 の計画）。上限の中で送れる回数でボスが出ること。
+            var budget = new SpectatorBudget();
+            budget.SetWaveSpawned(2000);
+            var sends = budget.Allowance / SpectatorConfig.GermsPerSend;
+            Assert.GreaterOrEqual(sends, budget.PoolMax, "上限の中でボスまで届く");
+        }
+
         // ---- 群れの帳簿 ----
 
         [Test]

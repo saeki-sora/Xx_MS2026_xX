@@ -276,7 +276,7 @@ namespace MS2026.Spectator
         public int StartAllowance = 60;
 
         /// <summary>ボスが来るまでの「送った回数」の合計。</summary>
-        public int PoolMax = 40;
+        public int PoolMax = 15;
 
         /// <summary>1 試合で出るボスの数の上限。</summary>
         public int MaxBosses = 2;
