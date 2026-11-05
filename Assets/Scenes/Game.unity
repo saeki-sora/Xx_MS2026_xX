@@ -292,7 +292,7 @@ MonoBehaviour:
   tuning: {fileID: 11400000, guid: 300685bf5fc7cd0478f7949bf1f8f6e5, type: 2}
   autoRotate: 1
   rotationDirection: 1
-  rotationSpeedScale: 1.2
+  rotationSpeedScale: 1.6
   muzzle: {fileID: 714704709}
 --- !u!114 &62728023
 MonoBehaviour:
@@ -389,8 +389,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 62728021}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -6, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: 0.5890633, w: -0.80808693}
+  m_LocalPosition: {x: -14, y: -9.5, z: 0}
   m_LocalScale: {x: 1.2, y: 1.2, z: 1.2}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1045,7 +1045,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9600a9df12c3194fabfb69618b0ee2d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.Cameras.FortressCameraRig
-  preset: {fileID: 11400000, guid: 246e5d0de6c604d4bbef6b49919df11d, type: 2}
+  preset: {fileID: 11400000, guid: d13bc4fc2c750f346a49dba25ec72df8, type: 2}
   targetCamera: {fileID: 11383752}
   fallbackViewer: -1
   viewerSwitchBlendSeconds: 0.35
@@ -1253,7 +1253,7 @@ Transform:
   m_GameObject: {fileID: 526317129}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -5, z: 0}
   m_LocalScale: {x: 2.5, y: 2.5, z: 2.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1422,7 +1422,7 @@ MonoBehaviour:
   tuning: {fileID: 11400000, guid: 300685bf5fc7cd0478f7949bf1f8f6e5, type: 2}
   autoRotate: 1
   rotationDirection: 0
-  rotationSpeedScale: 1.2
+  rotationSpeedScale: 1.4
   muzzle: {fileID: 1219381026}
 --- !u!114 &648091142
 MonoBehaviour:
@@ -1519,8 +1519,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 648091140}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: 0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: 6, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: 0.8701999, w: 0.49269882}
+  m_LocalPosition: {x: 15, y: 4, z: 0}
   m_LocalScale: {x: 1.2, y: 1.2, z: 1.2}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1575,8 +1575,8 @@ MonoBehaviour:
   playerIndex: 0
   tuning: {fileID: 11400000, guid: 300685bf5fc7cd0478f7949bf1f8f6e5, type: 2}
   autoRotate: 1
-  rotationDirection: 1
-  rotationSpeedScale: 1.2
+  rotationDirection: 0
+  rotationSpeedScale: 1.4
   muzzle: {fileID: 466277769}
 --- !u!114 &669435693
 MonoBehaviour:
@@ -1673,8 +1673,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 669435691}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: 1, w: -0.00000004371139}
-  m_LocalPosition: {x: 0, y: 6, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: 0.88577944, w: -0.46410656}
+  m_LocalPosition: {x: -13, y: 4, z: 0}
   m_LocalScale: {x: 1.2, y: 1.2, z: 1.2}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2741,7 +2741,7 @@ MonoBehaviour:
   tuning: {fileID: 11400000, guid: 300685bf5fc7cd0478f7949bf1f8f6e5, type: 2}
   autoRotate: 1
   rotationDirection: 0
-  rotationSpeedScale: 1.2
+  rotationSpeedScale: 1.6
   muzzle: {fileID: 746343943}
 --- !u!114 &1727559728
 MonoBehaviour:
@@ -2838,8 +2838,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1727559726}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: 0.7071068, w: -0.7071068}
-  m_LocalPosition: {x: -6, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: 0.5890633, w: 0.808087}
+  m_LocalPosition: {x: 14, y: -9.5, z: 0}
   m_LocalScale: {x: 1.2, y: 1.2, z: 1.2}
   m_ConstrainProportionsScale: 0
   m_Children:
