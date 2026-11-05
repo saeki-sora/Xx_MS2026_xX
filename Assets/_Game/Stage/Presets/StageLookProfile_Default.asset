@@ -68,8 +68,8 @@ MonoBehaviour:
   dissolveEdgeColor: {r: 3, g: 1.2, b: 0.25, a: 1}
   edgeMist:
     enabled: 1
-    start: 0.502
-    softness: 0.523
+    start: 0.756
+    softness: 0.642
     nearSideFade: 0.585
     cornerRoundness: 2.6
     darkness: 0.642
