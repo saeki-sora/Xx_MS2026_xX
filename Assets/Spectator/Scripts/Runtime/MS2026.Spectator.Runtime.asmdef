@@ -1,0 +1,16 @@
+{
+    "name": "MS2026.Spectator.Runtime",
+    "rootNamespace": "MS2026.Spectator",
+    "references": [
+        "MS2026.Fortress.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

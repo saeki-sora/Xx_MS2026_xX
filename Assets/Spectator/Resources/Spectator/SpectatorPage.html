@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0a0e16">
+<title>菌を送りこめ！</title>
+<style>
+/* ブースのルーターだけで動く（インターネットに出ない）ので、フォントや画像は外から読まない。 */
+:root{
+  --bg:#0a0e16; --panel:#111827; --panel2:#0d1420; --line:#223047; --ink:#e9f2f8; --mute:#93a5ba;
+  --accent:#80e3ff; --enamel:#f4f8f5; --floor:#16202f; --bad:#ff9a8f;
+  --me:#ff7eb6;
+  --round:"Hiragino Maru Gothic ProN","Hiragino Maru Gothic Pro","M PLUS Rounded 1c","BIZ UDPGothic","Yu Gothic","Noto Sans JP",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--round);font-size:15px;line-height:1.6;-webkit-user-select:none;user-select:none;overscroll-behavior:none}
+.app{height:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:12px;
+  padding-top:calc(14px + env(safe-area-inset-top,0px));padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.me{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:16px;min-width:0}
+.me b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--me);box-shadow:0 0 10px var(--me);flex:none}
+.clock{font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums;white-space:nowrap}
+.swatches{display:flex;gap:10px;align-items:center;font-size:12px;color:var(--mute)}
+.sw{width:30px;height:30px;border-radius:50%;border:3px solid transparent;background:var(--c);padding:0;cursor:pointer}
+.sw[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 3px var(--bg) inset}
+.mapbox{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+.map{display:block;width:100%;height:100%;max-height:100%}
+.m-floor{fill:var(--floor)}
+.m-ring{fill:none;stroke:var(--line);stroke-width:2}
+.m-tooth{fill:var(--enamel)}
+.exit{cursor:pointer;outline:none}
+.exit:focus-visible .ex{stroke:var(--ink);stroke-width:3}
+.exit .hit{fill:transparent}
+.exit .ex{fill:var(--me);transition:opacity .2s}
+.exit .pulse{fill:none;stroke:var(--me);stroke-width:2;transform-box:fill-box;transform-origin:center;animation:pulse 1.6s ease-out infinite}
+.fd{fill:var(--me)}
+@keyframes pulse{from{transform:scale(1);opacity:.9}to{transform:scale(2.1);opacity:0}}
+.locked .exit .ex{opacity:.28}
+.locked .exit .pulse{display:none}
+.notice{position:absolute;inset:auto 0 50% 0;transform:translateY(50%);margin:0 auto;max-width:86%;text-align:center;font-weight:800;font-size:15px;background:rgba(6,9,14,.88);border:1px solid var(--line);border-radius:16px;padding:12px 16px;pointer-events:none}
+.cool{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mute)}
+.cool-bar{height:6px;border-radius:6px;background:var(--line);overflow:hidden}
+.cool-bar i{display:block;height:100%;width:0;background:var(--me)}
+.toast{position:fixed;left:50%;top:44%;transform:translate(-50%,-50%);max-width:90%;text-align:center;font-weight:800;font-size:15px;background:rgba(6,9,14,.94);border:2px solid var(--me);border-radius:999px;padding:8px 18px;pointer-events:none;z-index:5}
+.offline{font-size:13px;color:var(--bg);background:var(--bad);border-radius:10px;padding:6px 10px;text-align:center}
+@media (prefers-reduced-motion:reduce){.exit .pulse{animation:none;display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <p class="offline" id="offline" hidden>つながっていません。ブースの Wi-Fi に入っているか確かめてください</p>
+  <div class="top">
+    <span class="me"><i class="dot"></i><b id="name">…</b></span>
+    <span class="clock" id="clock"></span>
+  </div>
+  <div class="swatches" id="swatches" role="group" aria-label="自分の菌の色"></div>
+  <div class="mapbox" id="mapbox">
+    <svg class="map" id="map" viewBox="-14 -14 228 228" role="img" aria-label="歯の地図。光っている出口をタップすると菌が出る">
+      <circle class="m-floor" cx="100" cy="100" r="96"></circle>
+      <circle class="m-ring" cx="100" cy="100" r="84"></circle>
+      <path class="m-tooth" transform="translate(0 4)" d="M86 86C86 76 94 73 100 78C106 73 114 76 114 86C114 94 111 99 110 106L108 116C107 120 103 120 103 116L102 108C101 105 99 105 98 108L97 116C97 120 93 120 92 116L90 106C89 99 86 94 86 86Z"></path>
+      <g id="fly"></g>
+      <g id="exits"></g>
+    </svg>
+    <p class="notice" id="notice">つないでいます…</p>
+  </div>
+  <div class="cool">
+    <div class="cool-bar"><i id="coolbar"></i></div>
+    <span id="cooltxt">出口をえらんで送る</span>
+  </div>
+</div>
+<p class="toast" id="toast" hidden></p>
+<script>
+(function(){
+  var COLORS=['#ff7eb6','#b48cff','#ff9a4d','#f0f0f0'];
+  var CNAMES=['ピンク','むらさき','オレンジ','しろ'];
+  var POLL_MS=700;
+  var NS='http://www.w3.org/2000/svg';
+  function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+  function save(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+  function newId(){var s='',c='abcdefghijklmnopqrstuvwxyz0123456789';for(var i=0;i<20;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
+
+  var id=load('ms2026.spectator.id');
+  if(!/^[a-z0-9]{8,32}$/i.test(id||'')){id=newId();save('ms2026.spectator.id',id);}
+  var color=parseInt(load('ms2026.spectator.color'),10);
+  if(!(color>=0&&color<COLORS.length)){color=Math.floor(Math.random()*COLORS.length);save('ms2026.spectator.color',String(color));}
+
+  var el=function(x){return document.getElementById(x);};
+  var shared=null, me=null, mapKey=null, fails=0;
+  var coolEnd=0, coolTotal=8, timeLeft=-1, timeAt=0, toastT=0, sending=false;
+  var flies=[];
+  var exitPts=[];
+
+  // 色
+  var sw=el('swatches');
+  COLORS.forEach(function(c,i){
+    var b=document.createElement('button');b.type='button';b.className='sw';b.style.setProperty('--c',c);b.setAttribute('aria-label',CNAMES[i]);
+    b.addEventListener('click',function(){setColor(i,true);});sw.appendChild(b);
+  });
+  var lbl=document.createElement('span');lbl.textContent='色をえらぶ';sw.appendChild(lbl);
+  function setColor(i,tell){
+    color=i;save('ms2026.spectator.color',String(i));
+    document.documentElement.style.setProperty('--me',COLORS[i]);
+    Array.prototype.forEach.call(sw.querySelectorAll('.sw'),function(b,k){b.setAttribute('aria-pressed',String(k===i));});
+    if(tell)post('/api/color',{id:id,color:i}).catch(function(){});
+  }
+  setColor(color,false);
+
+  function post(path,data){
+    var body=Object.keys(data).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(data[k]);}).join('&');
+    return fetchT(path,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body});
+  }
+  function fetchT(url,opt){
+    opt=opt||{};opt.cache='no-store';
+    var ctl=window.AbortController?new AbortController():null;
+    if(ctl)opt.signal=ctl.signal;
+    var t=setTimeout(function(){if(ctl)ctl.abort();},3000);
+    return fetch(url,opt).then(function(r){clearTimeout(t);if(!r.ok)throw new Error(r.status);return r.json();},function(e){clearTimeout(t);throw e;});
+  }
+
+  // 地図
+  function buildMap(exits){
+    var g=el('exits');while(g.firstChild)g.removeChild(g.firstChild);
+    exitPts=[];
+    exits.forEach(function(p,i){
+      var x=100+84*p[0], y=100-84*p[1];
+      exitPts.push([x,y]);
+      var e=document.createElementNS(NS,'g');e.setAttribute('class','exit');e.setAttribute('transform','translate('+x.toFixed(1)+' '+y.toFixed(1)+')');
+      e.setAttribute('role','button');e.setAttribute('tabindex','0');e.setAttribute('aria-label','出口 '+(i+1)+' から送る');
+      e.innerHTML='<circle class="hit" r="18"></circle><circle class="pulse" r="9"></circle><circle class="ex" r="9"></circle>';
+      e.addEventListener('click',function(){send(i);});
+      e.addEventListener('keydown',function(ev){if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();send(i);}});
+      g.appendChild(e);
+    });
+  }
+
+  function poll(){
+    fetchT('/api/state?id='+encodeURIComponent(id)+'&color='+color).then(function(j){
+      fails=0;el('offline').hidden=true;apply(j);
+    },function(){
+      fails++;if(fails>=2)el('offline').hidden=false;
+    }).then(function(){setTimeout(poll,POLL_MS);});
+  }
+
+  function apply(j){
+    shared=j.s||{};
+    if(j.me){
+      me=j.me;el('name').textContent=me.name;
+      coolTotal=me.cooldownTotal||coolTotal;
+      if(!sending){var serverEnd=performance.now()+me.cooldown*1000;if(Math.abs(serverEnd-coolEnd)>400)coolEnd=serverEnd;}
+    }else if(j.full){
+      el('name').textContent='いまは満員です';
+    }
+    if(shared.stage!==mapKey){mapKey=shared.stage;buildMap(shared.exits||[]);}
+    timeLeft=typeof shared.timeLeft==='number'?shared.timeLeft:-1;timeAt=performance.now();
+  }
+
+  function send(i){
+    if(!shared||shared.phase!=='play'){showToast(shared&&shared.msg?shared.msg:'まだ送れません');return;}
+    if(!me){showToast('つないでいます…');return;}
+    if(performance.now()<coolEnd||sending)return;
+    sending=true;
+    var before=coolEnd;
+    coolEnd=performance.now()+coolTotal*1000;
+    post('/api/send',{id:id,exit:i,stage:shared.stage,color:color}).then(function(r){
+      sending=false;
+      if(r.me){me=r.me;coolEnd=performance.now()+me.cooldown*1000;}
+      if(r.ok){fly(i);showToast((shared.germs||20)+'体の菌が出口から出てくる！');if(navigator.vibrate)try{navigator.vibrate(30);}catch(e){}}
+      else{
+        if(!r.me)coolEnd=before;
+        if(r.reason==='cooldown')showToast('もう少し待ってね');
+        else if(r.reason==='not_playing')showToast(shared.msg||'いまは送れません');
+        else if(r.reason==='stage'){showToast('地図を新しくしました');mapKey=null;}
+        else showToast('送れませんでした');
+      }
+    },function(){sending=false;coolEnd=before;showToast('送れませんでした。もう一度タップしてね');});
+  }
+
+  function fly(i){
+    var p=exitPts[i];if(!p)return;
+    for(var n=0;n<12;n++){
+      var c=document.createElementNS(NS,'circle');c.setAttribute('r','3.2');c.setAttribute('class','fd');c.style.opacity='0';
+      el('fly').appendChild(c);
+      flies.push({c:c,x:p[0],y:p[1],t:-Math.random()*0.45,dur:1.5+Math.random()*0.3,jx:(Math.random()-.5)*22,jy:(Math.random()-.5)*22});
+    }
+  }
+
+  function showToast(text){var t=el('toast');t.textContent=text;t.hidden=false;toastT=1.8;}
+
+  var last=performance.now();
+  function frame(now){
+    var dt=Math.min(0.05,(now-last)/1000);last=now;
+    var phase=shared?shared.phase:null;
+    var cooling=now<coolEnd;
+    el('mapbox').classList.toggle('locked',phase!=='play'||cooling||!me);
+    var notice=el('notice');
+    if(!shared){notice.hidden=false;notice.textContent='つないでいます…';}
+    else if(phase!=='play'){notice.hidden=false;notice.textContent=shared.msg||'次の試合を待っています';}
+    else notice.hidden=true;
+    var rem=Math.max(0,(coolEnd-now)/1000);
+    el('coolbar').style.width=(cooling?Math.min(100,rem/coolTotal*100):0)+'%';
+    el('cooltxt').textContent=cooling?('次に送れるまで '+rem.toFixed(1)+' 秒'):(phase==='play'?'光っている出口をタップして送る':'送れるようになるまで待ってね');
+    if(timeLeft>=0&&phase==='play'){var tl=Math.max(0,timeLeft-(now-timeAt)/1000);var m=Math.floor(tl/60),s=Math.floor(tl%60);el('clock').textContent='残り '+m+':'+(s<10?'0':'')+s;}
+    else if(shared&&shared.wave>0){el('clock').textContent='WAVE '+shared.wave+(shared.waveCount?(' / '+shared.waveCount):'');}
+    else el('clock').textContent='';
+    if(toastT>0){toastT-=dt;if(toastT<=0)el('toast').hidden=true;}
+    for(var k=flies.length-1;k>=0;k--){
+      var f=flies[k];f.t+=dt;
+      var u=Math.max(0,Math.min(1,f.t/f.dur)),j=Math.sin(u*Math.PI);
+      f.c.setAttribute('cx',(f.x+(100-f.x)*u+f.jx*j).toFixed(1));
+      f.c.setAttribute('cy',(f.y+(104-f.y)*u+f.jy*j).toFixed(1));
+      f.c.style.opacity=f.t<0?'0':(u>0.85?String((1-u)/0.15):'1');
+      if(u>=1){f.c.parentNode.removeChild(f.c);flies.splice(k,1);}
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  poll();
+})();
+</script>
+</body>
+</html>
