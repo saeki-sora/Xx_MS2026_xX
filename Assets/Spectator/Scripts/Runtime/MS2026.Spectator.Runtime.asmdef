@@ -6,7 +6,8 @@
         "Unity.Netcode.Runtime",
         "Unity.Collections",
         "Unity.Mathematics",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

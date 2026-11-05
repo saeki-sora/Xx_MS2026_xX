@@ -50,6 +50,9 @@ namespace MS2026.Spectator
         private bool _scanDue;
         private string _matchKey = "";
         private int _spawnBaseline;
+        private string _startError;
+        private string _lastEvent = "";
+        private float _lastEventAt = -1f;
 
         /// <summary>動いている係（無ければ null）。</summary>
         public static SpectatorHost Instance => _instance;
@@ -57,6 +60,43 @@ namespace MS2026.Spectator
         public int Port => _port;
 
         public int SpectatorCount => _api != null ? _api.Roster.Count : 0;
+
+        /// <summary>F10 の確認表示に出す、いまの様子。</summary>
+        internal SpectatorHostReport Report()
+        {
+            var message = "";
+            var phase = SpectatorPhase.Off;
+            if (_api != null)
+            {
+                phase = ReadPhase(out message);
+            }
+
+            return new SpectatorHostReport
+            {
+                Open = _server != null && _server.IsRunning,
+                StartError = _startError,
+                Port = _port,
+                Role = !FortressNet.IsNetworked ? "オフライン（この PC だけ）" : FortressNet.HasSimulationAuthority ? "Host（この PC で菌を出す）" : HostStatusFresh ? "Client（Host とつながっている）" : "Client（Host の様子が届いていない）",
+                Phase = phase,
+                Message = message,
+                Spectators = SpectatorCount,
+                Connections = _server != null ? _server.ActiveConnections : 0,
+                Allowance = IsRelayClient ? _hostStatus.Allowance : _budget.Allowance,
+                Pool = IsRelayClient ? _hostStatus.Pool : _budget.Pool,
+                PoolMax = IsRelayClient ? _hostStatus.PoolMax : _budget.PoolMax,
+                BossesLeft = IsRelayClient ? _hostStatus.BossesLeft : _budget.BossesLeft,
+                StageReady = _stage.IsReady,
+                Exits = _stage.ExitCount,
+                LastEvent = _lastEvent,
+                LastEventAge = _lastEventAt < 0f ? -1f : Time.unscaledTime - _lastEventAt
+            };
+        }
+
+        private void Note(string text)
+        {
+            _lastEvent = text;
+            _lastEventAt = Time.unscaledTime;
+        }
 
         private static double Now => Time.realtimeSinceStartupAsDouble;
 
@@ -126,6 +166,7 @@ namespace MS2026.Spectator
 
             if (!started)
             {
+                _startError = error;
                 Debug.LogWarning($"[Spectator] 観客ページを開けませんでした（番号 {_port}）: {error}。ほかのアプリが同じ番号を使っていないか確かめてください。起動オプション {SpectatorConfig.PortFlag} で番号を変えられます。");
                 _server = null;
                 enabled = false;
@@ -261,6 +302,7 @@ namespace MS2026.Spectator
             _budget.AddSpectatorSpawned(spawned);
             _book.RecordSend(owner, spawned);
             var from = source == 0 ? "" : $"（PC {source - 1} から取り次ぎ）";
+            Note($"{SpectatorNames.Make(number)}{from} が {_stage.ExitId(exitIndex)} から {spawned} 体");
             Debug.Log($"[Spectator] {SpectatorNames.Make(number)}{from} が出口 {_stage.ExitId(exitIndex)} から {_stage.GermName} を {spawned} 体送り込んだ（ボスまで {_budget.Pool + 1}/{_budget.PoolMax}）");
 
             if (_budget.AddToPool())
@@ -341,7 +383,10 @@ namespace MS2026.Spectator
             {
                 _forward.TryComplete(seq, out _);
                 _api.Roster.Refund(order.SpectatorId);
+                return;
             }
+
+            Note($"{order.Name} の分を Host に頼んだ");
         }
 
         /// <summary>Host: Client から頼まれた。出口は名前で探し、出せたかを返す。</summary>
@@ -359,6 +404,7 @@ namespace MS2026.Spectator
             if (_forward.TryComplete(seq, out var spectatorId) && !ok)
             {
                 _api.Roster.Refund(spectatorId);
+                Note("Host が出せなかった（上限・戦闘中でない等）。待ち時間を返した");
             }
         }
 
