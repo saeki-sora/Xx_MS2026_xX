@@ -21,6 +21,12 @@ namespace MS2026.Fortress
         /// <summary>形を見るとき、左右の差がこれより小さければ（平らな壁の真ん中など）経路どおりにする（m）。</summary>
         private const float ShapeDiffMin = 0.15f;
 
+        /// <summary>経路の向きが滑る向きと「逆」とみなす、内積のしきい値。ほぼ真横（壁から真っすぐ離れる向き）は逆とみなさない。</summary>
+        private const float SlideOpposeMin = 0.1f;
+
+        /// <summary>滑る向きとコアへの向きの内積がこれより下（コアから遠ざかる坂登り）なら、勢いでは滑らせない。</summary>
+        private const float SlideUphillMax = 0.2f;
+
         [ReadOnly] public NativeArray<float2> pos;
         public NativeArray<float2> vel;
         [WriteOnly] public NativeArray<float2> predOut;
@@ -128,7 +134,7 @@ namespace MS2026.Fortress
                 var contact = 1f - math.saturate((wallDistance - tp.radius) / wallContactRange);
                 if (contact > 0f && (wallMomentumSlide < 1f || wallShapeProbe > 0f))
                 {
-                    flow = MomentumSlide(p, vel[i], flow);
+                    flow = MomentumSlide(p, vel[i], flow, direct);
                 }
 
                 var follow = math.lerp(obstacleAwareness, 1f, contact);
@@ -171,14 +177,16 @@ namespace MS2026.Fortress
         /// 斜面に当たっても坂を登って近い側へ回ろうとする。勢いが壁に沿ってはっきり片側へ向いていて、
         /// 経路がその逆向きに壁沿いを指すときだけ、勢いの方へ滑らせる。
         /// 真正面から当たった敵は、当たった所の形を見て、出っ張りの頂上からずれた側（壁が遠のく側）へ滑る。
-        /// 経路が壁から離れる向きを指す所（障害物の角を回り終えた所）では経路に戻るので、行き止まりで止まり続けない。
+        /// 経路が「壁から離れて坂を登れ」と指していても（斜面の上で、頭を越えて反対側へ回る道など）、その向きが勢いと逆側なら勢いを優先する。
+        /// ただし滑る向きがコアから遠ざかる（坂を登る）ときは滑らせない。こうすると障害物のまわりをぐるぐる回り続けることがなく、
+        /// 角を回り終えて経路と勢いの向きがそろえば経路どおりに戻る。
         /// </summary>
-        private float2 MomentumSlide(float2 p, float2 v, float2 flow)
+        private float2 MomentumSlide(float2 p, float2 v, float2 flow, float2 direct)
         {
             var normal = math.normalizesafe(SwarmMath.SampleVector(sdfGradient, 0, p, navOrigin, navCell, navW, navH));
-            if (math.dot(flow, normal) >= 0.5f || math.lengthsq(normal) < 0.5f)
+            if (math.lengthsq(normal) < 0.5f)
             {
-                return flow; // 経路が壁から離れる向き（角を回り終えた所）なら経路どおり
+                return flow;
             }
 
             var tangent = new float2(-normal.y, normal.x);
@@ -204,7 +212,15 @@ namespace MS2026.Fortress
                 }
             }
 
-            return side != 0f && math.dot(flow, tangent) * side < 0f ? tangent * side : flow;
+            if (side == 0f)
+            {
+                return flow;
+            }
+
+            var slide = tangent * side;
+            var flowOpposes = math.dot(flow, slide) < -SlideOpposeMin; // 経路が勢いと逆側へ回れと言っている
+            var notUphill = math.dot(slide, direct) > -SlideUphillMax;   // 滑る向きがコアから大きく遠ざからない
+            return flowOpposes && notUphill ? slide : flow;
         }
 
         private float2 NearestGoalDirection(float2 p)
