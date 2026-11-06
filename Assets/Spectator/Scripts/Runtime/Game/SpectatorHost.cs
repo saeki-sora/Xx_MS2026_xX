@@ -13,7 +13,8 @@ namespace MS2026.Spectator
     /// ・1 秒に 4 回、試合の様子とステージの地図を写してサーバーに渡す
     /// ・観客が送った分を取り出し、この PC が Host（かオフライン）なら印つきで菌を出す
     /// ・印つきの菌を追いかけ、群れの中心・広がり・残りの数を 1 秒に 5 回、全員の PC に配る（名前札と光の輪）
-    /// ・試合ごとの上限（ウェーブの菌の 15% 上乗せまで）と、ボスのたまり（15 回で 1 体、1 試合 2 体まで。上限が 1 試合およそ 20 回分なので、1 試合に 1 回は見られる数）
+    /// ・観客の菌は、ウェーブがこれから出す予定の敵と入れ替える（送った分だけ本来のウェーブの敵が減るので、難しさは変わらない。
+    ///   プレイヤーには明かさない）。先に出しすぎないよう、まだ打ち消していない分は 60 体まで。ボスのたまり（15 回で 1 体、1 試合 2 体まで。上限が 1 試合およそ 20 回分なので、1 試合に 1 回は見られる数）
     /// ・Host でない PC は、受け付けた「送る」を Host へ取り次ぐ（印刷した QR がどの PC を指していてもよい）。
     ///   Host は出せたかを返し、出せなかったらその人の待ち時間を返す。Host は上限の残りとボスのたまりを 1 秒 4 回配る。
     /// </summary>
@@ -49,7 +50,6 @@ namespace MS2026.Spectator
         private float _scanTimer;
         private bool _scanDue;
         private string _matchKey = "";
-        private int _spawnBaseline;
         private string _startError;
         private string _lastEvent = "";
         private float _lastEventAt = -1f;
@@ -262,7 +262,7 @@ namespace MS2026.Spectator
             _matchId = UnityEngine.Random.Range(1, int.MaxValue);
             _book.Clear();
             _budget.Reset();
-            _spawnBaseline = _swarm != null ? _swarm.Stats.totalSpawned : 0;
+            _stage.ClearReplacements();
             _groups.Clear();
             SpectatorGroupFeed.Publish(_groups);
         }
@@ -300,6 +300,8 @@ namespace MS2026.Spectator
             }
 
             _budget.AddSpectatorSpawned(spawned);
+            _stage.ReplaceUpcoming(spawned);
+            _budget.SetPending(_stage.PendingReplacements);
             _book.RecordSend(owner, spawned);
             var from = source == 0 ? "" : $"（PC {source - 1} から取り次ぎ）";
             Note($"{SpectatorNames.Make(number)}{from} が {_stage.ExitId(exitIndex)} から {spawned} 体");
@@ -426,7 +428,10 @@ namespace MS2026.Spectator
                 return;
             }
 
-            _budget.AddSpectatorSpawned(_stage.HasDistinctBoss ? SpectatorConfig.GermsPerSend : spawned);
+            var equivalent = _stage.HasDistinctBoss ? _stage.BossEquivalentGerms : spawned;
+            _budget.AddSpectatorSpawned(equivalent);
+            _stage.ReplaceUpcoming(equivalent);
+            _budget.SetPending(_stage.PendingReplacements);
             Debug.Log($"[Spectator] みんなのボス菌が出口 {_stage.ExitId(exit)} から出撃（この試合 {_budget.BossesSpawned}/{_budget.MaxBosses} 体目）");
         }
 
@@ -449,7 +454,6 @@ namespace MS2026.Spectator
             _swarm.TaggedSpawnAdded += OnTaggedSpawnAdded;
             _swarm.AgentsRemoved += OnAgentsRemoved;
             _swarm.StorageReadable += OnStorageReadable;
-            _spawnBaseline = _swarm.Stats.totalSpawned;
         }
 
         private void Unhook()
@@ -513,10 +517,7 @@ namespace MS2026.Spectator
 
         private void UpdateBoard()
         {
-            if (_swarm != null)
-            {
-                _budget.SetWaveSpawned(_swarm.Stats.totalSpawned - _spawnBaseline - _budget.SpectatorSpawned);
-            }
+            _budget.SetPending(_stage.PendingReplacements);
 
             var phase = ReadPhase(out var message);
             var status = IsRelayClient

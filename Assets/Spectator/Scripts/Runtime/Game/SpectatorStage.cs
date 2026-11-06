@@ -31,6 +31,42 @@ namespace MS2026.Spectator
         /// <summary>ボスに使う種類（このステージのウェーブでいちばん HP が多い群衆の種類）。ふつうの菌と同じなら、菌をたくさん出してボスの代わりにする。</summary>
         public bool HasDistinctBoss => _boss != null && _boss != _germ;
 
+        /// <summary>ウェーブがこれから出す予定のうち、観客の菌と入れ替えてまだ打ち消していない数。</summary>
+        public int PendingReplacements => _director != null ? _director.Replacements.Pending : 0;
+
+        /// <summary>
+        /// 観客が出した count 体ぶん、ウェーブがこれから出すふつうの菌を減らす（観客が送った分だけ、本来のウェーブの敵が減る）。
+        /// </summary>
+        public void ReplaceUpcoming(int count)
+        {
+            if (_director != null && _germ != null)
+            {
+                _director.Replacements.Add(_germ, count);
+            }
+        }
+
+        /// <summary>ボス 1 体を、ふつうの菌何体ぶんとして入れ替えるか（HP の比。1〜40）。</summary>
+        public int BossEquivalentGerms
+        {
+            get
+            {
+                if (_germ == null || _boss == null || _germ.maxHealth <= 0f)
+                {
+                    return 0;
+                }
+
+                return Mathf.Clamp(Mathf.RoundToInt(_boss.maxHealth / _germ.maxHealth), 1, 40);
+            }
+        }
+
+        public void ClearReplacements()
+        {
+            if (_director != null)
+            {
+                _director.Replacements.Clear();
+            }
+        }
+
         /// <summary>湧き位置の係を探し直す（見つかっていて、まだあれば何もしない）。</summary>
         public void Refresh()
         {

@@ -233,18 +233,20 @@ namespace MS2026.Spectator.Tests
         // ---- 上限とボス ----
 
         [Test]
-        public void Budget_GrowsWithWaveAndShrinksWithSpectators()
+        public void Budget_LimitsOnlyWhatTheWaveHasNotReplacedYet()
         {
-            var budget = new SpectatorBudget { Ratio = 0.15f, StartAllowance = 60 };
+            var budget = new SpectatorBudget { MaxPending = 60 };
             Assert.AreEqual(60, budget.Allowance);
-            budget.SetWaveSpawned(1000);
-            Assert.AreEqual(210, budget.Allowance);
-            budget.AddSpectatorSpawned(200);
-            Assert.AreEqual(10, budget.Allowance);
-            budget.AddSpectatorSpawned(100);
+            budget.SetPending(40);
+            Assert.AreEqual(20, budget.Allowance, "ウェーブがまだ打ち消していない分だけ減る");
+            Assert.IsTrue(budget.CanSpawn(20));
+            Assert.IsFalse(budget.CanSpawn(21));
+            budget.SetPending(90);
             Assert.AreEqual(0, budget.Allowance, "マイナスにはならない");
-            budget.Reset();
-            Assert.AreEqual(60, budget.Allowance);
+            budget.SetPending(0);
+            Assert.AreEqual(60, budget.Allowance, "ウェーブが打ち消したら、また送れる");
+            budget.AddSpectatorSpawned(500);
+            Assert.AreEqual(60, budget.Allowance, "送った合計では減らない（入れ替えなので試合の難しさは変わらない）");
         }
 
         [Test]
@@ -270,13 +272,11 @@ namespace MS2026.Spectator.Tests
         }
 
         [Test]
-        public void Budget_DefaultBossFitsInOneMatch()
+        public void Budget_DefaultsLetSeveralSendsWaitAtOnce()
         {
-            // 1 試合でウェーブが出す菌はおよそ 2000〜3000 体（Stage1・Stage2 の計画）。上限の中で送れる回数でボスが出ること。
             var budget = new SpectatorBudget();
-            budget.SetWaveSpawned(2000);
-            var sends = budget.Allowance / SpectatorConfig.GermsPerSend;
-            Assert.GreaterOrEqual(sends, budget.PoolMax, "上限の中でボスまで届く");
+            Assert.GreaterOrEqual(budget.Allowance / SpectatorConfig.GermsPerSend, 3, "ウェーブが追いつく前でも 3 回は送れる");
+            Assert.AreEqual(15, budget.PoolMax);
         }
 
         // ---- 群れの帳簿 ----

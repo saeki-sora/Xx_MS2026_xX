@@ -37,6 +37,12 @@ namespace MS2026.Fortress
         /// <summary>今の再生で出した合計の数。</summary>
         public int SpawnedCount => _clock.TotalSpawned;
 
+        /// <summary>
+        /// 代わりに出した敵の帳簿（観客の菌など）。Host・オフラインで、ウェーブがこれから出す同じ種類の敵を、その数だけ出さない。
+        /// ウェーブの敵の総数を変えずに、出る場所と時間だけを入れ替える。
+        /// </summary>
+        public SpawnReplacementBook<EnemyTypeDefinition> Replacements { get; } = new SpawnReplacementBook<EnemyTypeDefinition>();
+
         private readonly WaveSpawnClock _clock = new WaveSpawnClock();
         private readonly List<EnemySpawnEntry> _due = new List<EnemySpawnEntry>();
         private readonly HashSet<string> _missingPointsLogged = new HashSet<string>();
@@ -190,6 +196,12 @@ namespace MS2026.Fortress
                     Debug.LogWarning("[EnemySpawnDirector] enemyTypeが未設定のエントリがあります。", this);
                 }
 
+                return;
+            }
+
+            // 代わりにもう出ている分（観客の菌など）は、ここでは出さない。
+            if (FortressNet.HasSimulationAuthority && Replacements.TryConsume(entry.enemyType))
+            {
                 return;
             }
 

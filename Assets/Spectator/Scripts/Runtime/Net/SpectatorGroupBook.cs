@@ -275,15 +275,14 @@ namespace MS2026.Spectator
 
     /// <summary>
     /// 観客が出せる量の上限と、ボスのたまり（Host だけ・メインスレッド）。Unity に頼らない。
-    /// 上限 = はじめの持ち分 + ウェーブで出た菌の数 × 割合 − 観客が出した数（試合ごと）。
+    /// 観客の菌は、ウェーブがこれから出す予定の敵と入れ替える（その数だけウェーブの敵が減る）ので、試合の難しさは変わらない。
+    /// ただ、ウェーブがまだ出していない分を先に出しすぎないよう、入れ替えてまだ打ち消していない数を
+    /// <see cref="MaxPending"/> までにする（上限 = MaxPending − まだ打ち消していない数）。
     /// </summary>
     public sealed class SpectatorBudget
     {
-        /// <summary>ウェーブの菌に対する観客の菌の割合（0.15 = 15% 上乗せまで）。</summary>
-        public float Ratio = 0.15f;
-
-        /// <summary>試合の始めから出せる分（ウェーブがまだ少ないうちも送れるように）。</summary>
-        public int StartAllowance = 60;
+        /// <summary>入れ替えてまだウェーブで打ち消していない数の上限（ふつうの菌の数。60 = 3 回分）。</summary>
+        public int MaxPending = 60;
 
         /// <summary>ボスが来るまでの「送った回数」の合計。</summary>
         public int PoolMax = 15;
@@ -291,7 +290,8 @@ namespace MS2026.Spectator
         /// <summary>1 試合で出るボスの数の上限。</summary>
         public int MaxBosses = 2;
 
-        public int WaveSpawned { get; private set; }
+        /// <summary>入れ替えて、まだウェーブで打ち消していない数。</summary>
+        public int Pending { get; private set; }
 
         public int SpectatorSpawned { get; private set; }
 
@@ -301,20 +301,20 @@ namespace MS2026.Spectator
 
         public int BossesLeft => Math.Max(0, MaxBosses - BossesSpawned);
 
-        public int Allowance => Math.Max(0, StartAllowance + (int)(Ratio * WaveSpawned) - SpectatorSpawned);
+        public int Allowance => Math.Max(0, MaxPending - Pending);
 
         /// <summary>あと count 体出してよいか。</summary>
         public bool CanSpawn(int count) => Allowance >= count;
 
         public void Reset()
         {
-            WaveSpawned = 0;
+            Pending = 0;
             SpectatorSpawned = 0;
             Pool = 0;
             BossesSpawned = 0;
         }
 
-        public void SetWaveSpawned(int count) => WaveSpawned = Math.Max(0, count);
+        public void SetPending(int count) => Pending = Math.Max(0, count);
 
         public void AddSpectatorSpawned(int count) => SpectatorSpawned += Math.Max(0, count);
 
