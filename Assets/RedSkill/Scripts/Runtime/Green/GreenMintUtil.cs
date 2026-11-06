@@ -119,6 +119,30 @@ namespace MS2026.Skills.Green
             return 1f - t * t * t;
         }
 
+        public static float EaseInCubic(float t)
+        {
+            t = Mathf.Clamp01(t);
+            return t * t * t;
+        }
+
+        public static float EaseInOutCubic(float t)
+        {
+            t = Mathf.Clamp01(t);
+            return t < 0.5f ? 4f * t * t * t : 1f - Mathf.Pow(-2f * t + 2f, 3f) * 0.5f;
+        }
+
+        /// <summary>t が from から to まで進む割合（0〜1）。</summary>
+        public static float Segment(float t, float from, float to)
+        {
+            return to > from ? Mathf.Clamp01((t - from) / (to - from)) : (t >= to ? 1f : 0f);
+        }
+
+        /// <summary>画面の上向き up に対する、画面の右向き。</summary>
+        public static Vector2 RightOf(Vector2 up)
+        {
+            return new Vector2(up.y, -up.x);
+        }
+
         public static void DestroySafe(Object target)
         {
             if (target == null)

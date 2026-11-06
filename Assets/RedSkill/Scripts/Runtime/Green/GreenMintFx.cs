@@ -6,19 +6,29 @@ using UnityEngine.Rendering;
 namespace MS2026.Skills.Green
 {
     /// <summary>
-    /// 緑スキルの演出の道具箱（1人ぶん）。キラキラ・粉・葉っぱ・回復の十字（パーティクル）、光（Radial の板）、広がる波の輪を、
-    /// どこからでも「ここに出して」と呼べるようにまとめる。見た目はすべてシーンの一番上の `[GreenSkill] Pn` の下に作る（保存されない）。
-    /// 粉・葉っぱ・十字は明るい床の上でも読めるよう、光を足す（加算）のではなく普通に重ねて描く。キラキラと光だけ加算。
+    /// 緑スキルの演出の道具箱（1人ぶん）。光の粒・ミントの粉・葉っぱ・回復の十字・煙（パーティクル）、光（Radial の板）、広がる衝撃波の輪、
+    /// 当たったときの白い線を、どこからでも「ここに出して」と呼べるようにまとめる。見た目はすべてシーンの一番上の `[GreenSkill] Pn` の下に作る（保存されない）。
+    /// 粉・葉っぱ・十字・煙は明るい床の上でも読めるよう、光を足す（加算）のではなく普通に重ねて描く。光の粒と光の板だけ加算。
+    /// 描く順番: 守護霊としっぽ（<see cref="UnderEnemiesQueue"/>）は敵より下。葉・粒・光は敵より上。
     /// </summary>
     internal sealed class GreenMintFx : IDisposable
     {
         public const float ZOffset = -0.08f;
+
+        /// <summary>敵（群衆 2990）より先に描く順番。守護霊・しっぽ・地面の光はここから下を使う。</summary>
+        public const int UnderEnemiesQueue = 2986;
+
+        /// <summary>敵より上の絵（葉・十字・煙など）の順番。</summary>
+        public const int OverQueue = 3108;
+
+        public const int SortingBase = 160;
 
         private const string RadialShaderName = "MS2026/RedSkill/Radial";
         private const string ParticleShaderName = "MS2026/RedSkill/Particle";
         private const string SpriteShaderName = "MS2026/GreenSkill/Sprite";
         private const int GlowPoolSize = 24;
         private const int WavePoolSize = 10;
+        private const int SlashPoolSize = 16;
 
         private static readonly int ColorId = Shader.PropertyToID("_Color");
         private static readonly int ShapeAId = Shader.PropertyToID("_ShapeA");
@@ -37,41 +47,53 @@ namespace MS2026.Skills.Green
         private readonly ParticleSystem _powder;
         private readonly ParticleSystem _leaves;
         private readonly ParticleSystem _crosses;
+        private readonly ParticleSystem _smoke;
         private readonly Flash[] _flashes = new Flash[GlowPoolSize];
         private readonly Wave[] _waves = new Wave[WavePoolSize];
+        private readonly Slash[] _slashes = new Slash[SlashPoolSize];
+        private readonly Material _overSpriteMaterial;
 
         public GreenMintFx(GreenMintSkill definition, int playerIndex)
         {
             Definition = definition;
-            Art = new GreenMintArt(definition.palette);
+            Art = new GreenMintArt(definition.palette, definition.spirit.fillOpacity);
             _root = new GameObject("[GreenSkill] P" + (playerIndex + 1)) { hideFlags = HideFlags.DontSave };
             // 地面に寝かせて描くので、自動のビルボード（立たせる処理）の対象から外す。
             _root.AddComponent<BillboardIgnore>();
 
             RadialMaterial = CreateMaterial(definition.shaders.radial, RadialShaderName, 3100);
+            GroundGlowMaterial = CreateMaterial(definition.shaders.radial, RadialShaderName, UnderEnemiesQueue + 2);
             SparkMaterial = CreateMaterial(definition.shaders.particle, ParticleShaderName, 3110);
             SparkMaterial.SetFloat(IntensityId, 2.2f);
             SparkMaterial.SetFloat(SoftnessId, 1.4f);
-            TrailMaterial = CreateMaterial(definition.shaders.particle, ParticleShaderName, 3105);
+            TrailMaterial = CreateMaterial(definition.shaders.particle, ParticleShaderName, 3104);
             TrailMaterial.SetFloat(LineModeId, 1f);
             TrailMaterial.SetFloat(SoftnessId, 1.2f);
-            TrailMaterial.SetFloat(IntensityId, 1.6f);
-            var powderMaterial = CreateSpriteMaterial(definition.shaders.sprite, Art.SoftDot);
-            var leafMaterial = CreateSpriteMaterial(definition.shaders.sprite, Art.LeafTexture);
-            var crossMaterial = CreateSpriteMaterial(definition.shaders.sprite, Art.Cross);
+            TrailMaterial.SetFloat(IntensityId, 1.3f);
+            _overSpriteMaterial = CreateSpriteMaterial(null, OverQueue);
 
-            var order = definition.satellites.sortingOrder;
-            _powder = CreateParticles("Powder", powderMaterial, order + 4, 600, 2.4f,
-                new AnimationCurve(new Keyframe(0f, 0.55f), new Keyframe(0.25f, 1f), new Keyframe(1f, 1.35f)));
-            _leaves = CreateParticles("Leaves", leafMaterial, order + 5, 200, 1.6f,
+            var smokeTexture = definition.art.smoke != null ? definition.art.smoke : Art.SmokeDot;
+            var leafTexture = definition.art.leaf != null ? definition.art.leaf.texture : Art.Leaf.texture;
+            const int order = SortingBase;
+            _smoke = CreateParticles("Smoke", CreateSpriteMaterial(smokeTexture, OverQueue - 2), order + 2, 500, 1.1f,
+                new AnimationCurve(new Keyframe(0f, 0.5f), new Keyframe(1f, 1.7f)));
+            var noise = _smoke.noise;
+            noise.enabled = true;
+            noise.strength = 0.6f;
+            noise.frequency = 0.45f;
+            noise.scrollSpeed = 0.3f;
+            noise.damping = false;
+            _powder = CreateParticles("Powder", CreateSpriteMaterial(Art.PowderDot, OverQueue), order + 4, 500, 2.4f,
+                new AnimationCurve(new Keyframe(0f, 0.6f), new Keyframe(1f, 1.6f)));
+            _leaves = CreateParticles("Leaves", CreateSpriteMaterial(leafTexture, OverQueue), order + 5, 200, 1.5f,
                 new AnimationCurve(new Keyframe(0f, 0.3f), new Keyframe(0.15f, 1f), new Keyframe(1f, 0.85f)));
             var leafRotation = _leaves.rotationOverLifetime;
             leafRotation.enabled = true;
-            leafRotation.z = new ParticleSystem.MinMaxCurve(-3f, 3f);
-            _crosses = CreateParticles("Crosses", crossMaterial, order + 6, 120, 0.8f,
+            leafRotation.z = new ParticleSystem.MinMaxCurve(-5f, 5f);
+            _crosses = CreateParticles("Crosses", CreateSpriteMaterial(Art.Cross, OverQueue), order + 6, 120, 0.8f,
                 new AnimationCurve(new Keyframe(0f, 0.2f), new Keyframe(0.12f, 1.25f), new Keyframe(0.3f, 1f), new Keyframe(1f, 0.7f)));
-            _sparkles = CreateParticles("Sparkles", SparkMaterial, order + 7, 1200, 1.8f,
-                new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(1f, 0.15f)));
+            _sparkles = CreateParticles("Sparkles", SparkMaterial, order + 7, 1200, 2f,
+                new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(1f, 0.3f)));
 
             for (var i = 0; i < _flashes.Length; i++)
             {
@@ -80,8 +102,13 @@ namespace MS2026.Skills.Green
 
             for (var i = 0; i < _waves.Length; i++)
             {
-                var renderer = CreateSprite("Wave" + i, Art.WaveRing, order - 2);
-                _waves[i] = new Wave { Renderer = renderer };
+                _waves[i] = new Wave { Renderer = CreateSprite("Wave" + i, Art.WaveRing, order - 2, _overSpriteMaterial) };
+            }
+
+            var slashMaterial = CreateMaterial(definition.shaders.sprite, SpriteShaderName, 3112);
+            for (var i = 0; i < _slashes.Length; i++)
+            {
+                _slashes[i] = new Slash { Renderer = CreateSprite("Slash" + i, Art.Slash, order + 8, slashMaterial) };
             }
         }
 
@@ -91,16 +118,17 @@ namespace MS2026.Skills.Green
 
         public Transform Root => _root.transform;
 
-        /// <summary>光の板（加算）。</summary>
+        /// <summary>光の板（加算・敵より上）。</summary>
         public Material RadialMaterial { get; }
+
+        /// <summary>地面の光（加算・敵より下。コアや砲台の足元を光らせる）。</summary>
+        public Material GroundGlowMaterial { get; }
 
         /// <summary>光の粒（加算）。</summary>
         public Material SparkMaterial { get; }
 
         /// <summary>光の尾（加算、線）。</summary>
         public Material TrailMaterial { get; }
-
-        public MaterialPropertyBlock Block => _block;
 
         public static Mesh SharedQuad
         {
@@ -143,6 +171,7 @@ namespace MS2026.Skills.Green
                 _powder.Play();
                 _leaves.Play();
                 _crosses.Play();
+                _smoke.Play();
             }
         }
 
@@ -150,6 +179,7 @@ namespace MS2026.Skills.Green
         {
             TickFlashes(dt);
             TickWaves(dt);
+            TickSlashes(dt);
         }
 
         public void Dispose()
@@ -168,50 +198,59 @@ namespace MS2026.Skills.Green
                 var dir = direction.sqrMagnitude > 0.0001f
                     ? GreenMintUtil.Rotate(direction.normalized, UnityEngine.Random.Range(-spread, spread))
                     : GreenMintUtil.RandomDirection();
-                Emit(_sparkles, position, dir * speed * UnityEngine.Random.Range(0.35f, 1.1f), size * UnityEngine.Random.Range(0.6f, 1.25f),
-                    lifetime * UnityEngine.Random.Range(0.6f, 1.2f), color, 0f);
+                Emit(_sparkles, position, dir * speed * UnityEngine.Random.Range(0.4f, 1f), size * UnityEngine.Random.Range(0.75f, 1.2f),
+                    lifetime * UnityEngine.Random.Range(0.8f, 1.15f), color, 0f);
             }
         }
 
-        /// <summary>ミントの粉（白〜ミント色のやわらかい粒）をパッと広げる。</summary>
+        /// <summary>光の粒を1つ、決まった速さで出す（光の柱の中を降る粒など）。</summary>
+        public void SparkAt(Vector2 position, Vector2 velocity, float size, float lifetime, Color color)
+        {
+            Emit(_sparkles, position, velocity, size, lifetime, color, 0f);
+        }
+
+        /// <summary>ミントの粉（白い中・緑のふち）をパッと広げる。</summary>
         public void Powder(Vector2 position, int count, float size, float speed)
         {
-            var palette = Definition.palette;
             for (var i = 0; i < count; i++)
             {
-                var color = Color.Lerp(palette.tablet, palette.mint, UnityEngine.Random.Range(0f, 0.8f));
-                color.a = UnityEngine.Random.Range(0.75f, 0.95f);
                 var dir = GreenMintUtil.RandomDirection();
-                var offset = dir * size * UnityEngine.Random.Range(0f, 0.3f);
-                Emit(_powder, position + offset, dir * speed * UnityEngine.Random.Range(0.3f, 1f), size * UnityEngine.Random.Range(0.6f, 1.2f),
-                    UnityEngine.Random.Range(0.35f, 0.6f), color, 0f);
+                Emit(_powder, position, dir * speed * UnityEngine.Random.Range(0.4f, 1f), size * UnityEngine.Random.Range(0.75f, 1.2f),
+                    UnityEngine.Random.Range(0.36f, 0.52f), Color.white, 0f);
             }
         }
 
         /// <summary>ミントの葉っぱをひらひら舞わせる（外へ流れて、くるくる回りながら消える）。</summary>
         public void Leaves(Vector2 position, int count, float size, float speed)
         {
-            var palette = Definition.palette;
             for (var i = 0; i < count; i++)
             {
                 var dir = GreenMintUtil.RandomDirection();
-                var color = Color.Lerp(Color.white, palette.mint, UnityEngine.Random.Range(0f, 0.25f));
                 Emit(_leaves, position + dir * 0.2f, dir * speed * UnityEngine.Random.Range(0.4f, 1f), size * UnityEngine.Random.Range(0.75f, 1.2f),
-                    UnityEngine.Random.Range(0.8f, 1.3f), color, UnityEngine.Random.Range(0f, 360f));
+                    UnityEngine.Random.Range(1.1f, 1.6f), Color.white, UnityEngine.Random.Range(0f, 360f));
             }
         }
 
         /// <summary>回復の十字（＋）を、画面の上へ浮かばせる。</summary>
-        public void Crosses(Vector2 position, int count, float size, float spreadRadius, Vector2 screenUp)
+        public void Crosses(Vector2 position, int count, float size, float spreadRadius, Vector2 screenUp, float rise = 2f)
         {
-            var palette = Definition.palette;
             for (var i = 0; i < count; i++)
             {
                 var offset = UnityEngine.Random.insideUnitCircle * spreadRadius;
-                var color = Color.Lerp(palette.green, palette.mint, UnityEngine.Random.Range(0.3f, 0.9f));
-                var velocity = screenUp * UnityEngine.Random.Range(1.6f, 3.2f) + UnityEngine.Random.insideUnitCircle * 0.5f;
-                Emit(_crosses, position + offset, velocity, size * UnityEngine.Random.Range(0.7f, 1.2f),
-                    UnityEngine.Random.Range(0.8f, 1.2f), color, 0f);
+                var velocity = screenUp * rise * UnityEngine.Random.Range(0.8f, 1.6f) + UnityEngine.Random.insideUnitCircle * (count > 1 ? 2.5f : 0.3f);
+                Emit(_crosses, position + offset, velocity, size * UnityEngine.Random.Range(0.75f, 1.2f),
+                    UnityEngine.Random.Range(0.9f, 1.3f), Color.white, 0f);
+            }
+        }
+
+        /// <summary>煙の粒（うすい黄緑の丸。ゆらゆら流れながら大きくなって消える）。</summary>
+        public void Smoke(Vector2 position, int count, float size, float speed, Vector2 drift, float lifetime)
+        {
+            for (var i = 0; i < count; i++)
+            {
+                var dir = GreenMintUtil.RandomDirection();
+                Emit(_smoke, position, dir * speed * UnityEngine.Random.Range(0.4f, 1f) + drift, size * 2f * UnityEngine.Random.Range(0.75f, 1.2f),
+                    lifetime * UnityEngine.Random.Range(0.8f, 1.15f), Color.white, UnityEngine.Random.Range(0f, 360f));
             }
         }
 
@@ -230,17 +269,34 @@ namespace MS2026.Skills.Green
             slot.Position = new Vector3(position.x, position.y, z);
         }
 
-        /// <summary>広がる波の輪（普通に重ねる白い輪に色を付ける）。</summary>
-        public void WaveAt(Vector2 position, float fromSize, float toSize, float seconds, Color color, float z = ZOffset + 0.02f)
+        /// <summary>広がる衝撃波の輪（白い輪に色を付ける）。delay 秒あとに出す。</summary>
+        public void WaveAt(Vector2 position, float fromSize, float toSize, float seconds, Color color, float delay = 0f)
         {
             var slot = Oldest(_waves);
             slot.Active = true;
-            slot.Elapsed = 0f;
+            slot.Elapsed = -Mathf.Max(0f, delay);
             slot.Duration = Mathf.Max(0.02f, seconds);
             slot.From = fromSize;
             slot.To = toSize;
             slot.Color = color;
-            slot.Position = new Vector3(position.x, position.y, z);
+            slot.Position = new Vector3(position.x, position.y, ZOffset + 0.02f);
+        }
+
+        /// <summary>当たったときの白い線（弧）。rotationDegrees は線の向き（地面の上で）。</summary>
+        public void SlashAt(Vector2 position, float rotationDegrees, float length, float seconds = 0.22f)
+        {
+            if (length <= 0f)
+            {
+                return;
+            }
+
+            var slot = Oldest(_slashes);
+            slot.Active = true;
+            slot.Elapsed = 0f;
+            slot.Duration = Mathf.Max(0.02f, seconds);
+            slot.Size = length;
+            slot.Rotation = rotationDegrees;
+            slot.Position = new Vector3(position.x, position.y, ZOffset - 0.07f);
         }
 
         // ───────────── 作る ─────────────
@@ -261,17 +317,32 @@ namespace MS2026.Skills.Green
             return renderer;
         }
 
-        public SpriteRenderer CreateSprite(string objectName, Sprite sprite, int sortingOrder, Transform parent = null)
+        /// <summary>絵を1枚出す板。material を省くと、敵より上に描く普通の重ね塗り。</summary>
+        public SpriteRenderer CreateSprite(string objectName, Sprite sprite, int sortingOrder, Material material = null, Transform parent = null)
         {
             var go = new GameObject(objectName) { hideFlags = HideFlags.DontSave };
             go.transform.SetParent(parent != null ? parent : _root.transform, false);
             var renderer = go.AddComponent<SpriteRenderer>();
             renderer.sprite = sprite;
+            renderer.sharedMaterial = material != null ? material : _overSpriteMaterial;
             renderer.sortingOrder = sortingOrder;
             renderer.shadowCastingMode = ShadowCastingMode.Off;
             renderer.receiveShadows = false;
             renderer.enabled = false;
             return renderer;
+        }
+
+        /// <summary>絵のシェーダー（MS2026/GreenSkill/Sprite）のマテリアル。texture は SpriteRenderer なら自動で入るので空でよい。</summary>
+        public Material CreateSpriteMaterial(Texture texture, int renderQueue)
+        {
+            var material = CreateMaterial(Definition.shaders.sprite, SpriteShaderName, renderQueue);
+            if (texture != null)
+            {
+                material.SetTexture(MainTexId, texture);
+                material.mainTexture = texture;
+            }
+
+            return material;
         }
 
         /// <summary>
@@ -288,6 +359,12 @@ namespace MS2026.Skills.Green
             renderer.SetPropertyBlock(_block);
         }
 
+        /// <summary>やわらかい丸い光（地面の光・葉の光）。</summary>
+        public void ApplySoftGlow(Renderer renderer, Color color)
+        {
+            ApplyRadial(renderer, color, new Vector4(0.9f, 1.6f, 0f, 0f), new Vector4(4f, 0f, 0f, 0f), Vector4.zero);
+        }
+
         public static Material CreateMaterial(Shader shader, string fallbackName, int renderQueue)
         {
             if (shader == null)
@@ -302,14 +379,6 @@ namespace MS2026.Skills.Green
             }
 
             return new Material(shader) { hideFlags = HideFlags.HideAndDontSave, renderQueue = renderQueue };
-        }
-
-        private static Material CreateSpriteMaterial(Shader shader, Texture texture)
-        {
-            var material = CreateMaterial(shader, SpriteShaderName, 3108);
-            material.SetTexture(MainTexId, texture);
-            material.mainTexture = texture;
-            return material;
         }
 
         private ParticleSystem CreateParticles(string objectName, Material material, int sortingOrder, int maxParticles, float drag, AnimationCurve sizeCurve)
@@ -341,7 +410,7 @@ namespace MS2026.Skills.Green
             var fade = new Gradient();
             fade.SetKeys(
                 new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
-                new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0.9f, 0.55f), new GradientAlphaKey(0f, 1f) });
+                new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0.75f, 0.5f), new GradientAlphaKey(0f, 1f) });
             colorOverLifetime.color = fade;
 
             var sizeOverLifetime = system.sizeOverLifetime;
@@ -383,7 +452,7 @@ namespace MS2026.Skills.Green
             system.Emit(parameters, 1);
         }
 
-        // ───────────── 光と波 ─────────────
+        // ───────────── 光・波・線 ─────────────
 
         private abstract class Pooled
         {
@@ -409,6 +478,14 @@ namespace MS2026.Skills.Green
             public float From;
             public float To;
             public Color Color;
+            public Vector3 Position;
+        }
+
+        private sealed class Slash : Pooled
+        {
+            public SpriteRenderer Renderer;
+            public float Size;
+            public float Rotation;
             public Vector3 Position;
         }
 
@@ -478,6 +555,12 @@ namespace MS2026.Skills.Green
                 }
 
                 wave.Elapsed += dt;
+                if (wave.Elapsed < 0f)
+                {
+                    wave.Renderer.enabled = false;
+                    continue;
+                }
+
                 var t = wave.Elapsed / wave.Duration;
                 if (t >= 1f)
                 {
@@ -488,12 +571,42 @@ namespace MS2026.Skills.Green
 
                 var size = Mathf.Lerp(wave.From, wave.To, GreenMintUtil.EaseOutCubic(t));
                 var color = wave.Color;
-                color.a *= 1f - t * t;
+                color.a *= 1f - t;
                 var transform = wave.Renderer.transform;
                 transform.SetPositionAndRotation(wave.Position, Quaternion.identity);
                 transform.localScale = new Vector3(size, size, 1f);
                 wave.Renderer.color = color;
                 wave.Renderer.enabled = true;
+            }
+        }
+
+        private void TickSlashes(float dt)
+        {
+            for (var i = 0; i < _slashes.Length; i++)
+            {
+                var slash = _slashes[i];
+                if (!slash.Active)
+                {
+                    slash.Renderer.enabled = false;
+                    continue;
+                }
+
+                slash.Elapsed += dt;
+                var t = slash.Elapsed / slash.Duration;
+                if (t >= 1f)
+                {
+                    slash.Active = false;
+                    slash.Renderer.enabled = false;
+                    continue;
+                }
+
+                // すっと伸びて消える。
+                var length = slash.Size * (0.6f + 0.6f * GreenMintUtil.EaseOutCubic(t));
+                var transform = slash.Renderer.transform;
+                transform.SetPositionAndRotation(slash.Position, Quaternion.Euler(0f, 0f, slash.Rotation));
+                transform.localScale = new Vector3(length, length * Mathf.Lerp(1f, 0.4f, t), 1f);
+                slash.Renderer.color = new Color(0.92f, 1f, 0.86f, 1f - t);
+                slash.Renderer.enabled = true;
             }
         }
     }

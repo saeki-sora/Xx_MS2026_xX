@@ -6,11 +6,14 @@ using UnityEngine;
 namespace MS2026.Skills.Green
 {
     /// <summary>
-    /// 「ミント・サテライト」を実際に動かす係（<see cref="GreenMintSkill.CreateRunner"/> が砲台に付ける。シーンに手で置く必要はない）。
-    /// 流れ: 使える間はケースが震える → 握ると蓋が開き、タブレットがコアへ飛ぶ・ジェルがコアへ伸びる（launch）
-    /// → コアに着いて「ドン」と回復＋全員の画面に波（ここから active）→ 衛星が回って近い敵を撃ち、コアがじわじわ回復
-    /// → 衛星がらせんを描いてコアに吸い込まれ、ジェルの根元もコアへ吸い込まれる（end）→ スロットに終了を知らせる。
-    /// スキル中に緑のプレイヤーが握ると、ジェルが太く速くなり、弾が増える（握っている間は砲台の熱は普段どおり上がる）。
+    /// 緑の守護霊のスキルを実際に動かす係（<see cref="GreenMintSkill.CreateRunner"/> が砲台に付ける。シーンに手で置く必要はない）。
+    /// 流れ（決定版ページと同じ。秒はカットインの後、この係が動き始めてから）:
+    /// 0秒 コアに光の柱 → 0.35秒 巨大な守護霊（26m）が画面の上から降りる（両手を上げた姿から広げた姿へ）
+    /// → 1.5秒「ドン」着地: 衝撃波・画面のふち・揺れ、コア回復（20%）、葉の輪がコアから広がる、しっぽの煙が緑の砲台へつながる
+    /// → 2.7〜3.5秒 一回り小さく（11m）なってコアの背後に収まり、コアを抱える姿へ
+    /// → 12秒まで 葉で守る（触れた敵にダメージ、コアはじわじわ回復 15%）
+    /// → 1秒かけて葉と守護霊が渦になってコアへ吸い込まれる → コアがきらっと光る → スロットに終了を知らせる。
+    /// スキル中に緑のプレイヤーが握ると、輪が速く寄せては返し、回転も速く、葉が大きく光る（握っている間は砲台の熱は普段どおり上がる）。
     /// 回復とダメージは結果を決めるPC（オフライン／Host）だけ。見た目・効果音・揺れは全PCがそれぞれ出す（通信は増やさない）。
     /// </summary>
     // スキルを別の設定ファイルに差し替えるとき、古い係の削除はフレームの最後なので、同じ砲台に一時的に2つ付くことがある（DisallowMultipleComponent にしない）。
@@ -20,30 +23,36 @@ namespace MS2026.Skills.Green
         private enum Phase
         {
             Idle,
-            Launch,
-            Active,
-            Ending
+            Descend,
+            Guard,
+            Suck
         }
+
+        private const int MaxHitFxPerFrame = 12;
 
         [SerializeField]
         private GreenMintSkill definition;
 
         private GreenMintFx _fx;
-        private GreenMintCase _case;
-        private GreenMintSatellites _satellites;
-        private GreenGelLink _gel;
-        private GreenTabletVolley _volley;
+        private GreenToothpasteTube _tube;
+        private GreenGuardianSpirit _spirit;
+        private GreenLeafRing _ring;
+        private GreenLeafContacts _contacts;
         private GreenMintBurst _burst;
-        private GreenTargetScanner _scanner;
+        private SpriteRenderer _pillar;
+        private MeshRenderer _coreGlow;
+        private MeshRenderer _turretGlow;
 
         private Phase _phase = Phase.Idle;
-        private float _phaseTime;
+        private float _time;
         private float _boost;
-        private float _shotCarry;
-        private float _crossCarry;
         private float _regenPending;
-        private float _nextShotSound;
-        private int _nextSatellite;
+        private float _crossCarry;
+        private float _sparkCarry;
+        private float _smokeCarry;
+        private float _coreFlash;
+        private float _nextHitSound;
+        private bool _landed;
         private Handle<VfxMarker> _loopVfx = Handle<VfxMarker>.Invalid;
 
         /// <summary>使っている設定ファイル。</summary>
@@ -70,31 +79,34 @@ namespace MS2026.Skills.Green
             }
 
             _fx = new GreenMintFx(definition, Turret.playerIndex);
-            _scanner = new GreenTargetScanner();
-            _case = new GreenMintCase(_fx, Turret);
-            _satellites = new GreenMintSatellites(_fx);
-            _gel = new GreenGelLink(_fx);
-            _volley = new GreenTabletVolley(_fx, _scanner);
+            _tube = new GreenToothpasteTube(_fx, Turret);
+            _spirit = new GreenGuardianSpirit(_fx);
+            _ring = new GreenLeafRing(_fx);
+            _contacts = new GreenLeafContacts(_ring);
+            _contacts.Configure(definition);
             _burst = new GreenMintBurst(_fx);
+            _pillar = _fx.CreateSprite("Pillar", _fx.Art.Pillar, GreenMintFx.SortingBase + 1);
+            _coreGlow = _fx.CreateQuad("CoreGroundGlow", _fx.GroundGlowMaterial, 0);
+            _turretGlow = _fx.CreateQuad("TurretGroundGlow", _fx.GroundGlowMaterial, 0);
         }
 
         public override void SetReadyVisual(bool ready)
         {
             OnBound();
-            if (_case == null)
+            if (_tube == null)
             {
                 return;
             }
 
             if (ready)
             {
-                _case.Show();
+                _tube.Show();
                 FortressEffectPlayer.PlayOnce(definition.sounds.onReady, Turret.transform.position, Quaternion.identity, Turret.playerIndex);
             }
-            else if (_phase == Phase.Idle)
+            else
             {
-                // 発動以外で取り消された（テストの「止める」など）。発動のときは Activate がケースを開く。
-                _case.Dismiss();
+                // 発動（カットインの始まり）でも、取り消し（テストの「止める」など）でも、最後にぼふっとして消える。
+                _tube.Dismiss(true);
             }
         }
 
@@ -107,16 +119,17 @@ namespace MS2026.Skills.Green
             }
 
             OnBound();
-            SetPhase(Phase.Launch);
+            _tube.Dismiss(false);
+            _phase = Phase.Descend;
+            _time = 0f;
             _boost = 0f;
-            _shotCarry = 0f;
             _regenPending = 0f;
+            _landed = false;
             HealedThisUse = 0f;
-            _case.Open();
-            var from = _case.IsShown ? (Vector2)_case.MouthPosition : (Vector2)Turret.transform.position;
-            _satellites.Launch(from, definition.timing.launchSeconds);
-            _scanner.SetActive(true);
-            FortressEffectPlayer.PlayOnce(definition.sounds.onActivate, _case.IsShown ? _case.MouthPosition : Turret.transform.position, Quaternion.identity, Turret.playerIndex);
+            _ring.ResetLeaves();
+            _contacts.SetActive(true, Turret);
+            var core = CorePosition;
+            FortressEffectPlayer.PlayOnce(definition.sounds.onPillar, new Vector3(core.x, core.y, 0f), Quaternion.identity, Turret.playerIndex);
         }
 
         public override void Cancel()
@@ -126,7 +139,7 @@ namespace MS2026.Skills.Green
                 return;
             }
 
-            StopEverything(true);
+            StopEverything();
         }
 
         private void OnEnable()
@@ -138,21 +151,23 @@ namespace MS2026.Skills.Green
         {
             if (_phase != Phase.Idle)
             {
-                StopEverything(true);
+                StopEverything();
             }
 
-            _case?.Hide();
+            _tube?.Hide();
             _fx?.SetVisible(false);
         }
 
         private void OnDestroy()
         {
             FortressEffectPlayer.Stop(ref _loopVfx);
-            _scanner?.Dispose();
-            _gel?.Dispose();
+            _contacts?.Dispose();
+            _spirit?.Dispose();
             _fx?.Dispose();
             _fx = null;
         }
+
+        private Vector2 CorePosition => GreenMintUtil.CorePosition(Turret.transform.position);
 
         private void Update()
         {
@@ -162,125 +177,299 @@ namespace MS2026.Skills.Green
             }
 
             var dt = Time.deltaTime;
-            var turretPosition = (Vector2)Turret.transform.position;
-            var core = (Vector2)GreenMintUtil.CorePosition(Turret.transform.position);
+            var core = CorePosition;
             UpdateBoost(dt);
-
             _fx.Tick(dt);
-            _case.Tick(dt);
+            _tube.Tick(dt);
             _burst.Tick(dt);
+            _coreFlash = Mathf.Max(0f, _coreFlash - dt * 1.5f);
 
-            switch (_phase)
+            if (_phase == Phase.Idle)
             {
-                case Phase.Launch:
-                    _phaseTime += dt;
-                    if (_phaseTime >= definition.timing.launchSeconds)
-                    {
-                        BeginActive(core);
-                    }
-
-                    break;
-                case Phase.Active:
-                    _phaseTime += dt;
-                    Regenerate(dt);
-                    Shoot(core, dt);
-                    EmitRegenFx(core, dt);
-                    if (_phaseTime >= definition.timing.activeSeconds)
-                    {
-                        BeginEnding();
-                    }
-
-                    break;
-                case Phase.Ending:
-                    _phaseTime += dt;
-                    if (_phaseTime >= definition.timing.endSeconds)
-                    {
-                        Finish(core);
-                    }
-
-                    break;
+                _spirit.Hide();
+                _ring.Hide();
+                _pillar.enabled = false;
+                UpdateGroundGlows(core, false, Slot != null && Slot.IsWaitingForCutIn);
+                return;
             }
 
-            _satellites.Tick(core, _boost, dt);
-            _volley.Tick(Turret, dt);
-            UpdateGel(turretPosition, core, dt);
-
-            // スキルが終わっても、飛んでいる弾が着くまでは敵の位置を追う。
-            if (_phase == Phase.Idle && _volley.ActiveCount == 0)
+            _time += dt;
+            var timing = definition.timing;
+            if (_phase == Phase.Descend && _time >= timing.Land)
             {
-                _scanner.SetActive(false);
+                Land(core);
             }
+
+            if (_phase == Phase.Guard && _time >= timing.GuardEnd)
+            {
+                BeginSuck(core);
+            }
+
+            if (_phase == Phase.Suck && _time >= timing.GuardEnd + timing.suckSeconds)
+            {
+                Finish(core);
+                return;
+            }
+
+            var state = SpiritState(core, dt);
+            _spirit.Apply(state, Time.time);
+            UpdatePillar(core);
+            UpdateRing(core, dt);
+            if (_phase == Phase.Guard)
+            {
+                Regenerate(dt);
+                EmitRegenCrosses(core, dt);
+            }
+
+            UpdateGroundGlows(core, _phase == Phase.Guard, true);
         }
 
         // ───────────── 段階 ─────────────
 
-        private void BeginActive(Vector2 core)
+        /// <summary>ドン: 守護霊が着地した瞬間。</summary>
+        private void Land(Vector2 core)
         {
-            SetPhase(Phase.Active);
-            _satellites.BeginOrbit();
-            _burst.Play(core, Turret.playerIndex);
+            _phase = Phase.Guard;
+            _landed = true;
+            _coreFlash = 1f;
+            _burst.PlayLand(core, Turret.playerIndex);
 
             var coreController = GreenMintUtil.Core;
             if (coreController != null)
             {
                 HealedThisUse += GreenMintUtil.Heal(coreController.maxHealth * definition.heal.burstPercent / 100f, definition.heal.stopWhenMatchEnded);
                 FortressEffectPlayer.Stop(ref _loopVfx);
-                _loopVfx = FortressEffectPlayer.StartFollowing(definition.sounds.whileActive, coreController.transform, Turret.playerIndex);
+                _loopVfx = FortressEffectPlayer.StartFollowing(definition.sounds.whileGuarding, coreController.transform, Turret.playerIndex);
             }
 
-            FortressEffectPlayer.PlayOnce(definition.sounds.onBurst, new Vector3(core.x, core.y, 0f), Quaternion.identity, Turret.playerIndex);
+            var position = new Vector3(core.x, core.y, 0f);
+            FortressEffectPlayer.PlayOnce(definition.sounds.onLand, position, Quaternion.identity, Turret.playerIndex);
+            FortressEffectPlayer.PlayOnce(definition.sounds.landVoice, position, Quaternion.identity, Turret.playerIndex);
         }
 
-        private void BeginEnding()
+        private void BeginSuck(Vector2 core)
         {
-            SetPhase(Phase.Ending);
+            _phase = Phase.Suck;
             FlushRegen(true);
-            _satellites.BeginEnd(definition.timing.endSeconds);
+            FortressEffectPlayer.Stop(ref _loopVfx);
+            FortressEffectPlayer.PlayOnce(definition.sounds.onSuck, new Vector3(core.x, core.y, 0f), Quaternion.identity, Turret.playerIndex);
         }
 
         private void Finish(Vector2 core)
         {
-            var palette = definition.palette;
-            _fx.FlashAt(core, definition.satellites.membraneRadius * 2.6f, 0.45f, palette.glow, 10, 0.6f);
-            _fx.Sparkles(core, 40, 9f, 0.35f, palette.glow);
-            var ring = palette.mint;
-            ring.a = 0.8f;
-            _fx.WaveAt(core, 1f, definition.satellites.membraneRadius * 3.5f, 0.45f, ring);
+            _burst.PlayEnd(core);
+            _coreFlash = 1f;
             FortressEffectPlayer.PlayOnce(definition.sounds.onEnd, new Vector3(core.x, core.y, 0f), Quaternion.identity, Turret.playerIndex);
-            StopEverything(false);
+            StopEverything();
+            // 地面の光は、きらっの後もしばらく残して消す（Idle の間も少しずつ弱まる）。
             NotifyFinished();
         }
 
-        /// <summary>止める。immediate なら見た目もすぐ消す（中断）。そうでなければ飛んでいる弾は最後まで飛ばす。</summary>
-        private void StopEverything(bool immediate)
+        /// <summary>止める（見た目もすぐ消す）。</summary>
+        private void StopEverything()
         {
-            SetPhase(Phase.Idle);
+            _phase = Phase.Idle;
             FortressEffectPlayer.Stop(ref _loopVfx);
             _boost = 0f;
-            if (immediate)
+            _contacts?.SetActive(false, Turret);
+            _contacts?.ClearHits();
+            _spirit?.Hide();
+            _ring?.Hide();
+            if (_pillar != null)
             {
-                _volley?.Clear();
-                _satellites?.Hide();
-                _gel?.Hide();
-                _burst?.Hide();
-                _case?.Dismiss();
-                _scanner?.SetActive(false);
+                _pillar.enabled = false;
             }
         }
 
-        private void SetPhase(Phase next)
+        // ───────────── 守護霊 ─────────────
+
+        private GreenSpiritState SpiritState(Vector2 core, float dt)
         {
-            _phase = next;
-            _phaseTime = 0f;
+            var timing = definition.timing;
+            var spirit = definition.spirit;
+            var t = _time;
+            var land = timing.Land;
+            var up = GreenMintUtil.ScreenUp;
+            var right = GreenMintUtil.RightOf(up);
+            var bob = Mathf.Sin(Time.time * spirit.bobSpeed) * spirit.bobAmount;
+            var state = new GreenSpiritState
+            {
+                Visible = true,
+                TailTarget = Turret.transform.position,
+                Height = spirit.giantHeight,
+                Alpha = 1f,
+                TailFrom = 0f,
+                TailTo = 1f
+            };
+
+            switch (_phase)
+            {
+                case Phase.Descend:
+                {
+                    // 画面の上から降りてくる（だんだんゆっくり）。降りながら両手を広げていく。
+                    var descend = GreenMintUtil.EaseOutCubic(GreenMintUtil.Segment(t, timing.descendStart, land));
+                    state.Center = core + up * Mathf.Lerp(spirit.startAbove, 0f, descend);
+                    state.Pose = GreenMintUtil.Segment(t, land * 0.6f, land);
+                    state.Alpha = GreenMintUtil.Segment(t, timing.descendStart, timing.descendStart + 0.35f);
+                    state.Glow = spirit.glow.x;
+                    state.TailMode = 1;
+                    RainSparkles(core, up, right, dt);
+                    break;
+                }
+                case Phase.Guard:
+                {
+                    // 一回り小さくなってコアの背後に収まり、コアを抱える姿へ。
+                    var shrink = GreenMintUtil.EaseInOutCubic(GreenMintUtil.Segment(t, timing.shrinkStart, Mathf.Max(timing.shrinkStart + 0.05f, timing.shrinkEnd)));
+                    state.Height = Mathf.Lerp(spirit.giantHeight, spirit.stayHeight, shrink);
+                    state.Center = core + up * bob;
+                    state.Pose = 1f + shrink;
+                    state.Glow = Mathf.Lerp(spirit.glow.y, spirit.glow.z, GreenMintUtil.Segment(t, land, Mathf.Max(land + 0.1f, timing.shrinkEnd - 0.1f)));
+                    state.Glow = Mathf.Max(state.Glow, 0.9f * _boost);
+                    state.TailMode = 2;
+                    state.TailTo = GreenMintUtil.EaseOutCubic(GreenMintUtil.Segment(t, land, land + 0.6f));
+                    if (shrink > 0f && shrink < 1f)
+                    {
+                        // 縮むとき、体からふわっと煙がこぼれる。
+                        var count = GreenMintUtil.Accumulate(ref _smokeCarry, 42f * dt);
+                        for (var i = 0; i < count; i++)
+                        {
+                            var p = state.Center + right * (Random.Range(-0.25f, 0.25f) * state.Height) - up * (Random.Range(-0.5f, 0.2f) * state.Height);
+                            _fx.Smoke(p, 1, 1.3f, 2f, Vector2.zero, 0.8f);
+                        }
+                    }
+
+                    break;
+                }
+                case Phase.Suck:
+                {
+                    // 回りながら小さくなってコアへ吸い込まれる。しっぽの煙は先に消える。
+                    var p = GreenMintUtil.Segment(t, timing.GuardEnd, timing.GuardEnd + timing.suckSeconds);
+                    var g = GreenMintUtil.EaseInCubic(p);
+                    state.Height = Mathf.Lerp(spirit.stayHeight, 0.5f, g);
+                    state.Center = core + up * Mathf.Lerp(bob, 0f, g);
+                    state.Pose = 2f;
+                    state.Spin = g * 360f * 1.1f;
+                    state.Alpha = 1f - GreenMintUtil.Segment(p, 0.75f, 1f);
+                    state.Glow = spirit.glow.z + g;
+                    state.TailMode = 2;
+                    state.TailTo = 1f - GreenMintUtil.EaseOutCubic(GreenMintUtil.Segment(p, 0f, 0.6f));
+                    var count = GreenMintUtil.Accumulate(ref _smokeCarry, 50f * dt);
+                    for (var i = 0; i < count; i++)
+                    {
+                        var a = Time.time * 10f + i * 0.4f;
+                        var r = Mathf.Lerp(5f, 0.5f, g);
+                        _fx.Smoke(core + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r, 1, 0.9f, 0.3f, Vector2.zero, 0.5f);
+                    }
+
+                    break;
+                }
+            }
+
+            return state;
         }
 
-        // ───────────── 中身 ─────────────
+        /// <summary>光の柱の中を、上から光の粒が降る（降りてくる間）。</summary>
+        private void RainSparkles(Vector2 core, Vector2 up, Vector2 right, float dt)
+        {
+            if (_time >= 1.4f)
+            {
+                return;
+            }
+
+            var count = GreenMintUtil.Accumulate(ref _sparkCarry, 48f * dt);
+            var color = definition.palette.glow;
+            for (var i = 0; i < count; i++)
+            {
+                var position = core + right * Random.Range(-2.2f, 2.2f) + up * 14f;
+                _fx.SparkAt(position, -up * Random.Range(12f, 20f), Random.Range(0.3f, 0.5f), Random.Range(0.65f, 0.9f), color);
+            }
+        }
+
+        private void UpdatePillar(Vector2 core)
+        {
+            var settings = definition.burst.pillar;
+            var duration = Mathf.Max(0.05f, settings.y);
+            var f = _time / duration;
+            if (f >= 1f || settings.x <= 0f)
+            {
+                _pillar.enabled = false;
+                return;
+            }
+
+            var up = GreenMintUtil.ScreenUp;
+            var bottom = core - up * 0.5f;
+            var width = settings.x * (1f - f * 0.4f);
+            _pillar.transform.SetPositionAndRotation(new Vector3(bottom.x, bottom.y, GreenMintFx.ZOffset - 0.09f), GreenMintUtil.FacingUp(up));
+            // 絵は幅 1・縦 4。縦 40m まで伸ばす（画面の上の外まで）。
+            _pillar.transform.localScale = new Vector3(width, 10f, 1f);
+            _pillar.color = new Color(0.92f, 1f, 0.88f, 0.75f * Mathf.Sin(f * Mathf.PI));
+            _pillar.enabled = true;
+        }
+
+        // ───────────── 葉の輪 ─────────────
+
+        private void UpdateRing(Vector2 core, float dt)
+        {
+            var timing = definition.timing;
+            var appear = _landed ? GreenMintUtil.Segment(_time, timing.Land, timing.Land + timing.leafAppearSeconds) : 0f;
+            if (appear <= 0f && _landed)
+            {
+                appear = 0.0001f;
+            }
+
+            var suck = _phase == Phase.Suck ? GreenMintUtil.Segment(_time, timing.GuardEnd, timing.GuardEnd + timing.suckSeconds) : -1f;
+            _ring.Tick(core, appear, suck, _boost, Time.time, dt);
+
+            if (_phase == Phase.Guard)
+            {
+                _contacts.Tick(core);
+            }
+            else
+            {
+                _contacts.Pause();
+            }
+
+            PlayHitFx();
+        }
+
+        private void PlayHitFx()
+        {
+            var hits = _contacts.Hits;
+            if (hits.Count == 0)
+            {
+                return;
+            }
+
+            var leaves = definition.leaves;
+            var palette = definition.palette;
+            var sounds = definition.sounds;
+            var shown = Mathf.Min(hits.Count, MaxHitFxPerFrame);
+            for (var i = 0; i < shown; i++)
+            {
+                var hit = hits[i];
+                _fx.Powder(hit.Position, leaves.hitPowder, 1f, 3f);
+                _fx.Sparkles(hit.Position, leaves.hitSparkles, 6f, 0.3f, palette.glow, default, 180f, 0.4f);
+                _fx.SlashAt(hit.Position, _ring.RotationOf(hit.Leaf), leaves.hitSlashSize);
+                _ring.MarkHit(hit.Leaf);
+            }
+
+            if (Time.time >= _nextHitSound && !sounds.onLeafHit.IsEmpty)
+            {
+                _nextHitSound = Time.time + sounds.leafHitInterval;
+                var p = hits[0].Position;
+                FortressEffectPlayer.PlayOnce(sounds.onLeafHit, new Vector3(p.x, p.y, 0f), Quaternion.identity, Turret.playerIndex);
+            }
+
+            _contacts.ClearHits();
+        }
+
+        // ───────────── 回復・握る・地面の光 ─────────────
 
         /// <summary>握る強さ: 握っている間の太さ（0〜1）をなめらかに追う。スキル中以外は 0 へ戻る。</summary>
         private void UpdateBoost(float dt)
         {
             var target = 0f;
-            if ((_phase == Phase.Launch || _phase == Phase.Active) && Turret.IsFiring)
+            if ((_phase == Phase.Descend || _phase == Phase.Guard) && Turret.IsFiring)
             {
                 target = Mathf.Clamp01(Turret.CurrentThickness01);
             }
@@ -297,7 +486,8 @@ namespace MS2026.Skills.Green
                 return;
             }
 
-            _regenPending += core.maxHealth * definition.heal.regenPercent / 100f * dt / Mathf.Max(0.1f, definition.timing.activeSeconds);
+            var seconds = Mathf.Max(0.1f, definition.timing.GuardEnd - definition.timing.Land);
+            _regenPending += core.maxHealth * definition.heal.regenPercent / 100f * dt / seconds;
             FlushRegen(false);
         }
 
@@ -313,125 +503,44 @@ namespace MS2026.Skills.Green
             _regenPending = 0f;
         }
 
-        private void Shoot(Vector2 core, float dt)
-        {
-            if (!_satellites.CanShoot)
-            {
-                return;
-            }
-
-            var attack = definition.attack;
-            _scanner.Configure(core, attack.range, attack.bombPriorityMeters, attack.targetActors);
-            _scanner.BeginFrame();
-
-            var rate = Mathf.Lerp(attack.shotsPerSecond, Mathf.Max(attack.shotsPerSecond, definition.boost.boostedShotsPerSecond), _boost);
-            _shotCarry += rate * dt;
-            var shots = Mathf.Min(Mathf.FloorToInt(_shotCarry), 8);
-            for (var i = 0; i < shots; i++)
-            {
-                if (!_scanner.TryTake(out var target))
-                {
-                    // 狙う敵がいない: 溜めすぎないようにして待つ。
-                    _shotCarry = Mathf.Min(_shotCarry, 1f);
-                    return;
-                }
-
-                _shotCarry -= 1f;
-                var satellite = PickSatellite(target.Position);
-                var from = _satellites.PositionOf(satellite);
-                if (!_volley.Fire(from, from - core, target))
-                {
-                    _scanner.Release(target);
-                    _shotCarry = Mathf.Min(_shotCarry, 1f);
-                    return;
-                }
-
-                _satellites.Punch(satellite);
-                var shotFx = definition.shots;
-                if (shotFx.muzzleFlashSize > 0f)
-                {
-                    _fx.FlashAt(from, shotFx.muzzleFlashSize, 0.14f, definition.palette.glow, 4);
-                }
-
-                var sounds = definition.sounds;
-                if (Time.time >= _nextShotSound && !sounds.onShot.IsEmpty)
-                {
-                    _nextShotSound = Time.time + sounds.shotInterval;
-                    FortressEffectPlayer.PlayOnce(sounds.onShot, new Vector3(from.x, from.y, 0f), FortressEffectPlayer.RotationFacing(target.Position - from), Turret.playerIndex);
-                }
-            }
-        }
-
-        /// <summary>撃つ衛星: 敵に近い衛星を優先しつつ、同じ衛星ばかりにならないよう順番も混ぜる。</summary>
-        private int PickSatellite(Vector2 target)
-        {
-            var count = _satellites.Count;
-            var best = _nextSatellite % count;
-            var bestDistance = float.MaxValue;
-            for (var k = 0; k < Mathf.Min(3, count); k++)
-            {
-                var index = (_nextSatellite + k) % count;
-                var distance = (_satellites.PositionOf(index) - target).sqrMagnitude;
-                if (distance < bestDistance)
-                {
-                    bestDistance = distance;
-                    best = index;
-                }
-            }
-
-            _nextSatellite = (best + 1) % count;
-            return best;
-        }
-
-        private void EmitRegenFx(Vector2 core, float dt)
+        private void EmitRegenCrosses(Vector2 core, float dt)
         {
             var crosses = GreenMintUtil.Accumulate(ref _crossCarry, definition.burst.regenCrossRate * dt);
-            if (crosses > 0)
+            for (var i = 0; i < crosses; i++)
             {
-                _fx.Crosses(core, crosses, 0.55f, definition.satellites.membraneRadius * 0.8f, GreenMintUtil.ScreenUp);
+                _fx.Crosses(core + Random.insideUnitCircle, 1, 0.55f, 0f, GreenMintUtil.ScreenUp, 1.6f);
             }
         }
 
-        /// <summary>ジェル: 発動で砲台からコアへ伸び、スキル中は流れ続け、終わりは根元がコアへ吸い込まれる。</summary>
-        private void UpdateGel(Vector2 turret, Vector2 core, float dt)
+        /// <summary>コアと緑の砲台の足元の光（敵より下）。守っている間・きらっの後はコア、カットインからスキル中は砲台。</summary>
+        private void UpdateGroundGlows(Vector2 core, bool guarding, bool turretBusy)
         {
-            var link = definition.link;
-            float tail;
-            float head;
-            var strength = 1f;
-            switch (_phase)
+            var glow = definition.palette.glow;
+            var coreStrength = (guarding ? 0.25f : 0f) + 0.5f * _coreFlash;
+            if (coreStrength > 0.005f)
             {
-                case Phase.Launch:
-                    tail = 0f;
-                    head = GreenMintUtil.EaseOutCubic(_phaseTime / Mathf.Max(0.01f, Mathf.Min(link.extendSeconds, definition.timing.launchSeconds)));
-                    break;
-                case Phase.Active:
-                    tail = 0f;
-                    head = 1f;
-                    break;
-                case Phase.Ending:
-                    var t = _phaseTime / Mathf.Max(0.01f, Mathf.Min(link.extendSeconds, definition.timing.endSeconds));
-                    tail = Mathf.SmoothStep(0f, 1f, t);
-                    head = 1f;
-                    strength = 1f - Mathf.Clamp01(t - 0.6f) / 0.4f;
-                    break;
-                default:
-                    _gel.Hide();
-                    return;
+                _coreGlow.transform.SetPositionAndRotation(new Vector3(core.x, core.y, GreenMintFx.ZOffset + 0.02f), Quaternion.identity);
+                _coreGlow.transform.localScale = new Vector3(6.8f, 6.8f, 1f);
+                _fx.ApplySoftGlow(_coreGlow, glow * coreStrength);
+                _coreGlow.enabled = true;
+            }
+            else
+            {
+                _coreGlow.enabled = false;
             }
 
-            var axis = core - turret;
-            var length = axis.magnitude;
-            if (length < 0.1f)
+            if (turretBusy)
             {
-                _gel.Hide();
-                return;
+                var turret = (Vector2)Turret.transform.position;
+                _turretGlow.transform.SetPositionAndRotation(new Vector3(turret.x, turret.y, GreenMintFx.ZOffset + 0.02f), Quaternion.identity);
+                _turretGlow.transform.localScale = new Vector3(3.6f, 3.6f, 1f);
+                _fx.ApplySoftGlow(_turretGlow, glow * (0.45f + 0.2f * _boost));
+                _turretGlow.enabled = true;
             }
-
-            var dir = axis / length;
-            var from = turret + dir * 0.55f;
-            var to = core - dir * (definition.satellites.membraneRadius * 0.8f);
-            _gel.Tick(from, to, tail, head, _boost, strength, dt);
+            else
+            {
+                _turretGlow.enabled = false;
+            }
         }
     }
 }

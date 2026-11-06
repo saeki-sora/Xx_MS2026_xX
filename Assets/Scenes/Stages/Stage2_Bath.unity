@@ -2482,7 +2482,7 @@ MonoBehaviour:
       regenDelaySeconds: 10
       regenHealthRatio: 1
     visual:
-      visualPrefab: {fileID: 0}
+      visualPrefab: {fileID: 919132149155446097, guid: c0393c8b9a56b8b48ad05a64ef410026, type: 3}
       fitMode: 0
       visualOffset: {x: 0, y: 0, z: 0}
       visualRotation: {x: 0, y: 0, z: 0}
@@ -2491,7 +2491,7 @@ MonoBehaviour:
       damageStages: []
       darkenWithDamage: 1
       destroyedPrefab: {fileID: 0}
-      destroyedGhostAlpha: 0.15
+      destroyedGhostAlpha: 0
       controlPlaceholderColor: 1
       placeholderColor: {r: 0.72, g: 0.52, b: 0.34, a: 1}
       hitFlashSeconds: 0.06

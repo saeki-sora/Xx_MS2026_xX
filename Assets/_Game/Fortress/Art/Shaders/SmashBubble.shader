@@ -5,7 +5,8 @@
 //                   先に描くので、泡の後ろに回り込んだように見える。メッシュの大きさは変えないので、
 //                   破壊可能物の「大きさへの合わせ方」（Renderer の大きさで測る）には影響しない。
 //   2回目「膜」:     半透明の泡。縁ほど虹色が濃く、中にも色がゆっくり流れる。つやも付ける。
-// どちらも _BaseColor を最後に掛けるので、破壊可能物の色の掛け算（ダメージで暗く・割れた後の薄い跡）がそのまま効く。
+// 破壊可能物が掛ける _BaseColor は、濃さ（A）だけを使う。割れた後の薄い跡は効くが、
+// 「ダメージで暗くする」の色（RGB）は無視して、割れる直前まで同じ見た目のままにする（ユーザー決定 2026-11-06）。
 // メッシュは「原点が中心の球」を想定（Bubble2.fbx はそうなっている）。
 Shader "MS2026/Fortress/SmashBubble"
 {
@@ -162,7 +163,7 @@ Shader "MS2026/Fortress/SmashBubble"
                 float3 color = rainbow * glowAlpha + coreAlpha.xxx;
                 float alpha = saturate(glowAlpha + coreAlpha) * (1.0 - _HaloAdditive);
 
-                color *= _BaseColor.rgb * _BaseColor.a;
+                color *= _BaseColor.a; // 色（RGB）は使わない: ダメージで暗くしない
                 alpha *= _BaseColor.a;
                 return half4(color, alpha);
             }
@@ -238,7 +239,7 @@ Shader "MS2026/Fortress/SmashBubble"
                 float3 color = _BubbleColor.rgb * bodyAlpha + swirlColor * swirlAlpha + rimColor * rimAlpha + shine.xxx;
                 float alpha = saturate(bodyAlpha + swirlAlpha * 0.6 + rimAlpha * 0.7 + shine * 0.8);
 
-                color *= _BaseColor.rgb * _BaseColor.a;
+                color *= _BaseColor.a; // 色（RGB）は使わない: ダメージで暗くしない
                 alpha *= _BaseColor.a;
                 return half4(color, alpha);
             }
