@@ -51,6 +51,7 @@ namespace MS2026.Stage.EditorTools
             _shell.AddPage(new StageImportPage(_context));
             _shell.AddPage(new StageLayoutPage(_context));
             _shell.AddPage(new StagePropsPage(_context));
+            _shell.AddPage(new StageCorePage(_context));
             _shell.AddPage(new StageViewPage(_context));
             _shell.AddPage(new StageLightPage(_context));
             _shell.AddPage(new StageCheckPage(_context));

@@ -22,6 +22,9 @@ namespace MS2026.Fortress
         [Tooltip("コアを宝石のように見せる見た目（屈折・脈打つ光・HP が減るとひび）。見た目だけ。")]
         public CoreGemLookSettings gemLook = new CoreGemLookSettings();
 
+        [Tooltip("コアを3Dモデル（歯）にしたときの見た目（汚れのしみ・ふちの光・ひび）。光の色・脈の速さ・ひびが入り始める HP は上の宝石の設定と同じ値を使う。見た目だけ。")]
+        public CoreToothLookSettings toothLook = new CoreToothLookSettings();
+
         [Tooltip("ダメージを受けた瞬間に広がる警告の光の輪。見た目だけ。")]
         public CoreHitRingSettings hitRing = new CoreHitRingSettings();
 
@@ -123,6 +126,12 @@ namespace MS2026.Fortress
             if (GetComponent<CoreHitRings>() == null)
             {
                 gameObject.AddComponent<CoreHitRings>();
+            }
+
+            // 見た目を3Dモデル（歯）にしているときの、汚れ・ふちの光・ひび（見た目だけ）。
+            if (GetComponent<CoreToothLook>() == null && GetComponentInChildren<CoreToothModel>(true) != null)
+            {
+                gameObject.AddComponent<CoreToothLook>();
             }
         }
 

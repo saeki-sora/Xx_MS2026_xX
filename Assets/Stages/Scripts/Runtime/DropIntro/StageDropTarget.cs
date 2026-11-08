@@ -24,22 +24,65 @@ namespace MS2026.Stages
         /// <summary>見た目の大きさ（半径くらい。画面の外へ出しきるのに使う）。</summary>
         public readonly float Radius;
 
+        /// <summary>
+        /// 見た目のいちばん床側（カメラから遠い側。Z が大きい側）の、根元からの高さの差。
+        /// 根元が浮いていて見た目は床にある物（石けんなど）でも、見た目のある深さで「画面の外」を計算するのに使う。
+        /// </summary>
+        public readonly float FloorDepthOffset;
+
         public float Delay;
         public bool Landed;
 
+        private readonly System.Collections.Generic.List<Renderer> _hiddenRenderers = new System.Collections.Generic.List<Renderer>();
         private Vector3 _baseLocalPosition;
         private Vector3 _baseScale;
         private Vector3 _writtenLocalPosition;
         private Vector3 _writtenScale;
         private bool _written;
 
-        public StageDropTarget(Transform transform, StageDropKind kind, bool flat, int playerIndex, float radius)
+        public StageDropTarget(Transform transform, StageDropKind kind, bool flat, int playerIndex, float radius, float floorDepthOffset)
         {
             Transform = transform;
             Kind = kind;
             Flat = flat;
             PlayerIndex = playerIndex;
             Radius = radius;
+            FloorDepthOffset = floorDepthOffset;
+        }
+
+        /// <summary>
+        /// 描かない（true）／描く（false）。順番が来るまで描かないことで、置き方や大きさに関わらず、落ちる前に見えることを防ぐ。
+        /// 隠している間にできた見た目（あとから付く絵など）も拾うので、隠している間は毎フレーム呼ぶ。自分が隠した物だけ戻す。
+        /// </summary>
+        public void SetHidden(bool hidden)
+        {
+            if (!hidden)
+            {
+                foreach (var renderer in _hiddenRenderers)
+                {
+                    if (renderer != null)
+                    {
+                        renderer.forceRenderingOff = false;
+                    }
+                }
+
+                _hiddenRenderers.Clear();
+                return;
+            }
+
+            if (Transform == null)
+            {
+                return;
+            }
+
+            foreach (var renderer in Transform.GetComponentsInChildren<Renderer>(true))
+            {
+                if (!renderer.forceRenderingOff)
+                {
+                    renderer.forceRenderingOff = true;
+                    _hiddenRenderers.Add(renderer);
+                }
+            }
         }
 
         /// <summary>着地する位置（今の元の位置。ワールド座標）。</summary>
@@ -88,6 +131,7 @@ namespace MS2026.Stages
             }
 
             _written = false;
+            SetHidden(false);
         }
 
         // 前に書いた値から変わっていたら、ほかの係が書いたので、それを元の値にする。

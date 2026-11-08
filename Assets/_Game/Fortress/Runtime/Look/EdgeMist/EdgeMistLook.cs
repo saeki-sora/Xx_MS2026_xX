@@ -38,11 +38,36 @@ namespace MS2026.Fortress
         /// <summary>今の靄の設定。null なら靄を出さない（ステージが無いシーン）。</summary>
         public static EdgeMistSettings Settings { get; set; }
 
+        private static Camera _editorPreviewCamera;
+
+        /// <summary>
+        /// 編集中のプレビュー（ステージ背景スタジオの「ゲームと同じ見え方で見る」）で、Play していなくても靄を描くカメラ。
+        /// null なら今まで通り Play 中だけ。
+        /// </summary>
+        public static Camera EditorPreviewCamera
+        {
+            get => _editorPreviewCamera;
+            set
+            {
+                _editorPreviewCamera = value;
+                RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+                if (value != null || Application.isPlaying)
+                {
+                    RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
+                }
+                else
+                {
+                    Shader.SetGlobalVector(CoreId, Vector4.zero);
+                }
+            }
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
             RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
             SceneManager.sceneLoaded -= OnSceneLoaded;
+            _editorPreviewCamera = null;
             Settings = null;
             _core = null;
             _coreSearchFrame = -1;
@@ -122,8 +147,9 @@ namespace MS2026.Fortress
                 return false;
             }
 
+            var preview = !Application.isPlaying && _editorPreviewCamera != null && _editorPreviewCamera == camera;
             var rig = FortressCameraRig.Active;
-            if (rig == null || rig.targetCamera != camera)
+            if (!preview && (rig == null || rig.targetCamera != camera))
             {
                 return false;
             }

@@ -107,7 +107,7 @@ namespace MS2026.Fortress
             ring.age = 0f;
             ring.duration = Mathf.Max(0.05f, settings.seconds);
 
-            var radius = Mathf.Max(0.5f, settings.radius);
+            var radius = RingRadius(settings);
             var position = transform.position;
             // カメラは +Z を向いているので、床より少しだけ手前(-Z)に置く。
             ring.renderer.transform.SetPositionAndRotation(new Vector3(position.x, position.y, position.z - 0.03f), Quaternion.identity);
@@ -124,7 +124,7 @@ namespace MS2026.Fortress
                 return;
             }
 
-            var radius = Mathf.Max(0.5f, settings.radius);
+            var radius = RingRadius(settings);
             for (var i = 0; i < _rings.Count; i++)
             {
                 var ring = _rings[i];
@@ -154,8 +154,57 @@ namespace MS2026.Fortress
             ring.renderer.SetPropertyBlock(_block);
         }
 
+        // 輪の半径。コアが3Dモデル（歯）なら、歯が大きいときに歯のふちより外まで広がるようにする（2026-11-07）。
+        private float RingRadius(CoreHitRingSettings settings)
+        {
+            return ToothModel() != null
+                ? CoreToothFit.RingRadius(settings.radius, CoreVisualRadius())
+                : Mathf.Max(0.5f, settings.radius);
+        }
+
+        private CoreToothModel _toothModel;
+
+        private CoreToothModel ToothModel()
+        {
+            if (_toothModel == null)
+            {
+                _toothModel = GetComponentInChildren<CoreToothModel>();
+            }
+
+            return _toothModel != null && _toothModel.IsShowing ? _toothModel : null;
+        }
+
         private float CoreVisualRadius()
         {
+            var tooth = ToothModel();
+            if (tooth != null)
+            {
+                var has = false;
+                var bounds = new Bounds();
+                foreach (var meshRenderer in tooth.GetComponentsInChildren<Renderer>())
+                {
+                    if (meshRenderer is SpriteRenderer)
+                    {
+                        continue;
+                    }
+
+                    if (has)
+                    {
+                        bounds.Encapsulate(meshRenderer.bounds);
+                    }
+                    else
+                    {
+                        bounds = meshRenderer.bounds;
+                        has = true;
+                    }
+                }
+
+                if (has)
+                {
+                    return Mathf.Max(bounds.extents.x, bounds.extents.y);
+                }
+            }
+
             var renderer = TryGetComponent<SpriteRenderer>(out var own) ? own : GetComponentInChildren<SpriteRenderer>();
             if (renderer == null)
             {

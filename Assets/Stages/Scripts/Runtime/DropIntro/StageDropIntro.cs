@@ -191,7 +191,7 @@ namespace MS2026.Stages
                     continue;
                 }
 
-                _targets.Add(new StageDropTarget(prop.visualRoot, StageDropKind.Prop, IsFlat(prop.visualRoot), -1, RadiusOf(prop.visualRoot)));
+                _targets.Add(CreateTarget(prop.visualRoot, StageDropKind.Prop, IsFlat(prop.visualRoot), -1));
             }
         }
 
@@ -312,8 +312,10 @@ namespace MS2026.Stages
                 var kind = _settings.Get(target.Kind);
                 var pose = StageDropTimeline.Evaluate(_time - target.Delay, kind.fallSeconds, kind.fallStretch, kind.squash, kind.squashSeconds);
                 var landing = target.LandingPosition;
-                var offset = pose.Height01 > 0f ? up * (DistanceToLeaveScreen(camera, landing, up, target.Radius) * pose.Height01) : Vector3.zero;
+                var offset = pose.Height01 > 0f ? up * (DistanceToLeaveScreen(camera, landing, up, target) * pose.Height01) : Vector3.zero;
                 target.Apply(offset, ScaleFor(target, pose));
+                // 落ち始めるまでは描かない（画面の外へ出しているが、念のため）。
+                target.SetHidden(pose.Height01 >= 1f);
                 if (pose.Landed && !target.Landed)
                 {
                     target.Landed = true;
@@ -335,7 +337,8 @@ namespace MS2026.Stages
             {
                 if (target.IsAlive)
                 {
-                    target.Apply(up * DistanceToLeaveScreen(camera, target.LandingPosition, up, target.Radius), Vector3.one);
+                    target.Apply(up * DistanceToLeaveScreen(camera, target.LandingPosition, up, target), Vector3.one);
+                    target.SetHidden(true);
                 }
             }
         }
@@ -437,7 +440,8 @@ namespace MS2026.Stages
             var core = FindFirstObjectByType<CoreCrystalController>();
             if (core != null && !IsSkipped(core.transform))
             {
-                _targets.Add(new StageDropTarget(core.transform, StageDropKind.Core, true, -1, RadiusOf(core.transform)));
+                // コアが3Dモデル（歯）なら、3Dの伸び縮み（高さ＝Z）にする（2026-11-07）。
+                _targets.Add(CreateTarget(core.transform, StageDropKind.Core, IsFlat(core.transform), -1));
             }
 
             var turrets = new List<LaserTurret>(FindObjectsByType<LaserTurret>(FindObjectsSortMode.None));
@@ -446,7 +450,7 @@ namespace MS2026.Stages
             {
                 if (!IsSkipped(turret.transform))
                 {
-                    _targets.Add(new StageDropTarget(turret.transform, StageDropKind.Player, true, turret.playerIndex, RadiusOf(turret.transform)));
+                    _targets.Add(CreateTarget(turret.transform, StageDropKind.Player, true, turret.playerIndex));
                 }
             }
         }
@@ -458,7 +462,7 @@ namespace MS2026.Stages
                 return;
             }
 
-            props.Add(new StageDropTarget(visual, StageDropKind.Prop, IsFlat(visual), -1, RadiusOf(visual)));
+            props.Add(CreateTarget(visual, StageDropKind.Prop, IsFlat(visual), -1));
         }
 
         private static void AddObstacle(List<StageDropTarget> props, HashSet<Transform> used, Transform root, UnityEngine.SceneManagement.Scene scene)
@@ -516,7 +520,17 @@ namespace MS2026.Stages
             return hasSprite;
         }
 
-        private static float RadiusOf(Transform root)
+        private static StageDropTarget CreateTarget(Transform root, StageDropKind kind, bool flat, int playerIndex)
+        {
+            var bounds = VisualBounds(root);
+            // 足元から見た大きさ。絵は立てて描かれることもあるので、高さ（Z）も含める。
+            var extents = bounds.extents;
+            var fromRoot = (Vector2)(bounds.center - root.position);
+            var radius = Mathf.Max(extents.x, extents.y, extents.z * 2f) + fromRoot.magnitude + 0.5f;
+            return new StageDropTarget(root, kind, flat, playerIndex, radius, bounds.max.z - root.position.z);
+        }
+
+        private static Bounds VisualBounds(Transform root)
         {
             var has = false;
             var bounds = new Bounds(root.position, Vector3.zero);
@@ -538,10 +552,7 @@ namespace MS2026.Stages
                 }
             }
 
-            // 足元から見た大きさ。絵は立てて描かれることもあるので、高さ（Z）も含める。
-            var extents = bounds.extents;
-            var fromRoot = (Vector2)(bounds.center - root.position);
-            return Mathf.Max(extents.x, extents.y, extents.z * 2f) + fromRoot.magnitude + 0.5f;
+            return bounds;
         }
 
         private static bool IsShape(Renderer renderer)
@@ -656,8 +667,9 @@ namespace MS2026.Stages
         }
 
         /// <summary>着地点から画面の上へ、どれだけずらせば画面の外に出きるか。</summary>
-        private float DistanceToLeaveScreen(Camera camera, Vector3 landing, Vector3 up, float radius)
+        private float DistanceToLeaveScreen(Camera camera, Vector3 landing, Vector3 up, StageDropTarget target)
         {
+            var radius = target.Radius;
             if (camera == null)
             {
                 return FallbackDistance;
@@ -675,14 +687,17 @@ namespace MS2026.Stages
                 return FallbackDistance;
             }
 
-            // 着地点と同じ高さ（Z）の面で、画面の上のふちの少し外にあたる所。
-            var along = (landing.z - ray.origin.z) / ray.direction.z;
+            // 見た目のいちばん床側（カメラから遠い側）の高さ（Z）の面で、画面の上のふちの少し外にあたる所。
+            // 根元の高さで測ると、根元が浮いていて見た目が床にある物（石けんなど）は、ずらしが足りず画面に残る。
+            var depthZ = landing.z + target.FloorDepthOffset;
+            var along = (depthZ - ray.origin.z) / ray.direction.z;
             if (along <= 0f)
             {
                 return FallbackDistance;
             }
 
             var edge = ray.origin + ray.direction * along;
+            edge.z = landing.z;
             return Mathf.Max(radius, Vector3.Dot(edge - landing, up) + radius);
         }
     }

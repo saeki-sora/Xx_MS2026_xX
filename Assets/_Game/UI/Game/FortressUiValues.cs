@@ -38,6 +38,16 @@ namespace MS2026.UI.Game
         [Min(0.2f)]
         public float killMilestoneShowSeconds = 2.2f;
 
+        [Header("コアのHPバー（見た目だけ）")]
+        [Tooltip("本当のHPがこの割合以下を「最後の方」とする。0 = 見た目を変えない。\n" +
+                 "最大HP・ダメージは変えない（バーと % の表示だけ）。ギリギリで勝った感を出すため。")]
+        [Range(0f, 0.9f)]
+        public float coreBarLowActual = 0.35f;
+
+        [Tooltip("本当のHPが上の割合のとき、バーはここまでしか見せない（上より小さいほど、バーは残りわずかなのに実際は粘れる）。")]
+        [Range(0f, 0.95f)]
+        public float coreBarLowShown = 0.25f;
+
         private readonly KillHudLogic _killLogic = new KillHudLogic();
         private float _nextKillPublish;
 
@@ -147,9 +157,28 @@ namespace MS2026.UI.Game
 
             var max = Mathf.Max(1f, _core.maxHealth);
             UiValues.Set(FortressUiKeys.CoreHp, _core.CurrentHealth);
-            UiValues.Set(FortressUiKeys.CoreHp01, Mathf.Clamp01(_core.CurrentHealth / max));
+            UiValues.Set(FortressUiKeys.CoreHp01, CoreBarShown01(Mathf.Clamp01(_core.CurrentHealth / max), coreBarLowActual, coreBarLowShown));
             UiValues.Set(FortressUiKeys.CoreDestroyed, _core.CurrentHealth <= 0f);
             WaveUiPublisher.PublishCoating(_core);
+        }
+
+        /// <summary>
+        /// 本当のHPの割合 → バーに見せる割合。0 と 1 はそのまま、本当の <paramref name="lowActual"/> を
+        /// <paramref name="lowShown"/> に見せ、その間はまっすぐつなぐ（lowShown &lt; lowActual なら、
+        /// 上の方は少しゆっくり減り、バーが残りわずかに見えてからが実際は長く粘れる）。
+        /// </summary>
+        public static float CoreBarShown01(float actual01, float lowActual, float lowShown)
+        {
+            actual01 = Mathf.Clamp01(actual01);
+            if (lowActual <= 0f || lowActual >= 1f)
+            {
+                return actual01;
+            }
+
+            lowShown = Mathf.Clamp(lowShown, 0f, 0.999f);
+            return actual01 <= lowActual
+                ? actual01 / lowActual * lowShown
+                : Mathf.Lerp(lowShown, 1f, (actual01 - lowActual) / (1f - lowActual));
         }
 
         private void PublishEnemies()
