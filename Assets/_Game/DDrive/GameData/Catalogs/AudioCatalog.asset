@@ -153,6 +153,20 @@ MonoBehaviour:
       Persistent: 0
       Domain: 0
       Net: 0
+  - Id: 12053507635172124471
+    Type: 1
+    Address: SE_Fortress_FoamPopMany
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
   - Id: 15534537489305070377
     Type: 2
     Address: BGM_Fortress_BattleTillDawn
@@ -198,6 +212,20 @@ MonoBehaviour:
   - Id: 17972745566154370587
     Type: 1
     Address: SE_Fortress_CoreShatter
+    Flags:
+      Pause: 0
+      Load: 1
+      Pool:
+        Kind: 0
+        InitialCount: 0
+        MaxCount: 0
+      Priority: 0
+      Persistent: 0
+      Domain: 0
+      Net: 0
+  - Id: 18417598939939951980
+    Type: 1
+    Address: SE_Fortress_FoamPop
     Flags:
       Pause: 0
       Load: 1

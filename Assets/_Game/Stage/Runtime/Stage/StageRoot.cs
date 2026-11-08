@@ -69,6 +69,7 @@ namespace MS2026.Stage
                 // 背景が無くなったら群衆の影の2回目の描画も止める（描画の負荷を元に戻す）。
                 Shader.SetGlobalFloat(StageShaderIds.SilhouetteEnabled, 0f);
                 MS2026.Fortress.KillBurstLook.Settings = null;
+                MS2026.Fortress.FoamPopLook.Settings = null;
                 Shader.SetGlobalFloat(StageShaderIds.GlossShift, 0f);
                 // 背景が無くなったら画面のふちの靄も消す。
                 MS2026.Fortress.EdgeMistLook.Settings = null;

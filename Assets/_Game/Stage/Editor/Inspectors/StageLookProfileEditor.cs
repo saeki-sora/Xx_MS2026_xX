@@ -33,7 +33,37 @@ namespace MS2026.Stage.EditorTools
                 ("focusHeight", "透かす目印の高さ"),
                 ("wholeFadeSpeed", "「全体を薄く」の速さ")
             }),
-            ("撃破の破裂（アニメ調。Play 中だけ）", new[]
+            (FoamPopGroup, new[]
+            {
+                ("foamPop.enabled", "光る泡を出す"),
+                ("foamPop.wrapSeconds", "① 包む泡のかたまりの秒数（0=出さない）"),
+                ("foamPop.wrapSize", "① 包む泡のかたまりの大きさ（敵の何倍）"),
+                ("foamPop.bubbleCount", "② 泡の数（まわりが空いているとき）"),
+                ("foamPop.crowdedBubbleCount", "② 泡の数（たくさん倒れているとき）"),
+                ("foamPop.crowdStart", "② 混んでいるとみなし始める数"),
+                ("foamPop.crowdFull", "② とても混んでいるとみなす数"),
+                ("foamPop.bubbleSize", "② 一番大きい泡の半径（m）"),
+                ("foamPop.bubbleSpread", "② 泡が散らばる広さ（m）"),
+                ("foamPop.bubbleSeconds", "② 泡が見えている秒数（1つめが縮み始めるまで）"),
+                ("foamPop.bubbleStagger", "② 2つめ以降が遅れて縮む秒数"),
+                ("foamPop.shrinkSeconds", "② 泡が縮んで光の点になる秒数"),
+                ("foamPop.riseSpeed", "② 泡が浮く速さ"),
+                ("foamPop.dotSeconds", "③ 光の点が消えるまでの秒数（0=出さない）"),
+                ("foamPop.dotRiseSpeed", "③ 光の点が昇る速さ"),
+                ("foamPop.mintColor", "色: ふちの内側の帯のミント色"),
+                ("foamPop.playerColorMix", "色: ふちの外側の倒した人の色の帯の割合"),
+                ("foamPop.glowWhiten", "色: 光を白に寄せる量"),
+                ("foamPop.glowStrength", "色: 泡のまわりの光の強さ"),
+                ("foamPop.bubbleFill", "色: 泡の中の白い塗りの濃さ"),
+                ("foamPop.sound", "音: シュワッ（少し倒したとき）"),
+                ("foamPop.soundMany", "音: シュワッ（たくさん倒したとき。空なら上と同じ）"),
+                ("foamPop.manyKillsCount", "音: 「たくさん」とみなす数"),
+                ("foamPop.soundGroupSeconds", "音: この秒数の間の撃破は1回にまとめる"),
+                ("foamPop.maxNewPerFrame", "負荷: 1フレームに出す最大数"),
+                ("foamPop.maxParts", "負荷: 同時に出す部品の最大数"),
+                ("foamPop.lift", "床からの高さ")
+            }),
+            ("撃破の破裂（アニメ調。Play 中だけ。2026-11-09 から光る泡に替えて OFF）", new[]
             {
                 ("killBurst.enabled", "破裂を出す"),
                 ("killBurst.size", "大きさ"),
@@ -115,6 +145,8 @@ namespace MS2026.Stage.EditorTools
             })
         };
 
+        private const string FoamPopGroup = "倒したときの光る泡（Play 中だけ。下のボタンで試せる）";
+
         public override VisualElement CreateInspectorGUI()
         {
             var root = new VisualElement();
@@ -135,11 +167,48 @@ namespace MS2026.Stage.EditorTools
                         root.Add(new PropertyField(property, label) { tooltip = property.tooltip });
                     }
                 }
+
+                if (group == FoamPopGroup)
+                {
+                    root.Add(FoamPopPreviewButtons());
+                }
             }
 
             root.Bind(serializedObject);
             root.TrackSerializedObjectValue(serializedObject, _ => ((StageLookProfile)target).ApplyGlobals());
             return root;
+        }
+
+        // Play 中に、コアの近くで敵を倒したことにして光る泡を出すボタン（1体・8体・30体）。
+        private static VisualElement FoamPopPreviewButtons()
+        {
+            var row = new VisualElement();
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.flexWrap = Wrap.Wrap;
+            row.style.marginTop = 4;
+            row.style.marginBottom = 8;
+            foreach (var count in new[] { 1, 8, 30 })
+            {
+                var n = count;
+                var button = new Button(() => PreviewFoamPop(n)) { text = $"▶ {n}体倒した所を試す" };
+                button.tooltip = "Play 中だけ。コアの右側で、1P が倒したことにして光る泡と効果音を出す（数字を変えたらすぐ押して見比べられる）。";
+                row.Add(button);
+            }
+
+            return row;
+        }
+
+        private static void PreviewFoamPop(int count)
+        {
+            if (!UnityEngine.Application.isPlaying)
+            {
+                UnityEngine.Debug.Log("[光る泡] 試すボタンは Play 中だけ使えます。");
+                return;
+            }
+
+            var core = UnityEngine.Object.FindFirstObjectByType<MS2026.Fortress.CoreCrystalController>();
+            var centre = core != null ? (UnityEngine.Vector2)core.transform.position : UnityEngine.Vector2.zero;
+            MS2026.Fortress.FoamPopLook.Preview(centre + new UnityEngine.Vector2(3f, 0f), 0, count);
         }
     }
 }

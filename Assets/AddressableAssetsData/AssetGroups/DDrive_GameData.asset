@@ -65,6 +65,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6995b285f7b7c6e449457b04b6ae2944
+    m_Address: SE_Fortress_FoamPopMany
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6ab8e43b8e9ae284e8f53496138e1b8c
     m_Address: SE_Fortress_Overheat
     m_ReadOnly: 0
@@ -132,6 +137,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: dc64863c04f7f0a4bbc648896d675c47
     m_Address: VFX_Fortress_LaserMuzzle
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e657d47322cd20846a2667c3e12de3f9
+    m_Address: SE_Fortress_FoamPop
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

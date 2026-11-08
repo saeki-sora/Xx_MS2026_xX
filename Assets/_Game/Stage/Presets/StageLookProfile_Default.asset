@@ -28,8 +28,52 @@ MonoBehaviour:
   holeSoftness: 0.4
   focusHeight: 0.4
   wholeFadeSpeed: 6
-  killBurst:
+  foamPop:
     enabled: 1
+    wrapSeconds: 0.1
+    wrapSize: 0.75
+    bubbleCount: 5
+    crowdedBubbleCount: 2
+    crowdStart: 3.5
+    crowdFull: 7
+    bubbleSize: 0.155
+    bubbleSpread: 0.26
+    bubbleSeconds: 0.2
+    bubbleStagger: 0.06
+    shrinkSeconds: 0.08
+    riseSpeed: 0.35
+    dotSeconds: 0.35
+    dotRiseSpeed: 0.9
+    mintColor: {r: 0.23, g: 0.76, b: 0.69, a: 1}
+    playerColorMix: 0.5
+    glowWhiten: 0.35
+    glowStrength: 1
+    bubbleFill: 0.5
+    sound:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 18417598939939951980
+        type: 1
+      tintWithPlayerColor: 0
+      colorParam: Color
+    soundMany:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 12053507635172124471
+        type: 1
+      tintWithPlayerColor: 0
+      colorParam: Color
+    manyKillsCount: 8
+    soundGroupSeconds: 0.08
+    maxNewPerFrame: 200
+    maxParts: 3000
+    lift: 0.45
+  killBurst:
+    enabled: 0
     size: 0.9
     lifeSeconds: 0.42
     framesPerSecond: 12

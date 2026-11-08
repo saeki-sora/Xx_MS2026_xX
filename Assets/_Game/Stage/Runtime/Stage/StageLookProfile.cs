@@ -32,6 +32,10 @@ namespace MS2026.Stage
         [Tooltip("「全体を薄く」の切り替わりの速さ。")]
         [Min(0.1f)] public float wholeFadeSpeed = 6f;
 
+        // ── 倒したときの光る泡 ──（見出しは StageLookProfileEditor が日本語で出す）
+        [Tooltip("敵を倒した所に出す光る泡（泡に包まれ、倒した人の色にほんのり光る泡が浮いて、光の点になって昇る）と、まとめて鳴らす効果音。")]
+        public MS2026.Fortress.FoamPopSettings foamPop = new MS2026.Fortress.FoamPopSettings();
+
         // ── 撃破の破裂（アニメ調） ──（見出しは StageLookProfileEditor が日本語で出す）
         [Tooltip("敵を倒した所に出す、アニメ調の破裂（白い星・色のしずく・色の輪。コマ打ち）。")]
         public MS2026.Fortress.KillBurstSettings killBurst = new MS2026.Fortress.KillBurstSettings();
@@ -151,6 +155,7 @@ namespace MS2026.Stage
             if (this == Current)
             {
                 MS2026.Fortress.KillBurstLook.Settings = killBurst;
+                MS2026.Fortress.FoamPopLook.Settings = foamPop;
             }
 
             Shader.SetGlobalColor(StageShaderIds.HeatGlowColor, glowColor);

@@ -55,7 +55,7 @@ MonoBehaviour:
   sparkBurstSpeed: 3.5
   sparkHomingDelay: 0.18
   sparkHomingSpeed: 16
-  deathFlashSize: 0.9
+  deathFlashSize: 0
   sparkBrightness: 1.4
   hitEffectsPerSecond: 60
   fallbackAreaSize: 64
