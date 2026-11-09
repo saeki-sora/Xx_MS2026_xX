@@ -16,6 +16,9 @@ namespace MS2026.Skills.Red
     /// ・火花・トゲ状の光・光の粒・レーザーに沿って走る光の線: パーティクルをコードから1粒ずつ出す。
     /// ・溜めの歯磨き粉: <see cref="RedLaserTube"/>。使える間〜撃ち終わるまで砲台の上に乗り、レーザー・発射口の演出はその口（<see cref="FirePoint"/>）から出る。
     /// ・ビリビリ（赤い稲妻）: <see cref="RedLaserLightning"/>（LineRenderer の使い回し）。溜め中・ため・撃っている間・当たった場所。
+    /// ・光の奔流（2026-11-09）: 白く焼けた芯・影のふちのぼかし（本体のシェーダー）、床を照らす光（FloorLight）、陽炎（Haze）、壁に沿って流れる火花。
+    ///   床の光と陽炎も本体と同じ筋から帯を作るので、壁で止まった筋の先（障害物の裏側）には届かない。
+    /// ・演出ごとの付け外し・強さ（<see cref="RedLaserEffects"/>）は、それぞれの演出の明るさ・数に掛ける。
     /// 作った物は保存されない一時オブジェクト（シーンの一番上に "[RedSkill] Pn" として出る）。
     /// </summary>
     internal sealed class RedLaserVisuals : IDisposable
@@ -23,6 +26,12 @@ namespace MS2026.Skills.Red
         private const string BeamShaderName = "MS2026/RedSkill/Beam";
         private const string RadialShaderName = "MS2026/RedSkill/Radial";
         private const string ParticleShaderName = "MS2026/RedSkill/Particle";
+        private const string FloorLightShaderName = "MS2026/RedSkill/FloorLight";
+        private const string HazeShaderName = "MS2026/RedSkill/Haze";
+
+        // 床の光と陽炎は、敵（群衆、2990）より先に描く（敵の下に光が落ち、敵はゆがまない）。
+        private const int FloorLightQueue = 2980;
+        private const int HazeQueue = 2981;
         private const int RingPoolSize = 8;
         private const int MaxImpactAreas = 4;
         private const int BeamRingPoolSize = 12;
@@ -44,6 +53,12 @@ namespace MS2026.Skills.Red
         private static readonly int IntensityId = Shader.PropertyToID("_Intensity");
         private static readonly int LineModeId = Shader.PropertyToID("_LineMode");
         private static readonly int SoftnessId = Shader.PropertyToID("_Softness");
+        private static readonly int GlowParamsId = Shader.PropertyToID("_GlowParams");
+        private static readonly int CutParamsId = Shader.PropertyToID("_CutParams");
+        private static readonly int FloorColorId = Shader.PropertyToID("_FloorColor");
+        private static readonly int FloorParamsId = Shader.PropertyToID("_FloorParams");
+        private static readonly int HazeParamsId = Shader.PropertyToID("_HazeParams");
+        private static readonly int HazeShapeId = Shader.PropertyToID("_HazeShape");
         private const int LightningPoolSize = 64;
 
         private static Mesh _sharedQuad;
@@ -64,6 +79,15 @@ namespace MS2026.Skills.Red
         private readonly MeshRenderer _haloRenderer;
         private readonly Mesh _haloMesh;
         private readonly StripMesh _haloStrips;
+        private readonly Material _floorMaterial;
+        private readonly MeshRenderer _floorRenderer;
+        private readonly Mesh _floorMesh;
+        private readonly StripMesh _floorStrips;
+        private readonly Material _hazeMaterial;
+        private readonly MeshRenderer _hazeRenderer;
+        private readonly Mesh _hazeMesh;
+        private readonly StripMesh _hazeStrips;
+        private float _wallSparkCarry;
         private Texture2D _haloCrossTexture;
         private readonly Gradient _haloGradient = new Gradient();
         private readonly Glow _muzzleFlare2;
@@ -128,6 +152,10 @@ namespace MS2026.Skills.Red
             _radialMaterial = CreateMaterial(definition.shaders.radial, RadialShaderName);
             _particleMaterial = CreateMaterial(definition.shaders.particle, ParticleShaderName);
             _lightningMaterial = CreateMaterial(definition.shaders.particle, ParticleShaderName);
+            _floorMaterial = CreateMaterial(definition.shaders.floorLight, FloorLightShaderName);
+            _floorMaterial.renderQueue = FloorLightQueue;
+            _hazeMaterial = CreateMaterial(definition.shaders.haze, HazeShaderName);
+            _hazeMaterial.renderQueue = HazeQueue;
             BakeGradients();
 
             var order = definition.look.sortingOrder;
@@ -139,6 +167,14 @@ namespace MS2026.Skills.Red
             _haloMesh.MarkDynamic();
             _haloRenderer = CreateRenderer("BeamHalo", _haloMesh, _haloMaterial, HaloSortingOrder);
             _haloStrips = new StripMesh { Mesh = _haloMesh };
+            _floorMesh = new Mesh { name = "RedSkillFloorLight" };
+            _floorMesh.MarkDynamic();
+            _floorRenderer = CreateRenderer("FloorLight", _floorMesh, _floorMaterial, definition.glow.floorSortingOrder);
+            _floorStrips = new StripMesh { Mesh = _floorMesh };
+            _hazeMesh = new Mesh { name = "RedSkillHaze" };
+            _hazeMesh.MarkDynamic();
+            _hazeRenderer = CreateRenderer("Haze", _hazeMesh, _hazeMaterial, definition.glow.floorSortingOrder);
+            _hazeStrips = new StripMesh { Mesh = _hazeMesh };
 
             _chargeGlow = new Glow(CreateRenderer("ChargeGlow", SharedQuad, _radialMaterial, order + 1));
             _muzzleFlare = new Glow(CreateRenderer("MuzzleFlare", SharedQuad, _radialMaterial, order + 1));
@@ -275,6 +311,8 @@ namespace MS2026.Skills.Red
             _firing = false;
             _beamRenderer.enabled = false;
             _haloRenderer.enabled = false;
+            _floorRenderer.enabled = false;
+            _hazeRenderer.enabled = false;
             _muzzleFlare.Hide();
             _muzzleFlare2.Hide();
             HideBeamRings();
@@ -297,6 +335,8 @@ namespace MS2026.Skills.Red
             // 撃っている間は、このあと同じフレームの UpdateBeam がまた表示する。
             _beamRenderer.enabled = false;
             _haloRenderer.enabled = false;
+            _floorRenderer.enabled = false;
+            _hazeRenderer.enabled = false;
             _muzzleFlare.Hide();
             _muzzleFlare2.Hide();
             HideBeamRings();
@@ -321,8 +361,11 @@ namespace MS2026.Skills.Red
             _chargeFlash = Mathf.MoveTowards(_chargeFlash, 0f, dt * 12f);
         }
 
-        /// <summary>レーザー本体・発射口・当たった場所の見た目を今フレームの状態に合わせる（筋ごとの長さ・当たり方は <paramref name="lanes"/>）。</summary>
-        public void UpdateBeam(Vector3 origin, Vector2 direction, float widthScale, RedLaserLanes lanes)
+        /// <summary>
+        /// レーザー本体・発射口・当たった場所の見た目を今フレームの状態に合わせる（筋ごとの長さ・当たり方は <paramref name="lanes"/>）。
+        /// <paramref name="glowLanes"/> は床の光・陽炎用の太い範囲の筋（見た目の太さの <paramref name="glowScale"/> 倍。出さないなら null）。
+        /// </summary>
+        public void UpdateBeam(Vector3 origin, Vector2 direction, float widthScale, RedLaserLanes lanes, RedLaserLanes glowLanes, float glowScale)
         {
             _lanes = lanes;
             var dt = Time.deltaTime;
@@ -337,7 +380,8 @@ namespace MS2026.Skills.Red
 
             // 外側の大きなにじみ（本体と同じ筋の形で、太く作る。壁で止まった所では一緒に止まる）。
             var flash = _def.flash;
-            if (flash.haloEnabled && length > 0.01f)
+            var fx = _def.effects;
+            if (flash.haloEnabled && fx.halo.IsOn && length > 0.01f)
             {
                 // レーザーの上に重ねるときは手前、後ろのときは奥に置く。
                 var haloZ = z + (flash.haloOnTop ? -0.005f : 0.005f);
@@ -351,6 +395,9 @@ namespace MS2026.Skills.Red
                 _haloRenderer.enabled = false;
             }
 
+            // 光の奔流: 床を照らす光と陽炎（どちらも本体と同じ筋の形で、壁で止まった所では一緒に止まる）。
+            UpdateFloorAndHaze(origin2, direction, perpendicular, widthScale, z, glowLanes, glowScale);
+
             var muzzleFx = _def.muzzle;
             var look = _def.look;
             var flicker = 1f + (Mathf.PerlinNoise(_time * 23f, 0.37f) - 0.5f) * look.flicker * 2f;
@@ -359,17 +406,23 @@ namespace MS2026.Skills.Red
             // 発射口の光（トゲ付き）
             var muzzleSize = muzzleFx.flareSize * Mathf.Max(0.2f, widthScale) * flicker;
             _muzzleFlare.Show(new Vector3(origin.x, origin.y, z - 0.01f), Quaternion.Euler(0f, 0f, _time * 90f), new Vector3(muzzleSize, muzzleSize, 1f));
-            _muzzleFlare.Apply(_block, muzzleFx.flareColor * open01,
+            var flareDial = fx.muzzleFlare.Value;
+            if (flareDial <= 0f)
+            {
+                _muzzleFlare.Hide();
+            }
+
+            _muzzleFlare.Apply(_block, muzzleFx.flareColor * (open01 * flareDial),
                 new Vector4(0.45f, 2.2f, muzzleFx.flareRays, 0.9f),
                 new Vector4(6f, 0f, 0f, 0f),
                 new Vector4(0f, 0f, Mathf.Floor(_time * 15f), 0.55f));
 
             // 発射口の二重の光（後ろで逆向きに回る大きな光と輪）
-            if (flash.muzzleFlare2Scale > 0f)
+            if (flash.muzzleFlare2Scale > 0f && flareDial > 0f)
             {
                 var size2 = muzzleSize * flash.muzzleFlare2Scale;
                 _muzzleFlare2.Show(new Vector3(origin.x, origin.y, z - 0.005f), Quaternion.Euler(0f, 0f, -_time * 60f), new Vector3(size2, size2, 1f));
-                _muzzleFlare2.Apply(_block, muzzleFx.flareColor * (0.55f * open01),
+                _muzzleFlare2.Apply(_block, muzzleFx.flareColor * (0.55f * open01 * flareDial),
                     new Vector4(0.25f, 1.5f, flash.muzzleFlare2Rays, 0.7f),
                     new Vector4(10f, 0f, 0.78f, 0.05f),
                     new Vector4(0.6f, 0f, Mathf.Floor(_time * 8f) + 3f, 0.3f));
@@ -408,6 +461,10 @@ namespace MS2026.Skills.Red
             DestroySafe(_haloMesh);
             DestroySafe(_haloMaterial);
             DestroySafe(_haloCrossTexture);
+            DestroySafe(_floorMesh);
+            DestroySafe(_floorMaterial);
+            DestroySafe(_hazeMesh);
+            DestroySafe(_hazeMaterial);
             DestroySafe(_radialMaterial);
             DestroySafe(_particleMaterial);
             DestroySafe(_lightningMaterial);
@@ -425,6 +482,7 @@ namespace MS2026.Skills.Red
             public Vector3[] Vertices;
             public Vector4[] Uvs;
             public Vector4[] LaneUvs;
+            public Vector4[] CutUvs;
             public int Rows = -1;
             public int Capacity = -1;
         }
@@ -448,6 +506,7 @@ namespace MS2026.Skills.Red
                 target.Vertices = new Vector3[count];
                 target.Uvs = new Vector4[count];
                 target.LaneUvs = new Vector4[count];
+                target.CutUvs = new Vector4[count];
                 var triangles = new int[capacity * (rows - 1) * 6];
                 var t = 0;
                 for (var strip = 0; strip < capacity; strip++)
@@ -469,6 +528,7 @@ namespace MS2026.Skills.Red
                 target.Mesh.vertices = target.Vertices;
                 target.Mesh.SetUVs(0, target.Uvs);
                 target.Mesh.SetUVs(1, target.LaneUvs);
+                target.Mesh.SetUVs(2, target.CutUvs);
                 target.Mesh.triangles = triangles;
             }
 
@@ -491,20 +551,25 @@ namespace MS2026.Skills.Red
                     continue;
                 }
 
+                // 影のふち用: となりの帯の長さ（となりがここより手前で終わっていれば、その側は障害物の後ろで途切れる）。
+                var leftNeighbor = strip > 0 ? lanes.StripLengthRight[strip - 1] : -1f;
+                var rightNeighbor = strip + 1 < lanes.StripCount ? lanes.StripLengthLeft[strip + 1] : -1f;
+                var stripWidth = (lanes.StripRight[strip] - lanes.StripLeft[strip]) * 0.5f;
                 WriteColumn(target, leftBase, rows, lanes.StripLeft[strip], lanes.StripLengthLeft[strip], lanes.StripBlockedLeft[strip],
-                    origin, direction, perpendicular, widthScale, z, visualScale, range);
+                    origin, direction, perpendicular, widthScale, z, visualScale, range, new Vector4(0f, leftNeighbor, rightNeighbor, stripWidth));
                 WriteColumn(target, rightBase, rows, lanes.StripRight[strip], lanes.StripLengthRight[strip], lanes.StripBlockedRight[strip],
-                    origin, direction, perpendicular, widthScale, z, visualScale, range);
+                    origin, direction, perpendicular, widthScale, z, visualScale, range, new Vector4(1f, leftNeighbor, rightNeighbor, stripWidth));
             }
 
             target.Mesh.vertices = target.Vertices;
             target.Mesh.SetUVs(0, target.Uvs);
             target.Mesh.SetUVs(1, target.LaneUvs);
+            target.Mesh.SetUVs(2, target.CutUvs);
             target.Mesh.RecalculateBounds();
         }
 
         private void WriteColumn(StripMesh target, int start, int rows, float fraction, float laneLength, bool blocked,
-            Vector2 origin, Vector2 direction, Vector2 perpendicular, float widthScale, float z, float visualScale, float range)
+            Vector2 origin, Vector2 direction, Vector2 perpendicular, float widthScale, float z, float visualScale, float range, Vector4 cutUv)
         {
             var laneUv = new Vector4(laneLength, blocked ? 1f : 0f, 0f, 0f);
             var v = (fraction + 1f) * 0.5f;
@@ -516,29 +581,87 @@ namespace MS2026.Skills.Red
                 target.Vertices[start + k] = new Vector3(point.x, point.y, z);
                 target.Uvs[start + k] = new Vector4(distance / range, v, distance, width);
                 target.LaneUvs[start + k] = laneUv;
+                target.CutUvs[start + k] = cutUv;
             }
         }
 
         private void ApplyBeamParameters(float length)
         {
             var look = _def.look;
+            var fx = _def.effects;
+            var glow = _def.glow;
+            var streak = look.streakStrength * fx.streaks.Value;
+            var jag = Mathf.Min(1f, look.edgeJag * fx.edgeJag.Value);
+            var stripe = Mathf.Clamp(look.stripeStrength * fx.stripes.Value, 0f, 1.5f);
+            var wave = fx.lightWave.Value;
+            var hot = fx.hotCore.Value;
+            var cut = new Vector4(glow.cutSoftness * fx.softCut.Value, glow.cutFringe * Mathf.Min(1f, fx.softCut.Value), 0f, 0f);
+
             _beamMaterial.SetVector(BeamParamsId, new Vector4(look.intensity, length, look.tipFadeLength, look.bodyOpacity));
-            _beamMaterial.SetVector(StreakParamsId, new Vector4(look.streakStrength, look.streakDensity, look.streakSpeed, look.flicker));
-            _beamMaterial.SetVector(JagParamsId, new Vector4(look.edgeJag, look.edgeJagFrequency, look.edgeJagSpeed, _turret.playerIndex * 13.7f));
+            _beamMaterial.SetVector(StreakParamsId, new Vector4(streak, look.streakDensity, look.streakSpeed, look.flicker));
+            _beamMaterial.SetVector(JagParamsId, new Vector4(jag, look.edgeJagFrequency, look.edgeJagSpeed, _turret.playerIndex * 13.7f));
             var slant = Mathf.Tan(Mathf.Clamp(look.stripeAngle, -80f, 80f) * Mathf.Deg2Rad);
-            _beamMaterial.SetVector(StripeParamsId, new Vector4(Mathf.Max(0.05f, look.stripePeriod), slant, look.stripeScrollSpeed, look.stripeStrength));
+            _beamMaterial.SetVector(StripeParamsId, new Vector4(Mathf.Max(0.05f, look.stripePeriod), slant, look.stripeScrollSpeed, stripe));
             _beamMaterial.SetVector(ShineParamsId, new Vector4(look.coreShine, look.wallGlow, 0f, 0f));
             var flash = _def.flash;
-            var pulse = new Vector4(flash.pulseStrength, Mathf.Max(0.2f, flash.pulseSpacing), flash.pulseSpeed, flash.pulseWidth);
+            var pulse = new Vector4(flash.pulseStrength * wave, Mathf.Max(0.2f, flash.pulseSpacing), flash.pulseSpeed, flash.pulseWidth);
             _beamMaterial.SetVector(PulseParamsId, pulse);
+            _beamMaterial.SetVector(GlowParamsId, new Vector4(glow.coreGlow * hot, glow.coreWidth, Mathf.Clamp01(glow.flowNoise * hot), glow.flowSpeed));
+            _beamMaterial.SetVector(CutParamsId, cut);
 
             // 外側の光: しま・スジなし、光を足すだけ。荒れたふちと光の波は本体と同じに走らせる。
-            _haloMaterial.SetVector(BeamParamsId, new Vector4(flash.haloIntensity, length, look.tipFadeLength * 1.5f, 0f));
+            _haloMaterial.SetVector(BeamParamsId, new Vector4(flash.haloIntensity * fx.halo.Value, length, look.tipFadeLength * 1.5f, 0f));
             _haloMaterial.SetVector(StreakParamsId, new Vector4(0f, look.streakDensity, look.streakSpeed, look.flicker));
-            _haloMaterial.SetVector(JagParamsId, new Vector4(Mathf.Min(1f, look.edgeJag * 1.5f), look.edgeJagFrequency * 0.7f, look.edgeJagSpeed, _turret.playerIndex * 13.7f + 5f));
+            _haloMaterial.SetVector(JagParamsId, new Vector4(Mathf.Min(1f, jag * 1.5f), look.edgeJagFrequency * 0.7f, look.edgeJagSpeed, _turret.playerIndex * 13.7f + 5f));
             _haloMaterial.SetVector(StripeParamsId, new Vector4(1f, 0f, 0f, 0f));
             _haloMaterial.SetVector(ShineParamsId, new Vector4(0f, look.wallGlow * 0.6f, 0f, 0f));
-            _haloMaterial.SetVector(PulseParamsId, new Vector4(flash.pulseStrength * 0.6f, Mathf.Max(0.2f, flash.pulseSpacing), flash.pulseSpeed, flash.pulseWidth * 1.4f));
+            _haloMaterial.SetVector(PulseParamsId, new Vector4(flash.pulseStrength * 0.6f * wave, Mathf.Max(0.2f, flash.pulseSpacing), flash.pulseSpeed, flash.pulseWidth * 1.4f));
+            _haloMaterial.SetVector(GlowParamsId, new Vector4(0f, glow.coreWidth, Mathf.Clamp01(glow.flowNoise * hot * 0.5f), glow.flowSpeed));
+            _haloMaterial.SetVector(CutParamsId, new Vector4(cut.x * 1.5f, 0f, 0f, 0f));
+        }
+
+        // ───────────── 光の奔流: 床を照らす光・陽炎 ─────────────
+
+        /// <param name="lanes">床の光・陽炎用の太い範囲の筋（見た目の太さの <paramref name="scale"/> 倍に並び、それぞれ壁で止まっている）。</param>
+        private void UpdateFloorAndHaze(Vector2 origin, Vector2 direction, Vector2 perpendicular, float widthScale, float z,
+            RedLaserLanes lanes, float scale)
+        {
+            var fx = _def.effects;
+            var glow = _def.glow;
+            var open01 = Mathf.Clamp01(widthScale);
+            var length = lanes != null ? lanes.MaxLength : 0f;
+            scale = Mathf.Max(1f, scale);
+
+            var floor = fx.floorLight.Value * open01;
+            if (floor > 0.001f && length > 0.01f)
+            {
+                var outer = Mathf.Clamp01(Mathf.Max(1f, glow.floorLightWidth) / scale);
+                BuildStripMesh(_floorStrips, origin, direction, perpendicular, widthScale, z - ZOffset * 0.6f, lanes, scale);
+                _floorMaterial.SetColor(FloorColorId, glow.floorLightColor);
+                _floorMaterial.SetVector(FloorParamsId, new Vector4(glow.floorTint, 1f / scale, glow.floorContactGlow, floor));
+                _floorMaterial.SetVector(CutParamsId, new Vector4(glow.cutSoftness * Mathf.Max(0.5f, fx.softCut.Value) * 2f, 0f, _def.look.tipFadeLength * 1.5f, outer));
+                _floorRenderer.sortingOrder = glow.floorSortingOrder;
+                _floorRenderer.enabled = true;
+            }
+            else
+            {
+                _floorRenderer.enabled = false;
+            }
+
+            var haze = fx.heatHaze.Value * glow.hazeStrength * open01;
+            if (haze > 0.0005f && length > 0.01f)
+            {
+                var outer = Mathf.Clamp01(Mathf.Max(1f, glow.hazeWidth) / scale);
+                BuildStripMesh(_hazeStrips, origin, direction, perpendicular, widthScale, z - ZOffset * 0.5f, lanes, scale);
+                _hazeMaterial.SetVector(HazeParamsId, new Vector4(haze, Mathf.Max(0.05f, glow.hazeScale), glow.hazeSpeed, outer));
+                _hazeMaterial.SetVector(HazeShapeId, new Vector4(0.8f / scale, glow.cutSoftness * 2f, _def.look.tipFadeLength, _turret.playerIndex * 7.3f));
+                _hazeRenderer.sortingOrder = glow.floorSortingOrder;
+                _hazeRenderer.enabled = true;
+            }
+            else
+            {
+                _hazeRenderer.enabled = false;
+            }
         }
 
         // ───────────── レーザーを進む光の輪 ─────────────
@@ -566,7 +689,8 @@ namespace MS2026.Skills.Red
         private void UpdateBeamRings(Vector2 origin, Vector2 direction, float widthScale, float length, float dt)
         {
             var flash = _def.flash;
-            if (flash.beamRingInterval > 0f)
+            var ringDial = _def.effects.beamRings.Value;
+            if (flash.beamRingInterval > 0f && ringDial > 0f)
             {
                 _beamRingTimer -= dt;
                 if (_beamRingTimer <= 0f)
@@ -609,7 +733,7 @@ namespace MS2026.Skills.Red
                 var width = _def.WidthAt(ring.Distance, widthScale) * _def.shape.visualWidthScale * (flash.keepInsideLaser ? 1f : 1.15f);
                 var position = origin + direction * ring.Distance;
                 ring.Glow.Show(new Vector3(position.x, position.y, z), rotation, new Vector3(width, flash.beamRingThickness, 1f));
-                ring.Glow.Apply(_block, flash.beamRingColor * (fade * Mathf.Clamp01(widthScale)),
+                ring.Glow.Apply(_block, flash.beamRingColor * (fade * Mathf.Clamp01(widthScale) * ringDial),
                     new Vector4(0f, 1f, 0f, 0f),
                     new Vector4(1f, 0f, 0.8f, 0.12f),
                     new Vector4(1.3f, 0f, 0f, 0f));
@@ -696,13 +820,14 @@ namespace MS2026.Skills.Red
         {
             CollectImpactAreas(widthScale);
             var impactFx = _def.impact;
+            var impactDial = _def.effects.impact.Value;
             var open01 = Mathf.Clamp01(widthScale);
             var lanes = _lanes;
 
             // まとまりごとに、光（トゲ付き、毎フレーム向きが変わってバチバチする）と、壁に沿って横に押し広がる光（楕円）
             for (var i = 0; i < MaxImpactAreas; i++)
             {
-                if (i >= _impactAreaCount)
+                if (i >= _impactAreaCount || impactDial <= 0f)
                 {
                     _impactFlares[i].Hide();
                     _impactSplashes[i].Hide();
@@ -713,7 +838,7 @@ namespace MS2026.Skills.Red
                 var pos = new Vector3(area.Center.x, area.Center.y, z - 0.02f);
                 var flareSize = Mathf.Max(0.5f, area.Width * impactFx.flareScale) * flicker;
                 _impactFlares[i].Show(pos, Quaternion.Euler(0f, 0f, UnityEngine.Random.Range(0f, 360f)), new Vector3(flareSize, flareSize, 1f));
-                _impactFlares[i].Apply(_block, impactFx.flareColor * open01,
+                _impactFlares[i].Apply(_block, impactFx.flareColor * (open01 * impactDial),
                     new Vector4(0.5f, 1.8f, 16f, 1.1f),
                     new Vector4(4f, 0f, 0f, 0f),
                     new Vector4(0f, 0f, Mathf.Floor(_time * 30f) + i * 7f, 0.8f));
@@ -724,7 +849,7 @@ namespace MS2026.Skills.Red
                 var splashThickness = Mathf.Max(0.3f, area.Width * 0.35f);
                 _impactSplashes[i].Show(pos + (Vector3)(area.Normal * splashThickness * 0.15f), Quaternion.LookRotation(Vector3.forward, area.Normal),
                     new Vector3(splashLength, splashThickness, 1f));
-                _impactSplashes[i].Apply(_block, impactFx.flareColor * (0.8f * open01),
+                _impactSplashes[i].Apply(_block, impactFx.flareColor * (0.8f * open01 * impactDial),
                     new Vector4(0.95f, 1.6f, 0f, 0f),
                     Vector4.zero,
                     Vector4.zero);
@@ -739,7 +864,7 @@ namespace MS2026.Skills.Red
             var blockedShare = _blockedLanes.Count / (float)lanes.Count;
             var laneSpacing = _def.WidthAt(lanes.MaxLength, widthScale) * _def.shape.visualWidthScale / (lanes.Count - 1);
 
-            var sparks = Accumulate(ref _impactSparkCarry, impactFx.sparkRate * open01 * blockedShare * dt);
+            var sparks = Accumulate(ref _impactSparkCarry, impactFx.sparkRate * open01 * blockedShare * impactDial * dt);
             for (var i = 0; i < sparks; i++)
             {
                 RandomImpactPoint(laneSpacing, out var point, out var normal);
@@ -748,7 +873,7 @@ namespace MS2026.Skills.Red
                 Emit(_sparks, point, dir * speed, UnityEngine.Random.Range(0.08f, 0.2f), UnityEngine.Random.Range(0.15f, 0.45f), impactFx.sparkColor);
             }
 
-            var embers = Accumulate(ref _impactEmberCarry, impactFx.emberRate * open01 * blockedShare * dt);
+            var embers = Accumulate(ref _impactEmberCarry, impactFx.emberRate * open01 * blockedShare * impactDial * dt);
             for (var i = 0; i < embers; i++)
             {
                 RandomImpactPoint(laneSpacing, out var point, out var normal);
@@ -756,7 +881,7 @@ namespace MS2026.Skills.Red
                 Emit(_embers, point, dir * UnityEngine.Random.Range(1f, 4f), UnityEngine.Random.Range(0.4f, 1.1f), UnityEngine.Random.Range(0.35f, 0.8f), _def.muzzle.shardColor);
             }
 
-            var bolts = Accumulate(ref _impactBoltCarry, _def.lightning.impactRate * open01 * blockedShare * dt);
+            var bolts = Accumulate(ref _impactBoltCarry, _def.lightning.impactRate * open01 * blockedShare * _def.effects.lightning.Value * dt);
             for (var i = 0; i < bolts; i++)
             {
                 RandomImpactPoint(laneSpacing, out var point, out var normal);
@@ -765,8 +890,29 @@ namespace MS2026.Skills.Red
                 SpawnBolt(point, end, 1f);
             }
 
+            // 光の奔流: 当たった場所から、はね返りながら壁に沿って横へ流れる線の火花（壁の手前にだけ出る）。
+            var glow = _def.glow;
+            var wallSparks = Accumulate(ref _wallSparkCarry, glow.wallSparkRate * _def.effects.wallSparks.Value * open01 * blockedShare * dt);
+            for (var i = 0; i < wallSparks; i++)
+            {
+                RandomImpactPoint(laneSpacing, out var point, out var normal);
+                var tangent = new Vector2(-normal.y, normal.x);
+                var along = Vector2.Dot(direction, normal);
+                var reflected = direction - 2f * along * normal;
+                var side = UnityEngine.Random.Range(-1.1f, 1.1f);
+                var velocity = reflected * UnityEngine.Random.Range(0.2f, 0.8f) + tangent * side + normal * UnityEngine.Random.Range(0.05f, 0.4f);
+                if (velocity.sqrMagnitude < 0.0001f)
+                {
+                    velocity = normal;
+                }
+
+                var speed = glow.wallSparkSpeed * UnityEngine.Random.Range(0.5f, 1.5f);
+                Emit(_sparks, point + normal * 0.05f, velocity.normalized * speed, UnityEngine.Random.Range(0.1f, 0.24f),
+                    UnityEngine.Random.Range(0.25f, 0.7f), glow.wallSparkColor);
+            }
+
             // 一定の間隔で、まとまりごとに衝撃の輪
-            if (impactFx.shockwaveInterval > 0f)
+            if (impactFx.shockwaveInterval > 0f && impactDial > 0f)
             {
                 _shockwaveTimer -= dt;
                 if (_shockwaveTimer <= 0f)
@@ -775,7 +921,7 @@ namespace MS2026.Skills.Red
                     for (var i = 0; i < _impactAreaCount; i++)
                     {
                         var area = _impactAreas[i];
-                        SpawnRing(new Vector3(area.Center.x, area.Center.y, z), Mathf.Max(1f, area.Width * impactFx.shockwaveScale), 0.35f, impactFx.flareColor * 0.7f);
+                        SpawnRing(new Vector3(area.Center.x, area.Center.y, z), Mathf.Max(1f, area.Width * impactFx.shockwaveScale), 0.35f, impactFx.flareColor * (0.7f * impactDial));
                     }
                 }
             }
@@ -807,7 +953,7 @@ namespace MS2026.Skills.Red
         private void EmitMuzzleSparks(Vector2 origin, Vector2 direction, float dt, float open01)
         {
             var muzzleFx = _def.muzzle;
-            var count = Accumulate(ref _muzzleSparkCarry, muzzleFx.sparkRate * open01 * dt);
+            var count = Accumulate(ref _muzzleSparkCarry, muzzleFx.sparkRate * open01 * _def.effects.muzzleParticles.Value * dt);
             for (var i = 0; i < count; i++)
             {
                 var dir = Rotate(direction, UnityEngine.Random.Range(-muzzleFx.sparkSpreadAngle, muzzleFx.sparkSpreadAngle));
@@ -820,7 +966,7 @@ namespace MS2026.Skills.Red
         {
             var muzzleFx = _def.muzzle;
             var reach = Mathf.Min(muzzleFx.shardReach, length);
-            var count = Accumulate(ref _shardCarry, muzzleFx.shardRate * Mathf.Clamp01(widthScale) * dt);
+            var count = Accumulate(ref _shardCarry, muzzleFx.shardRate * Mathf.Clamp01(widthScale) * _def.effects.muzzleParticles.Value * dt);
             for (var i = 0; i < count; i++)
             {
                 // 根元ほど多く、レーザーのふちから外へ斜め前に吹き出す。
@@ -845,7 +991,7 @@ namespace MS2026.Skills.Red
         private void EmitBeamEmbers(Vector2 origin, Vector2 direction, Vector2 perpendicular, float length, float widthScale, float dt)
         {
             var muzzleFx = _def.muzzle;
-            var count = Accumulate(ref _beamEmberCarry, muzzleFx.emberRate * Mathf.Clamp01(widthScale) * dt);
+            var count = Accumulate(ref _beamEmberCarry, muzzleFx.emberRate * Mathf.Clamp01(widthScale) * _def.effects.muzzleParticles.Value * dt);
             for (var i = 0; i < count; i++)
             {
                 var across = UnityEngine.Random.Range(-1f, 1f);
@@ -873,6 +1019,7 @@ namespace MS2026.Skills.Red
         private void BurstLightning(Vector3 center, Vector2 direction, float spreadAngle, int count, float reach)
         {
             _particleZ = center.z + ZOffset;
+            count = Mathf.RoundToInt(count * _def.effects.lightning.Value);
             var dir = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector2.up;
             for (var i = 0; i < count; i++)
             {
@@ -885,7 +1032,7 @@ namespace MS2026.Skills.Red
         private void EmitChargeLightning(Vector3 muzzle, bool windingUp, float windup, float dt)
         {
             var lightning = _def.lightning;
-            var rate = lightning.chargeRate * Mathf.Lerp(1f, lightning.windupMultiplier, windup);
+            var rate = lightning.chargeRate * Mathf.Lerp(1f, lightning.windupMultiplier, windup) * _def.effects.lightning.Value;
             var count = Accumulate(ref _chargeBoltCarry, rate * dt);
             var center = (Vector2)muzzle;
             var basePosition = (Vector2)_turret.transform.position;
@@ -924,7 +1071,7 @@ namespace MS2026.Skills.Red
         private void EmitBeamLightning(Vector2 origin, Vector2 direction, Vector2 perpendicular, float length, float widthScale, float dt)
         {
             var lightning = _def.lightning;
-            var open01 = Mathf.Clamp01(widthScale);
+            var open01 = Mathf.Clamp01(widthScale) * _def.effects.lightning.Value;
             var visualScale = _def.shape.visualWidthScale;
 
             var along = Accumulate(ref _beamBoltCarry, lightning.beamRate * open01 * dt);
@@ -974,7 +1121,7 @@ namespace MS2026.Skills.Red
         private void EmitSpeedLines(Vector2 origin, Vector2 direction, Vector2 perpendicular, float length, float widthScale, float dt)
         {
             var muzzleFx = _def.muzzle;
-            var count = Accumulate(ref _speedLineCarry, muzzleFx.speedLineRate * Mathf.Clamp01(widthScale) * dt);
+            var count = Accumulate(ref _speedLineCarry, muzzleFx.speedLineRate * Mathf.Clamp01(widthScale) * _def.effects.muzzleParticles.Value * dt);
             for (var i = 0; i < count; i++)
             {
                 var acrossFraction = _def.flash.keepInsideLaser || UnityEngine.Random.value < 0.3f
@@ -1038,14 +1185,14 @@ namespace MS2026.Skills.Red
 
             // 雷: まわりの遠くから、太い稲妻が歯磨き粉に落ちてくる（光って、輪と火花が出る）。ため中は3倍の速さ。
             _thunderTimer -= dt * Mathf.Lerp(1f, 3f, windup);
-            if (tube.thunderIntervalMax > 0f && _thunderTimer <= 0f)
+            if (tube.thunderIntervalMax > 0f && _thunderTimer <= 0f && _def.effects.lightning.IsOn)
             {
                 _thunderTimer = UnityEngine.Random.Range(Mathf.Min(tube.thunderIntervalMin, tube.thunderIntervalMax), tube.thunderIntervalMax);
                 StrikeThunder(tube);
             }
 
             // チューブの表面を走る稲妻
-            var bolts = Accumulate(ref _tubeBoltCarry, tube.lightningRate * Mathf.Lerp(1f, 3f, windup) * dt);
+            var bolts = Accumulate(ref _tubeBoltCarry, tube.lightningRate * Mathf.Lerp(1f, 3f, windup) * _def.effects.lightning.Value * dt);
             for (var i = 0; i < bolts; i++)
             {
                 var from = _tube.SurfacePoint(UnityEngine.Random.Range(-0.9f, 0.9f), UnityEngine.Random.Range(-1f, 1f));
@@ -1186,6 +1333,8 @@ namespace MS2026.Skills.Red
             var order = _def.look.sortingOrder;
             _beamRenderer.sortingOrder = order;
             _haloRenderer.sortingOrder = HaloSortingOrder;
+            _floorRenderer.sortingOrder = _def.glow.floorSortingOrder;
+            _hazeRenderer.sortingOrder = _def.glow.floorSortingOrder;
             _muzzleFlare2.SortingOrder = order + 1;
             for (var i = 0; i < _beamRings.Length; i++)
             {
@@ -1218,6 +1367,8 @@ namespace MS2026.Skills.Red
             _lightning.HideAll();
             _beamRenderer.enabled = false;
             _haloRenderer.enabled = false;
+            _floorRenderer.enabled = false;
+            _hazeRenderer.enabled = false;
             _chargeGlow.Hide();
             _muzzleFlare.Hide();
             _muzzleFlare2.Hide();

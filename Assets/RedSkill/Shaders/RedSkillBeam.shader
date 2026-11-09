@@ -1,6 +1,9 @@
 // 赤スキル「極太レーザー」本体。RedLaserVisuals が作る帯のメッシュに使う。
 // UV0: x = 根元からの距離 / 届く距離, y = 断面0〜1, z = 根元からの距離(m), w = その場所の見た目の太さ(m)
 // UV1: x = その筋の長さ(m), y = その筋が壁で止まっているか(0/1)。壁で止まった筋は先をぼかさず、壁ぎわを明るくする。
+// UV2: x = 帯の中の横の位置(0 = 左の列, 1 = 右の列), y = 左どなりの帯の長さ(m、どなりが無ければ -1), z = 右どなりの帯の長さ, w = 帯の幅(見た目の太さに対する割合)。
+//      となりの帯がここより手前で終わっている（＝障害物の後ろで途切れる）所は、帯の中だけでやわらかくぼかし、明るいふちを付ける（裏側には描かない）。
+// 光の奔流（2026-11-09）: 白く焼けた芯（_GlowParams.x/y）と、赤い光が流れながらゆらめく動き（_GlowParams.z/w）。
 // 色 = 斜めのしま模様(しまのグラデーション、先へ流れる) × 断面グラデーション(中心→ふち) × 長さグラデーション(根元→先端) × 明るさ
 //      ＋ 真ん中のツヤ。流れるスジ・荒れたふち・ちらつきを足す。
 // 合成は「光を足す」と「塗る」の中間（_BeamParams.w = 塗る強さ）。
@@ -17,6 +20,8 @@ Shader "MS2026/RedSkill/Beam"
         _BeamParams ("Intensity, Length, TipFade, BodyOpacity", Vector) = (2, 10, 4, 0.35)
         _StreakParams ("Streak Strength, Density, Speed, Flicker", Vector) = (0.55, 10, 16, 0.12)
         _JagParams ("Jag Amount, Frequency, Speed, Seed", Vector) = (0.3, 1.4, 10, 0)
+        _GlowParams ("Core Glow, Core Width, Flow Noise, Flow Speed", Vector) = (0, 0.22, 0, 9)
+        _CutParams ("Cut Softness(m), Cut Fringe", Vector) = (0, 0, 0, 0)
     }
 
     SubShader
@@ -54,6 +59,8 @@ Shader "MS2026/RedSkill/Beam"
                 float4 _BeamParams;
                 float4 _StreakParams;
                 float4 _JagParams;
+                float4 _GlowParams;
+                float4 _CutParams;
             CBUFFER_END
 
             struct Attributes
@@ -61,6 +68,7 @@ Shader "MS2026/RedSkill/Beam"
                 float4 positionOS : POSITION;
                 float4 uv : TEXCOORD0;
                 float4 lane : TEXCOORD1;
+                float4 cut : TEXCOORD2;
             };
 
             struct Varyings
@@ -68,6 +76,7 @@ Shader "MS2026/RedSkill/Beam"
                 float4 positionCS : SV_POSITION;
                 float4 uv : TEXCOORD0;
                 float4 lane : TEXCOORD1;
+                float4 cut : TEXCOORD2;
             };
 
             Varyings vert(Attributes input)
@@ -76,6 +85,7 @@ Shader "MS2026/RedSkill/Beam"
                 output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
                 output.uv = input.uv;
                 output.lane = input.lane;
+                output.cut = input.cut;
                 return output;
             }
 
@@ -130,14 +140,26 @@ Shader "MS2026/RedSkill/Beam"
                 // 壁で止まっている筋は、壁ぎわを明るくする（ぶつかって押し返されている感じ）。
                 float wall = laneBlocked * _ShineParams.y * pow(saturate(1.0 - (laneLength - dist) / max(0.6, width * 0.12)), 2.0);
 
-                float alpha = saturate(crossColor.a * alongColor.a * inside * root * tip);
+                // 影のふち: となりの帯がここより手前で終わっている側を、帯の中だけでぼかす（帯の外＝障害物の後ろには何も描かない）。
+                float cutFade;
+                float cutEdge;
+                RedSkillCutFade(input.cut, dist, width, _CutParams.x, cutFade, cutEdge);
+
+                float alpha = saturate(crossColor.a * alongColor.a * inside * root * tip * cutFade);
                 // 光の波: 根元から先へ走る明るい帯（真ん中ほど明るい）。
                 float pulsePhase = frac((dist - t * _PulseParams.z) / max(_PulseParams.y, 0.2));
                 float pulseBand = saturate(1.0 - abs(pulsePhase - 0.5) / max(_PulseParams.w * 0.5, 0.01));
                 float pulse = _PulseParams.x * pulseBand * pulseBand * (1.0 - x * 0.6);
 
-                float3 color = (stripeColor * crossColor.rgb * alongColor.rgb * streak + shine + wall * float3(1.0, 0.55, 0.5)
-                               + pulse * float3(1.0, 0.85, 0.85)) * intensity * flicker;
+                // 光の奔流: 赤い光が先へ流れながらゆらめく（芯にはかけない）＋ 白く焼けた芯 ＋ 途切れる所の明るいふち。
+                float flow = RedSkillValueNoise(float2(dist * 0.3 - t * _GlowParams.w * 0.3, v * 2.2 + _JagParams.w))
+                           * 0.6 + RedSkillValueNoise(float2(dist * 1.1 - t * _GlowParams.w * 1.1, v * 5.0 + 7.0)) * 0.4;
+                float flowMul = lerp(1.0, 0.7 + 0.75 * flow, _GlowParams.z * saturate(x * 1.6));
+                float core = exp(-pow(across / max(_GlowParams.y, 0.02), 2.0)) * _GlowParams.x;
+                float fringe = cutEdge * _CutParams.y;
+
+                float3 color = (stripeColor * crossColor.rgb * alongColor.rgb * streak * flowMul + shine + wall * float3(1.0, 0.55, 0.5)
+                               + pulse * float3(1.0, 0.85, 0.85) + core * float3(1.0, 0.95, 0.92) + fringe * float3(1.0, 0.5, 0.58)) * intensity * flicker;
 
                 // 加算（opacity 0）〜普通の重ね（opacity 1）。
                 return half4(color * alpha, alpha * opacity);

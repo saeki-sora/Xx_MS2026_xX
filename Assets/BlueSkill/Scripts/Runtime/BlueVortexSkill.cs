@@ -18,54 +18,67 @@ namespace MS2026.Skills.Blue
     public sealed class BlueVortexSkill : CharacterSkill
     {
         [Tooltip("振りかぶってから投げて、落ちるまでの流れ。")]
+        [SkillTab(SkillTab.Level)]
         [SkillLabel("タイミング（投げる）")]
         public BlueThrowTiming timing = new BlueThrowTiming();
 
         [Tooltip("ボトルが落ちる場所（＝渦を広げる場所）。")]
+        [SkillTab(SkillTab.Level)]
         [SkillLabel("落ちる場所（渦を広げる場所）")]
         public BlueThrowTarget target = new BlueThrowTarget();
 
         [Tooltip("握っている長さで投げる距離を変える（最大で止まる／最大と最小を往復する）。使うときは、握っている間に距離が伸びて、離した瞬間に投げる。「使わない」なら「落ちる場所」の距離にいつも落ちる。")]
+        [SkillTab(SkillTab.Level)]
         [SkillLabel("握って飛距離を決める")]
         public BlueGripDistance gripDistance = new BlueGripDistance();
 
         [Tooltip("ボトルを何本持つか・どう投げるか（1本だけ／まとめて一気に／1本ずつ順番に）。「1本だけ」にすると元の動きに戻る。")]
+        [SkillTab(SkillTab.Level)]
         [SkillLabel("投げ方（1本・まとめて・1本ずつ）")]
         public BlueMultiThrow multi = new BlueMultiThrow();
 
         [Tooltip("渦（デバフエリア）の広さと時間。")]
+        [SkillTab(SkillTab.Level)]
         [SkillLabel("渦の広さ・時間")]
         public BlueVortexAreaSettings area = new BlueVortexAreaSettings();
 
         [Tooltip("渦の中の敵にかかる効果（足止め・巻き込み・ダメージ）。")]
+        [SkillTab(SkillTab.Level)]
         [SkillLabel("敵への効果（デバフ）")]
         public BlueVortexDebuff debuff = new BlueVortexDebuff();
 
         [Tooltip("渦の色・模様・回り方。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("渦の見た目")]
         public BlueVortexLook look = new BlueVortexLook();
 
         [Tooltip("使える状態のときに持つ、うがい薬のボトル。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("うがい薬のボトル")]
         public BlueBottleSettings bottle = new BlueBottleSettings();
 
         [Tooltip("使える状態（溜め）の間の演出。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("溜め（使える状態）の演出")]
         public BlueChargeFx charge = new BlueChargeFx();
 
         [Tooltip("投げている間と、落ちて破裂した瞬間の演出。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("投げる・破裂の演出")]
         public BlueBurstFx burst = new BlueBurstFx();
 
         [Tooltip("投げた瞬間・破裂・渦が消えるときの画面の揺れ。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("カメラの揺れ")]
         public BlueCameraShake cameraShake = new BlueCameraShake();
 
         [Tooltip("D-Drive の効果音・追加エフェクト（空なら鳴らさない）。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("効果音・追加エフェクト（D-Drive）")]
         public BlueSkillSounds sounds = new BlueSkillSounds();
 
         [Tooltip("見た目に使うシェーダー（通常は触らない）。")]
+        [SkillTab(SkillTab.Hidden)]
         [SkillLabel("シェーダー（通常は触らない）")]
         public BlueSkillShaders shaders = new BlueSkillShaders();
 

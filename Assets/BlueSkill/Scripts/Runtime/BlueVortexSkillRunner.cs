@@ -75,6 +75,30 @@ namespace MS2026.Skills.Blue
 
         public override bool IsActive => _phase != Phase.Idle;
 
+        // 投げている間に加えて、自分が広げた渦が残っている間も、スキルの効果が残っている（渦の継続ダメージで倒した敵を数え分けるため）。
+        public override bool EffectsAlive
+        {
+            get
+            {
+                if (IsActive)
+                {
+                    return true;
+                }
+
+                var owner = Turret != null ? Turret.playerIndex : -1;
+                var areas = BlueVortexArea.Active;
+                for (var i = 0; i < areas.Count; i++)
+                {
+                    if (areas[i] != null && areas[i].OwnerPlayerIndex == owner)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+
         /// <summary>この砲台で最後に出した渦（もう消えていれば null）。</summary>
         public BlueVortexArea LastArea { get; private set; }
 

@@ -25,6 +25,23 @@ namespace MS2026.Skills.Yellow
         // 矢を放った瞬間に終わる（矢が飛んでいる間もスロットは次の溜めを受け付ける）。
         public override bool IsActive => false;
 
+        // 放った矢が飛んでいる間は、スキルの効果が残っている（この間に倒した敵は「スキルで倒した敵」）。
+        public override bool EffectsAlive
+        {
+            get
+            {
+                for (var i = 0; i < _arrows.Count; i++)
+                {
+                    if (_arrows[i] != null)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+
         internal void Configure(YellowArrowSkill skill)
         {
             definition = skill;

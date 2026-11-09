@@ -16,54 +16,78 @@ namespace MS2026.Skills.Red
     public sealed class RedLaserSkill : CharacterSkill
     {
         [Tooltip("撃つまでの流れと長さ。")]
+        [SkillTab(SkillTab.Level)]
         [SkillLabel("タイミング")]
         public RedLaserTiming timing = new RedLaserTiming();
 
         [Tooltip("レーザーの形（長さ・太さ・広がり方）。")]
+        [SkillTab(SkillTab.Level)]
         [SkillLabel("形・大きさ")]
         public RedLaserShape shape = new RedLaserShape();
 
         [Tooltip("ダメージと、何に当たると止まるか。")]
+        [SkillTab(SkillTab.Level)]
         [SkillLabel("ダメージ・当たり判定")]
         public RedLaserDamage damage = new RedLaserDamage();
 
+        [Tooltip("演出ごとの付け外しと強さのメーター（稲妻・しま模様・進む輪・光の波・床を照らす光・陽炎など）。" +
+                 "細かい値は下のそれぞれの欄で決め、ここではまとめて出す／出さない・強さだけを変える。")]
+        [SkillTab(SkillTab.Look)]
+        [SkillLabel("演出の付け外し・強さ")]
+        public RedLaserEffects effects = new RedLaserEffects();
+
         [Tooltip("レーザーの色・グラデーション・模様。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("レーザーの色・模様")]
         public RedLaserLook look = new RedLaserLook();
 
+        [Tooltip("「光の奔流」の見た目（白く焼けた芯・床を照らす光・陽炎・影のふちのやわらかさ・壁に沿って流れる火花）の細かい値。")]
+        [SkillTab(SkillTab.Look)]
+        [SkillLabel("光の奔流（照らす光・陽炎・影）")]
+        public RedLaserGlowFx glow = new RedLaserGlowFx();
+
         [Tooltip("溜め（スキルを使える状態）の見た目。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("溜め（使える状態）の演出")]
         public RedLaserChargeFx charge = new RedLaserChargeFx();
 
         [Tooltip("ビリビリ（赤い稲妻）。溜め中・撃っている間・当たった場所に出る。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("ビリビリ（稲妻）")]
         public RedLaserLightningFx lightning = new RedLaserLightningFx();
 
         [Tooltip("スキルを使える間、砲台の上に乗る強力そうな歯磨き粉。スキルのレーザーはこの口から出る。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("溜めの歯磨き粉")]
         public RedLaserTubeFx tube = new RedLaserTubeFx();
 
         [Tooltip("発射口（根元）の見た目。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("発射口の演出")]
         public RedLaserMuzzleFx muzzle = new RedLaserMuzzleFx();
 
         [Tooltip("壁・障害物に当たった場所の見た目。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("壁に当たった場所の演出")]
         public RedLaserImpactFx impact = new RedLaserImpactFx();
 
         [Tooltip("カメラの揺れ。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("カメラの揺れ")]
         public RedLaserCameraShake cameraShake = new RedLaserCameraShake();
 
         [Tooltip("レーザーをもっと派手にする追加の演出（光の波・外側の光・レーザーを進む輪・発射口の二重の光）。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("派手さ（追加の演出）")]
         public RedLaserFlashFx flash = new RedLaserFlashFx();
 
         [Tooltip("効果音と、D-Drive の追加エフェクト（空なら何もしない）。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("効果音・追加エフェクト（D-Drive）")]
         public RedLaserSounds sounds = new RedLaserSounds();
 
         [Tooltip("見た目に使うシェーダー（通常は触らない）。")]
+        [SkillTab(SkillTab.Hidden)]
         [SkillLabel("シェーダー（通常は触らない）")]
         public RedLaserShaders shaders = new RedLaserShaders();
 
@@ -984,5 +1008,13 @@ namespace MS2026.Skills.Red
         [Tooltip("火花・光の粒のシェーダー（MS2026/RedSkill/Particle）。")]
         [SkillLabel("火花・粒")]
         public Shader particle;
+
+        [Tooltip("床を照らす光のシェーダー（MS2026/RedSkill/FloorLight）。")]
+        [SkillLabel("床を照らす光")]
+        public Shader floorLight;
+
+        [Tooltip("陽炎のシェーダー（MS2026/RedSkill/Haze）。")]
+        [SkillLabel("陽炎")]
+        public Shader haze;
     }
 }

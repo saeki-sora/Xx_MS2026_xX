@@ -14,14 +14,17 @@ namespace MS2026.Skills.Yellow
     public sealed class YellowArrowSkill : CharacterSkill
     {
         [Tooltip("放つ矢の速さ・長さ・寿命・ダメージ・跳ね返る壁。")]
+        [SkillTab(SkillTab.Level)]
         [SkillLabel("矢")]
         public YellowArrowSettings arrow = new YellowArrowSettings();
 
         [Tooltip("矢を放ったとき・壁で跳ね返ったときのカメラの揺れ。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("カメラの揺れ")]
         public YellowArrowCameraShake cameraShake = new YellowArrowCameraShake();
 
         [Tooltip("効果音と、D-Drive の追加エフェクト（空なら何もしない）。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("効果音・追加エフェクト（D-Drive）")]
         public YellowArrowSounds sounds = new YellowArrowSounds();
 

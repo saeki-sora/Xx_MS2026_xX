@@ -515,13 +515,21 @@ namespace MS2026.Skills
 
             var gained = kills - _lastKills;
             _lastKills = kills;
-            if (gained > 0 && skill != null && skill.chargeByKills && State == PlayerSkillState.Empty)
+            if (gained > 0 && skill != null && skill.chargeByKills)
             {
-                _gaugeKills = Mathf.Min(_gaugeKills + gained, KillsToCharge);
-                if (_gaugeKills >= KillsToCharge)
+                // スキルを撃っている間・スキルの効果が残っている間に倒した敵は「自分のスキルで倒した敵」。
+                // 数える設定なら、撃っている最中の分も次のゲージに貯めておく（満タンになっても、撃ち終わるまでは使えるようにしない）。
+                var bySkill = State == PlayerSkillState.Active || (_runner != null && _runner.EffectsAlive);
+                var counts = bySkill ? skill.countOwnSkillKills : State == PlayerSkillState.Empty;
+                if (counts && State != PlayerSkillState.Ready)
                 {
-                    GrantCharge();
+                    _gaugeKills = Mathf.Min(_gaugeKills + gained, KillsToCharge);
                 }
+            }
+
+            if (skill != null && skill.chargeByKills && State == PlayerSkillState.Empty && _gaugeKills >= KillsToCharge)
+            {
+                GrantCharge();
             }
 
             PublishGauge();

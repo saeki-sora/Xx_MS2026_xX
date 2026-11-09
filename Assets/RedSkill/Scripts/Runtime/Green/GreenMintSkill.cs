@@ -20,50 +20,62 @@ namespace MS2026.Skills.Green
     public sealed class GreenMintSkill : CharacterSkill
     {
         [Tooltip("降臨からおしまいまでの流れと長さ（秒は、カットインが終わって守護霊の場面が始まってから）。")]
+        [SkillTab(SkillTab.Level)]
         [SkillLabel("タイミング")]
         public GreenGuardianTiming timing = new GreenGuardianTiming();
 
         [Tooltip("コアの回復量。")]
+        [SkillTab(SkillTab.Level)]
         [SkillLabel("コアの回復")]
         public GreenMintHeal heal = new GreenMintHeal();
 
         [Tooltip("コアの周りを回る葉の輪（触れた敵にダメージ）。")]
+        [SkillTab(SkillTab.Level)]
         [SkillLabel("葉の輪（攻撃）")]
         public GreenLeafRingSettings leaves = new GreenLeafRingSettings();
 
         [Tooltip("スキル中、緑のプレイヤーが握ったときのおまけ（輪が速く寄せては返し、葉が大きく光る）。")]
+        [SkillTab(SkillTab.Level)]
         [SkillLabel("握ったときの強化")]
         public GreenGuardianBoost boost = new GreenGuardianBoost();
 
         [Tooltip("守護霊の大きさ・動き。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("守護霊")]
         public GreenSpiritSettings spirit = new GreenSpiritSettings();
 
         [Tooltip("使える間、緑の砲台の横に転がる歯みがき粉のチューブ。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("溜めの歯みがき粉チューブ")]
         public GreenTubeSettings tube = new GreenTubeSettings();
 
         [Tooltip("デザイナーの絵に差し替える欄。空の欄は、コードで描いた仮の絵を使う。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("絵（差し替え）")]
         public GreenGuardianArtSlots art = new GreenGuardianArtSlots();
 
         [Tooltip("全体の色。コードで描く仮の絵もこの色から作る。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("色")]
         public GreenGuardianPalette palette = new GreenGuardianPalette();
 
         [Tooltip("守護霊が着地する「ドン」と、おしまいの「きらっ」の演出（全員の画面に出る）。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("ドンときらっの演出")]
         public GreenMintBurstFx burst = new GreenMintBurstFx();
 
         [Tooltip("カメラの揺れ。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("カメラの揺れ")]
         public GreenMintCameraShake cameraShake = new GreenMintCameraShake();
 
         [Tooltip("効果音・声と、D-Drive の追加エフェクト（空なら何もしない）。")]
+        [SkillTab(SkillTab.Look)]
         [SkillLabel("効果音・声・追加エフェクト（D-Drive）")]
         public GreenGuardianSounds sounds = new GreenGuardianSounds();
 
         [Tooltip("見た目に使うシェーダー（通常は触らない）。")]
+        [SkillTab(SkillTab.Hidden)]
         [SkillLabel("シェーダー（通常は触らない）")]
         public GreenMintShaders shaders = new GreenMintShaders();
 

@@ -42,6 +42,12 @@ namespace MS2026.Skills
         /// <summary>撃っている途中でも、すぐにやめる（見た目も消す）。</summary>
         public abstract void Cancel();
 
+        /// <summary>
+        /// スキルの効果がまだ場に残っているか（撃っている間に加えて、放った矢・広げた渦などが残っている間も true にする）。
+        /// この間に倒した敵は「自分のスキルで倒した敵」として扱う（<see cref="CharacterSkill.countOwnSkillKills"/>）。
+        /// </summary>
+        public virtual bool EffectsAlive => IsActive;
+
         /// <summary>撃ち終わったことをスロットに知らせる。</summary>
         protected void NotifyFinished()
         {

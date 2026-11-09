@@ -38,6 +38,10 @@ namespace MS2026.Skills.Red
 
         private readonly HashSet<ILaserTarget> _damagedThisFrame = new HashSet<ILaserTarget>();
         private readonly RedLaserLanes _lanes = new RedLaserLanes();
+
+        // 床を照らす光・陽炎用の、レーザーより太い範囲の筋（2026-11-09）。見た目だけに使い、ダメージには使わない。
+        // 太い範囲でも筋ごとに壁で止めるので、光が障害物の裏側へ回り込まない。
+        private readonly RedLaserLanes _glowLanes = new RedLaserLanes();
         private readonly List<TargetHit> _targetHits = new List<TargetHit>(32);
         private readonly float[] _pathBreaks = new float[PathBreaks];
         private readonly List<float> _medianBuffer = new List<float>(16);
@@ -111,6 +115,7 @@ namespace MS2026.Skills.Red
             OverrideRotation(true);
             _length = 0f;
             _lanes.ResetLengths();
+            _glowLanes.ResetLengths();
             _hadImpact = false;
             _impactShakeTimer = 0f;
             SetPhase(definition.timing.windupSeconds > 0f ? Phase.Windup : Phase.Firing);
@@ -250,7 +255,13 @@ namespace MS2026.Skills.Red
             }
 
             UpdateImpactFeedback(direction, dt);
-            _visuals.UpdateBeam(origin3, direction, widthScale, _lanes);
+            var glowScale = GlowLaneScale;
+            if (glowScale > 0f)
+            {
+                CastGlowLanes(origin, direction, perpendicular, widthScale, dt, glowScale);
+            }
+
+            _visuals.UpdateBeam(origin3, direction, widthScale, _lanes, glowScale > 0f ? _glowLanes : null, glowScale);
         }
 
         private static bool IsSwarmReplica()
@@ -264,6 +275,62 @@ namespace MS2026.Skills.Red
         {
             var half = definition.WidthAt(distance, widthScale) * definition.shape.visualWidthScale * 0.5f;
             return origin + direction * distance + perpendicular * (fraction * half);
+        }
+
+        /// <summary>
+        /// 床の光・陽炎の筋の太さ（見た目の太さに対する倍率。床の光と陽炎の広い方）。どちらも出さないなら 0（筋を飛ばさない）。
+        /// </summary>
+        private float GlowLaneScale
+        {
+            get
+            {
+                var fx = definition.effects;
+                var glow = definition.glow;
+                var scale = 0f;
+                if (fx.floorLight.IsOn)
+                {
+                    scale = Mathf.Max(scale, glow.floorLightWidth);
+                }
+
+                if (fx.heatHaze.IsOn)
+                {
+                    scale = Mathf.Max(scale, glow.hazeWidth);
+                }
+
+                return scale > 0f ? Mathf.Max(1f, scale) : 0f;
+            }
+        }
+
+        /// <summary>
+        /// 床の光・陽炎用に、レーザーの <paramref name="scale"/> 倍の太さに筋を並べて、それぞれ壁で止める（見た目だけ。ダメージは与えない）。
+        /// </summary>
+        private void CastGlowLanes(Vector2 origin, Vector2 direction, Vector2 perpendicular, float widthScale, float dt, float scale)
+        {
+            var settings = definition.damage;
+            _glowLanes.Resize(Mathf.Clamp(settings.laneCount, 4, 48) + 1);
+            var filter = new ContactFilter2D { useTriggers = false };
+            filter.SetLayerMask(settings.blockerLayers);
+            var grow = definition.shape.extendSpeed * dt;
+            var anyBlocked = false;
+            var maxLength = 0f;
+            for (var lane = 0; lane < _glowLanes.Count; lane++)
+            {
+                var fraction = _glowLanes.Fraction[lane] * scale;
+                var found = CastLane(origin, direction, perpendicular, widthScale, filter, fraction, -1, out var hitDistance, out var normal);
+                var length = Mathf.Min(_glowLanes.Length[lane] + grow, hitDistance);
+                var blocked = found && length >= hitDistance - 0.01f;
+                _glowLanes.HitDistance[lane] = hitDistance;
+                _glowLanes.Length[lane] = length;
+                _glowLanes.Blocked[lane] = blocked;
+                _glowLanes.HitPoint[lane] = LanePoint(origin, direction, perpendicular, fraction, length, widthScale);
+                _glowLanes.HitNormal[lane] = normal;
+                anyBlocked |= blocked;
+                maxLength = Mathf.Max(maxLength, length);
+            }
+
+            _glowLanes.AnyBlocked = anyBlocked;
+            _glowLanes.MaxLength = maxLength;
+            BuildStrips(_glowLanes, scale, origin, direction, perpendicular, widthScale, filter);
         }
 
         /// <summary>当たり判定の太さが、見た目の太さの何割か（筋の横の位置と比べる）。</summary>
@@ -314,7 +381,7 @@ namespace MS2026.Skills.Red
 
             _lanes.AnyBlocked = anyBlocked;
             _lanes.MaxLength = maxLength;
-            BuildStrips(origin, direction, perpendicular, widthScale, filter);
+            BuildStrips(_lanes, 1f, origin, direction, perpendicular, widthScale, filter);
         }
 
         /// <summary>
@@ -378,25 +445,28 @@ namespace MS2026.Skills.Red
         /// 見た目用の帯を作る。となりの筋どうしの止まる距離が大きく違うとき（片方だけ障害物に当たっている＝障害物のかどがその間にある）は、
         /// 間で何回か判定を飛ばして（二分探索）かどの位置を見つけ、そこで帯を2つに分ける。
         /// </summary>
-        private void BuildStrips(Vector2 origin, Vector2 direction, Vector2 perpendicular, float widthScale, ContactFilter2D filter)
+        /// <param name="lanes">帯を作る筋（レーザー本体用、または床の光・陽炎用）。</param>
+        /// <param name="fractionScale">筋の横の位置に掛ける倍率（床の光・陽炎用はレーザーより太いので 1 より大きい）。</param>
+        private void BuildStrips(RedLaserLanes lanes, float fractionScale, Vector2 origin, Vector2 direction, Vector2 perpendicular, float widthScale,
+            ContactFilter2D filter)
         {
             const float EdgeGap = 0.75f;
             const int SearchSteps = 4;
-            _lanes.ClearStrips();
-            for (var lane = 0; lane < _lanes.Count - 1; lane++)
+            lanes.ClearStrips();
+            for (var lane = 0; lane < lanes.Count - 1; lane++)
             {
-                var left = _lanes.Fraction[lane];
-                var right = _lanes.Fraction[lane + 1];
-                var leftLength = _lanes.Length[lane];
-                var rightLength = _lanes.Length[lane + 1];
-                var leftBlocked = _lanes.Blocked[lane];
-                var rightBlocked = _lanes.Blocked[lane + 1];
-                var leftHit = _lanes.HitDistance[lane];
-                var rightHit = _lanes.HitDistance[lane + 1];
+                var left = lanes.Fraction[lane];
+                var right = lanes.Fraction[lane + 1];
+                var leftLength = lanes.Length[lane];
+                var rightLength = lanes.Length[lane + 1];
+                var leftBlocked = lanes.Blocked[lane];
+                var rightBlocked = lanes.Blocked[lane + 1];
+                var leftHit = lanes.HitDistance[lane];
+                var rightHit = lanes.HitDistance[lane + 1];
 
                 if (Mathf.Abs(leftHit - rightHit) < EdgeGap)
                 {
-                    _lanes.AddStrip(left, right, leftLength, rightLength, leftBlocked, rightBlocked);
+                    lanes.AddStrip(left, right, leftLength, rightLength, leftBlocked, rightBlocked);
                     continue;
                 }
 
@@ -406,7 +476,7 @@ namespace MS2026.Skills.Red
                 for (var step = 0; step < SearchSteps; step++)
                 {
                     var middle = (low + high) * 0.5f;
-                    CastLane(origin, direction, perpendicular, widthScale, filter, middle, -1, out var middleHit, out _);
+                    CastLane(origin, direction, perpendicular, widthScale, filter, middle * fractionScale, -1, out var middleHit, out _);
                     if (Mathf.Abs(middleHit - leftHit) < Mathf.Abs(middleHit - rightHit))
                     {
                         low = middle;
@@ -418,8 +488,8 @@ namespace MS2026.Skills.Red
                 }
 
                 var edge = (low + high) * 0.5f;
-                _lanes.AddStrip(left, edge, leftLength, leftLength, leftBlocked, leftBlocked);
-                _lanes.AddStrip(edge, right, rightLength, rightLength, rightBlocked, rightBlocked);
+                lanes.AddStrip(left, edge, leftLength, leftLength, leftBlocked, leftBlocked);
+                lanes.AddStrip(edge, right, rightLength, rightLength, rightBlocked, rightBlocked);
             }
         }
 
@@ -633,6 +703,7 @@ namespace MS2026.Skills.Red
             OverrideRotation(false);
             _length = 0f;
             _lanes.ResetLengths();
+            _glowLanes.ResetLengths();
             _hadImpact = false;
             _visuals?.EndFire();
         }
@@ -670,6 +741,8 @@ namespace MS2026.Skills.Red
 
         private void Shake(SimpleShakeSettings settings, float strength)
         {
+            // 「演出の付け外し・強さ」のカメラの揺れのメーターを掛ける。
+            strength *= definition.effects != null ? definition.effects.cameraShake.Value : 1f;
             if (settings == null || strength <= 0f)
             {
                 return;

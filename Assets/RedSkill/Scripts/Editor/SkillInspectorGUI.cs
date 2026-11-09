@@ -55,10 +55,55 @@ namespace MS2026.Skills.EditorTools
             serializedObject.ApplyModifiedProperties();
         }
 
+        /// <summary>
+        /// 設定のまとまり1つの中身を、折りたたみ無しで描く（スキル調整スタジオがカードの中に描くとき用）。
+        /// <paramref name="skip"/> の名前の項目は描かない。
+        /// </summary>
+        public static void DrawGroupContents(SerializedProperty group, Type groupType, params string[] skip)
+        {
+            var child = group.Copy();
+            var end = group.GetEndProperty();
+            if (!child.NextVisible(true))
+            {
+                return;
+            }
+
+            while (!SerializedProperty.EqualContents(child, end))
+            {
+                if (skip == null || Array.IndexOf(skip, child.name) < 0)
+                {
+                    DrawProperty(child.Copy(), FindField(groupType, child.name));
+                }
+
+                if (!child.NextVisible(false))
+                {
+                    break;
+                }
+            }
+        }
+
+        /// <summary>1項目を描く（日本語の項目名・範囲・色などの扱いはインスペクターと同じ）。</summary>
+        public static void DrawField(SerializedProperty property, FieldInfo field)
+        {
+            DrawProperty(property, field);
+        }
+
+        /// <summary>項目の日本語名（[SkillLabel] が無ければ Unity の表示名）。</summary>
+        public static string Label(SerializedProperty property, FieldInfo field) => LabelFor(property, field);
+
+        /// <summary>型から名前で項目（フィールド）を探す（親クラスもさかのぼる）。</summary>
+        public static FieldInfo Field(Type type, string name) => FindField(type, name);
+
         private static void DrawProperty(SerializedProperty property, FieldInfo field)
         {
             DrawHeaders(field);
             var label = new GUIContent(LabelFor(property, field), property.tooltip);
+
+            if (field != null && field.FieldType == typeof(SkillEffectDial) && property.propertyType == SerializedPropertyType.Generic)
+            {
+                DrawDial(property, label);
+                return;
+            }
 
             if (field != null && IsGroup(field.FieldType) && property.propertyType == SerializedPropertyType.Generic)
             {
@@ -124,6 +169,26 @@ namespace MS2026.Skills.EditorTools
                     property.intValue = (int)min.min;
                 }
             }
+        }
+
+        /// <summary>演出の付け外し（<see cref="SkillEffectDial"/>）を1行で描く: 項目名・出す/出さない・強さのメーター。</summary>
+        private static void DrawDial(SerializedProperty property, GUIContent label)
+        {
+            var enabled = property.FindPropertyRelative(nameof(SkillEffectDial.enabled));
+            var amount = property.FindPropertyRelative(nameof(SkillEffectDial.amount));
+            var rect = EditorGUILayout.GetControlRect();
+            rect = EditorGUI.PrefixLabel(rect, label);
+            var indent = EditorGUI.indentLevel;
+            EditorGUI.indentLevel = 0;
+            var toggleRect = new Rect(rect.x, rect.y, 18f, rect.height);
+            var sliderRect = new Rect(rect.x + 22f, rect.y, Mathf.Max(0f, rect.width - 22f), rect.height);
+            enabled.boolValue = EditorGUI.Toggle(toggleRect, enabled.boolValue);
+            using (new EditorGUI.DisabledScope(!enabled.boolValue))
+            {
+                amount.floatValue = EditorGUI.Slider(sliderRect, amount.floatValue, 0f, SkillEffectDial.MaxAmount);
+            }
+
+            EditorGUI.indentLevel = indent;
         }
 
         private static void DrawGroup(SerializedProperty property, Type groupType, GUIContent label)

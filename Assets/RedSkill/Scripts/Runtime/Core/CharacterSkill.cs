@@ -43,6 +43,12 @@ namespace MS2026.Skills
         [Min(1)]
         public int killsToCharge = 50;
 
+        [Tooltip("ONなら、自分のスキルで倒した敵も、次のスキルを溜めるための倒した数に入れる。OFF（最初の状態）なら入れない。\n" +
+                 "「スキルで倒した」は、スキルを撃っている間と、スキルの効果（黄色の矢・青の渦など）が残っている間に倒した敵として数える" +
+                 "（その間に普段のレーザーで倒した敵も含まれる）。")]
+        [SkillLabel("自分のスキルで倒した敵も数える")]
+        public bool countOwnSkillKills = false;
+
         [Tooltip("ONなら、スキルを撃っている最中に割ったスマッシュボールでは次のスキルが溜まらない（連発を防ぐ）。")]
         [SkillLabel("スキル中は溜まらない")]
         public bool ignoreChargeWhileActive = true;

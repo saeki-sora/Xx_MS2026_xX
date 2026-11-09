@@ -19,6 +19,7 @@ MonoBehaviour:
   chargeBySmashBall: 1
   chargeByKills: 1
   killsToCharge: 120
+  countOwnSkillKills: 0
   ignoreChargeWhileActive: 1
   replacesNormalLaser: 1
   hideNormalLaserUntilRelease: 1
@@ -141,6 +142,55 @@ MonoBehaviour:
       serializedVersion: 2
       m_Bits: 4294967295
     stopAtDestructibles: 1
+  effects:
+    lightning:
+      enabled: 1
+      amount: 1
+    stripes:
+      enabled: 1
+      amount: 1
+    beamRings:
+      enabled: 1
+      amount: 1
+    lightWave:
+      enabled: 1
+      amount: 1
+    halo:
+      enabled: 1
+      amount: 1
+    streaks:
+      enabled: 1
+      amount: 1
+    edgeJag:
+      enabled: 1
+      amount: 1
+    muzzleFlare:
+      enabled: 1
+      amount: 1
+    muzzleParticles:
+      enabled: 1
+      amount: 1
+    impact:
+      enabled: 1
+      amount: 1
+    cameraShake:
+      enabled: 1
+      amount: 1
+    hotCore:
+      enabled: 1
+      amount: 1
+    floorLight:
+      enabled: 1
+      amount: 1
+    heatHaze:
+      enabled: 1
+      amount: 1
+    softCut:
+      enabled: 1
+      amount: 1
+    wallSparks:
+      enabled: 1
+      amount: 1
   look:
     stripeGradient:
       serializedVersion: 2
@@ -252,6 +302,25 @@ MonoBehaviour:
     tipFadeLength: 4
     sortingOrder: 150
     gradientResolution: 128
+  glow:
+    coreGlow: 0.7
+    coreWidth: 0.22
+    flowNoise: 0.35
+    flowSpeed: 9
+    floorLightColor: {r: 1.6, g: 0.35, b: 0.4, a: 1}
+    floorTint: 0.45
+    floorLightWidth: 2.6
+    floorContactGlow: 1.2
+    hazeStrength: 0.09
+    hazeWidth: 1.7
+    hazeScale: 1.3
+    hazeSpeed: 3
+    cutSoftness: 0.35
+    cutFringe: 0.9
+    wallSparkRate: 260
+    wallSparkSpeed: 20
+    wallSparkColor: {r: 1, g: 0.62, b: 0.45, a: 1}
+    floorSortingOrder: 0
   charge:
     glowColor: {r: 1.6, g: 0.18, b: 0.14, a: 1}
     pulseFrequency: 1.6
@@ -437,3 +506,5 @@ MonoBehaviour:
     beam: {fileID: 4800000, guid: 32afbcfe7e994540896ec5ef5f6901d7, type: 3}
     radial: {fileID: 4800000, guid: 527d8e270d474a6488fcfeac9ed5f61a, type: 3}
     particle: {fileID: 4800000, guid: b2109d45b11a4d1495705b82af89f548, type: 3}
+    floorLight: {fileID: 4800000, guid: e3a1c9d27b5f4f0e8d6c4b2a1f0e9d87, type: 3}
+    haze: {fileID: 4800000, guid: f4b2d0e38c6a4a1f9e7d5c3b2a1f0e98, type: 3}
