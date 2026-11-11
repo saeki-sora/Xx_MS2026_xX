@@ -123,6 +123,7 @@ namespace MS2026.Skills.Red
         [Min(0f)]
         public float windupSeconds = 0.3f;
 
+        [SkillQuick(10)]
         [Tooltip("レーザーを撃ち続ける秒数（細くなって消える時間は含まない）。")]
         [SkillLabel("撃ち続ける時間（秒）")]
         [Min(0.05f)]
@@ -161,6 +162,7 @@ namespace MS2026.Skills.Red
     [Serializable]
     public sealed class RedLaserShape
     {
+        [SkillQuick(11, "レーザーが届く距離（m）")]
         [Tooltip("レーザーが届く最大の距離（メートル）。普段のレーザーは 20。")]
         [SkillLabel("届く距離（m）")]
         [Min(1f)]
@@ -171,6 +173,7 @@ namespace MS2026.Skills.Red
         [Min(0f)]
         public float rootWidth = 0.8f;
 
+        [SkillQuick(12, "レーザーの先の太さ（m）")]
         [Tooltip("先の太さ（メートル）。根元からここまで広がっていく。")]
         [SkillLabel("先の太さ（m）")]
         [Min(0f)]
@@ -215,11 +218,13 @@ namespace MS2026.Skills.Red
     [Serializable]
     public sealed class RedLaserDamage
     {
+        [SkillQuick(13, "群衆の敵へのダメージ（毎秒）")]
         [Tooltip("群衆の敵に与えるダメージ（毎秒）。普段のレーザーは最大 20。敵の体力は 10（ボスは 150）。")]
         [SkillLabel("群衆の敵へのダメージ（毎秒）")]
         [Min(0f)]
         public float swarmDamagePerSecond = 100f;
 
+        [SkillQuick(14, "壊せる物へのダメージ（毎秒）")]
         [Tooltip("破壊できる物（壁の箱・スマッシュボール・Actorの敵など）に与えるダメージ（毎秒）。")]
         [SkillLabel("破壊できる物へのダメージ（毎秒）")]
         [Min(0f)]
@@ -345,6 +350,7 @@ namespace MS2026.Skills.Red
             },
             new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 1f) });
 
+        [SkillQuick(0, "レーザーの明るさ")]
         [Tooltip("全体の明るさ。ポストエフェクトの光のにじみ（Bloom）がある場合は 1 より大きいほど強く光る。")]
         [SkillLabel("明るさ")]
         [Min(0f)]

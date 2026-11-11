@@ -230,6 +230,7 @@ namespace MS2026.Skills.Blue
         [SkillLabel("投げ方")]
         public BlueThrowMode mode = BlueThrowMode.OneByOne;
 
+        [SkillQuick(15)]
         [Tooltip("持つボトルの数。「まとめて一気に」なら一度に投げる数、「1本ずつ順番に」なら1回の溜めで投げられる回数。「1本だけ」では使わない。")]
         [SkillLabel("ボトルの数")]
         [Range(1, MaxCount)]
@@ -302,6 +303,7 @@ namespace MS2026.Skills.Blue
     [Serializable]
     public sealed class BlueThrowTarget
     {
+        [SkillQuick(14, "ボトルが落ちる距離（m）")]
         [Tooltip("ボトルが落ちる場所までの距離（m）。砲台の向いている方向へ測る。")]
         [SkillLabel("落ちる距離（m）")]
         [Range(0f, 30f)]
@@ -347,11 +349,13 @@ namespace MS2026.Skills.Blue
     [Serializable]
     public sealed class BlueVortexAreaSettings
     {
+        [SkillQuick(10)]
         [Tooltip("渦の半径（m）。この中の敵に効果がかかる。")]
         [SkillLabel("渦の半径（m）")]
         [Range(0.5f, 12f)]
         public float radius = 3.2f;
 
+        [SkillQuick(11)]
         [Tooltip("渦が広がりきってから消え始めるまでの時間（秒）。")]
         [SkillLabel("渦が続く時間（秒）")]
         [Range(0.1f, 30f)]
@@ -387,6 +391,7 @@ namespace MS2026.Skills.Blue
     [Serializable]
     public sealed class BlueVortexDebuff
     {
+        [SkillQuick(12)]
         [Tooltip("足止めの強さ。1 = その場で止まる（コアへ進めない）、0.5 = 半分の速さ、0 = 足止めしない。")]
         [SkillLabel("足止めの強さ（1=止まる）")]
         [Range(0f, 1f)]
@@ -416,6 +421,7 @@ namespace MS2026.Skills.Blue
         [Range(0f, 1f)]
         public float pullInnerRadius = 0.3f;
 
+        [SkillQuick(13, "渦の中の敵が受けるダメージの倍率")]
         [Tooltip("渦の中の敵が受けるダメージの倍率（1 = いつも通り、1.5 = 1.5倍）。レーザー・爆発など、他から受けたダメージに上乗せする。群衆の敵だけ。")]
         [SkillLabel("受けるダメージの倍率")]
         [Range(1f, 5f)]
@@ -448,6 +454,7 @@ namespace MS2026.Skills.Blue
     [Serializable]
     public sealed class BlueVortexLook
     {
+        [SkillQuick(0)]
         [Tooltip("渦の色（中心→ふち、HDR）。左が中心の暗い目、右がふち。アルファは濃さ。")]
         [SkillLabel("渦の色（中心→ふち）")]
         [GradientUsage(true)]
@@ -478,6 +485,7 @@ namespace MS2026.Skills.Blue
         [Range(0f, 12f)]
         public float twist = 4.5f;
 
+        [SkillQuick(3, "渦の回る速さ（回/秒）")]
         [Tooltip("渦が回る速さ（回/秒）。")]
         [SkillLabel("回る速さ（回/秒）")]
         [Range(0f, 4f)]
@@ -498,11 +506,13 @@ namespace MS2026.Skills.Blue
         [Range(0f, 0.6f)]
         public float eyeSize = 0.17f;
 
+        [SkillQuick(2, "渦の濃さ")]
         [Tooltip("全体の濃さ（0 = 光を足すだけ、1 = 床を青く塗る）。床が明るいときは高めに。")]
         [SkillLabel("濃さ（床を塗る強さ）")]
         [Range(0f, 1f)]
         public float opacity = 0.85f;
 
+        [SkillQuick(1, "渦の明るさ")]
         [Tooltip("全体の明るさ。")]
         [SkillLabel("明るさ")]
         [Range(0f, 4f)]
@@ -824,6 +834,7 @@ namespace MS2026.Skills.Blue
         [SkillLabel("投げた瞬間の揺れ")]
         public SimpleShakeSettings onThrow = new SimpleShakeSettings { amplitude = 0.12f, rollAmplitude = 0.3f, frequency = 20f, duration = 0.2f };
 
+        [SkillQuick(4)]
         [SkillLabel("投げた瞬間の揺れの強さ")]
         [Range(0f, 3f)]
         public float throwStrength = 1f;
@@ -832,6 +843,7 @@ namespace MS2026.Skills.Blue
         [SkillLabel("破裂の揺れ")]
         public SimpleShakeSettings onBurst = new SimpleShakeSettings { amplitude = 0.45f, rollAmplitude = 1.1f, frequency = 20f, duration = 0.55f };
 
+        [SkillQuick(5)]
         [SkillLabel("破裂の揺れの強さ")]
         [Range(0f, 3f)]
         public float burstStrength = 1f;

@@ -24,6 +24,23 @@ namespace MS2026.SkillStudio
 
         public SkillSnapshotService Snapshots { get; }
 
+        /// <summary>開いている折りたたみ（「詳しい設定」・各まとまり）。画面を作り直しても開いたままにするため、ここで覚える。</summary>
+        public HashSet<string> OpenSections { get; } = new HashSet<string>();
+
+        public bool IsOpen(string key) => OpenSections.Contains(key);
+
+        public void SetOpen(string key, bool open)
+        {
+            if (open)
+            {
+                OpenSections.Add(key);
+            }
+            else
+            {
+                OpenSections.Remove(key);
+            }
+        }
+
         /// <summary>撃ち終わったらすぐもう一度撃つ（試し撃ち）色。Play を止めると消える。</summary>
         public HashSet<SkillColor> AutoRefire { get; } = new HashSet<SkillColor>();
 

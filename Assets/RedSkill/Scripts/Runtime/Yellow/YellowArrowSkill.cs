@@ -47,21 +47,25 @@ namespace MS2026.Skills.Yellow
     [System.Serializable]
     public sealed class YellowArrowSettings
     {
+        [SkillQuick(10, "矢の速さ（m/秒）")]
         [Tooltip("矢の速さ（メートル／秒）。")]
         [SkillLabel("速さ（m/秒）")]
         [Min(0.01f)]
         public float speed = 12f;
 
+        [SkillQuick(11, "矢が消えるまで（秒）")]
         [Tooltip("発射から消滅までの秒数。")]
         [SkillLabel("消えるまで（秒）")]
         [Min(0.01f)]
         public float lifetime = 5f;
 
+        [SkillQuick(12, "矢の長さ（m）")]
         [Tooltip("矢の長さ（メートル）。")]
         [SkillLabel("長さ（m）")]
         [Min(0.01f)]
         public float length = 4.8f;
 
+        [SkillQuick(13, "矢の毎秒ダメージ")]
         [Tooltip("矢に触れている敵に与える毎秒ダメージ。コア・砲台・壁にはダメージを与えない。")]
         [SkillLabel("毎秒ダメージ")]
         [Min(0f)]
@@ -75,11 +79,13 @@ namespace MS2026.Skills.Yellow
     [System.Serializable]
     public sealed class YellowArrowCameraShake
     {
+        [SkillQuick(0, "放ったときの揺れ")]
         [Tooltip("矢を放った瞬間の揺れ。")]
         [SkillLabel("放ったとき")]
         public SimpleShakeSettings launch = new SimpleShakeSettings
             { amplitude = 0.65f, rollAmplitude = 1.1f, frequency = 17f, duration = 0.32f };
 
+        [SkillQuick(1, "跳ね返ったときの揺れ")]
         [Tooltip("壁で跳ね返ったときの揺れ。")]
         [SkillLabel("跳ね返ったとき")]
         public SimpleShakeSettings bounce = new SimpleShakeSettings
@@ -97,6 +103,7 @@ namespace MS2026.Skills.Yellow
         [SkillLabel("矢を放った瞬間")]
         public FortressEffect onLaunch = new FortressEffect();
 
+        [SkillQuick(2)]
         [Tooltip("矢の発射音の音量。通常のレーザーの発射音には影響しない。")]
         [SkillLabel("発射音の音量")]
         [Range(0f, 1f)]

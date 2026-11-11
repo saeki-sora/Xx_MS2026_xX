@@ -126,6 +126,7 @@ namespace MS2026.Skills.Green
         [Min(0f)]
         public float shrinkEnd = 3.5f;
 
+        [SkillQuick(10)]
         [Tooltip("降臨の始まりから、葉と守護霊がコアへ吸い込まれ始めるまでの秒数（葉で守る時間を含む）。")]
         [SkillLabel("守る時間（降臨から・秒）")]
         [Min(0.5f)]
@@ -146,11 +147,13 @@ namespace MS2026.Skills.Green
     [Serializable]
     public sealed class GreenMintHeal
     {
+        [SkillQuick(11, "ドンと回復するコアの量（%）")]
         [Tooltip("守護霊が着地した瞬間に回復する量（コアの最大体力に対する %）。")]
         [SkillLabel("ドンと回復（%）")]
         [Range(0f, 100f)]
         public float burstPercent = 20f;
 
+        [SkillQuick(12, "じわじわ回復するコアの量（合計 %）")]
         [Tooltip("葉で守っている間に、合わせてじわじわ回復する量（コアの最大体力に対する %）。")]
         [SkillLabel("じわじわ回復（合計 %）")]
         [Range(0f, 100f)]
@@ -164,6 +167,7 @@ namespace MS2026.Skills.Green
     [Serializable]
     public sealed class GreenLeafRingSettings
     {
+        [SkillQuick(14)]
         [Tooltip("コアの周りを回る葉の数。")]
         [SkillLabel("葉の数")]
         [Range(1, 16)]
@@ -174,6 +178,7 @@ namespace MS2026.Skills.Green
         [Min(0.3f)]
         public float minRadius = 2.6f;
 
+        [SkillQuick(15, "葉の輪の一番大きい半径（m）")]
         [Tooltip("輪が一番広がったときの半径（m）。画面の縦は約28m、砲台はコアから6m。")]
         [SkillLabel("一番大きい半径（m）")]
         [Min(0.3f)]
@@ -203,6 +208,7 @@ namespace MS2026.Skills.Green
         [Min(0f)]
         public float wobbleDegrees = 12.6f;
 
+        [SkillQuick(13, "葉に触れた敵へのダメージ")]
         [Tooltip("葉に触れた敵に与えるダメージ（ふつうの敵の体力は 10 なので一撃。硬い敵は何度か当たると倒れる）。")]
         [SkillLabel("触れたときのダメージ")]
         [Min(0f)]
@@ -298,6 +304,7 @@ namespace MS2026.Skills.Green
         [Min(0f)]
         public float startAbove = 30f;
 
+        [SkillQuick(2, "守護霊の体の濃さ")]
         [Tooltip("守護霊の体の濃さ（0〜1）。輪郭の線はいつも濃い。")]
         [SkillLabel("体の濃さ")]
         [Range(0.1f, 1f)]
@@ -459,10 +466,12 @@ namespace MS2026.Skills.Green
         [SkillLabel("体の細い線")]
         public Color spiritLines = new Color(0.31f, 0.78f, 0.24f, 0.6f);
 
+        [SkillQuick(0, "守護霊のまわりの光の色")]
         [Tooltip("守護霊のまわりの光。")]
         [SkillLabel("体のまわりの光")]
         public Color spiritGlow = new Color(0.51f, 1f, 0.39f, 0.95f);
 
+        [SkillQuick(1, "葉の色（明るい側）")]
         [Tooltip("葉っぱの色（明るい側・濃い側・ふち・葉脈）。")]
         [SkillLabel("葉（明るい側）")]
         public Color leafLight = new Color(0.608f, 0.961f, 0.541f);
@@ -524,6 +533,7 @@ namespace MS2026.Skills.Green
         [Min(0.05f)]
         public float waveSeconds = 1.1f;
 
+        [SkillQuick(3)]
         [Tooltip("ドン: コアの光の大きさ（直径 m）。")]
         [SkillLabel("ドン: コアの光の大きさ（m）")]
         [Min(0f)]
@@ -534,6 +544,7 @@ namespace MS2026.Skills.Green
         [Range(0f, 1f)]
         public float screenEdgeStrength = 0.5f;
 
+        [SkillQuick(4)]
         [Tooltip("ドン: 画面全体が白く光る濃さ（0〜1）。")]
         [SkillLabel("ドン: 画面の白い光")]
         [Range(0f, 1f)]
@@ -591,6 +602,7 @@ namespace MS2026.Skills.Green
         [FormerlySerializedAs("burst")]
         public SimpleShakeSettings land = new SimpleShakeSettings { amplitude = 0.3f, rollAmplitude = 0.6f, frequency = 16f, duration = 0.6f };
 
+        [SkillQuick(5)]
         [Tooltip("着地の揺れの強さ（0で揺らさない）。")]
         [SkillLabel("着地の揺れの強さ")]
         [FormerlySerializedAs("burstStrength")]

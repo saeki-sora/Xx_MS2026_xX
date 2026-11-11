@@ -38,6 +38,7 @@ namespace MS2026.Skills
         [SkillLabel("敵を倒して粒を集めると溜まる")]
         public bool chargeByKills = true;
 
+        [SkillQuick(0)]
         [Tooltip("ゲージが満タンになるまでに倒す敵の数（自分のレーザーが最後に当たった敵）。")]
         [SkillLabel("満タンまでに倒す数")]
         [Min(1)]
@@ -46,6 +47,7 @@ namespace MS2026.Skills
         [Tooltip("ONなら、自分のスキルで倒した敵も、次のスキルを溜めるための倒した数に入れる。OFF（最初の状態）なら入れない。\n" +
                  "「スキルで倒した」は、スキルを撃っている間と、スキルの効果（黄色の矢・青の渦など）が残っている間に倒した敵として数える" +
                  "（その間に普段のレーザーで倒した敵も含まれる）。")]
+        [SkillQuick(1)]
         [SkillLabel("自分のスキルで倒した敵も数える")]
         public bool countOwnSkillKills = false;
 

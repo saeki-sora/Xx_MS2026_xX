@@ -11,67 +11,87 @@ namespace MS2026.Skills.Red
     [Serializable]
     public sealed class RedLaserEffects
     {
+        [SkillDialFor("lightning")]
+        [SkillQuick(4)]
         [Tooltip("溜め中・撃っている間・当たった場所に出る、赤い稲妻（ビリビリ）。強さは稲妻の数に掛かる。")]
         [SkillLabel("ビリビリの赤い稲妻")]
         public SkillEffectDial lightning = new SkillEffectDial();
 
+        [SkillDialFor("look")]
         [Tooltip("レーザーの中を流れる、斜めのしま模様。強さはしまの濃さに掛かる。")]
         [SkillLabel("斜めのしま模様")]
         public SkillEffectDial stripes = new SkillEffectDial();
 
+        [SkillDialFor("flash")]
         [Tooltip("発射口から出て、レーザーに沿って先へ飛ぶ光の輪。強さは輪の明るさに掛かる。")]
         [SkillLabel("レーザーを進む輪")]
         public SkillEffectDial beamRings = new SkillEffectDial();
 
+        [SkillDialFor("flash")]
         [Tooltip("根元から先へ走る明るい帯（光の波）。強さは帯の明るさに掛かる。")]
         [SkillLabel("光の波")]
         public SkillEffectDial lightWave = new SkillEffectDial();
 
+        [SkillDialFor("flash")]
         [Tooltip("レーザーのまわりのにじむ光（外側の光）。強さは明るさに掛かる。")]
         [SkillLabel("外側のにじむ光")]
         public SkillEffectDial halo = new SkillEffectDial();
 
+        [SkillDialFor("look")]
         [Tooltip("レーザーの中を流れる細いスジ模様。強さはスジの濃さに掛かる。")]
         [SkillLabel("流れるスジ")]
         public SkillEffectDial streaks = new SkillEffectDial();
 
+        [SkillDialFor("look")]
         [Tooltip("レーザーのふちのギザギザ（エネルギーが荒れる感じ）。強さはギザギザの大きさに掛かる。")]
         [SkillLabel("ふちのギザギザ")]
         public SkillEffectDial edgeJag = new SkillEffectDial();
 
+        [SkillDialFor("muzzle")]
         [Tooltip("発射口のトゲ付きの光と、その後ろで回る大きな光。強さは明るさに掛かる。")]
         [SkillLabel("発射口の光")]
         public SkillEffectDial muzzleFlare = new SkillEffectDial();
 
+        [SkillDialFor("muzzle")]
         [Tooltip("発射口から飛び散る火花・吹き出すトゲ状の光・レーザーに沿って舞う粒・走る光の線。強さは数に掛かる。")]
         [SkillLabel("発射口とレーザーの粒")]
         public SkillEffectDial muzzleParticles = new SkillEffectDial();
 
+        [SkillDialFor("impact")]
         [Tooltip("壁に当たった場所の光・横に広がる光・火花・衝撃の輪。強さは明るさと数に掛かる。")]
         [SkillLabel("当たった場所の光と火花")]
         public SkillEffectDial impact = new SkillEffectDial();
 
+        [SkillDialFor("cameraShake")]
+        [SkillQuick(5)]
         [Tooltip("撃ち始め・撃っている間・当たっている間のカメラの揺れ。強さは揺れの強さに掛かる。")]
         [SkillLabel("カメラの揺れ")]
         public SkillEffectDial cameraShake = new SkillEffectDial();
 
-        [Header("光の奔流（細かい値は「光の奔流」の欄）")]
+        [SkillQuick(1)]
+        [SkillDialFor("glow")]
         [Tooltip("レーザーの真ん中の、白く焼けた芯の光と、赤い光がゆらめく動き。強さは芯の明るさとゆらめきに掛かる。")]
         [SkillLabel("白く焼けた芯")]
         public SkillEffectDial hotCore = new SkillEffectDial();
 
+        [SkillDialFor("glow")]
+        [SkillQuick(2)]
         [Tooltip("レーザーのまわりの床を赤く照らす光。障害物の後ろは影になる（光は回り込まない）。強さは光の強さに掛かる。")]
         [SkillLabel("床を照らす光")]
         public SkillEffectDial floorLight = new SkillEffectDial();
 
+        [SkillDialFor("glow")]
+        [SkillQuick(3)]
         [Tooltip("レーザーのまわりの景色が熱でゆらぐ陽炎。強さはゆらぎの大きさに掛かる。")]
         [SkillLabel("陽炎")]
         public SkillEffectDial heatHaze = new SkillEffectDial();
 
+        [SkillDialFor("glow")]
         [Tooltip("障害物の後ろで途切れる所（影のふち）を、やわらかくぼかして明るいふちを付ける。強さはぼかす幅に掛かる。OFF でくっきり切れる。")]
         [SkillLabel("影のふちのやわらかさ")]
         public SkillEffectDial softCut = new SkillEffectDial();
 
+        [SkillDialFor("glow")]
         [Tooltip("当たった場所から、壁に沿って横へ流れる線の火花。強さは数に掛かる。")]
         [SkillLabel("壁に沿って流れる火花")]
         public SkillEffectDial wallSparks = new SkillEffectDial();

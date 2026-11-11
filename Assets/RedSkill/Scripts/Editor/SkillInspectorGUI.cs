@@ -23,6 +23,21 @@ namespace MS2026.Skills.EditorTools
         };
 
         private const BindingFlags FieldFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
+        private const float MarkGutter = 6f;
+        private const float ResetWidth = 22f;
+        private static readonly Color MarkColor = new Color(0.3f, 0.65f, 1f, 1f);
+
+        /// <summary>
+        /// スキル調整スタジオ用: 初期値から変えた項目か。null でない間は、項目の左に印、右に「↺」（初期値に戻す）を出す。
+        /// 普通のインスペクターでは null のまま（印は出さない）。
+        /// </summary>
+        internal static Func<SerializedProperty, bool> IsChangedFromDefault;
+
+        /// <summary>スキル調整スタジオ用: 項目を初期値に戻す。</summary>
+        internal static Action<SerializedProperty> ResetToDefault;
+
+        /// <summary>スキル調整スタジオ用: 初期値を短い文字にする（「↺」の説明に出す）。</summary>
+        internal static Func<SerializedProperty, string> DefaultValueText;
 
         /// <summary>対象の全項目を描く（m_Script は灰色で一番上）。<paramref name="skip"/> の名前の項目は描かない（自分で描くとき用）。</summary>
         public static void DrawAll(SerializedObject serializedObject, params string[] skip)
@@ -88,26 +103,88 @@ namespace MS2026.Skills.EditorTools
             DrawProperty(property, field);
         }
 
+        /// <summary>
+        /// 1項目を、名前を差し替えて描く（スキル調整スタジオの「よく触る項目」用。まとまりの外に出すので [Header] は描かない）。
+        /// <paramref name="label"/> が空なら [SkillLabel] の名前。
+        /// </summary>
+        public static void DrawField(SerializedProperty property, FieldInfo field, string label)
+        {
+            DrawProperty(property, field, label, false);
+        }
+
         /// <summary>項目の日本語名（[SkillLabel] が無ければ Unity の表示名）。</summary>
         public static string Label(SerializedProperty property, FieldInfo field) => LabelFor(property, field);
 
         /// <summary>型から名前で項目（フィールド）を探す（親クラスもさかのぼる）。</summary>
         public static FieldInfo Field(Type type, string name) => FindField(type, name);
 
-        private static void DrawProperty(SerializedProperty property, FieldInfo field)
+        private static void DrawProperty(SerializedProperty property, FieldInfo field, string labelOverride = null, bool headers = true)
         {
-            DrawHeaders(field);
-            var label = new GUIContent(LabelFor(property, field), property.tooltip);
-
-            if (field != null && field.FieldType == typeof(SkillEffectDial) && property.propertyType == SerializedPropertyType.Generic)
+            // [Header] は、自分で描く項目のときだけ描く。Unity の PropertyField に任せる項目は、PropertyField が見出しも描くので
+            // ここでも描くと見出しが2回出てしまう（2026-11-09 に直した）。
+            if (headers && !DrawsWithPropertyField(property, field))
             {
-                DrawDial(property, label);
+                DrawHeaders(field);
+            }
+
+            var label = new GUIContent(string.IsNullOrEmpty(labelOverride) ? LabelFor(property, field) : labelOverride, property.tooltip);
+
+            if (field != null && field.FieldType != typeof(SkillEffectDial) && IsGroup(field.FieldType)
+                && property.propertyType == SerializedPropertyType.Generic)
+            {
+                DrawGroup(property, field.FieldType, label);
                 return;
             }
 
-            if (field != null && IsGroup(field.FieldType) && property.propertyType == SerializedPropertyType.Generic)
+            if (IsChangedFromDefault == null)
             {
-                DrawGroup(property, field.FieldType, label);
+                DrawLeaf(property, field, label);
+                return;
+            }
+
+            DrawMarkedRow(property, field, label);
+        }
+
+        /// <summary>1項目を、左に「変えた印」、右に「↺」（初期値に戻す）の場所を取って描く（スキル調整スタジオの中だけ）。</summary>
+        private static void DrawMarkedRow(SerializedProperty property, FieldInfo field, GUIContent label)
+        {
+            var changed = IsChangedFromDefault(property);
+            var reset = false;
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Space(MarkGutter);
+            EditorGUILayout.BeginVertical();
+            DrawLeaf(property, field, label);
+            EditorGUILayout.EndVertical();
+            if (changed)
+            {
+                var text = DefaultValueText?.Invoke(property);
+                var tip = string.IsNullOrEmpty(text) ? "初期値に戻す。Ctrl+Z で取り消せる。" : $"初期値（{text}）に戻す。Ctrl+Z で取り消せる。";
+                reset = GUILayout.Button(new GUIContent("↺", tip), EditorStyles.miniButton, GUILayout.Width(ResetWidth));
+            }
+            else
+            {
+                GUILayout.Space(ResetWidth + 2f);
+            }
+
+            EditorGUILayout.EndHorizontal();
+            if (changed && Event.current.type == EventType.Repaint)
+            {
+                var row = GUILayoutUtility.GetLastRect();
+                EditorGUI.DrawRect(new Rect(row.x + 1f, row.y + 2f, 3f, Mathf.Max(0f, row.height - 4f)), MarkColor);
+            }
+
+            if (reset)
+            {
+                ResetToDefault?.Invoke(property);
+                GUI.FocusControl(null);
+            }
+        }
+
+        private static void DrawLeaf(SerializedProperty property, FieldInfo field, GUIContent label)
+        {
+            if (field != null && field.FieldType == typeof(SkillEffectDial) && property.propertyType == SerializedPropertyType.Generic)
+            {
+                DrawDial(property, label);
                 return;
             }
 
@@ -169,6 +246,38 @@ namespace MS2026.Skills.EditorTools
                     property.intValue = (int)min.min;
                 }
             }
+        }
+
+        /// <summary>この項目を、最後の Unity の PropertyField で描くか（範囲・色・グラデーション・文章欄・まとまり・付け外し以外）。</summary>
+        private static bool DrawsWithPropertyField(SerializedProperty property, FieldInfo field)
+        {
+            if (field == null)
+            {
+                return true;
+            }
+
+            if (property.propertyType == SerializedPropertyType.Generic && (field.FieldType == typeof(SkillEffectDial) || IsGroup(field.FieldType)))
+            {
+                return false;
+            }
+
+            if (field.GetCustomAttribute<RangeAttribute>() != null
+                && (property.propertyType == SerializedPropertyType.Float || property.propertyType == SerializedPropertyType.Integer))
+            {
+                return false;
+            }
+
+            if (field.GetCustomAttribute<ColorUsageAttribute>() != null && property.propertyType == SerializedPropertyType.Color)
+            {
+                return false;
+            }
+
+            if (field.GetCustomAttribute<GradientUsageAttribute>() != null && property.propertyType == SerializedPropertyType.Gradient)
+            {
+                return false;
+            }
+
+            return !(field.GetCustomAttribute<TextAreaAttribute>() != null && property.propertyType == SerializedPropertyType.String);
         }
 
         /// <summary>演出の付け外し（<see cref="SkillEffectDial"/>）を1行で描く: 項目名・出す/出さない・強さのメーター。</summary>
