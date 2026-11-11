@@ -102,6 +102,17 @@ namespace MS2026.Stage.EditorTools
                 ("hotColor", "一番熱い色"),
                 ("scorchColor", "焦げ跡の色")
             }),
+            ("敵の質感（縁・ぷるぷる・当たったときの潰れ）", new[]
+            {
+                ("enemyLook.enabled", "敵の質感を出す"),
+                ("enemyLook.edgeDarken", "縁を濃くする量"),
+                ("enemyLook.edgeColor", "縁の色"),
+                ("enemyLook.edgeWidth", "縁の太さ"),
+                ("enemyLook.jiggle", "ぷるぷる揺れる量"),
+                ("enemyLook.jiggleFramesPerSecond", "揺れのコマ数（1秒あたり）"),
+                ("enemyLook.hitSquash", "当たった瞬間に潰れる量")
+            }),
+
             ("揺れ（敵の群れに押されたとき）", new[]
             {
                 ("pressureForFullTilt", "一番傾く敵の数"),

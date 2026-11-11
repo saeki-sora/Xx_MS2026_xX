@@ -36,6 +36,12 @@ Shader "MS2026/Fortress/ToothpasteBeam"
         _BubbleSize ("泡の大きさ", Range(0.05, 0.5)) = 0.2
         _BubbleCellsAcross ("幅に並ぶ泡の数", Range(1, 8)) = 3
 
+        [Header(Core Light)]
+        _CoreAmount ("芯の白い光（0で出さない）", Range(0, 1)) = 0.7
+        _CoreWidthWeak ("芯の太さ（弱く握ったとき・幅に対する割合）", Range(0.02, 1)) = 0.16
+        _CoreWidthStrong ("芯の太さ（強く握ったとき）", Range(0.02, 1)) = 0.42
+        _CoreGlow ("芯の明るさ（強く握ったとき。大きいほど光がにじむ）", Range(0, 3)) = 0.9
+
         [HideInInspector] _BeamLength ("Beam Length", Float) = 10
         [HideInInspector] _BeamWidth ("Beam Width", Float) = 0.3
         [HideInInspector] _BeamFlow ("Beam Flow", Float) = 0
@@ -92,6 +98,10 @@ Shader "MS2026/Fortress/ToothpasteBeam"
                 half _BubbleAmount;
                 half _BubbleSize;
                 float _BubbleCellsAcross;
+                half _CoreAmount;
+                half _CoreWidthWeak;
+                half _CoreWidthStrong;
+                half _CoreGlow;
                 float _BeamLength;
                 float _BeamWidth;
                 float _BeamFlow;
@@ -260,6 +270,17 @@ Shader "MS2026/Fortress/ToothpasteBeam"
 
                 half rim = pow(1.0 - nz, 3.0) * _RimStrength;
                 color += specColor * spec + glint + rim;
+
+                // 芯の白い光（2026-11-09 見た目強化）: 真ん中の帯を白く、強く握るほど帯が太く・明るく（1より明るいと光のにじみが付く）。
+                // 弱く握っているときは控えめにして、4人同時でも「全部が光る」にならないようにする。
+                if (_CoreAmount > 0.001)
+                {
+                    float coreWidth = lerp(_CoreWidthWeak, _CoreWidthStrong, saturate(_BeamPower));
+                    half core = (1.0 - smoothstep(coreWidth * 0.55, coreWidth, ax)) * _CoreAmount;
+                    color = lerp(color, max(color, 1.0), core);
+                    color *= 1.0 + core * _CoreGlow * saturate(_BeamPower);
+                }
+
                 return half4(color, saturate(alpha));
             }
             ENDHLSL

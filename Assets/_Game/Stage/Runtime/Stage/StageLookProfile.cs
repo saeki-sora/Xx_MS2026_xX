@@ -79,6 +79,10 @@ namespace MS2026.Stage
         [Tooltip("焦げ跡の色。")]
         public Color scorchColor = new Color(0.12f, 0.07f, 0.05f);
 
+        // ── 敵の質感（縁・ぷるぷる・当たったときの潰れ） ──（見出しは StageLookProfileEditor が日本語で出す）
+        [Tooltip("敵（群衆）の縁を濃くして形を読みやすくし、1秒12コマでぷるぷる揺らし、当たった瞬間にぷにっと潰す（見た目だけ）。")]
+        public MS2026.Fortress.EnemyLookSettings enemyLook = new MS2026.Fortress.EnemyLookSettings();
+
         // ── 揺れ（敵の群れに押されたとき） ──（見出しは StageLookProfileEditor が日本語で出す）
         [Tooltip("この人数の敵が周りに押し寄せると、一番大きく傾く。")]
         [Min(1f)] public float pressureForFullTilt = 25f;
@@ -166,6 +170,11 @@ namespace MS2026.Stage
 
             Shader.SetGlobalColor(StageShaderIds.HeatHotColor, hotColor);
             Shader.SetGlobalColor(StageShaderIds.ScorchColor, scorchColor);
+            if (this == Current)
+            {
+                MS2026.Fortress.EnemyLookGlobals.Apply(enemyLook);
+            }
+
             Shader.SetGlobalColor(StageShaderIds.SilhouetteColor, hiddenEnemyColor);
             Shader.SetGlobalFloat(StageShaderIds.SilhouetteEnabled, showHiddenEnemies ? 1f : 0f);
             // 今のステージの設定のときだけ靄の設定を入れる（エディタで別のステージの設定を触っても、今の画面は変えない）。

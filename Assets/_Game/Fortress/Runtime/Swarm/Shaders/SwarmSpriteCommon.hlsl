@@ -27,6 +27,11 @@ float _FortressEnemyScreenAlign;
 float4 _FortressCrowdSheen;
 float4 _FortressCrowdSheenColor;
 
+// 敵の質感（EnemyLookGlobals がステージの見え方の設定から入れる。2026-11-09 見た目強化）。
+// x=ぷるぷる揺れる量, y=揺れのコマ数(1秒あたり), z=当たった瞬間に潰れる量, w=縁を濃くする量。一度も入っていないときは0なので何も変わらない。
+float4 _FortressEnemyLook;
+float4 _FortressEnemyEdge; // rgb=縁の色, a=縁の太さ（絵の1コマの大きさに対する割合）
+
 TEXTURE2D(_MainTex);
 SAMPLER(sampler_MainTex);
 
@@ -96,7 +101,18 @@ Varyings vert(Attributes input)
     float size = inst.a.z;
     float2 spriteUp = SwarmSpriteUp();
     float2 spriteRight = float2(spriteUp.y, -spriteUp.x);
-    float2 quad = (spriteRight * input.positionOS.x + spriteUp * input.positionOS.y) * size;
+    // 敵の質感: コマ打ちのぷるぷる（場所ごとに揺れの向きがずれる）＋当たった瞬間（flash）に横へ潰れる。値が0なら何もしない。
+    float2 squash = float2(1.0, 1.0);
+    if (_FortressEnemyLook.x > 0.0 || _FortressEnemyLook.z > 0.0)
+    {
+        float fps = max(_FortressEnemyLook.y, 1.0);
+        float steppedTime = floor(_Time.y * fps) / fps;
+        float wobble = sin(steppedTime * 7.0 + dot(inst.a.xy, float2(1.37, 0.71)) * 3.0) * _FortressEnemyLook.x;
+        float hit = saturate(inst.a.w) * _FortressEnemyLook.z;
+        squash = float2((1.0 + wobble) * (1.0 + hit), (1.0 - wobble) * (1.0 - hit * 0.7));
+    }
+
+    float2 quad = (spriteRight * (input.positionOS.x * squash.x) + spriteUp * (input.positionOS.y * squash.y)) * size;
     float3 offset = FortressBillboardOffset(
         quad, float2(0.0, 0.0), spriteRight * (0.5 * size), spriteUp * (0.5 * size),
         _FortressSwarmBillboardStand);

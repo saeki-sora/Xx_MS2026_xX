@@ -99,6 +99,14 @@ MonoBehaviour:
   glowColor: {r: 2.2, g: 0.45, b: 0.08, a: 1}
   hotColor: {r: 4, g: 3.2, b: 1.6, a: 1}
   scorchColor: {r: 0.12, g: 0.07, b: 0.05, a: 1}
+  enemyLook:
+    enabled: 1
+    edgeDarken: 0.55
+    edgeColor: {r: 0.17, g: 0.08, b: 0.27, a: 1}
+    edgeWidth: 0.05
+    jiggle: 0.06
+    jiggleFramesPerSecond: 12
+    hitSquash: 0.18
   pressureForFullTilt: 25
   maxTiltDegrees: 5
   squash: 0.04
