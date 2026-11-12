@@ -40,7 +40,7 @@ MonoBehaviour:
     type: 0
   ambientMotes:
     enabled: 1
-    dataCount: 36
+    dataCount: 0
     bubbleCount: 6
     steamCount: 0
     dataColor: {r: 0.55, g: 1, b: 1, a: 0.8}

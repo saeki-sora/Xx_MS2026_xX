@@ -1,0 +1,280 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ステージ1 光の見比べ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=IBM+Plex+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* 配置: 色を公平に見るための暗いグレーの調光室。主役は上のモニター1枚で、下に理由・設定値・作業を順に置く。 */
+:root {
+  --room: #17191d;      /* 色の判断を邪魔しない、ほぼ無彩色の壁 */
+  --panel: #202328;
+  --line: #363a42;
+  --text: #e9e8e4;
+  --dim: #a4a7ad;
+  --sun: #ffd9a0;       /* 太陽の色。案に合わせて JS が差し替える */
+  --mint: #6fe3b2;      /* ステージの床の色 */
+  --warn: #ffb35c;
+  --display: "Dela Gothic One", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  --body: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+  --mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--room); color: var(--text); font-family: var(--body); font-size: 16px; line-height: 1.75; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 36px 72px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 56px; }
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(30px, 5vw, 46px); line-height: 1.25; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 400; font-size: 23px; line-height: 1.4; margin: 0; text-wrap: balance; }
+h3 { font-size: 16px; margin: 0; font-weight: 700; }
+p { margin: 0; }
+.lead { max-width: 44em; font-size: 18px; }
+.head { display: grid; gap: 14px; }
+.sec { display: grid; gap: 18px; }
+.sec > p { max-width: 42em; color: var(--dim); }
+
+/* モニター */
+.bench { display: grid; gap: 12px; }
+.monitor { position: relative; width: 100%; max-width: 100%; aspect-ratio: 16 / 9; background: #000; overflow: hidden; outline: 1px solid var(--line); }
+.monitor video, .monitor .wipe img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.wipe { position: absolute; inset: 0; }
+.wipe .top { clip-path: inset(0 calc(100% - var(--x, 50%)) 0 0); }
+.seam { position: absolute; top: 0; bottom: 0; left: var(--x, 50%); width: 2px; background: #fff; pointer-events: none; }
+.tag { position: absolute; top: 10px; padding: 2px 10px; font-size: 13px; font-weight: 700; color: #fff; background: rgba(10, 11, 14, .72); }
+.tag.l { left: 10px; } .tag.r { right: 10px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; }
+.mode { display: inline-flex; border: 1px solid var(--line); }
+.mode button { font: inherit; font-size: 14px; color: var(--dim); background: none; border: 0; padding: 5px 14px; cursor: pointer; }
+.mode button[aria-pressed="true"] { color: var(--room); background: var(--text); font-weight: 700; }
+#wipeX { flex: 1 1 220px; min-width: 0; accent-color: var(--sun); }
+.hint { font-size: 13px; color: var(--dim); }
+
+.tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.tab { font: inherit; color: var(--text); text-align: left; background: var(--panel); border: 1px solid var(--line); padding: 10px 12px 11px; cursor: pointer; display: grid; gap: 2px; align-content: start; }
+.tab b { font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.tab i { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.tab span { font-size: 13px; line-height: 1.5; color: var(--dim); }
+.tab[aria-selected="true"] { background: var(--text); color: var(--room); border-color: var(--text); }
+.tab[aria-selected="true"] span { color: #4a4d53; }
+.tab .rec { font-family: var(--mono); font-size: 11px; letter-spacing: .04em; color: var(--mint); }
+.tab[aria-selected="true"] .rec { color: #0d7a50; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--sun); outline-offset: 2px; }
+.note { background: var(--panel); padding: 14px 16px; display: grid; gap: 4px; }
+.note p { max-width: 46em; }
+
+/* 比の棒 */
+.bars { display: grid; gap: 10px; }
+.bar { display: grid; grid-template-columns: 7.5em minmax(0, 1fr) 3.6em; gap: 12px; align-items: center; font-size: 14px; }
+.track { height: 18px; background: #4a5266; position: relative; }
+.fill { position: absolute; inset: 0 auto 0 0; background: var(--c); }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; }
+.legend { font-size: 13px; color: var(--dim); display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.legend i { display: inline-block; width: 11px; height: 11px; margin-right: 6px; vertical-align: -1px; }
+
+.cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.cols > div { display: grid; gap: 4px; align-content: start; min-width: 0; }
+.cols p { color: var(--dim); font-size: 15px; }
+.big { font-family: var(--mono); font-size: 30px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.big small { font-size: 15px; color: var(--dim); }
+
+.scroll { overflow-x: auto; border-top: 1px solid var(--line); }
+table { border-collapse: collapse; width: 100%; min-width: 800px; font-size: 14px; }
+th, td { text-align: left; padding: 7px 12px 7px 0; border-bottom: 1px solid var(--line); vertical-align: middle; white-space: nowrap; }
+thead th { font-weight: 700; }
+tbody th { font-weight: 500; color: var(--dim); }
+td { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+td s { text-decoration: none; display: inline-block; width: 11px; height: 11px; margin-right: 7px; vertical-align: -1px; outline: 1px solid rgba(255, 255, 255, .25); }
+tr.group th { padding-top: 16px; color: var(--text); font-weight: 700; }
+th.on, td.on { color: var(--sun); }
+
+.tasks { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; }
+.tasks li { display: grid; grid-template-columns: 6.5em minmax(0, 1fr); gap: 12px; }
+.chip { font-size: 12px; font-weight: 700; padding: 1px 0; height: fit-content; text-align: center; border: 1px solid; }
+.chip.ok { color: var(--mint); } .chip.fix { color: var(--warn); }
+.tasks p { color: var(--dim); font-size: 15px; max-width: 42em; }
+code { font-family: var(--mono); font-size: .9em; overflow-wrap: anywhere; }
+.foot { color: var(--dim); font-size: 14px; display: grid; gap: 6px; max-width: 46em; }
+
+@media (max-width: 760px) {
+  .tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cols { grid-template-columns: minmax(0, 1fr); }
+  .tasks li { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .chip { width: 6.5em; }
+  .bar { grid-template-columns: 6em minmax(0, 1fr) 3.2em; }
+}
+</style>
+
+</head><body><div class="wrap">
+  <header class="head">
+    <h1>ステージ1 光の見比べ</h1>
+    <p class="lead">実際のゲームを Unity で動かし、同じ試合の同じ瞬間を5通りの光で撮りました。今の画面がかすんで見える一番の理由は、床に届く光の約7割が環境光で、影が出ないことです。おすすめは「くっきり昼」です。ゲームの読みやすさを保ったまま、物の形がはっきりします。</p>
+  </header>
+
+  <section class="bench" aria-label="光の案の比較">
+    <div class="monitor" id="monitor">
+      <div id="videos"></div>
+      <div class="wipe" id="wipe" hidden>
+        <img id="wipeBase" alt="今の光のスクリーンショット">
+        <img id="wipeTop" class="top" alt="選んだ案のスクリーンショット">
+        <div class="seam"></div>
+        <span class="tag l" id="wipeLabel"></span>
+        <span class="tag r">今の光</span>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="mode" role="group" aria-label="表示の切り替え">
+        <button type="button" id="modeVideo" aria-pressed="true">動画</button>
+        <button type="button" id="modeWipe" aria-pressed="false">今の光と重ねて比べる</button>
+      </div>
+      <input type="range" id="wipeX" min="0" max="100" value="50" aria-label="境目の位置" hidden>
+      <span class="hint" id="hint">案を押すと、同じ場面のまま光だけが替わります（キーボードの 1〜5 でも切り替え）</span>
+    </div>
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="note" id="note" aria-live="polite"></div>
+  </section>
+
+  <section class="sec">
+    <h2>今の画面がかすむ理由</h2>
+    <div class="cols">
+      <div><div class="big">30<small>%</small></div><h3>床に届く光のうち太陽の割合</h3><p>太陽の明るさが 0.13 しかなく、環境光が勝っています。影が薄く、暗い部分も持ち上がるので、全体が白っぽく見えます。</p></div>
+      <div><div class="big">54 → 29</div><h3>画面の暗い部分の明るさ（0〜255）</h3><p>暗い側の下位1%の値です。環境光を絞った「くっきり昼」で約半分になり、締まりが出ました。</p></div>
+      <div><div class="big">215 → 254</div><h3>白の上限（トーンマップ有無）</h3><p>白が 215 で止まるのは、URP の設定に Neutral トーンマップが常時入っているからです。切ると 254 まで出ました。「まぶしさを抑える: 使わない」にしても、この設定は外れません。</p></div>
+    </div>
+    <div class="bars" id="bars" aria-label="床に届く光のうち太陽の割合"></div>
+    <div class="legend"><span><i style="background:var(--sun)"></i>太陽</span><span><i style="background:#4a5266"></i>環境光</span><span>設定値からの計算（太陽の明るさ×sin 高さ と、環境光「横」の明るさ）。目安です。</span></div>
+  </section>
+
+  <section class="sec">
+    <h2>案の設定値</h2>
+    <p>ステージ背景スタジオの表示名に合わせました。上の表はスタジオだけで入れられます。下の「色の調整」は今回の撮影で足したもので、今のスタジオには欄がありません。</p>
+    <div class="scroll"><table id="values"></table></div>
+  </section>
+
+  <section class="sec">
+    <h2>実際に入れるときの作業</h2>
+    <ul class="tasks">
+      <li><span class="chip ok">すぐできる</span><div><h3>太陽・環境光・影を入れ替える</h3><p>スタジオの「光」ページに上の値を入れるだけです。かすみの解消はこれが一番効きます。</p></div></li>
+      <li><span class="chip ok">注意して</span><div><h3>光の筋と靄は、ステージ専用にしてから変える</h3><p>ステージ1とお風呂場は同じ <code>StageLookProfile_Default</code> を使っています。先に「このステージ専用にする」を押さないと、お風呂場の見た目も変わります。</p></div></li>
+      <li><span class="chip fix">コード修正</span><div><h3>コントラスト・彩度・周辺減光の欄を足す</h3><p>撮影では一時的な Volume で入れました。入れないと、どの案も少しやわらかい絵になります。</p></div></li>
+      <li><span class="chip fix">コード修正</span><div><h3>トーンマップを本当に切れるようにする</h3><p><code>StageLookVolume</code> が「使わない」のときに Volume を止めるので、URP の既定値の Neutral が残ります。</p></div></li>
+      <li><span class="chip fix">コード修正</span><div><h3>点光源・スポットライトを背景に効かせる</h3><p>今の描画は Forward+ ですが、<code>StageProp.shader</code> に <code>_CLUSTER_LIGHT_LOOP</code> がありません。URP の Lit にはある設定です。撮影でコアの上にスポットライトを置いても床は明るくなりませんでした。原因はこの設定の不足と見ていますが、直して確かめてはいません。「夜の洗面所」でコアの周りだけ照らしたいときに必要になります。</p></div></li>
+    </ul>
+  </section>
+
+  <footer class="foot">
+    <h3>撮影の条件と、まだ確かめていないこと</h3>
+    <p>Unity 6000.3.13f1 の Play で撮影しました。プロジェクトのシーンと素材は保存していません。視点は1P、敵はベンチ機能で約1,500体を出し、ビームは撮影用に固定の握力で撃っています。動画は7秒です。後半に画面が赤くなるのは、コアが危ないときのゲームの演出で、光の案とは関係ありません。</p>
+    <p>HUD は写っていません。今回の撮影方法では描けませんでした。HUD は光の影響を受けませんが、HUD との見やすさは未確認です。2〜4P の視点、実機のモニターでの見え方、案を入れたときの処理の重さも未確認です。</p>
+    <p>他社のゲーム画面はプロジェクトの決まりに従って使っていません。ここの画像と動画は、すべて自分たちのゲームを撮ったものです。</p>
+  </footer>
+</div>
+
+<script>
+const VARIANTS = [
+  { id: "now", name: "今の光", sub: "現在の設定", sun: "#FFF5E6", share: 30,
+    note: "太陽が弱く、環境光が主役です。影が薄く、床の緑も白っぽく見えます。ゲームは読めますが、物の立体感が出ません。",
+    v: ["#FFF5E6","0.13","−46°","45°","0.85","0.77","#9EADC7","#808085","#524D47","使わない","0","0.30","標準"], g: ["0","0","なし","標準"] },
+  { id: "crisp", name: "くっきり昼", sub: "いちばん素直な改善", sun: "#FFF4E4", share: 76, rec: "おすすめ",
+    note: "向きは今のまま、太陽を強くして環境光を絞りました。影が出て、石けんやカップが床から立ち上がります。雰囲気を変えずに直せるので、最初に試す案です。",
+    v: ["#FFF4E4","0.85","−46°","45°","0.80","0.75","#8FA2BE","#6E7886","#4A4844","映画風","0","0.14","標準"], g: ["+6","+6","なし","標準"] },
+  { id: "morning", name: "朝の洗面所", sub: "低い朝日で物語を足す", sun: "#FFE2B8", share: 81,
+    note: "低い太陽で影が長くなり、洗面台に朝日が差す絵になります。物の形はいちばんはっきりしますが、影が太いぶん床が少し騒がしくなります。",
+    v: ["#FFE2B8","1.25","−56°","32°","0.85","0.70","#8FB0DA","#5C7088","#463F3A","映画風","0","0.26","標準"], g: ["+10","+8","なし","標準"] },
+  { id: "night", name: "夜の洗面所", sub: "ビームと敵を主役にする", sun: "#AFC0F0", share: 94,
+    note: "全体を暗くして靄を強めました。ビームが床を照らす演出がいちばん映えます。端のカップは暗くなるので、物の位置が大事な場面では見落としやすくなります。",
+    v: ["#AFC0F0","0.60","28°","58°","0.75","0.90","#2E3656","#2A3050","#181A2C","映画風","0","なし","暗く広く"], g: ["+16","+10","0.22","1.5"] },
+  { id: "sunset", name: "夕焼け", sub: "終盤のウェーブ向き", sun: "#FFB67E", share: 84,
+    note: "暖色で物が色づき、緑の床との対比が強くなります。ステージの印象は大きく変わります。ウェーブが進むと夕方になる、といった使い方も考えられます。",
+    v: ["#FFB67E","1.50","−74°","24°","0.85","0.80","#6C6AA8","#6A5A84","#3E3040","映画風","+0.15","0.30","標準"], g: ["+8","+2","0.14","標準"] },
+];
+const ROWS = ["太陽の色","太陽の明るさ","向き（度）","高さ（度）","影の濃さ","光の集中度","環境光（上）","環境光（横）","環境光（下）","まぶしさを抑える","全体の明るさ（露出）","光の筋の明るさ","靄"];
+const GROWS = ["コントラスト","彩度","周辺減光","光のにじみ"];
+
+const $ = (id) => document.getElementById(id);
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let current = 0, mode = "video";
+
+const videos = VARIANTS.map((x, i) => {
+  const el = document.createElement("video");
+  el.src = "media/" + x.id + ".mp4";
+  el.poster = "media/" + x.id + ".jpg";
+  el.muted = true; el.loop = true; el.playsInline = true; el.preload = "auto";
+  el.setAttribute("aria-label", x.name + "の動画");
+  el.hidden = i !== 0;
+  $("videos").append(el);
+  return el;
+});
+
+const tabs = VARIANTS.map((x, i) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "tab"; b.role = "tab"; b.id = "tab-" + x.id;
+  b.innerHTML = `<b><i style="background:${x.sun}"></i>${x.name}</b><span>${x.sub}</span>` + (x.rec ? `<em class="rec" style="font-style:normal">${x.rec}</em>` : "");
+  b.addEventListener("click", () => select(i));
+  $("tabs").append(b);
+  return b;
+});
+
+function select(i) {
+  const t = videos[current].currentTime;
+  videos[current].hidden = true;
+  current = i;
+  const x = VARIANTS[i], v = videos[i];
+  try { v.currentTime = t; } catch (e) {}
+  v.hidden = mode !== "video";
+  tabs.forEach((b, n) => b.setAttribute("aria-selected", n === i));
+  document.documentElement.style.setProperty("--sun", x.sun);
+  $("note").innerHTML = `<h3>${x.name}</h3><p>${x.note}</p>`;
+  $("wipeTop").src = "media/" + x.id + ".jpg";
+  $("wipeLabel").textContent = x.name;
+  document.querySelectorAll("[data-col]").forEach((c) => c.classList.toggle("on", +c.dataset.col === i));
+}
+
+function setMode(m) {
+  mode = m;
+  $("modeVideo").setAttribute("aria-pressed", m === "video");
+  $("modeWipe").setAttribute("aria-pressed", m === "wipe");
+  $("wipe").hidden = m !== "wipe";
+  $("wipeX").hidden = m !== "wipe";
+  $("hint").hidden = m === "wipe";
+  videos[current].hidden = m !== "video";
+}
+$("modeVideo").addEventListener("click", () => setMode("video"));
+$("modeWipe").addEventListener("click", () => setMode("wipe"));
+$("wipeBase").src = "media/now.jpg";
+$("wipeX").addEventListener("input", (e) => $("monitor").style.setProperty("--x", e.target.value + "%"));
+$("monitor").addEventListener("pointermove", (e) => {
+  if (mode !== "wipe" || !(e.buttons || e.pointerType === "mouse")) return;
+  const r = $("monitor").getBoundingClientRect();
+  const p = Math.round(((e.clientX - r.left) / r.width) * 100);
+  $("wipeX").value = p; $("monitor").style.setProperty("--x", p + "%");
+});
+addEventListener("keydown", (e) => {
+  if (e.target.tagName === "INPUT") return;
+  const n = +e.key;
+  if (n >= 1 && n <= VARIANTS.length) select(n - 1);
+});
+
+/* 全案を同時に再生し続ける。切り替えても同じ場面のままにするため */
+function playAll() { videos.forEach((v) => { const p = v.play(); if (p) p.catch(() => {}); }); }
+if (!reduce) {
+  playAll();
+  setInterval(() => {
+    const m = videos[current];
+    videos.forEach((v) => {
+      if (v !== m && Math.abs(v.currentTime - m.currentTime) > 0.12) { try { v.currentTime = m.currentTime; } catch (e) {} }
+    });
+  }, 700);
+}
+else { videos.forEach((v) => { v.controls = true; }); }
+
+$("bars").innerHTML = VARIANTS.map((x) => `<div class="bar"><span>${x.name}</span><div class="track"><div class="fill" style="width:${x.share}%;--c:${x.sun}"></div></div><span class="num">${x.share}%</span></div>`).join("");
+
+const swatch = (s) => /^#/.test(s) ? `<s style="background:${s}"></s>${s}` : s;
+const head = `<thead><tr><th></th>${VARIANTS.map((x, i) => `<th data-col="${i}">${x.name}</th>`).join("")}</tr></thead>`;
+const body = ROWS.map((r, n) => `<tr><th scope="row">${r}</th>${VARIANTS.map((x, i) => `<td data-col="${i}">${swatch(x.v[n])}</td>`).join("")}</tr>`).join("");
+const group = `<tr class="group"><th colspan="6" scope="colgroup">色の調整（スタジオに欄なし）</th></tr>`;
+const gbody = GROWS.map((r, n) => `<tr><th scope="row">${r}</th>${VARIANTS.map((x, i) => `<td data-col="${i}">${x.g[n]}</td>`).join("")}</tr>`).join("");
+$("values").innerHTML = head + "<tbody>" + body + group + gbody + "</tbody>";
+
+select(1);
+</script>
+
+</body></html>

@@ -1,0 +1,97 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18fa7a8701058604a9277d379b6da547, type: 3}
+  m_Name: CyberCleanSettings
+  m_EditorClassIdentifier: MS2026.CyberCleanLook.Runtime::MS2026.CyberCleanLook.CyberCleanSettings
+  stageScenes:
+  - Stage1
+  recolorFloor: 1
+  floorColor: {r: 0.64, g: 0.93, b: 0.98, a: 1}
+  outerTint: {r: 0.82, g: 0.74, b: 1, a: 1}
+  overrideLight: 1
+  sunColor: {r: 1, g: 0.97, b: 1, a: 1}
+  sunIntensity: 0.85
+  sunDirection: -46
+  sunElevation: 45
+  shadowStrength: 0.8
+  skyColor: {r: 0.72, g: 0.66, b: 0.92, a: 1}
+  equatorColor: {r: 0.54, g: 0.5, b: 0.74, a: 1}
+  groundColor: {r: 0.36, g: 0.3, b: 0.5, a: 1}
+  cinematicToneMapping: 1
+  recolorMist: 1
+  mistColor: {r: 0.13, g: 0.03, b: 0.22, a: 1}
+  mistShadeTint: {r: 0.78, g: 0.55, b: 1, a: 1}
+  mistEdgeBandColor: {r: 1, g: 0.35, b: 0.85, a: 1}
+  mistEdgeBandStrength: 0.24
+  mistEnemyRimColor: {r: 0.6, g: 1.6, b: 2.4, a: 1}
+  scanOnWaveStart: 1
+  scanSeconds: 0.9
+  scanColor: {r: 0.6, g: 0.97, b: 1, a: 0.10980392}
+  scanGridColor: {r: 0.55, g: 0.88, b: 1, a: 0.10980392}
+  onScan:
+    vfx:
+      value: 0
+      type: 0
+    se:
+      value: 0
+      type: 0
+    tintWithPlayerColor: 1
+    colorParam: Color
+  kiraOnWaveClear: 1
+  kiraSeconds: 1.1
+  kiraStrength: 0.8
+  kiraScale: 0.229
+  kiraColor: {r: 0.75, g: 0.97, b: 1, a: 1}
+  kiraAccentColor: {r: 1, g: 0.55, b: 0.9, a: 1}
+  kiraSortingOrder: 105
+  onKira:
+    vfx:
+      value: 0
+      type: 0
+    se:
+      value: 0
+      type: 0
+    tintWithPlayerColor: 1
+    colorParam: Color
+  foamOnBreak: 0
+  foamCoverSeconds: 0.5
+  foamHoldSeconds: 0.25
+  foamPopSeconds: 0.75
+  foamMaxHoldSeconds: 6
+  foamBubbleCount: 150
+  glossyBubbleCount: 22
+  foamColors:
+  - {r: 1, g: 1, b: 1, a: 1}
+  - {r: 1, g: 1, b: 1, a: 1}
+  - {r: 0.91, g: 0.99, b: 1, a: 1}
+  - {r: 0.96, g: 0.93, b: 1, a: 1}
+  - {r: 1, g: 0.95, b: 0.99, a: 1}
+  foamSortingOrder: 120
+  onFoam:
+    vfx:
+      value: 0
+      type: 0
+    se:
+      value: 0
+      type: 0
+    tintWithPlayerColor: 1
+    colorParam: Color
+  onFoamPop:
+    vfx:
+      value: 0
+      type: 0
+    se:
+      value: 0
+      type: 0
+    tintWithPlayerColor: 1
+    colorParam: Color
+  canvasSortingOrder: 90
