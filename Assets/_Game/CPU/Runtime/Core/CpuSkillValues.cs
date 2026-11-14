@@ -49,6 +49,33 @@ namespace MS2026.Cpu
         [Range(0f, 1.2f)]
         public float heatPanic01;
 
+        [Header("スキルの判断")]
+        [Tooltip("スキルが使えるようになってから、良い時を待つ最長の秒数（0 = 使えたらすぐ撃つ）。待つほど妥協して撃つ。")]
+        [Range(0f, 15f)]
+        public float skillPatienceSeconds;
+
+        [Tooltip("「これなら撃つ」と思うスキルの効きの目安（0〜1。待ち始めはこの値、待つほど下がる）。")]
+        [Range(0f, 1f)]
+        public float skillGoodValue;
+
+        [Tooltip("待ち時間の終わりでも、これより効きが低ければ撃たずに待ち続ける（0 = 何も無くても撃つ）。")]
+        [Range(0f, 1f)]
+        public float skillMinValue;
+
+        [Header("周りを見る")]
+        [Tooltip("スマッシュボールを狙う気持ちの強さ（0 = 狙わない、1 = 見えたら必ず狙う）。")]
+        [Range(0f, 1f)]
+        public float smashBallAttention;
+
+        [Header("歯みがき")]
+        [Tooltip("歯みがきタイムの「にぎにぎ」の速さ（1 秒の回数）。")]
+        [Range(0.5f, 6f)]
+        public float brushPulsesPerSecond;
+
+        [Tooltip("ほかの人の「にぎにぎ」に合わせる上手さ（0 = 合わせない、1 = すぐ合わせる）。シンクロのボーナスが出やすくなる。")]
+        [Range(0f, 1f)]
+        public float brushSync;
+
         [Header("手")]
         [Tooltip("握る強さを変えられる速さ（1 秒に変えられる量。4 なら 0.25 秒で 0 → 1）。")]
         [Range(0.5f, 30f)]
@@ -74,6 +101,12 @@ namespace MS2026.Cpu
             minGrip = 0.45f,
             heatCoolStart01 = 0.65f,
             heatPanic01 = 0.9f,
+            skillPatienceSeconds = 4f,
+            skillGoodValue = 0.6f,
+            skillMinValue = 0.1f,
+            smashBallAttention = 0.8f,
+            brushPulsesPerSecond = 3f,
+            brushSync = 0.5f,
             gripChangePerSecond = 5f,
             gripJitter = 0.05f,
             minToggleSeconds = 0.12f

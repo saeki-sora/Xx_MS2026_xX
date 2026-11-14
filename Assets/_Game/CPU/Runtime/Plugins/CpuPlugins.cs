@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MS2026.Skills;
 using UnityEngine;
 
 namespace MS2026.Cpu
@@ -37,6 +38,7 @@ namespace MS2026.Cpu
 
         private static readonly List<BehaviorEntry> Behaviors = new List<BehaviorEntry>();
         private static readonly List<CpuSkillArea> Areas = new List<CpuSkillArea>();
+        private static readonly List<ICpuSkillJudge> SkillJudges = new List<ICpuSkillJudge>();
         private static Func<ICpuMovePlanner> _movePlanner;
 
         /// <summary>行き先を決めた向きを砲台の移動へ渡す口（無ければ動かない）。</summary>
@@ -56,6 +58,7 @@ namespace MS2026.Cpu
         {
             Behaviors.Clear();
             Areas.Clear();
+            SkillJudges.Clear();
             _movePlanner = null;
             MoveOutput = null;
             ViewSource = null;
@@ -142,6 +145,37 @@ namespace MS2026.Cpu
                 Debug.LogException(e);
                 return null;
             }
+        }
+
+        // ───────── スキルの判断 ─────────
+
+        /// <summary>スキル（色）の判断を登録する（あとから登録した物が先に選ばれる）。</summary>
+        public static void RegisterSkillJudge(ICpuSkillJudge judge)
+        {
+            if (judge == null || SkillJudges.Contains(judge))
+            {
+                return;
+            }
+
+            SkillJudges.Insert(0, judge);
+            Changed?.Invoke();
+        }
+
+        /// <summary>そのスキルに合う判断（無ければ、砲身の向きに敵が多い時に撃つ「ふつうの判断」）。</summary>
+        public static ICpuSkillJudge FindSkillJudge(CharacterSkill skill)
+        {
+            if (skill != null)
+            {
+                foreach (var judge in SkillJudges)
+                {
+                    if (judge.Handles(skill))
+                    {
+                        return judge;
+                    }
+                }
+            }
+
+            return CpuGenericSkillJudge.Instance;
         }
 
         // ───────── 上手さの分野 ─────────

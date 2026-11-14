@@ -6,54 +6,12 @@ using UnityEngine;
 namespace MS2026.Cpu
 {
     /// <summary>
-    /// CPU の目が見た様子1回ぶん（その時刻の、砲台のまわりの敵の分布）。
-    /// </summary>
-    public sealed class CpuSight
-    {
-        public CpuSight(int sectorCount)
-        {
-            Weights = new float[sectorCount];
-            ObstacleDistances = new float[sectorCount];
-        }
-
-        /// <summary>見た時刻（ゲームの時間）。</summary>
-        public float Time;
-
-        /// <summary>見るたびに増える番号（0 = まだ何も見ていない）。</summary>
-        public int Stamp;
-
-        /// <summary>扇ごとの敵の重み（数。コアに近い敵は多めに数える）。角度は <see cref="CpuSectorMath"/> の決まり。</summary>
-        public readonly float[] Weights;
-
-        /// <summary>扇ごとの、ビームが壁などで止まる距離（止まらなければ射程）。</summary>
-        public readonly float[] ObstacleDistances;
-
-        /// <summary>見えていた敵の合計（重み）。</summary>
-        public float Total;
-
-        /// <summary>画面に映る範囲を使ったか（使えなかったときは射程の中を全部見ている）。</summary>
-        public bool HasView;
-
-        public CpuView View;
-
-        internal void CopyFrom(CpuSight other)
-        {
-            Time = other.Time;
-            Stamp = other.Stamp;
-            Array.Copy(other.Weights, Weights, Weights.Length);
-            Array.Copy(other.ObstacleDistances, ObstacleDistances, ObstacleDistances.Length);
-            Total = other.Total;
-            HasView = other.HasView;
-            View = other.View;
-        }
-    }
-
-    /// <summary>
     /// CPU の目。人と同じ条件で見る:
     /// ・その席のプレイヤーの画面に映る範囲（<see cref="ICpuViewSource"/>。無ければ席のカメラの決まった視点）の中だけ
     /// ・ビームが届く所（射程の中、壁などより手前。ビームと同じ当たり判定で確かめる）だけ
     /// ・見えた様子は、上手さの「反応」の秒数だけ遅れて頭に届く（<see cref="Perceived"/>）
     /// ・敵の数の見積もりは少し外れる（上手さの「見積もりの外れ」）
+    /// ・コア（HUD のバーで誰でも分かる体力と、まわりの敵）とスマッシュボール（画面に映っている物）も見る
     /// </summary>
     public sealed class CpuEyes
     {
@@ -62,10 +20,14 @@ namespace MS2026.Cpu
         private const float CoreBonus = 1.5f;
         private const int CoreRefreshFrames = 120;
 
+        /// <summary>「コアのまわり」とみなす距離（緑の守護霊の葉が回る広さに近い）。</summary>
+        public const float NearCoreRadius = 8.5f;
+
         private static readonly RaycastHit2D[] HitBuffer = new RaycastHit2D[16];
         private static readonly CoreCrystalController[] NoCores = new CoreCrystalController[0];
         private static CoreCrystalController[] _cores = NoCores;
         private static int _coreRefreshFrame = -CoreRefreshFrames;
+        private static SmashBallModule[] _balls = new SmashBallModule[0];
 
         private readonly CpuSight[] _history = new CpuSight[HistoryLength];
         private readonly CpuSight _perceived;
@@ -119,22 +81,47 @@ namespace MS2026.Cpu
             var sight = _history[_newest];
             sight.Time = context.Time;
             sight.Stamp = ++_stamp;
-            Array.Clear(sight.Weights, 0, sight.Weights.Length);
-            sight.Total = 0f;
+            sight.Clear();
 
             var origin = (Vector2)turret.MuzzlePosition;
             var range = turret.tuning != null ? turret.tuning.range : 20f;
+            sight.Origin = origin;
+            sight.Range = range;
             MeasureObstacles(turret, origin, range, sight.ObstacleDistances);
 
             sight.HasView = TryGetView(context.Player, out sight.View);
 
             RefreshCores();
+            var core = NearestCore(origin);
+            sight.HasCore = core != null && (!sight.HasView || sight.View.Contains(core.transform.position, 1f));
+            if (core != null)
+            {
+                // 体力は HUD のコアのバーで見えるので、コアが画面の外でも分かる。
+                sight.CorePosition = core.transform.position;
+                sight.CoreHealth01 = core.maxHealth > 0f ? Mathf.Clamp01(core.CurrentHealth / core.maxHealth) : 1f;
+            }
+
+            var rings = sight.RingCount;
+            var ringSize = Mathf.Max(0.01f, sight.RingSize);
+            var nearCoreSqr = NearCoreRadius * NearCoreRadius;
             var positions = sampler.Positions;
             for (var i = 0; i < sampler.Count; i++)
             {
                 var point = positions[i];
-                CpuSectorMath.Accumulate(sight.Weights, sight.ObstacleDistances, origin, range, sight.HasView, sight.View,
-                    point, WeightOf(point));
+                if (core != null && (point - sight.CorePosition).sqrMagnitude <= nearCoreSqr && (!sight.HasView || sight.View.Contains(point)))
+                {
+                    sight.NearCoreCount += 1f;
+                }
+
+                if (!CpuSectorMath.TryLocate(sight.SectorCount, sight.ObstacleDistances, origin, range, sight.HasView, sight.View, point,
+                        out var sector, out var distance))
+                {
+                    continue;
+                }
+
+                var weight = WeightOf(point);
+                sight.Weights[sector] += weight;
+                sight.RingWeights[sector * rings + Mathf.Min(rings - 1, (int)(distance / ringSize))] += weight;
             }
 
             // 見積もりの外れ（扇ごとに、見るたびに少し違う数に見える）。
@@ -143,11 +130,75 @@ namespace MS2026.Cpu
             {
                 if (noise > 0f && sight.Weights[s] > 0f)
                 {
-                    sight.Weights[s] *= Mathf.Max(0f, 1f + (context.NextFloat() * 2f - 1f) * noise);
+                    var factor = Mathf.Max(0f, 1f + (context.NextFloat() * 2f - 1f) * noise);
+                    sight.Weights[s] *= factor;
+                    for (var r = 0; r < rings; r++)
+                    {
+                        sight.RingWeights[s * rings + r] *= factor;
+                    }
                 }
 
                 sight.Total += sight.Weights[s];
             }
+
+            if (noise > 0f && sight.NearCoreCount > 0f)
+            {
+                sight.NearCoreCount *= Mathf.Max(0f, 1f + (context.NextFloat() * 2f - 1f) * noise * 0.5f);
+            }
+
+            LookAtBalls(sight, origin, range);
+        }
+
+        // 画面に映っていて、射程の中にあるスマッシュボール（割れている・待っている物は見えない）。
+        private void LookAtBalls(CpuSight sight, Vector2 origin, float range)
+        {
+            var filter = new ContactFilter2D { useTriggers = false };
+            filter.SetLayerMask(_beam != null ? _beam.targetLayerMask : (LayerMask)~0);
+            foreach (var ball in _balls)
+            {
+                if (ball == null || !ball.isActiveAndEnabled || ball.Obstacle == null || ball.Obstacle.IsDestroyed || ball.Obstacle.IsInvulnerable)
+                {
+                    continue;
+                }
+
+                var collider = ball.GetComponentInChildren<Collider2D>();
+                var position = collider != null ? (Vector2)collider.bounds.center : (Vector2)ball.transform.position;
+                var toBall = position - origin;
+                var distance = toBall.magnitude;
+                if (distance > range || distance < 0.01f || (sight.HasView && !sight.View.Contains(position)))
+                {
+                    continue;
+                }
+
+                var radius = collider != null ? Mathf.Max(collider.bounds.extents.x, collider.bounds.extents.y) : 0.5f;
+                sight.Balls.Add(new CpuBallSight
+                {
+                    Position = position,
+                    Angle = CpuSectorMath.AngleOf(toBall),
+                    Distance = distance,
+                    Radius = radius,
+                    Health01 = ball.Obstacle.Health01,
+                    InLine = FirstHitIs(origin, toBall / distance, distance + radius, ball, filter)
+                });
+            }
+        }
+
+        // ビームと同じ当たり判定で、いちばん近い当たりがそのボールか。
+        private static bool FirstHitIs(Vector2 origin, Vector2 direction, float distance, SmashBallModule ball, ContactFilter2D filter)
+        {
+            var hits = Physics2D.Raycast(origin, direction, filter, HitBuffer, distance);
+            var nearest = float.PositiveInfinity;
+            Collider2D first = null;
+            for (var i = 0; i < hits; i++)
+            {
+                if (HitBuffer[i].distance > 1e-4f && HitBuffer[i].distance < nearest)
+                {
+                    nearest = HitBuffer[i].distance;
+                    first = HitBuffer[i].collider;
+                }
+            }
+
+            return first != null && first.GetComponentInParent<SmashBallModule>() == ball;
         }
 
         // 反応の秒数だけ前の様子を、頭に届いた様子にする（それより新しい様子しか無ければ、いちばん古い様子）。
@@ -236,6 +287,29 @@ namespace MS2026.Cpu
 
             _coreRefreshFrame = UnityEngine.Time.frameCount;
             _cores = UnityEngine.Object.FindObjectsByType<CoreCrystalController>(FindObjectsSortMode.None);
+            _balls = UnityEngine.Object.FindObjectsByType<SmashBallModule>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        }
+
+        private static CoreCrystalController NearestCore(Vector2 from)
+        {
+            CoreCrystalController best = null;
+            var bestSqr = float.PositiveInfinity;
+            foreach (var core in _cores)
+            {
+                if (core == null)
+                {
+                    continue;
+                }
+
+                var sqr = ((Vector2)core.transform.position - from).sqrMagnitude;
+                if (sqr < bestSqr)
+                {
+                    bestSqr = sqr;
+                    best = core;
+                }
+            }
+
+            return best;
         }
 
         // その席の画面に映る範囲（差し込みがあればそれ、無ければ席のカメラの決まった視点）。

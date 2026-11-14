@@ -12,6 +12,9 @@ namespace MS2026.Cpu
         {
             CpuPlugins.RegisterBehavior(CpuShootBehavior.BehaviorId, () => new CpuShootBehavior());
             CpuPlugins.RegisterBehavior(CpuCoolDownBehavior.BehaviorId, () => new CpuCoolDownBehavior());
+            CpuPlugins.RegisterBehavior(CpuSkillBehavior.BehaviorId, () => new CpuSkillBehavior());
+            CpuPlugins.RegisterBehavior(CpuSmashBallBehavior.BehaviorId, () => new CpuSmashBallBehavior());
+            CpuPlugins.RegisterBehavior(CpuBrushingBehavior.BehaviorId, () => new CpuBrushingBehavior());
         }
     }
 }

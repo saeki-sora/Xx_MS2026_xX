@@ -107,9 +107,26 @@ namespace MS2026.Cpu
         public static bool Accumulate(float[] weights, float[] obstacleDistances, Vector2 origin, float range,
             bool hasView, in CpuView view, Vector2 point, float weight)
         {
+            if (weights == null || !TryLocate(weights.Length, obstacleDistances, origin, range, hasView, view, point, out var sector, out _))
+            {
+                return false;
+            }
+
+            weights[sector] += weight;
+            return true;
+        }
+
+        /// <summary>
+        /// 点が「見えて・ビームが届く」なら、その扇の番号と距離を返す（<see cref="Accumulate"/> と同じ条件）。
+        /// </summary>
+        public static bool TryLocate(int sectorCount, float[] obstacleDistances, Vector2 origin, float range, bool hasView, in CpuView view,
+            Vector2 point, out int sector, out float distance)
+        {
+            sector = -1;
+            distance = 0f;
             var d = point - origin;
             var sqr = d.sqrMagnitude;
-            if (sqr > range * range || weights == null || weights.Length == 0)
+            if (sqr > range * range || sectorCount <= 0)
             {
                 return false;
             }
@@ -119,17 +136,18 @@ namespace MS2026.Cpu
                 return false;
             }
 
-            var sector = SectorOf(AngleOf(d), weights.Length);
+            sector = SectorOf(AngleOf(d), sectorCount);
             if (obstacleDistances != null && sector < obstacleDistances.Length)
             {
                 var limit = obstacleDistances[sector];
                 if (sqr > limit * limit)
                 {
+                    sector = -1;
                     return false;
                 }
             }
 
-            weights[sector] += weight;
+            distance = Mathf.Sqrt(sqr);
             return true;
         }
     }
