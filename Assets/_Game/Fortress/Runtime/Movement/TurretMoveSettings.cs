@@ -125,6 +125,63 @@ namespace MS2026.Fortress
         [Min(0.1f)]
         public float enemyPushResponse = 12f;
 
+        [Header("菌にやられる・復活する")]
+        [Tooltip("ON なら、菌（群衆の敵）に触れている間、砲台に汚れが溜まり（体力が減り）、溜まりきると倒れる（撃てない・回らない・動けない・スキルも使えない）。\n" +
+                 "倒れている間は、菌は素通りする（押さない・汚さない）。味方のビームを当ててもらうか、握る連打で抜け出すと復活する。\n" +
+                 "時間では回復しない。味方のビームを当ててもらうと回復する。")]
+        public bool downEnabled = true;
+
+        [Tooltip("菌1体ぶんがぴったり重なっているとき、1秒に溜まる汚れ（1 で倒れる）。重なっている菌が多いほど速く溜まる。")]
+        [Min(0f)]
+        public float dirtPerOverlap = 0.45f;
+
+        [Tooltip("どんなに囲まれても、1秒に溜まる汚れはこれまで（倒れるまでの最短の秒数 = 1 ÷ この値）。")]
+        [Min(0.01f)]
+        public float dirtMaxPerSecond = 0.9f;
+
+        [Tooltip("時間では回復しない。倒れていない人に味方のビームが当たっている間、1秒にこれだけ汚れが落ちる（体力が戻る。2人に当ててもらえば2倍）。")]
+        [Min(0f)]
+        public float allyBeamHealPerSecond = 0.5f;
+
+        [Tooltip("自分の画面の右上に、自分の体力バーを出す（仮の見た目）。")]
+        public bool showHealthBar = true;
+
+        [Tooltip("倒れた人の砲台を、ほかの人の画面で色あせて見せる強さ（0 = そのまま、1 = 灰色）。")]
+        [Range(0f, 1f)]
+        public float downedDesaturate = 1f;
+
+        [Tooltip("倒れた人の砲台の、ほかの人の画面での明るさ（1 = そのまま、小さいほど暗い）。")]
+        [Range(0.05f, 1f)]
+        public float downedDarken = 0.4f;
+
+        [Tooltip("倒れた人の砲台の、ほかの人の画面での濃さ（1 = そのまま、小さいほど薄い）。")]
+        [Range(0.1f, 1f)]
+        public float downedAlpha = 0.85f;
+
+        [Tooltip("倒れた砲台から煙を出す（全員の画面。菌の色のくすんだ煙が、画面の上へ立ちのぼる）。")]
+        public bool downedSmoke = true;
+
+        [Tooltip("倒れた砲台に、菌のべったりした汚れをかぶせる（全員の画面）。")]
+        public bool downedGoo = true;
+
+        [Tooltip("倒れている間、自分で抜け出すのに要る「握る」回数（キーボードは連打、専用コントローラーは にぎにぎ）。長押しは1回と数える。")]
+        [Min(1)]
+        public int strugglePresses = 18;
+
+        [Tooltip("味方1人のビームを当て続けてもらって復活するまでの秒数（2人なら半分）。")]
+        [Min(0.05f)]
+        public float reviveBeamSeconds = 1.2f;
+
+        [Tooltip("復活した直後、この秒数だけ菌にやられない（汚れが溜まらない）。")]
+        [Min(0f)]
+        public float protectSeconds = 2.5f;
+
+        [Tooltip("倒れたときの演出（D-Drive の VFX・SE。プレイヤー色）。各PCが自分で鳴らす。")]
+        public FortressEffect onDowned = new FortressEffect();
+
+        [Tooltip("復活したときの演出（D-Drive の VFX・SE。プレイヤー色）。各PCが自分で鳴らす。")]
+        public FortressEffect onRevived = new FortressEffect();
+
         [Header("カメラ")]
         [Tooltip("砲台が席から離れた分の、どれだけカメラが付いてくるか。1で完全に付いてくる、0で付いてこない。")]
         [Range(0f, 1f)]

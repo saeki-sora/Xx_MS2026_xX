@@ -70,7 +70,7 @@ namespace MS2026.Fortress
                 return;
             }
 
-            var go = new GameObject("[実験] 移動できる範囲の輪") { hideFlags = HideFlags.DontSave };
+            var go = new GameObject("[実験] 移動できる範囲の輪");
             go.transform.SetParent(parent, false);
             _line = go.AddComponent<LineRenderer>();
             _material = new Material(Shader.Find("Sprites/Default")) { hideFlags = HideFlags.HideAndDontSave };

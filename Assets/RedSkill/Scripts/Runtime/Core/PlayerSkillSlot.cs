@@ -162,6 +162,12 @@ namespace MS2026.Skills
 
         private void Update()
         {
+            // 【実験・ブランチ「佐伯＿ちょっと移動の実験」だけ】菌にやられて倒れたら、撃っている最中のスキルも止める（溜めはそのまま）。
+            if (State == PlayerSkillState.Active && TurretMoveHooks.IsDowned(PlayerIndex))
+            {
+                CancelActive();
+            }
+
             UpdateCutInWait(Time.deltaTime);
             UpdateKillGauge();
         }
@@ -272,7 +278,8 @@ namespace MS2026.Skills
         /// <summary>テスト用: レーザーを撃っていなくても今すぐスキルを撃つ。使えない状態なら false。</summary>
         public bool ActivateNow()
         {
-            if (State != PlayerSkillState.Ready)
+            // 【実験】倒れている間はテストのキーでも撃てない。
+            if (State != PlayerSkillState.Ready || TurretMoveHooks.IsDowned(PlayerIndex))
             {
                 return false;
             }
@@ -419,7 +426,8 @@ namespace MS2026.Skills
 
         private void Activate()
         {
-            if (_runner == null)
+            // 【実験・ブランチ「佐伯＿ちょっと移動の実験」だけ】倒れている間はスキルを使えない（使える状態のまま、復活してからの撃ち始めで出る）。
+            if (_runner == null || TurretMoveHooks.IsDowned(PlayerIndex))
             {
                 return;
             }

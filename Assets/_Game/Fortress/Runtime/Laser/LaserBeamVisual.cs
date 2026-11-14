@@ -304,6 +304,12 @@ namespace MS2026.Fortress
             var nearestDistance = float.PositiveInfinity;
             for (var i = 0; i < hitCount; i++)
             {
+                // 【実験・ブランチ「佐伯＿ちょっと移動の実験」だけ】倒れた仲間の真上から撃ったときは、その仲間の当たりで長さ 0 にならないよう無視する。
+                if (HitBuffer[i].distance <= 1e-4f && TurretMoveHooks.IsDownedBlocker(HitBuffer[i].collider))
+                {
+                    continue;
+                }
+
                 if (HitBuffer[i].distance < nearestDistance)
                 {
                     nearestDistance = HitBuffer[i].distance;

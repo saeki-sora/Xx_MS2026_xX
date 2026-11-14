@@ -95,6 +95,12 @@ namespace MS2026.Fortress
         public bool HoldForSkill { get; set; }
 
         /// <summary>
+        /// 【実験・ブランチ「佐伯＿ちょっと移動の実験」だけ】true の間、この砲台だけ「握っていない」扱いになり、回転も止まる（菌にやられて倒れている間）。
+        /// Host・オフラインの係（TurretMoveDirector）が入れる。Client の砲台は Host の状態を映すだけなので、ここは使わない。
+        /// </summary>
+        public bool ForceIdle { get; set; }
+
+        /// <summary>
         /// trueの間は自分で計算せず、<see cref="ApplySnapshot"/>で受け取った状態をそのまま見せる(ネット対戦のClient側)。
         /// </summary>
         public bool IsReplica { get; private set; }
@@ -234,7 +240,7 @@ namespace MS2026.Fortress
                 grip = provider.GetGripValue(playerIndex);
             }
 
-            if (InputLocked)
+            if (InputLocked || ForceIdle)
             {
                 isGripping = false;
                 grip = 0f;
@@ -307,7 +313,7 @@ namespace MS2026.Fortress
                 return;
             }
 
-            var targetMultiplier = autoRotate && !InputLocked ? ResolveTargetRotationMultiplier() : 0f;
+            var targetMultiplier = autoRotate && !InputLocked && !ForceIdle ? ResolveTargetRotationMultiplier() : 0f;
             var blend = tuning.rotationResponse <= 0f ? 1f : 1f - Mathf.Exp(-tuning.rotationResponse * dt);
             CurrentRotationMultiplier = Mathf.Lerp(CurrentRotationMultiplier, targetMultiplier, blend);
             CurrentRotationSpeed = tuning.rotationSpeedDegPerSec * rotationSpeedScale * CurrentRotationMultiplier;

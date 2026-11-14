@@ -17,6 +17,8 @@ namespace MS2026.Fortress
     /// ・落下演出の間（<see cref="TurretMoveHooks.IsHeld"/>）は動けず、カメラも追わずに元の視点のまま。
     /// ・歯みがきタイム・席替えの間（<see cref="LaserTurret.InputLocked"/> / <see cref="FortressSeats.IsMoving"/>）は動けない。
     ///   席替えでは今いる場所から次の席へ跳ぶので、着地すると席に戻っている。
+    /// ・菌に触れ続けると倒れる。倒れている間は撃てない・動けない・菌は素通り。味方のビーム／握る連打で復活し、直後は少しやられない
+    ///   （<see cref="TurretDownSystem"/>。Host・オフラインが決め、Client へ配る。倒れた人の画面にだけ案内 <see cref="TurretDownOverlay"/>）。
     /// ・LAN: 各 PC が自分の砲台を動かして位置を送る（<see cref="TurretMoveNet"/>）。他の人の砲台は届いた位置へなめらかに追う。
     /// 設定: Resources/TurretMoveSettings（<see cref="TurretMoveSettings"/>）。
     /// </summary>
@@ -39,6 +41,15 @@ namespace MS2026.Fortress
         private readonly float[] _coreRadii = new float[8];
 
         private readonly TurretMoveRegion _region = new TurretMoveRegion();
+
+        // 菌にやられる・復活する
+        private readonly TurretDownSystem _down = new TurretDownSystem();
+        private readonly TurretDownView[] _downViews = new TurretDownView[PlayerCount];
+        private readonly TurretDownOverlay _downOverlay = new TurretDownOverlay();
+        private readonly TurretFade[] _fades = { new TurretFade(), new TurretFade(), new TurretFade(), new TurretFade() };
+        private readonly TurretDownedFx[] _downedFx = { new TurretDownedFx(), new TurretDownedFx(), new TurretDownedFx(), new TurretDownedFx() };
+        private readonly CircleCollider2D[] _downBlockers = new CircleCollider2D[PlayerCount];
+        private bool _localLastGripping;
 
         private TurretMoveSettings _settings;
         private SwarmSystem _swarm;
@@ -71,7 +82,8 @@ namespace MS2026.Fortress
                 return;
             }
 
-            var go = new GameObject("[実験] WASD 移動") { hideFlags = HideFlags.DontSave };
+            // DontSave は付けない（付けると、エディタで Play を止めても消えずに残ってしまう）。DontDestroyOnLoad だけなら Play を止めると消える。
+            var go = new GameObject("[実験] WASD 移動");
             DontDestroyOnLoad(go);
             go.AddComponent<TurretMoveDirector>();
         }
@@ -80,6 +92,10 @@ namespace MS2026.Fortress
         {
             _settings = TurretMoveSettings.Load();
             FortressCameraRig.FollowSource = this;
+            for (var p = 0; p < PlayerCount; p++)
+            {
+                _downViews[p] ??= new TurretDownView();
+            }
         }
 
         private void OnDisable()
@@ -92,6 +108,24 @@ namespace MS2026.Fortress
             Subscribe(null);
             _net.Shutdown();
             _ring.Dispose();
+            _down.Reset(_turrets);
+            foreach (var view in _downViews)
+            {
+                view?.Dispose();
+            }
+
+            _downOverlay.Dispose();
+            for (var p = 0; p < PlayerCount; p++)
+            {
+                _fades[p].Apply(_turrets[p], false, 0f, 1f, 1f);
+                TurretMoveHooks.SetDowned(p, false);
+                _downedFx[p].Dispose();
+                if (_downBlockers[p] != null)
+                {
+                    Destroy(_downBlockers[p].gameObject);
+                    _downBlockers[p] = null;
+                }
+            }
         }
 
         private void Update()
@@ -116,10 +150,128 @@ namespace MS2026.Fortress
             }
 
             _localPlayer = FortressSeatMover.LocalPlayer();
-            _net.Tick(Time.unscaledDeltaTime, _settings, _turrets, _localPlayer, _held);
+            _net.Tick(Time.unscaledDeltaTime, _settings, _turrets, _localPlayer, _held, _down);
 
+            TickDown(dt);
             TickLocal(dt);
             TickRemotes(dt);
+        }
+
+        // ───────── 菌にやられる・復活する ─────────
+
+        private void TickDown(float dt)
+        {
+            if (_net.IsClient)
+            {
+                // Client: Host が決めた調子を映すだけ（砲台の撃つ・撃たないも Host から届く）。
+                for (var p = 0; p < PlayerCount; p++)
+                {
+                    if (_net.TryGetCondition(p, out var condition, out var dirt, out var revive))
+                    {
+                        _down.ApplyRemote(p, condition, dirt, revive);
+                    }
+                }
+            }
+            else
+            {
+                // 落下演出・席替えの間は汚れが溜まらない（砲台を別の係が動かしているので）。
+                _down.TickAuthority(dt, _turrets, _settings, _held || FortressSeats.IsMoving, FortressWaves.Phase == WavePhase.Break);
+            }
+
+            _down.PlayTransitionEffects(_turrets, _settings);
+
+            for (var p = 0; p < PlayerCount; p++)
+            {
+                _downViews[p]?.Update(transform, _turrets[p], _down.States[p], _settings.bodyRadius, p);
+            }
+
+            // スキル欄などが「倒れているか」を見られるように知らせる（全PCで同じ値）。倒れている砲台はビームを止める。
+            for (var p = 0; p < PlayerCount; p++)
+            {
+                var downed = _settings.downEnabled && _down.IsDowned(p);
+                TurretMoveHooks.SetDowned(p, downed);
+                UpdateDownBlocker(p, downed);
+                _downedFx[p].Update(transform, _turrets[p], downed, _settings.bodyRadius, Time.unscaledDeltaTime);
+            }
+
+            // 自分の画面にだけ: 右上の体力バーと、倒れている間の抜け出し方の案内。
+            var localGripping = ReadLocalGripping(out var keyName);
+            var pressed = localGripping && !_localLastGripping;
+            _localLastGripping = localGripping;
+            var hasLocal = TurretOf(_localPlayer) != null;
+            var localState = hasLocal ? _down.States[_localPlayer] : null;
+            var localDowned = hasLocal && localState.Condition == TurretCondition.Downed;
+            _downOverlay.Update(
+                hasLocal && _settings.downEnabled && _settings.showHealthBar,
+                hasLocal ? localState.Health01 : 1f,
+                localDowned,
+                localDowned ? localState.Revive01 : 0f,
+                Mathf.Max(0, _localPlayer),
+                keyName,
+                pressed,
+                Time.unscaledDeltaTime);
+        }
+
+        // 倒れた人の砲台は、ほかの人の画面で色あせて見せる（キャラの絵は毎フレーム色を入れ直すので、全員の描き終わった後に重ねる）。
+        private void LateUpdate()
+        {
+            for (var p = 0; p < PlayerCount; p++)
+            {
+                var faded = _settings != null && _settings.downEnabled && p != _localPlayer && _down.IsDowned(p);
+                _fades[p].Apply(
+                    _turrets[p],
+                    faded,
+                    _settings != null ? _settings.downedDesaturate : 0f,
+                    _settings != null ? _settings.downedDarken : 1f,
+                    _settings != null ? _settings.downedAlpha : 1f);
+            }
+        }
+
+        // 倒れている砲台に、トリガーではない丸い当たりを付ける（障害物と同じく、ビームはそこで止まる。群衆の敵へのダメージも止まった所まで）。
+        // 砲台の子なので、移動の当たり判定（砲台の当たりは無視する）には引っかからない。全PCが自分で付ける（倒れているかは Host から届く）。
+        private void UpdateDownBlocker(int player, bool downed)
+        {
+            var turret = _turrets[player];
+            var blocker = _downBlockers[player];
+            if (blocker != null && (turret == null || blocker.transform.parent != turret.transform))
+            {
+                Destroy(blocker.gameObject);
+                blocker = null;
+                _downBlockers[player] = null;
+            }
+
+            if (!downed || turret == null)
+            {
+                if (blocker != null && blocker.enabled)
+                {
+                    blocker.enabled = false;
+                }
+
+                return;
+            }
+
+            if (blocker == null)
+            {
+                var go = new GameObject(TurretMoveHooks.DownedBlockerName);
+                go.transform.SetParent(turret.transform, false);
+                blocker = go.AddComponent<CircleCollider2D>();
+                _downBlockers[player] = blocker;
+            }
+
+            // 当たりの半径は「体の半径」（砲台の拡大率を打ち消す）。
+            var scale = turret.transform.lossyScale;
+            var s = Mathf.Max(0.0001f, Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.y)));
+            blocker.radius = _settings.bodyRadius / s;
+            blocker.enabled = true;
+        }
+
+        // この PC の握力（案内を跳ねさせるのに使うだけ。数えるのは Host）。通信中はこの PC のセンサー 0（キーボードなら Q）、オフラインは自分の番号のセンサー。
+        private bool ReadLocalGripping(out string keyName)
+        {
+            var sensor = _net.IsActive ? 0 : Mathf.Clamp(_localPlayer, 0, PlayerCount - 1);
+            var keys = global::MS2026.GripInputBridge.Transports.SimulatedGripTransport.DefaultKeyBindings;
+            keyName = sensor < keys.Length ? keys[sensor].ToString() : "Q";
+            return global::MS2026.GripInputBridge.GripInputBridge.Provider.IsGripping(sensor);
         }
 
         // ───────── 自分の砲台 ─────────
@@ -195,7 +347,7 @@ namespace MS2026.Fortress
 
         private bool CanMove()
         {
-            return _settings.movementEnabled && !LaserTurret.InputLocked && !FortressSeats.IsMoving && !_held;
+            return _settings.movementEnabled && !LaserTurret.InputLocked && !FortressSeats.IsMoving && !_held && !_down.IsDowned(_localPlayer);
         }
 
         // 動ける範囲: ステージの枠の内側（無ければ床、床も無ければ敵の通り道の範囲 NavigationField）。
@@ -311,7 +463,7 @@ namespace MS2026.Fortress
 
                 if (blocker == null)
                 {
-                    var go = new GameObject("[実験] 歯のビーム止め") { hideFlags = HideFlags.DontSave };
+                    var go = new GameObject("[実験] 歯のビーム止め");
                     go.transform.SetParent(transform, false);
                     blocker = go.AddComponent<CircleCollider2D>();
                     _coreBlockers[i] = blocker;
@@ -372,16 +524,36 @@ namespace MS2026.Fortress
         }
 
         // 敵の計算が止まっている瞬間に、自分の砲台に重なっている敵を数える（次のフレームの移動で使う）。
+        // 敵の計算が止まっている瞬間に、砲台に重なっている菌を調べる（次のフレームで使う）。
+        // ・自分の砲台: 押される向き（どのPCでも、自分の画面の菌の位置から）
+        // ・4人とも: 菌との重なり（汚れの溜まり方。Host・オフラインだけ。倒れている・守られている間は調べない＝菌は素通り）
         private void OnSwarmReadable()
         {
-            var turret = TurretOf(_localPlayer);
-            if (turret == null || _swarm == null || !_settings.pushedByEnemies || !CanMove())
+            _rawPush = Vector2.zero;
+            if (_swarm == null)
             {
-                _rawPush = Vector2.zero;
                 return;
             }
 
-            _rawPush = _swarm.ComputeCrowdPush(turret.transform.position, _settings.bodyRadius);
+            var authority = !_net.IsClient;
+            for (var p = 0; p < PlayerCount; p++)
+            {
+                var turret = _turrets[p];
+                var needContact = authority && turret != null && _settings.downEnabled && _down.States[p].Condition == TurretCondition.Normal;
+                var needPush = p == _localPlayer && turret != null && _settings.pushedByEnemies && CanMove();
+                if (!needContact && !needPush)
+                {
+                    _down.Contact[p] = 0f;
+                    continue;
+                }
+
+                var overlap = _swarm.ComputeCrowdContact(turret.transform.position, _settings.bodyRadius, out var push);
+                _down.Contact[p] = needContact ? overlap : 0f;
+                if (needPush)
+                {
+                    _rawPush = push;
+                }
+            }
         }
 
         // ───────── 他の人の砲台（LAN） ─────────
@@ -488,6 +660,14 @@ namespace MS2026.Fortress
             }
 
             Subscribe(swarm);
+            _down.Reset(_turrets);
+            for (var p = 0; p < PlayerCount; p++)
+            {
+                _fades[p].Apply(_turrets[p], false, 0f, 1f, 1f);
+                TurretMoveHooks.SetDowned(p, false);
+                UpdateDownBlocker(p, false);
+                _downedFx[p].Update(transform, null, false, 0f, 0f);
+            }
             for (var p = 0; p < PlayerCount; p++)
             {
                 _turrets[p] = null;
