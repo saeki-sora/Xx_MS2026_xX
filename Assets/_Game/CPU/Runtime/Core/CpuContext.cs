@@ -37,6 +37,9 @@ namespace MS2026.Cpu
         /// <summary>目（行動は <see cref="CpuEyes.Perceived"/> の、反応の遅れのある様子を使う）。</summary>
         public CpuEyes Eyes { get; }
 
+        /// <summary>記録（ウェーブごと）。行動は好きな名前の数を足してよい（結果の表に列が増える）。</summary>
+        public CpuStats Stats { get; } = new CpuStats();
+
         /// <summary>今の上手さ（実際の数値）。</summary>
         public CpuSkillValues Skill { get; set; }
 

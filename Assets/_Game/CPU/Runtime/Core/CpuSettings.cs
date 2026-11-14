@@ -2,6 +2,19 @@ using UnityEngine;
 
 namespace MS2026.Cpu
 {
+    /// <summary>結果の表（CSV）をいつ書くか。</summary>
+    public enum CpuCsvMode
+    {
+        [InspectorName("書かない")]
+        Off = 0,
+
+        [InspectorName("自動プレイのときだけ")]
+        AutoplayOnly = 1,
+
+        [InspectorName("CPU がいる試合はいつも")]
+        Always = 2
+    }
+
     /// <summary>
     /// CPU の設定（Resources/CpuSettings。無ければ初期値で動く）。メニュー「Tools/CPU/CPU の設定を開く」で作る・開く。
     /// 起動オプション（<see cref="CpuLaunchOptions"/>）があれば、そちらが優先。
@@ -38,6 +51,27 @@ namespace MS2026.Cpu
         [Header("上手さ（仮。段6 で強さごとに分ける）")]
         [Tooltip("今はどの強さでもこの値を使う（ふつうの仮の値）。")]
         public CpuSkillValues skill = CpuSkillValues.Default;
+
+        [Header("自動プレイ・結果の表（開発用）")]
+        [Tooltip("結果の表（CSV）をいつ書くか。置き場所はエディタならプロジェクトの Logs/CPU/、ビルドなら persistentDataPath/CPU/。")]
+        public CpuCsvMode csvMode = CpuCsvMode.AutoplayOnly;
+
+        [Tooltip("メニュー「Tools/CPU/自動プレイで Play する」で回す試合の数（.exe では起動オプション -autoplay N）。")]
+        [Min(1)]
+        public int autoplayMatches = 5;
+
+        [Tooltip("自動プレイの早送りの倍率（.exe では -timescale）。群衆は1フレームに進める時間に上限があるので、" +
+                 "上げすぎると敵だけ遅くなる（60 FPS なら 2 倍くらいまでが目安）。")]
+        [Range(1f, 4f)]
+        public float autoplayTimeScale = 2f;
+
+        [Tooltip("試合が終わってから次の試合を始めるまでの秒数（実時間。リザルトを少し見る）。")]
+        [Range(0f, 30f)]
+        public float autoplayWaitSeconds = 3f;
+
+        [Tooltip("自動プレイで、1試合がこの分数（ゲームの時間）を過ぎても終わらなければ打ち切って次へ。")]
+        [Range(1f, 60f)]
+        public float autoplayMaxMinutes = 20f;
 
         [Header("開発用")]
         [Tooltip("CPU の席が変わったとき、Console（ビルドでは Player.log）に出す。")]

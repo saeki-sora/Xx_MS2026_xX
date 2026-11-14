@@ -25,6 +25,9 @@ namespace MS2026.Cpu
     ///   -cpu none         CPU を使わない
     ///   -cpu-level hard   強さ（easy / normal / hard、1〜3）
     ///   -cpu-seed 123     乱数の種（同じ種なら同じ動き。0 = ばらばら）
+    ///   -autoplay 10      自動プレイ: 全部の席を CPU にして 10 試合続けて回す（席は -cpu で変えられる）
+    ///   -timescale 2      早送り（自動プレイのときだけ。1〜4）
+    ///   -cpu-csv          自動プレイでなくても、CPU がいる試合の結果を表（CSV）に書く
     /// </summary>
     public struct CpuLaunchOptions
     {
@@ -32,6 +35,9 @@ namespace MS2026.Cpu
         public const string AllFlag = "-cpu-all";
         public const string LevelFlag = "-cpu-level";
         public const string SeedFlag = "-cpu-seed";
+        public const string AutoplayFlag = "-autoplay";
+        public const string TimeScaleFlag = "-timescale";
+        public const string CsvFlag = "-cpu-csv";
 
         public CpuSeatMode SeatMode;
 
@@ -41,7 +47,17 @@ namespace MS2026.Cpu
         public CpuLevel? Level;
         public int? Seed;
 
-        public bool HasAny => SeatMode != CpuSeatMode.Default || Level.HasValue || Seed.HasValue;
+        /// <summary>自動プレイの試合数（指定なしは null）。</summary>
+        public int? AutoplayMatches;
+
+        /// <summary>早送りの倍率（指定なしは null）。</summary>
+        public float? TimeScale;
+
+        /// <summary>結果の表を書く（-cpu-csv）。</summary>
+        public bool Csv;
+
+        public bool HasAny => SeatMode != CpuSeatMode.Default || Level.HasValue || Seed.HasValue || AutoplayMatches.HasValue ||
+                              TimeScale.HasValue || Csv;
 
         /// <summary>この起動のオプション（1回だけ読む）。</summary>
         public static CpuLaunchOptions Current => Cache.Value;
@@ -99,6 +115,25 @@ namespace MS2026.Cpu
                     {
                         result.Seed = seed;
                     }
+                }
+                else if (string.Equals(arg, AutoplayFlag, StringComparison.OrdinalIgnoreCase))
+                {
+                    // 数が無ければ 1 試合。
+                    var value = NextValue(args, ref i);
+                    result.AutoplayMatches = int.TryParse(value, out var matches) ? Math.Max(1, matches) : 1;
+                }
+                else if (string.Equals(arg, TimeScaleFlag, StringComparison.OrdinalIgnoreCase))
+                {
+                    var value = NextValue(args, ref i);
+                    if (float.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture,
+                            out var scale) && scale > 0f)
+                    {
+                        result.TimeScale = scale;
+                    }
+                }
+                else if (string.Equals(arg, CsvFlag, StringComparison.OrdinalIgnoreCase))
+                {
+                    result.Csv = true;
                 }
             }
 

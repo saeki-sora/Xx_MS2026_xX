@@ -10,6 +10,7 @@ namespace MS2026.Cpu
     public sealed class CpuPlayer
     {
         private readonly ICpuMovePlanner _movePlanner;
+        private bool _wasOverheated;
 
         public CpuPlayer(int player, CpuLevel level, int seed, float thinkInterval, in CpuSkillValues skill)
         {
@@ -50,6 +51,47 @@ namespace MS2026.Cpu
             Brain.Tick(Context, deltaTime);
             Hands.Tick(deltaTime);
             TickMove(deltaTime);
+            Record(turret, deltaTime);
+        }
+
+        // 本体が数える記録（撃った秒・空振り・オーバーヒート・熱の最大・行動ごとの秒数）。
+        private void Record(LaserTurret turret, float deltaTime)
+        {
+            var stats = Context.Stats;
+            stats.Tick(deltaTime);
+
+            var current = Brain.Current;
+            if (current != null)
+            {
+                stats.Add(CpuStats.BehaviorSecondsPrefix + current.Id, deltaTime);
+            }
+
+            var info = new CpuTurretInfo(turret);
+            if (!info.Valid)
+            {
+                return;
+            }
+
+            stats.Max(CpuStats.MaxHeat, info.Heat01 * 100f);
+            if (info.IsOverheated && !_wasOverheated)
+            {
+                stats.Add(CpuStats.Overheats, 1f);
+            }
+
+            _wasOverheated = info.IsOverheated;
+            if (!info.IsFiring)
+            {
+                return;
+            }
+
+            stats.Add(CpuStats.FiringSeconds, deltaTime);
+
+            // 空振り: 撃っているのに、今の向き（と次の向き）にほとんど敵がいない（いちばん新しく見た様子で数える）。
+            var weights = Eyes.Latest.Weights;
+            if (Eyes.HasSeen && CpuSectorMath.MaxAhead(weights, info.AimDegrees, info.RotationSign, 0f, 360f / weights.Length) < 0.5f)
+            {
+                stats.Add(CpuStats.WhiffSeconds, deltaTime);
+            }
         }
 
         internal void Stop()

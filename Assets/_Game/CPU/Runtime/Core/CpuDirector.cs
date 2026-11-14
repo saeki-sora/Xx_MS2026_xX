@@ -25,6 +25,8 @@ namespace MS2026.Cpu
         private readonly LaserTurret[] _playerTurrets = new LaserTurret[PlayerCount]; // CPU を作ったときの砲台
         private readonly LaserTurret[] _lastTurrets = new LaserTurret[PlayerCount];
         private readonly CpuSwarmSampler _sampler = new CpuSwarmSampler();
+        private readonly CpuAutoplay _autoplay = new CpuAutoplay();
+        private CpuMatchRecorder _recorder;
 
         private CpuSettings _settings;
         private float _refreshTimer;
@@ -51,6 +53,15 @@ namespace MS2026.Cpu
 
         /// <summary>CPU 全員で使う、群衆の敵の位置の写し。</summary>
         public CpuSwarmSampler Sampler => _sampler;
+
+        /// <summary>試合・ウェーブの区切りと結果の表。</summary>
+        public CpuMatchRecorder Recorder => _recorder;
+
+        /// <summary>自動プレイ。</summary>
+        public CpuAutoplay Autoplay => _autoplay;
+
+        /// <summary>今の乱数の種（起動オプション → 設定。0 = ばらばら）。</summary>
+        public int Seed => CpuLaunchOptions.Current.Seed ?? (_settings != null ? _settings.randomSeed : 0);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetOnLoad()
@@ -79,12 +90,33 @@ namespace MS2026.Cpu
             _settings = CpuSettings.Load();
             _randomBase = Environment.TickCount;
             _refreshTimer = 0f;
+            if (_recorder == null)
+            {
+                _recorder = new CpuMatchRecorder(GetPlayer);
+                _recorder.MatchClosed += _ => _autoplay.OnMatchClosed(_settings);
+            }
+
+            _recorder.Subscribe();
+
+            // 頭の中の表示（開発用。デバッグ表示を出してよいときだけ）。
+            if (MS2026.Fortress.Hud.DebugUi.Visible)
+            {
+                // ?? は使わない（Unity の「無い」コンポーネントは null と比べないと分からない）。
+                var overlay = GetComponent<CpuDebugOverlay>();
+                if (overlay == null)
+                {
+                    overlay = gameObject.AddComponent<CpuDebugOverlay>();
+                }
+                overlay.Bind(this);
+            }
         }
 
         private void OnDisable()
         {
             StopAll();
             _sampler.Dispose();
+            _recorder?.Dispose();
+            _autoplay.Stop();
             if (Current == this)
             {
                 Current = null;
@@ -93,12 +125,15 @@ namespace MS2026.Cpu
 
         private void Update()
         {
+            _autoplay.TryStart(_settings);
             _refreshTimer -= Time.unscaledDeltaTime;
             if (_refreshTimer <= 0f)
             {
                 _refreshTimer = RefreshInterval;
                 Refresh();
             }
+
+            TickRecorder();
 
             // 群衆の写しは CPU がいる間だけ取る（写すのは次の、群衆の配列を読める瞬間）。
             if (CpuMask != 0)
@@ -131,6 +166,27 @@ namespace MS2026.Cpu
             }
         }
 
+        // 試合・ウェーブの区切り、結果の表、自動プレイ。
+        private void TickRecorder()
+        {
+            var authority = FortressNet.HasSimulationAuthority;
+            var launch = CpuLaunchOptions.Current;
+            var mode = _settings != null ? _settings.csvMode : CpuCsvMode.AutoplayOnly;
+            _recorder.WriteCsv = authority && mode != CpuCsvMode.Off &&
+                                 (_autoplay.Active || ((mode == CpuCsvMode.Always || launch.Csv) && CpuMask != 0));
+            _recorder.Level = Level;
+            _recorder.Seed = Seed;
+
+            var wasInMatch = _recorder.InMatch;
+            _recorder.Tick();
+            if (!wasInMatch && _recorder.InMatch)
+            {
+                _autoplay.OnMatchBegan();
+            }
+
+            _autoplay.Tick(_settings, _recorder);
+        }
+
         // ───────── 席を決め直す ─────────
 
         private void Refresh()
@@ -147,7 +203,8 @@ namespace MS2026.Cpu
                 RemoteHumanMask = RemoteHumanMask(),
                 TurretMask = TurretMask(),
                 FillOtherSeatsOffline = _settings == null || _settings.fillOtherSeatsOffline,
-                Mode = launch.SeatMode,
+                // 自動プレイは、席の指定が無ければ全部の席を CPU にする。
+                Mode = _autoplay.Active && launch.SeatMode == CpuSeatMode.Default ? CpuSeatMode.All : launch.SeatMode,
                 ListMask = launch.SeatMask
             };
 
@@ -187,13 +244,14 @@ namespace MS2026.Cpu
 
         private void StartPlayer(int player)
         {
-            var seed = CpuLaunchOptions.Current.Seed ?? (_settings != null ? _settings.randomSeed : 0);
+            var seed = Seed;
             var skill = _settings != null ? _settings.skill : CpuSkillValues.Default;
             var cpu = new CpuPlayer(player, Level, CpuSeatRules.SeedFor(seed, player, _matchCount, _randomBase),
                 _settings != null ? _settings.thinkInterval : 0.15f, skill);
             _players[player] = cpu;
             _playerTurrets[player] = _turrets[player];
             PlayerPilots.Set(player, cpu.Hands);
+            _recorder?.OnCpuStarted(cpu);
         }
 
         private void StopPlayer(int player)
