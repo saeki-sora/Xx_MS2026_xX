@@ -107,7 +107,7 @@ namespace MS2026.Fortress
         [Min(0.5f)]
         public float announceSeconds = 4f;
 
-        [Tooltip("発表の最後に 3・2・1 を出す秒数（0 なら出さない）。")]
+        [Tooltip("3・2・1 を出す秒数（0 なら出さない）。WAVE 2 からは発表の最後。WAVE 1 だけは発表の後、YOU の矢印と HUD を出してから数える。")]
         [Min(0f)]
         public float countdownSeconds = 2f;
 
@@ -135,6 +135,9 @@ namespace MS2026.Fortress
         public WaveSeatRotation seatRotation = new WaveSeatRotation();
 
         // 演出（D-Drive の番号札。各PCで鳴らす。空なら鳴らさない）。要塞デザイナーでは折りたたみの中に出す。
+        [Tooltip("試合の始まりの「コアを守れ！」が出たとき。")]
+        public FortressEffect onOpening = new FortressEffect { tintWithPlayerColor = false };
+
         [Tooltip("発表が始まったとき（最終ウェーブ以外）。")]
         public FortressEffect onAnnounce = new FortressEffect { tintWithPlayerColor = false };
 

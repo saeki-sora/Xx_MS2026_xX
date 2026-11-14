@@ -20,9 +20,13 @@ namespace MS2026.UI.Game
         }
 
         /// <summary>発表の最後の 3・2・1（出さないときは 0）。</summary>
-        public static int Countdown(WavePhase phase, float phaseRemaining, float countdownSeconds)
+        public static int Countdown(WavePhase phase, float phaseRemaining, float countdownSeconds) =>
+            Countdown(phase == WavePhase.Announce, phaseRemaining, countdownSeconds);
+
+        /// <summary>数える段階（<see cref="FortressWaves.CountsDown"/>）の最後の 3・2・1（出さないときは 0）。</summary>
+        public static int Countdown(bool countsDown, float phaseRemaining, float countdownSeconds)
         {
-            if (phase != WavePhase.Announce || countdownSeconds <= 0f || phaseRemaining <= 0f || phaseRemaining > countdownSeconds)
+            if (!countsDown || countdownSeconds <= 0f || phaseRemaining <= 0f || phaseRemaining > countdownSeconds)
             {
                 return 0;
             }

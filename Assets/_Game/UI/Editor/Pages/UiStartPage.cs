@@ -66,16 +66,17 @@ namespace MS2026.UI.EditorTools
                 StudioUi.Button("タイトルから Play", PlayFromTitle, "タイトルのシーンを開いて Play します（タイトル → ロビー → ゲームの順に進みます）。", small: true)));
 
             root.Add(StudioUi.Section("撃破数とコアの体力（ゲーム中HUD）", "倒した敵の数（全員の合計＋自分の分）・コンボ・区切りの数のお祝いと、コアの体力バーを、同じ見た目でゲーム中HUDに入れます。"));
-            root.Add(StudioUi.Note("ゲーム中HUD（画面 Hud）の自分の熱ゲージと古いコアのバーを隠し、撃破数（下の中央）とコアの体力バー（上の中央）を作ります（古い物は消さずに隠すだけ）。" +
+            root.Add(StudioUi.Note("ゲーム中HUD（画面 Hud）の自分の熱ゲージと古いコアのバーを隠し、撃破数（右下の「クリーン完了」の札）とコアの体力バー（上の中央）を作ります（古い物は消さずに隠すだけ）。" +
                                    "何度押しても作り直すだけです。見た目・動き・値のつなぎは、作ったあと「画面」「レイヤー」「動き」ページで自由に直せます。", NoteKind.Info));
             root.Add(StudioUi.Row(
-                StudioUi.Button("撃破数とコアの体力バーを入れる", () => HudKillCounterBuilder.Build(true), "画面 Hud に、コアの体力（上の中央）・撃破数（下の中央）・コンボ（その上）・お祝い（画面の中央）を入れます。", primary: true, small: true),
+                StudioUi.Button("撃破数とコアの体力バーを入れる", () => HudKillCounterBuilder.Build(true), "画面 Hud に、コアの体力（上の中央）・撃破数（右下）・コンボ（その上）・お祝い（画面の中央）を入れます。", primary: true, small: true),
                 StudioUi.Button("プレイヤーのパネルとコアのバー（歯）を入れる", () => HudPanelsBuilder.Build(true), "画面 Hud に、チームの絵で、コアの体力（上の中央・歯のアイコン）・自分のパネル（左下・しまのゲージ＝熱）・ほかの3人の丸いアイコン（その上）を入れます。前の水晶のコアの札と左上の4人の熱は隠します。", small: true),
                 StudioUi.Button("リザルト画面を作る", () => ResultScreenBuilder.Build(true), "試合が終わったとき（1000体でクリア／コアが壊れてゲームオーバー）に自動で開くリザルト画面（画面 Result）を作ります。", small: true)));
 
-            root.Add(StudioUi.Section("ウェーブ（WAVE 1〜5・目標撃破数・制限時間）", "コアのバーの左の WAVE の札、「WAVE n／目標撃破数」の発表・3・2・1・GO!・WAVE CLEAR!・TIME UP!、歯みがきタイム、初めての人向けのヒントをゲーム中HUDに入れます。"));
+            root.Add(StudioUi.Section("ウェーブ（WAVE 1〜5・目標撃破数・制限時間）", "上の中央の WAVE の帯、「WAVE n／目標撃破数」の発表・3・2・1・GO!・WAVE CLEAR!・TIME UP!、歯みがきタイム、初めての人向けのヒントをゲーム中HUDに入れます。"));
             root.Add(StudioUi.Row(
-                StudioUi.Button("ウェーブの表示を入れる", () => HudWaveBuilder.Build(true), "画面 Hud にウェーブの表示を入れます（何度押しても作り直すだけ。手で直した分は戻ります）。リザルトの GAME OVER の一言も、終わった理由（時間切れ・行けたウェーブ）にします。", primary: true, small: true)));
+                StudioUi.Button("ウェーブの表示を入れる", () => HudWaveBuilder.Build(true), "画面 Hud にウェーブの表示を入れます（何度押しても作り直すだけ。手で直した分は戻ります）。リザルトの GAME OVER の一言も、終わった理由（時間切れ・行けたウェーブ）にします。", primary: true, small: true),
+                StudioUi.Button("ウェーブの帯と撃破数の札だけ入れ直す", () => HudHeaderBuilder.Build(true), "チームの絵の、上の中央の WAVE の帯と右下の「クリーン完了」の札だけを作り直します（ほかの部品は触りません）。コアのバーは新しい枠の絵で帯の下に作り直し、コンボは札の上へ動かします。", small: true)));
 
             root.Add(StudioUi.Section("用語"));
             var words = StudioUi.Card();

@@ -27,11 +27,14 @@ namespace MS2026.Fortress
         /// <summary>全部のウェーブを終えた、または時間切れ。</summary>
         Finished = 6,
 
-        /// <summary>試合の始まりの「握り方のヒント」（全員の準備ができた後、WAVE 1 の発表の前。敵は来ない）。</summary>
+        /// <summary>試合の始まりの「YOU の矢印・HUD → 3・2・1」（WAVE 1 の発表の後、戦いの前。敵は来ない。2026-11-11 から発表の後に移した）。</summary>
         Hint = 7,
 
         /// <summary>合間の後、次のウェーブの発表の前の「席替え」（全員の砲台が隣の席へ跳び、YOU の矢印が出る。敵は来ない）。</summary>
-        SeatChange = 8
+        SeatChange = 8,
+
+        /// <summary>試合の始まりの「コアを守れ！」（全員の準備ができた後、WAVE 1 の発表の前。HUD はまだ隠したまま。敵は来ない。2026-11-11）。</summary>
+        Opening = 9
     }
 
     /// <summary>ウェーブの計画が終わった理由。</summary>
@@ -90,8 +93,14 @@ namespace MS2026.Fortress
         public float startDelaySeconds = 0.8f;
         public float maxWaitForPlayersSeconds = 10f;
 
-        /// <summary>全員の準備ができた後、WAVE 1 の発表の前に「握り方のヒント」を出す秒数（0 なら無し）。</summary>
+        /// <summary>全員の準備ができた後、WAVE 1 の発表の前に「コアを守れ！」を出す秒数（0 なら無し）。</summary>
+        public float openingSeconds;
+
+        /// <summary>WAVE 1 の発表の後、YOU の矢印と HUD を出してから 3・2・1 を始めるまでの秒数（ヒントの段階の長さ = これ ＋ <see cref="countdownSeconds"/>）。</summary>
         public float hintSeconds;
+
+        /// <summary>3・2・1 の秒数（WAVE 1 はヒントの段階の最後、WAVE 2 からは発表の最後に数える）。</summary>
+        public float countdownSeconds;
 
         public float announceSeconds = 4f;
 
@@ -132,7 +141,10 @@ namespace MS2026.Fortress
             }
 
             config.startDelaySeconds = plan.startDelaySeconds;
-            config.hintSeconds = plan.display != null && plan.display.timing != null ? plan.display.timing.hintSeconds : WaveDisplayTiming.Default.hintSeconds;
+            var timing = plan.display != null && plan.display.timing != null ? plan.display.timing : WaveDisplayTiming.Default;
+            config.openingSeconds = timing.openingSeconds;
+            config.hintSeconds = timing.hintSeconds;
+            config.countdownSeconds = plan.countdownSeconds;
             config.maxWaitForPlayersSeconds = plan.maxWaitForPlayersSeconds;
             config.announceSeconds = plan.announceSeconds;
             config.seatChangeSeconds = plan.seatRotation != null ? plan.seatRotation.WaveSeconds : 0f;
@@ -162,7 +174,7 @@ namespace MS2026.Fortress
 
     /// <summary>
     /// ウェーブの進め方（Unity に頼らない状態機械。テストあり）。決めるのは Host（オフラインでは自分）だけ。
-    /// 待つ →（握り方のヒント）→ 発表 → 戦う →（目標）→ 撤退 → 合間 →（席替え）→ 発表 …→ 最後のウェーブの目標でクリア。制限時間が来たら時間切れ。
+    /// 待つ →（コアを守れ！）→ 発表 →（WAVE 1 だけ: YOU の矢印・HUD → 3・2・1）→ 戦う →（目標）→ 撤退 → 合間 →（席替え）→ 発表 …→ 最後のウェーブの目標でクリア。制限時間が来たら時間切れ。
     /// </summary>
     public sealed class WaveFlow
     {
@@ -241,7 +253,7 @@ namespace MS2026.Fortress
                 }
             }
 
-            if (TimeLeft >= 0f && (Phase == WavePhase.Combat || _config.clockRunsDuringBreaks) && Phase != WavePhase.WaitingForPlayers && Phase != WavePhase.Hint)
+            if (TimeLeft >= 0f && (Phase == WavePhase.Combat || _config.clockRunsDuringBreaks) && !IsPreMatch(Phase))
             {
                 TimeLeft = Mathf.Max(0f, TimeLeft - dt);
                 if (TimeLeft <= 0f)
@@ -259,17 +271,24 @@ namespace MS2026.Fortress
                     }
 
                     break;
-                case WavePhase.Hint:
-                    if (PhaseTime >= _config.hintSeconds)
+                case WavePhase.Opening:
+                    if (PhaseTime >= _config.openingSeconds)
                     {
-                        signal |= Enter(WavePhase.Announce, _config.announceSeconds, WaveFlowSignal.None);
+                        signal |= EnterAnnounce();
+                    }
+
+                    break;
+                case WavePhase.Hint:
+                    if (PhaseTime >= PhaseDuration)
+                    {
+                        signal |= StartCombat(input.totalKills);
                     }
 
                     break;
                 case WavePhase.Announce:
                     if (PhaseTime >= _config.announceSeconds)
                     {
-                        signal |= StartCombat(input.totalKills);
+                        signal |= AfterAnnounce(input.totalKills);
                     }
 
                     break;
@@ -292,7 +311,7 @@ namespace MS2026.Fortress
                 case WavePhase.SeatChange:
                     if (PhaseTime >= _config.seatChangeSeconds)
                     {
-                        signal |= Enter(WavePhase.Announce, _config.announceSeconds, WaveFlowSignal.None);
+                        signal |= EnterAnnounce();
                     }
 
                     break;
@@ -308,10 +327,12 @@ namespace MS2026.Fortress
             {
                 case WavePhase.WaitingForPlayers:
                     return AfterWaiting();
+                case WavePhase.Opening:
+                    return EnterAnnounce();
                 case WavePhase.Hint:
-                    return Enter(WavePhase.Announce, _config.announceSeconds, WaveFlowSignal.None);
-                case WavePhase.Announce:
                     return StartCombat(totalKills);
+                case WavePhase.Announce:
+                    return AfterAnnounce(totalKills);
                 case WavePhase.Combat:
                     KillsInWave = Target;
                     return ClearWave(WaveFlowSignal.None);
@@ -320,7 +341,7 @@ namespace MS2026.Fortress
                 case WavePhase.Break:
                     return EndBreak();
                 case WavePhase.SeatChange:
-                    return Enter(WavePhase.Announce, _config.announceSeconds, WaveFlowSignal.None);
+                    return EnterAnnounce();
                 default:
                     return WaveFlowSignal.None;
             }
@@ -339,14 +360,28 @@ namespace MS2026.Fortress
             var endRetreat = Phase == WavePhase.Retreat ? WaveFlowSignal.FinishRetreat : WaveFlowSignal.None;
             WaveIndex = Mathf.Clamp(index, 0, WaveCount - 1);
             EndKind = WaveEndKind.None;
-            return stop | endBreak | endRetreat | Enter(WavePhase.Announce, _config.announceSeconds, WaveFlowSignal.None);
+            return stop | endBreak | endRetreat | EnterAnnounce();
         }
 
-        // 全員そろったら、握り方のヒント（あれば）→ WAVE 1 の発表。
+        /// <summary>試合の始まりの、まだ戦いの前の段階か（時間が減らない）。</summary>
+        public static bool IsPreMatch(WavePhase phase) => phase == WavePhase.WaitingForPlayers || phase == WavePhase.Opening || phase == WavePhase.Hint;
+
+        /// <summary>WAVE 1 の発表の後の「YOU の矢印・HUD → 3・2・1」の秒数（0 なら発表からすぐ戦い）。</summary>
+        public float PreludeSeconds => Mathf.Max(0f, _config.hintSeconds) + Mathf.Max(0f, _config.countdownSeconds);
+
+        // 全員そろったら、「コアを守れ！」（あれば）→ WAVE 1 の発表。
         private WaveFlowSignal AfterWaiting() =>
-            _config.hintSeconds > 0f
-                ? Enter(WavePhase.Hint, _config.hintSeconds, WaveFlowSignal.None)
-                : Enter(WavePhase.Announce, _config.announceSeconds, WaveFlowSignal.None);
+            _config.openingSeconds > 0f
+                ? Enter(WavePhase.Opening, _config.openingSeconds, WaveFlowSignal.None)
+                : EnterAnnounce();
+
+        private WaveFlowSignal EnterAnnounce() => Enter(WavePhase.Announce, _config.announceSeconds, WaveFlowSignal.None);
+
+        // 発表が終わったら戦い。WAVE 1 だけは、先に YOU の矢印と HUD を出し、最後に 3・2・1（ヒントの段階）。
+        private WaveFlowSignal AfterAnnounce(int totalKills) =>
+            WaveIndex == 0 && PreludeSeconds > 0f
+                ? Enter(WavePhase.Hint, PreludeSeconds, WaveFlowSignal.None)
+                : StartCombat(totalKills);
 
         // 合間が終わったら次のウェーブの番号にして、席替え（あれば）→ 発表。
         private WaveFlowSignal EndBreak()
@@ -354,7 +389,7 @@ namespace MS2026.Fortress
             WaveIndex++;
             var next = _config.seatChangeSeconds > 0f
                 ? Enter(WavePhase.SeatChange, _config.seatChangeSeconds, WaveFlowSignal.None)
-                : Enter(WavePhase.Announce, _config.announceSeconds, WaveFlowSignal.None);
+                : EnterAnnounce();
             return WaveFlowSignal.EndBreak | next;
         }
 

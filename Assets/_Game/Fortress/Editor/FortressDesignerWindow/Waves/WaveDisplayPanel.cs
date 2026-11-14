@@ -20,7 +20,9 @@ namespace MS2026.Fortress.EditorTools
         // 上から「試合の始まり → 発表の中の順番 → GO → 戦い → 赤い線 → 歯みがき」。
         private static readonly (string path, string label)[] TimingFields =
         {
-            ("hintSeconds", "握り方のヒントだけを出す秒数（0 ですぐ発表）"),
+            ("openingSeconds", "「コアを守れ！」を出す秒数（0 で出さない）"),
+            ("openingText", "「コアを守れ！」の文字"),
+            ("hintSeconds", "WAVE 1 の後、YOU と HUD を出してから 3・2・1 までの秒数"),
             ("showYouMarker", "「YOU」の矢印を出す"),
             ("showGripHint", "握り方のヒントを出す"),
             ("bannerDelay", "「WAVE n／目標撃破数」"),
@@ -161,14 +163,18 @@ namespace MS2026.Fortress.EditorTools
 
             if (plan.countdownSeconds > 0f)
             {
-                steps.Add((Mathf.Max(0f, announce - plan.countdownSeconds), "3・2・1"));
+                steps.Add((Mathf.Max(0f, announce - plan.countdownSeconds), "3・2・1（WAVE 2 から）"));
             }
 
             var line = string.Join(" → ", steps.OrderBy(x => x.time).Select(x => $"{x.time:0.#}秒 {x.text}"));
-            var start = t.hintSeconds > 0f && (t.showGripHint || t.showYouMarker) ? $"握り方のヒント {t.hintSeconds:0.#}秒 → " : "";
+            var opening = t.openingSeconds > 0f ? $"「{t.openingText}」{t.openingSeconds:0.#}秒 → " : "";
+            var you = t.hintSeconds > 0f ? $"YOU と HUD {t.hintSeconds:0.#}秒 → " : "HUD → ";
+            var count = plan.countdownSeconds > 0f ? $"3・2・1 {plan.countdownSeconds:0.#}秒 → " : "";
+            var go = $"GO!{(t.goSeconds > 0f ? $" {t.goSeconds:0.#}秒" : "（出さない）")}";
             EditorGUILayout.HelpBox(
-                $"出る順番（今の設定）: 準備待ち → {start}発表 {announce:0.#}秒［{line}］→ GO!{(t.goSeconds > 0f ? $" {t.goSeconds:0.#}秒" : "（出さない）")} → 戦い → WAVE CLEAR!（敵が逃げる）→ 合間 → 次の発表\n" +
-                "握り方のヒントは試合の始まりだけ（WAVE 2 からは発表から）。",
+                $"試合の始まり（今の設定）: 準備待ち（物が落ちてくる）→ {opening}WAVE 1 の発表 {announce:0.#}秒 → {you}{count}{go} → 戦い\n" +
+                $"WAVE 2 から: 合間 → 発表 {announce:0.#}秒［{line}］→ {go} → 戦い → WAVE CLEAR!（敵が逃げる）→ 合間\n" +
+                "HUD は WAVE 1 の発表が終わるまで隠したまま（「コアを守れ！」と発表だけが見える）。",
                 MessageType.None);
         }
 

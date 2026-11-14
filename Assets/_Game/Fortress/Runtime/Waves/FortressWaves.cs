@@ -52,6 +52,13 @@ namespace MS2026.Fortress
         /// <summary>次に発表されるウェーブの番号（合間の間は次、それ以外は今）。</summary>
         public static int UpcomingWaveIndex => Phase == WavePhase.Break || Phase == WavePhase.Retreat ? WaveIndex + 1 : WaveIndex;
 
+        /// <summary>3・2・1 を数える段階か（WAVE 1 は YOU の矢印の後のヒントの段階、WAVE 2 からは発表）。段階の残り秒数で数える。</summary>
+        public static bool CountsDown => Phase == WavePhase.Hint || (Phase == WavePhase.Announce && WaveIndex > 0);
+
+        /// <summary>試合の始まりの、HUD をまだ出さない段階か（準備待ち・「コアを守れ！」・WAVE 1 の発表）。</summary>
+        public static bool IsMatchIntro =>
+            Phase == WavePhase.WaitingForPlayers || Phase == WavePhase.Opening || (Phase == WavePhase.Announce && WaveIndex == 0);
+
         /// <summary>今のウェーブで倒した数。</summary>
         public static int KillsInWave { get; internal set; }
 

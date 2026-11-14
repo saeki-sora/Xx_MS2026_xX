@@ -48,20 +48,56 @@ namespace MS2026.Fortress.Tests.EditMode
         }
 
         [Test]
-        public void HintComesBeforeTheFirstAnnounceAndStopsTheClock()
+        public void OpeningThenFirstAnnounceThenHintWithCountdownThenFight()
         {
             var config = Config(timeLimit: 60f, clockInBreaks: true);
+            config.openingSeconds = 2f;
             config.hintSeconds = 3f;
+            config.countdownSeconds = 2f;
             var flow = new WaveFlow(config);
             flow.Begin();
             flow.Tick(1f, Kills(0));
-            Assert.AreEqual(WavePhase.Hint, flow.Phase, "全員そろったら、まず握り方のヒント");
-            flow.Tick(2.9f, Kills(0));
-            Assert.AreEqual(WavePhase.Hint, flow.Phase);
-            Assert.AreEqual(60f, flow.TimeLeft, 1e-4f, "ヒントの間は時間が減らない");
+            Assert.AreEqual(WavePhase.Opening, flow.Phase, "全員そろったら、まず「コアを守れ！」");
+            flow.Tick(1.9f, Kills(0));
+            Assert.AreEqual(WavePhase.Opening, flow.Phase);
+            Assert.AreEqual(60f, flow.TimeLeft, 1e-4f, "「コアを守れ！」の間は時間が減らない");
             flow.Tick(0.2f, Kills(0));
-            Assert.AreEqual(WavePhase.Announce, flow.Phase);
+            Assert.AreEqual(WavePhase.Announce, flow.Phase, "次に WAVE 1 の発表");
             Assert.AreEqual(0, flow.WaveIndex);
+            flow.Tick(3f, Kills(0));
+            Assert.AreEqual(WavePhase.Hint, flow.Phase, "WAVE 1 の発表の後に YOU の矢印 → 3・2・1");
+            Assert.AreEqual(5f, flow.PhaseDuration, 1e-4f, "ヒントの段階 = ヒントの秒数 ＋ 3・2・1 の秒数");
+            var before = flow.TimeLeft;
+            flow.Tick(4.9f, Kills(0));
+            Assert.AreEqual(WavePhase.Hint, flow.Phase);
+            Assert.AreEqual(before, flow.TimeLeft, 1e-4f, "ヒント（3・2・1 も）の間は時間が減らない");
+            var signal = flow.Tick(0.2f, Kills(0));
+            Assert.AreEqual(WavePhase.Combat, flow.Phase);
+            Assert.IsTrue((signal & WaveFlowSignal.StartSpawning) != 0);
+        }
+
+        [Test]
+        public void LaterWavesGoFromAnnounceStraightToCombat()
+        {
+            var config = Config();
+            config.openingSeconds = 1f;
+            config.hintSeconds = 2f;
+            config.countdownSeconds = 2f;
+            var flow = new WaveFlow(config);
+            flow.Begin();
+            flow.Skip(0);
+            flow.Skip(0);
+            flow.Skip(0);
+            Assert.AreEqual(WavePhase.Hint, flow.Phase);
+            flow.Skip(0);
+            Assert.AreEqual(WavePhase.Combat, flow.Phase);
+            flow.Skip(10);
+            flow.Skip(10);
+            flow.Skip(10);
+            Assert.AreEqual(WavePhase.Announce, flow.Phase);
+            Assert.AreEqual(1, flow.WaveIndex);
+            flow.Tick(3f, Kills(10));
+            Assert.AreEqual(WavePhase.Combat, flow.Phase, "WAVE 2 からは発表の最後に 3・2・1 があり、そのまま戦い");
         }
 
         [Test]
@@ -213,13 +249,16 @@ namespace MS2026.Fortress.Tests.EditMode
         public void SkipAdvancesEveryPhase()
         {
             var config = Config();
+            config.openingSeconds = 1f;
             config.hintSeconds = 2f;
             var flow = new WaveFlow(config);
             flow.Begin();
             flow.Skip(0);
-            Assert.AreEqual(WavePhase.Hint, flow.Phase);
+            Assert.AreEqual(WavePhase.Opening, flow.Phase);
             flow.Skip(0);
             Assert.AreEqual(WavePhase.Announce, flow.Phase);
+            flow.Skip(0);
+            Assert.AreEqual(WavePhase.Hint, flow.Phase);
             flow.Skip(4);
             Assert.AreEqual(WavePhase.Combat, flow.Phase);
             Assert.AreEqual(4, flow.KillsAtWaveStart);

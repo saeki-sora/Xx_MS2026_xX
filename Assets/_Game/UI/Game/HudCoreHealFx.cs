@@ -215,7 +215,8 @@ namespace MS2026.UI.Game
                 var soft = Sprite.Create(SoftTexture, new Rect(0f, 0f, SoftTexture.width, SoftTexture.height), new Vector2(0.5f, 0.5f));
                 _frameGlow = CreateImage("HealFrameGlow", frame.parent, soft);
                 Match(_frameGlow.rectTransform, frame, 28f);
-                var behind = gauge != null && gauge.parent == frame.parent ? gauge : frame;
+                // 枠とバーのうち後ろにある方のさらに後ろ（2026-11-11 からは枠の絵に空の溝が描いてあり、バーが枠の手前）。
+                var behind = gauge != null && gauge.parent == frame.parent && gauge.GetSiblingIndex() < frame.GetSiblingIndex() ? gauge : frame;
                 _frameGlow.rectTransform.SetSiblingIndex(behind.GetSiblingIndex());
             }
 

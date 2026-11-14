@@ -21,6 +21,8 @@ namespace MS2026.UI.Game
         public const string WaveTimeLeft = "wave.timeLeft";
         public const string WaveTimeText = "wave.timeText";
         public const string WaveTimeWarning = "wave.timeWarning";
+        public const string WaveOpening = "wave.opening";
+        public const string WaveOpeningText = "wave.openingText";
         public const string WaveAnnouncing = "wave.announcing";
         public const string WaveAnnounceTitle = "wave.announceTitle";
         public const string WaveAnnounceGoal = "wave.announceGoal";
@@ -60,17 +62,19 @@ namespace MS2026.UI.Game
                 (WaveTimeLeft, "試合の残り時間（秒）", "制限時間が無ければ −1。", UiValueKind.Number, c, new Vector2(-1, 600), 168),
                 (WaveTimeText, "試合の残り時間（02:48 の形）", "制限時間が無ければ「--:--」。", UiValueKind.Text, c, Vector2.up, 0),
                 (WaveTimeWarning, "残り時間が少ない", "時計が動いていて、残り10秒以下のときON。", UiValueKind.Bool, c, Vector2.up, 0),
+                (WaveOpening, "「コアを守れ！」中", "試合の始まり、物が落ちてきた後・WAVE 1 の発表の前の間ON（HUD はまだ隠れている）。", UiValueKind.Bool, c, Vector2.up, 0),
+                (WaveOpeningText, "「コアを守れ！」の文字", "表示の設定で変えられる。", UiValueKind.Text, c, Vector2.up, 0),
                 (WaveAnnouncing, "発表中", "「WAVE n！目標撃破数 m！」を出している間ON。", UiValueKind.Bool, c, Vector2.up, 1),
                 (WaveAnnounceTitle, "発表の大きな文字", "例: WAVE 2 / FINAL WAVE。", UiValueKind.Text, c, Vector2.up, 0),
                 (WaveAnnounceGoal, "発表の目標の文字", "例: 目標撃破数 60！", UiValueKind.Text, c, Vector2.up, 0),
                 (WaveAnnounceText, "発表の一言", "計画に書いた一言（無ければ空）。", UiValueKind.Text, c, Vector2.up, 0),
-                (WaveCountdown, "3・2・1", "発表の最後の 3・2・1。出していないときは 0。", UiValueKind.Number, c, new Vector2(0, 3), 2),
+                (WaveCountdown, "3・2・1", "3・2・1（WAVE 1 は YOU の矢印の後、WAVE 2 からは発表の最後）。出していないときは 0。", UiValueKind.Number, c, new Vector2(0, 3), 2),
                 (WaveGo, "GO!", "ウェーブが始まってから少しの間ON。", UiValueKind.Bool, c, Vector2.up, 0),
                 (WaveClearShowing, "WAVE CLEAR! 中", "目標を倒して、敵が逃げている間ON。", UiValueKind.Bool, c, Vector2.up, 0),
                 (WaveClearText, "クリアの文字", "例: WAVE 2 CLEAR!", UiValueKind.Text, c, Vector2.up, 0),
                 (WaveBreak, "合間中", "ウェーブの合間（歯みがきタイムなど）の間ON。", UiValueKind.Bool, c, Vector2.up, 0),
                 (WaveTimeUp, "時間切れ", "試合の制限時間が来たときON。", UiValueKind.Bool, c, Vector2.up, 0),
-                (WaveFirstHint, "握り方のヒントを出す", "試合の始まり（全員を待っている間と、WAVE 1 の発表の前のヒントの段階）ON。", UiValueKind.Bool, c, Vector2.up, 0),
+                (WaveFirstHint, "握り方のヒントを出す", "試合の始まり（WAVE 1 の発表の後、YOU の矢印 → 3・2・1 の間）ON。", UiValueKind.Bool, c, Vector2.up, 0),
                 (WaveShowBanner, "「WAVE n／目標」を出す", "発表の中で、表示の設定の秒数がたった後 ON。", UiValueKind.Bool, c, Vector2.up, 1),
                 (WaveShowNewEnemies, "NEW ENEMY を出す", "発表の中で、表示の設定の秒数がたった後 ON（初めて出てくる敵がいれば、カードが出る）。", UiValueKind.Bool, c, Vector2.up, 1),
                 (WaveShowRouteHint, "「赤い線＝敵の通り道」を出す", "発表の間、表示の設定で ON のときだけ ON。", UiValueKind.Bool, c, Vector2.up, 0),

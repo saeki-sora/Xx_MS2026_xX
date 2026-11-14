@@ -86,7 +86,8 @@ namespace MS2026.Fortress.EditorTools
             switch (phase)
             {
                 case WavePhase.WaitingForPlayers: return "全員の準備を待っている";
-                case WavePhase.Hint: return "握り方のヒント";
+                case WavePhase.Opening: return "「コアを守れ！」";
+                case WavePhase.Hint: return "YOU の矢印 → 3・2・1";
                 case WavePhase.Announce: return "発表中";
                 case WavePhase.Combat: return "戦っている";
                 case WavePhase.Retreat: return "クリア・敵が逃げている";

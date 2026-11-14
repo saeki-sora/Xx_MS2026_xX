@@ -10,7 +10,9 @@ namespace MS2026.UI.EditorTools
 {
     /// <summary>
     /// ゲーム中HUD（画面 Hud）に、ウェーブの表示を入れる（2026-10-24、ユーザー依頼「コアの体力バーの左隣に、後から素材を差し替える前提で目標敵数と制限時間のUI」）。
-    /// ・「WavePlate」: コアのバー（歯）の左。WAVE 2/5 ・ あと23体（進み具合の棒）・ TIME 02:48。ウェーブの計画が無いステージでは隠れる（wave.active）
+    /// ・「WaveHeader」: 上の中央の帯（チームの絵、2026-11-11 から。作るのは <see cref="HudHeaderBuilder"/>）。WAVE 1/3 ・ 進み具合の棒 ・ あと何体 ・ 残り時間。
+    ///   ウェーブの計画が無いステージでは隠れる（wave.active）。前はコアのバーの左の箱「WavePlate」（作り直すときに消す）
+    /// ・「WaveOpening」: 試合の始まりの「コアを守れ！」（物が落ちてきた後、WAVE 1 の発表の前。2026-11-11）
     /// ・「WaveAnnounce」: 発表「WAVE 2 / 目標撃破数 60！」＋一言＋「赤い線＝敵の通り道」。最終ウェーブは帯が赤い
     /// ・「WaveCountdown」「WaveGo」: 3・2・1・GO!
     /// ・「WaveClear」: 「WAVE 2 CLEAR! 敵が逃げていく！」
@@ -23,6 +25,11 @@ namespace MS2026.UI.EditorTools
     {
         public const string MenuPath = "Tools/UIスタジオ/ウェーブの表示をHUDに入れる";
 
+        /// <summary>「コアを守れ！」だけを入れる（ほかの部品は作り直さないので、手で直した分も残る）。</summary>
+        public const string OpeningMenuPath = "Tools/UIスタジオ/「コアを守れ！」をHUDに入れる";
+
+        internal const string OpeningName = "WaveOpening";
+
         internal const string PlateName = "WavePlate";
         internal const string AnnounceName = "WaveAnnounce";
         internal const string CountdownName = "WaveCountdown";
@@ -31,14 +38,7 @@ namespace MS2026.UI.EditorTools
         internal const string TimeUpName = "WaveTimeUp";
 
         /// <summary>このビルダーが作る部品の名前（作り直すときに消す）。ほかのウェーブの部品のビルダーも、ここに足す。</summary>
-        internal static readonly string[] OwnedNames = { PlateName, AnnounceName, CountdownName, GoName, ClearName, TimeUpName };
-
-        // コアのバー（幅 640、上から 26）の左に、少し離して置く。
-        private static readonly Vector2 PlateDesign = new Vector2(300f, 190f);
-        private const float PlateScale = 0.8f;
-        private const float PlateTop = 24f;
-        private const float PlateGap = 18f;
-        private const float CoreHalfWidth = 320f;
+        internal static readonly string[] OwnedNames = { PlateName, HudHeaderBuilder.HeaderName, OpeningName, AnnounceName, CountdownName, GoName, ClearName, TimeUpName };
 
         private static readonly Color Navy = new Color(0.06f, 0.08f, 0.2f);
         private static readonly Color DeepPink = new Color(0.86f, 0.18f, 0.55f);
@@ -46,7 +46,7 @@ namespace MS2026.UI.EditorTools
 
         internal static readonly string[] ArtFiles =
         {
-            "Wave_Plate.png", "Wave_Bar.png", "Wave_Banner.png", "Wave_Ring.png", "Wave_Arrow.png", "Wave_Panel.png",
+            "Wave_Bar.png", "Wave_Banner.png", "Wave_Ring.png", "Wave_Arrow.png", "Wave_Panel.png",
             "Brush_Title.png", "Brush_Card.png", "Brush_Chip.png", "Brush_Stage.png", "Brush_Tooth.png", "Brush_Brush.png", "Brush_BrushStripe.png",
             "Brush_Hand.png", "Brush_TimerBack.png", "Brush_TimerFill.png", "Brush_Burst.png", "Brush_Bubble.png", "Brush_Sparkle.png"
         };
@@ -87,6 +87,7 @@ namespace MS2026.UI.EditorTools
             }
 
             ConfigureArt();
+            HudHeaderBuilder.ConfigureArt();
             UiStudioSetup.RegisterGameValues(UiStudioSetup.ValueCatalog);
 
             var root = PrefabUtility.LoadPrefabContents(path);
@@ -94,7 +95,8 @@ namespace MS2026.UI.EditorTools
             {
                 var screen = root.transform;
                 Remove(screen, OwnedNames);
-                BuildPlate(screen);
+                HudHeaderBuilder.BuildHeader(screen);
+                BuildOpening(screen);
                 BuildAnnounce(screen);
                 BuildCountdown(screen);
                 BuildGo(screen);
@@ -115,7 +117,7 @@ namespace MS2026.UI.EditorTools
             if (interactive)
             {
                 EditorUtility.DisplayDialog("ウェーブの表示",
-                    "ゲーム中HUD に入れました。\n\n・コアのバーの左: WAVE 2/5 ・ あと○体 ・ TIME\n・画面の中央: 「WAVE n／目標撃破数」の発表、3・2・1・GO!、WAVE CLEAR!、TIME UP!\n" +
+                    "ゲーム中HUD に入れました。\n\n・上の中央の帯: WAVE 1/3 ・ 進み具合の棒 ・ あと何体 ・ 残り時間\n・画面の中央: 「WAVE n／目標撃破数」の発表、3・2・1・GO!、WAVE CLEAR!、TIME UP!\n" +
                     "・歯みがきタイムの表示、初めての人向けのヒント（あなたの砲台・握り方・敵が来る方向）\n\n" +
                     "絵は仮の物です（Assets/_Game/UI/Art/Hud/Wave_*.png を同じ名前で上書きすると差し替わります）。\n" +
                     "UIスタジオの「値」ページで「サンプル値で表示」をONにすると、再生しなくても見た目を確かめられます。", "OK");
@@ -124,82 +126,74 @@ namespace MS2026.UI.EditorTools
             return true;
         }
 
-        // ───────── WAVE の札（コアのバーの左） ─────────
-
-        private static void BuildPlate(Transform screen)
+        [MenuItem(OpeningMenuPath)]
+        private static void BuildOpeningFromMenu()
         {
-            var root = B.Rect(screen, PlateName);
-            var size = PlateDesign * PlateScale;
-            B.Place(root, new Vector2(0.5f, 1f), new Vector2(-(CoreHalfWidth + PlateGap + size.x * 0.5f), -PlateTop), size);
-            Visible(root, FortressUiKeys.WaveActive, UiVisibleCondition.WhenOn, 0.5f);
-            B.AddMotion(root.gameObject, UiMotionTrigger.OnShow, UiPreset.SlideFadeInTop, 0.45f);
-            var body = H.Body(root, PlateDesign, PlateScale);
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                Notify(true, "再生中は作れません。再生を止めてから実行してください。");
+                return;
+            }
 
-            var plate = H.Picture(body, "Plate", "Wave_Plate.png", Color.white);
-            B.Stretch(plate.rectTransform);
+            var hud = UiStudioSetup.Catalog.Find(H.HudScreenId);
+            var path = hud != null ? AssetDatabase.GetAssetPath(hud) : null;
+            if (string.IsNullOrEmpty(path))
+            {
+                Notify(true, $"画面「{H.HudScreenId}」（ゲーム中HUD）がありません。UIスタジオの「画面」ページで「ゲーム中HUD」を作ってから実行してください。");
+                return;
+            }
 
-            // 1段目: WAVE 2/5（ウェーブが進んだらはねる）
-            Caption(body, "WaveCaption", "WAVE", 54f);
-            var wave = Value(body, "Wave", 46, 54f);
-            H.Bind(wave, FortressUiKeys.WaveNumberText, "{0}", 0f);
-            B.AddMotion(wave.gameObject, UiMotionTrigger.OnValueUp, UiPreset.Tada, 0.6f, 0f, FortressUiKeys.WaveNumber);
+            ConfigureArt();
+            UiStudioSetup.RegisterGameValues(UiStudioSetup.ValueCatalog);
+            var root = PrefabUtility.LoadPrefabContents(path);
+            try
+            {
+                var screen = root.transform;
+                Remove(screen, new[] { OpeningName });
+                var opening = BuildOpening(screen);
+                // 発表のすぐ手前に並べる（重なったときは発表が上）。
+                var announce = screen.Find(AnnounceName);
+                if (announce != null)
+                {
+                    opening.SetSiblingIndex(announce.GetSiblingIndex());
+                }
 
-            // 2段目: あと 23体（1体倒すごとにぽんと縮む）＋ 進み具合の棒
-            Caption(body, "GoalCaption", "あと", 4f);
-            var remaining = Value(body, "Remaining", 46, 4f);
-            remaining.supportRichText = true;
-            H.Bind(remaining, FortressUiKeys.WaveRemaining, "{0:0}<size=24>体</size>", 0f);
-            B.AddMotion(remaining.gameObject, UiMotionTrigger.OnValueDown, UiPreset.PunchScale, 0.18f, 0f, FortressUiKeys.WaveRemaining);
-            var bar = B.Rect(body, "Progress");
-            H.Center(bar, new Vector2(0f, -20f), new Vector2(236f, 9f));
-            var back = H.Picture(bar, "Back", "Wave_Bar.png", new Color(1f, 1f, 1f, 0.18f));
-            back.type = Image.Type.Sliced;
-            B.Stretch(back.rectTransform);
-            var fill = H.Picture(bar, "Fill", "Wave_Bar.png", H.Cyan);
-            H.FillHorizontal(fill);
-            var bindFill = fill.gameObject.AddComponent<UiBindFill>();
-            bindFill.key = FortressUiKeys.WaveProgress01;
-            bindFill.fill = fill;
-            bindFill.smoothSeconds = 0.12f;
+                PrefabUtility.SaveAsPrefabAsset(root, path);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
 
-            // 3段目: TIME 02:48（残り10秒からは赤い数字が重なって脈打つ）
-            Caption(body, "TimeCaption", "TIME", -54f);
-            var time = Value(body, "Time", 46, -54f);
-            H.Bind(time, FortressUiKeys.WaveTimeText, "{0}", 0f);
-            var warn = B.Rect(body, "TimeWarning");
-            B.Stretch(warn);
-            Visible(warn, FortressUiKeys.WaveTimeWarning, UiVisibleCondition.WhenOn, 0.5f);
-            var warnText = Value(warn, "Time", 46, -54f);
-            warnText.color = Red;
-            H.Bind(warnText, FortressUiKeys.WaveTimeText, "{0}", 0f);
-            B.AddMotion(warnText.gameObject, UiMotionTrigger.Loop, UiPreset.Pulse, 0.5f);
-
-            // 札の下: 「あと少し！」（あと5体から）
-            var near = B.Rect(root, "NearGoal");
-            near.anchorMin = near.anchorMax = new Vector2(0.5f, 0f);
-            near.pivot = new Vector2(0.5f, 1f);
-            near.anchoredPosition = new Vector2(0f, -6f);
-            near.sizeDelta = new Vector2(260f, 44f);
-            Visible(near, FortressUiKeys.WaveNearGoal, UiVisibleCondition.WhenOn, 0.5f);
-            B.AddMotion(near.gameObject, UiMotionTrigger.OnShow, UiPreset.PopIn, 0.3f);
-            var nearText = H.Number(near, "Label", 34, H.Pink, TextAnchor.MiddleCenter, Navy, 3f, 0f);
-            nearText.text = "あと少し！";
-            B.Stretch(nearText.rectTransform);
-            B.AddMotion(nearText.gameObject, UiMotionTrigger.Loop, UiPreset.HeartBeat, 0.8f);
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[UIスタジオ] 「{path}」に「コアを守れ！」を入れました（ほかの部品はそのまま）。");
+            EditorUtility.DisplayDialog("「コアを守れ！」",
+                "ゲーム中HUD に「コアを守れ！」を入れました。\n\n試合の始まり、物が落ちてきた後・WAVE 1 の発表の前に出ます。\n" +
+                "秒数と文字は要塞デザイナーの「敵ウェーブ」→「全体」→「表示のタイミング」で変えられます。", "OK");
         }
 
-        private static Text Caption(Transform parent, string name, string text, float y)
-        {
-            var caption = H.Label(parent, name, text, 22, H.Cyan, TextAnchor.MiddleLeft);
-            H.Center(caption.rectTransform, new Vector2(-122f, y), new Vector2(110f, 40f), new Vector2(0f, 0.5f));
-            return caption;
-        }
+        // ───────── 試合の始まりの「コアを守れ！」 ─────────
 
-        private static Text Value(Transform parent, string name, int size, float y)
+        private static RectTransform BuildOpening(Transform screen)
         {
-            var value = H.Number(parent, name, size, Color.white, TextAnchor.MiddleRight, Navy, 3f, 0f);
-            H.Center(value.rectTransform, new Vector2(124f, y), new Vector2(190f, 56f), new Vector2(1f, 0.5f));
-            return value;
+            var root = B.Rect(screen, OpeningName);
+            B.Stretch(root);
+            Visible(root, FortressUiKeys.WaveOpening, UiVisibleCondition.WhenOn, 0.5f);
+
+            // 発表と同じ帯・同じ場所（続けて出るので、帯が残ったまま文字だけ変わって見える）。
+            var body = B.Rect(root, "Body");
+            H.Center(body, new Vector2(0f, 170f), new Vector2(1400f, 260f));
+            B.AddMotion(body.gameObject, UiMotionTrigger.OnShow, UiPreset.BounceIn, 0.5f);
+            B.AddMotion(body.gameObject, UiMotionTrigger.OnHide, UiPreset.ScaleOut, 0.25f);
+
+            var band = H.Picture(body, "Band", "Wave_Banner.png", Color.white);
+            B.Stretch(band.rectTransform);
+
+            var title = H.Number(body, "Title", 132, Color.white, TextAnchor.MiddleCenter, Navy, 6f, 6f);
+            H.Center(title.rectTransform, new Vector2(0f, 10f), new Vector2(1300f, 170f));
+            H.Bind(title, FortressUiKeys.WaveOpeningText, "{0}", 0f);
+            B.AddMotion(title.gameObject, UiMotionTrigger.OnShow, UiPreset.PunchScale, 0.35f, 0.3f);
+            return root;
         }
 
         // ───────── 発表（WAVE 2／目標撃破数 60！） ─────────

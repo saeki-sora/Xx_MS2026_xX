@@ -1901,3 +1901,22 @@ MonoBehaviour:
     sampleText: "\u30B5\u30F3\u30D7\u30EB"
     sampleColor: {r: 1, g: 1, b: 1, a: 1}
     category: "\u6B6F\u307F\u304C\u304D"
+  - key: wave.opening
+    label: "\u300C\u30B3\u30A2\u3092\u5B88\u308C\uFF01\u300D\u4E2D"
+    description: "\u8A66\u5408\u306E\u59CB\u307E\u308A\u3001\u7269\u304C\u843D\u3061\u3066\u304D\u305F\u5F8C\u30FBWAVE
+      1 \u306E\u767A\u8868\u306E\u524D\u306E\u9593ON\uFF08HUD \u306F\u307E\u3060\u96A0\u308C\u3066\u3044\u308B\uFF09\u3002"
+    kind: 2
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: 
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"
+  - key: wave.openingText
+    label: "\u300C\u30B3\u30A2\u3092\u5B88\u308C\uFF01\u300D\u306E\u6587\u5B57"
+    description: "\u8868\u793A\u306E\u8A2D\u5B9A\u3067\u5909\u3048\u3089\u308C\u308B\u3002"
+    kind: 3
+    range: {x: 0, y: 1}
+    sampleNumber: 0
+    sampleText: "\u30B5\u30F3\u30D7\u30EB"
+    sampleColor: {r: 1, g: 1, b: 1, a: 1}
+    category: "\u30A6\u30A7\u30FC\u30D6"

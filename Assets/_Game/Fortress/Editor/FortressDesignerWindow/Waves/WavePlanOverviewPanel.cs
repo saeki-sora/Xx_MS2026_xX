@@ -42,6 +42,7 @@ namespace MS2026.Fortress.EditorTools
                 using (new WaveLabelWidth())
                 using (new EditorGUI.IndentLevelScope())
                 {
+                    Prop(serialized, "onOpening", "「コアを守れ！」");
                     Prop(serialized, "onAnnounce", "発表");
                     Prop(serialized, "onFinalAnnounce", "最終ウェーブの発表");
                     Prop(serialized, "onCountdownTick", "3・2・1 の1つごと");

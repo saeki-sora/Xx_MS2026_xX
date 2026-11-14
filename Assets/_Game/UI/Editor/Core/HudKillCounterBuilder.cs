@@ -9,7 +9,7 @@ namespace MS2026.UI.EditorTools
 {
     /// <summary>
     /// ゲーム中HUD（画面 Hud）に撃破数の表示を入れる（2026-10-13、ユーザー依頼「熱ゲージがあった場所に、めっちゃおしゃれな撃破数」）。
-    /// ・下の中央（自分の熱ゲージ LocalHeat の場所。熱ゲージは消さずに隠す＝ON にすれば戻る）: 全員の撃破数（大きな数字）＋ 自分の撃破数（自分の色の札）
+    /// ・右下: 全員の撃破数 ＋ 自分の撃破数（2026-11-11 からはチームの絵の「クリーン完了」の札。作るのは HudHeaderBuilder。前は下の中央の「KillCounter」。熱ゲージ LocalHeat は隠したまま）
     /// ・その上: 「x25 COMBO!」と、途切れるまでの残りのバー（自分の撃破が続いている間だけ）
     /// ・画面の中央: 区切りの数（100・250・500・1000…）に届いた瞬間の「1,000 DEFEATED!」（光の放射つき、少しの間だけ）
     /// ・上の中央: コアの体力バー（2026-10-13 追加。古い CoreHp は消さずに隠す）。撃破数と同じ見た目の斜めの札に、水晶のアイコン・残りの割合・体力で色が変わるバー
@@ -70,6 +70,7 @@ namespace MS2026.UI.EditorTools
             }
 
             ConfigureArt();
+            HudHeaderBuilder.ConfigureArt();
             UiStudioSetup.RegisterGameValues(UiStudioSetup.ValueCatalog);
 
             var root = PrefabUtility.LoadPrefabContents(path);
@@ -106,10 +107,13 @@ namespace MS2026.UI.EditorTools
                     oldCore.gameObject.SetActive(false);
                 }
 
-                BuildCounter(screen);
+                // 撃破数は右下の「クリーン完了」の札（チームの絵、2026-11-11 から）。前の「KillCounter」は上で消している。
+                HudHeaderBuilder.BuildMeter(screen);
                 BuildCombo(screen);
+                HudHeaderBuilder.PlaceCombo(screen);
                 BuildMilestone(screen);
                 BuildCore(screen);
+                HudWaveExtrasBuilder.RefreshHiddenWhileBrushing(screen);
 
                 // 歯のコアのバー（HudPanelsBuilder、2026-10-17）が入っていれば、そちらを使う（水晶の札は作るが隠す）。
                 if (screen.Find(HudPanelsBuilder.CoreName) != null)
@@ -129,53 +133,11 @@ namespace MS2026.UI.EditorTools
             if (interactive)
             {
                 EditorUtility.DisplayDialog("撃破数とコアの体力バーをHUDに入れる",
-                    "ゲーム中HUD に撃破数とコアの体力バーを入れました。\n\n・上の中央: コアの体力（古いバーは隠しました）\n・下の中央: 全員の撃破数 ＋ 自分の撃破数（熱ゲージは隠しました）\n・その上: コンボ\n・画面の中央: 区切りの数のお祝い\n\n" +
+                    "ゲーム中HUD に撃破数とコアの体力バーを入れました。\n\n・上の中央: コアの体力（古いバーは隠しました）\n・右下: クリーン完了（全員の撃破数 ＋ 自分の撃破数）\n・その上: コンボ\n・画面の中央: 区切りの数のお祝い\n\n" +
                     "UIスタジオの「値」ページで「サンプル値で表示」をONにすると、再生しなくても見た目を確かめられます。", "OK");
             }
 
             return true;
-        }
-
-        // ───────── 下の中央: 全員の撃破数 ＋ 自分の撃破数 ─────────
-
-        private static void BuildCounter(Transform screen)
-        {
-            var root = B.Rect(screen, CounterName);
-            B.Place(root, new Vector2(0.5f, 0f), new Vector2(0f, 18f), new Vector2(900f, 176f) * CounterScale);
-            B.AddMotion(root.gameObject, UiMotionTrigger.OnShow, UiPreset.SlideFadeInBottom, 0.45f);
-            var counter = Body(root, new Vector2(900f, 176f), CounterScale);
-
-            var plate = Picture(counter, "Plate", "Kill_Plate.png", Color.white);
-            B.Stretch(plate.rectTransform);
-
-            // ばいきんのアイコン（ゆらゆら揺れる）。
-            var icon = Picture(counter, "Icon", "Kill_GermIcon.png", Color.white);
-            Center(icon.rectTransform, new Vector2(-352f, 4f), new Vector2(150f, 150f));
-            B.AddMotion(icon.gameObject, UiMotionTrigger.Loop, UiPreset.WobbleLoop, 2.4f);
-
-            var caption = Label(counter, "Caption", "TEAM DEFEATED", 24, Cyan, TextAnchor.MiddleLeft);
-            Center(caption.rectTransform, new Vector2(-100f, 52f), new Vector2(330f, 34f), new Vector2(0f, 0.5f), -262f);
-
-            // 全員の撃破数（倒すたびに弾む）。弾む動きは外枠、数字は中の文字（文字の大きさを変える動きと数え上げがぶつからないように）。
-            var totalPop = B.Rect(counter, "TotalPop");
-            Center(totalPop, new Vector2(-268f, -10f), new Vector2(430f, 112f), new Vector2(0f, 0.5f), -268f);
-            B.AddMotion(totalPop.gameObject, UiMotionTrigger.OnValueUp, UiPreset.PunchScale, 0.22f, 0f, FortressUiKeys.KillsTotal);
-            var total = Number(totalPop, "Total", 92, Color.white, TextAnchor.MiddleLeft, Navy, 3f, 4f);
-            B.Stretch(total.rectTransform);
-            Bind(total, FortressUiKeys.KillsTotal, "{0:N0}", 0.25f);
-
-            // 自分の撃破数（自分の色の札）。
-            var tag = Picture(counter, "You", "Kill_YouTag.png", Color.white);
-            Center(tag.rectTransform, new Vector2(262f, -4f), new Vector2(260f, 72f));
-            var tagColor = tag.gameObject.AddComponent<UiBindColor>();
-            tagColor.key = FortressUiKeys.LocalColor;
-            tagColor.target = tag;
-            B.AddMotion(tag.gameObject, UiMotionTrigger.OnValueUp, UiPreset.Jelly, 0.3f, 0f, FortressUiKeys.KillsLocal);
-            var you = Label(tag.transform, "Label", "YOU", 26, Navy, TextAnchor.MiddleLeft);
-            Center(you.rectTransform, new Vector2(-100f, 0f), new Vector2(90f, 40f), new Vector2(0f, 0.5f), -100f);
-            var own = Number(tag.transform, "Count", 44, Color.white, TextAnchor.MiddleRight, Navy, 3f, 0f);
-            Center(own.rectTransform, new Vector2(105f, 0f), new Vector2(190f, 60f), new Vector2(1f, 0.5f), 105f);
-            Bind(own, FortressUiKeys.KillsLocal, "{0:N0}", 0.2f);
         }
 
         // ───────── その上: コンボ ─────────

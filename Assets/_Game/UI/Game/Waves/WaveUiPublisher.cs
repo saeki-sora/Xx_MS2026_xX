@@ -18,6 +18,7 @@ namespace MS2026.UI.Game
             UiValues.Set(FortressUiKeys.WaveActive, active);
             if (!active)
             {
+                UiValues.Set(FortressUiKeys.WaveOpening, false);
                 UiValues.Set(FortressUiKeys.WaveAnnouncing, false);
                 UiValues.Set(FortressUiKeys.WaveCountdown, 0);
                 UiValues.Set(FortressUiKeys.WaveGo, false);
@@ -60,6 +61,9 @@ namespace MS2026.UI.Game
             UiValues.Set(FortressUiKeys.WaveTimeText, WaveHudLogic.Clock(FortressWaves.TimeLeft));
             UiValues.Set(FortressUiKeys.WaveTimeWarning, WaveHudLogic.TimeWarning(FortressWaves.ClockRunning, FortressWaves.TimeLeft, timing.timeWarningSeconds));
 
+            UiValues.Set(FortressUiKeys.WaveOpening, phase == WavePhase.Opening);
+            UiValues.Set(FortressUiKeys.WaveOpeningText, timing.openingText ?? "");
+
             var announcing = phase == WavePhase.Announce;
             UiValues.Set(FortressUiKeys.WaveAnnouncing, announcing);
             UiValues.Set(FortressUiKeys.WaveAnnounceTitle, WaveHudLogic.AnnounceTitle(number, isFinal, wave?.label));
@@ -70,7 +74,7 @@ namespace MS2026.UI.Game
                 timing.showNewEnemyCards && WaveDisplayTiming.ShowInAnnounce(phase, FortressWaves.PhaseElapsed, timing.newEnemyDelay));
             UiValues.Set(FortressUiKeys.WaveShowRouteHint,
                 timing.showRouteHint && WaveDisplayTiming.ShowInAnnounce(phase, FortressWaves.PhaseElapsed, timing.routeDelay));
-            UiValues.Set(FortressUiKeys.WaveCountdown, WaveHudLogic.Countdown(phase, FortressWaves.PhaseRemaining, plan != null ? plan.countdownSeconds : 0f));
+            UiValues.Set(FortressUiKeys.WaveCountdown, WaveHudLogic.Countdown(FortressWaves.CountsDown, FortressWaves.PhaseRemaining, plan != null ? plan.countdownSeconds : 0f));
             UiValues.Set(FortressUiKeys.WaveGo, WaveHudLogic.ShowGo(phase, FortressWaves.PhaseElapsed, timing.goSeconds));
             UiValues.Set(FortressUiKeys.WaveClearShowing, phase == WavePhase.Retreat);
             UiValues.Set(FortressUiKeys.WaveClearText, WaveHudLogic.ClearText(number, isFinal));

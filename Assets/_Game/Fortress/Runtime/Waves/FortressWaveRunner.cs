@@ -233,7 +233,7 @@ namespace MS2026.Fortress
             FortressWaves.TimeLeft = _flow.TimeLeft;
             FortressWaves.ClockRunning = _flow.TimeLeft >= 0f &&
                                          (_flow.Phase == WavePhase.Combat ||
-                                          (_flow.Config.clockRunsDuringBreaks && _flow.Phase != WavePhase.WaitingForPlayers && _flow.Phase != WavePhase.Hint &&
+                                          (_flow.Config.clockRunsDuringBreaks && !WaveFlow.IsPreMatch(_flow.Phase) &&
                                            _flow.Phase != WavePhase.Finished));
             FortressWaves.EndKind = _flow.EndKind;
             FortressWaves.PlayerMask = ComputePlayerMask();
@@ -453,6 +453,9 @@ namespace MS2026.Fortress
             FortressEffect effect = null;
             switch (phase)
             {
+                case WavePhase.Opening:
+                    effect = _plan.onOpening;
+                    break;
                 case WavePhase.Announce:
                     effect = FortressWaves.IsFinalWave && !_plan.onFinalAnnounce.IsEmpty ? _plan.onFinalAnnounce : _plan.onAnnounce;
                     break;
@@ -489,7 +492,7 @@ namespace MS2026.Fortress
                 return;
             }
 
-            if (FortressWaves.Phase == WavePhase.Announce && _plan.countdownSeconds > 0f && FortressWaves.PhaseRemaining <= _plan.countdownSeconds)
+            if (FortressWaves.CountsDown && _plan.countdownSeconds > 0f && FortressWaves.PhaseRemaining <= _plan.countdownSeconds)
             {
                 var tick = Mathf.CeilToInt(FortressWaves.PhaseRemaining);
                 if (tick > 0 && tick != _lastCountdownTick)

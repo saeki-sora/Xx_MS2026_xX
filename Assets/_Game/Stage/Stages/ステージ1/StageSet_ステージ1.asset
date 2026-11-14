@@ -20,15 +20,15 @@ MonoBehaviour:
   lookProfile: {fileID: 11400000, guid: d5923a60eb563e5498332b52919dcb8b, type: 2}
   lighting:
     apply: 1
-    sunColor: {r: 1, g: 0.96, b: 0.9, a: 1}
+    sunColor: {r: 1, g: 0.9685534, b: 0.9213836, a: 1}
     sunIntensity: 0.13
     sunDirection: -46
     sunElevation: 45
     shadowStrength: 0.846
-    highlightFocus: 0.773
-    skyColor: {r: 0.62, g: 0.68, b: 0.78, a: 1}
-    equatorColor: {r: 0.5, g: 0.5, b: 0.52, a: 1}
-    groundColor: {r: 0.32, g: 0.3, b: 0.28, a: 1}
+    highlightFocus: 0.7
+    skyColor: {r: 1, g: 1, b: 1, a: 1}
+    equatorColor: {r: 1, g: 1, b: 1, a: 1}
+    groundColor: {r: 1, g: 1, b: 1, a: 1}
     fog: 0
     fogColor: {r: 0.75, g: 0.8, b: 0.85, a: 1}
     fogStart: 20

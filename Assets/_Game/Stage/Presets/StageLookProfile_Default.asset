@@ -119,7 +119,7 @@ MonoBehaviour:
   dissolveSeconds: 0.7
   dissolveEdgeColor: {r: 3, g: 1.2, b: 0.25, a: 1}
   edgeMist:
-    enabled: 1
+    enabled: 0
     start: 0.756
     softness: 0.642
     nearSideFade: 0.585

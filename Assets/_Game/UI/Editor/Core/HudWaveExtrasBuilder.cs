@@ -205,6 +205,17 @@ namespace MS2026.UI.EditorTools
             view.popArea = popArea;
             view.plusColor = Hot;
             // 歯みがきの間は、下の普段の HUD を隠す（コアのバーは回復が見えるように残す）。
+            view.hideWhileBrushing = FindHiddenWhileBrushing(screen);
+        }
+
+        /// <summary>歯みがきの間だけ隠す、普段の HUD の部品の名前。</summary>
+        private static readonly string[] HiddenWhileBrushing =
+        {
+            "PlayerPanel", "OtherPlayers", HudHeaderBuilder.MeterName, HudHeaderBuilder.HeaderName, HudPanelsBuilder.CoreName, CoatingName
+        };
+
+        private static GameObject[] FindHiddenWhileBrushing(Transform screen)
+        {
             var others = new System.Collections.Generic.List<GameObject>();
             foreach (var name in HiddenWhileBrushing)
             {
@@ -215,11 +226,18 @@ namespace MS2026.UI.EditorTools
                 }
             }
 
-            view.hideWhileBrushing = others.ToArray();
+            return others.ToArray();
         }
 
-        /// <summary>歯みがきの間だけ隠す、普段の HUD の部品の名前。</summary>
-        private static readonly string[] HiddenWhileBrushing = { "PlayerPanel", "OtherPlayers", "KillCounter", HudWaveBuilder.PlateName, HudPanelsBuilder.CoreName, CoatingName };
+        /// <summary>歯みがきタイムの表示（BrushTimeView）が隠す部品を、今の HUD の部品で選び直す（部品を作り直したときに呼ぶ）。</summary>
+        internal static void RefreshHiddenWhileBrushing(Transform screen)
+        {
+            var view = screen.GetComponentInChildren<BrushTimeView>(true);
+            if (view != null)
+            {
+                view.hideWhileBrushing = FindHiddenWhileBrushing(screen);
+            }
+        }
 
         private static void BuildBrushTitle(RectTransform root)
         {

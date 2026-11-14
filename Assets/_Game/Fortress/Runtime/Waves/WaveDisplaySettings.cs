@@ -5,8 +5,9 @@ namespace MS2026.Fortress
 {
     /// <summary>
     /// ウェーブの表示の順番・タイミングと、出すか出さないか（2026-10-24、ユーザー依頼「出る順番や秒数を調整したい」）。
-    /// 試合の始まりは「準備待ち → 握り方のヒント（YOU の矢印も）→ WAVE 1 の発表」の順。
-    /// 発表の中は「WAVE n・目標 → 赤い線 → NEW ENEMY → 最後に 3・2・1」で、それぞれ発表が始まってから何秒後に出すかを決める。
+    /// 試合の始まりは「準備待ち（物が落ちてくる）→「コアを守れ！」→ WAVE 1 の発表（3・2・1 なし）→ YOU の矢印・HUD → 3・2・1」の順（2026-11-11、ユーザー依頼）。
+    /// HUD は WAVE 1 の発表が終わるまで隠したまま。
+    /// 発表の中は「WAVE n・目標 → 赤い線 → NEW ENEMY →（WAVE 2 から）最後に 3・2・1」で、それぞれ発表が始まってから何秒後に出すかを決める。
     /// 数だけの入れ物なので、テストや「設定が無いとき」は <see cref="Default"/> を使う。
     /// </summary>
     [Serializable]
@@ -16,7 +17,14 @@ namespace MS2026.Fortress
         public static readonly WaveDisplayTiming Default = new WaveDisplayTiming();
 
         [Header("試合の始まり（初めての人向け）")]
-        [Tooltip("全員の準備ができた後、WAVE 1 の発表の前に「握り方のヒント」と「YOU」の矢印だけを出す秒数（0 なら出さずにすぐ発表）。敵は来ず、時間も減らない。準備を待っている間も出る。")]
+        [Tooltip("全員の準備ができた後（物が落ちてきた後）、WAVE 1 の発表の前に「コアを守れ！」を出す秒数（0 なら出さずにすぐ発表）。HUD は隠したまま。敵は来ず、時間も減らない。")]
+        [Min(0f)]
+        public float openingSeconds = 1.8f;
+
+        [Tooltip("「コアを守れ！」の文字。")]
+        public string openingText = "コアを守れ！";
+
+        [Tooltip("WAVE 1 の発表の後、「YOU」の矢印・HUD・握り方のヒントを出してから 3・2・1 を始めるまでの秒数（0 なら HUD と同時に 3・2・1）。敵は来ず、時間も減らない。")]
         [Min(0f)]
         public float hintSeconds = 4f;
 
@@ -104,8 +112,8 @@ namespace MS2026.Fortress
             }
         }
 
-        /// <summary>握り方のヒント・YOU の矢印を出す段階か（準備待ちと、ヒントの段階）。</summary>
-        public static bool IsHintPhase(WavePhase phase) => phase == WavePhase.WaitingForPlayers || phase == WavePhase.Hint;
+        /// <summary>握り方のヒント・YOU の矢印を出す段階か（WAVE 1 の発表の後のヒントの段階。2026-11-11 から準備待ちの間は出さない）。</summary>
+        public static bool IsHintPhase(WavePhase phase) => phase == WavePhase.Hint;
 
         /// <summary>発表の中で、delay 秒後に出す物を、今出すか。</summary>
         public static bool ShowInAnnounce(WavePhase phase, float phaseElapsed, float delay) => phase == WavePhase.Announce && phaseElapsed >= delay;

@@ -64,6 +64,10 @@ namespace MS2026.Fortress
                     _instance.FadeOut();
                 }
             }
+            else if (next == WavePhase.Hint && previous == WavePhase.Announce)
+            {
+                // WAVE 1 は発表の後に YOU の矢印 → 3・2・1 が来るので、戦いが始まるまで線を出したままにする。
+            }
             else
             {
                 if (_instance != null)

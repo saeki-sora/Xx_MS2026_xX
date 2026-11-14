@@ -10,14 +10,16 @@ namespace MS2026.UI.EditorTools
 {
     /// <summary>
     /// ゲーム中HUD（画面 Hud）に、チームの絵を使った3つの部品を入れる（2026-10-17、ユーザーの見本画像どおりの配置）。
-    /// ・上の中央「CoreBar」: 歯のアイコン ＋ 紺の枠のバー（ピンク→水色）＋ 中央に「100%」。コアの体力（core.hp01）。
+    /// ・上の中央「CoreBar」: 歯＋バーの枠（1枚の絵 teethBar_frame、2026-11-11 から）＋ ピンク→水色のバー ＋ 歯の中に「100%」。コアの体力（core.hp01）。
+    ///   （2026-10-17〜11-11 は、歯のアイコン・紺の枠・バーの中央の「100%」が別々の絵だった。歯だけ揺れていたが、今は歯が枠と1枚なので数字が弾む）
     /// ・左下「PlayerPanel」: 自分のキャラの絵・「1P」の札・しまのゲージ（自分のスキルのゲージ local.skillGauge。濃い赤のしま＝空、ピンクのしま＝溜まった分）。
     ///   （2026-10-31: 前は自分の熱 local.heat だったが、敵を倒して集めた光の粒のゲージに入れ替え。満タンでスキルが使える。ユーザー依頼）
     /// ・その上「OtherPlayers」: ほかの3人の丸いアイコン（other.1〜3。番号の小さい順）。灰色のアイコンの上に、つながっている人だけ番号（その人の色）とオーバーヒートの灯りを出す。
     ///   （2026-10-17: 最初は「アイコン＋熱のバー」の行だったが、バーが邪魔なのでアイコンだけの絵に差し替え。ユーザー依頼）
     /// UIの位置は全プレイヤー共通（ユーザー決定 2026-10-17。カメラの向きは P1〜P4 で違っても、HUD は同じ位置）。
     /// 前の「CoreStatus」（水晶のコアの札）・テンプレートの「Team」（左上の4人の熱）は消さずに隠す（ON にすれば戻る）。何度実行しても作り直すだけ。
-    /// 絵は Tools/UIArt/HudSource/ の元画像を Tools/UIArt/make_hud_panel_art.py で切り分けた Assets/_Game/UI/Art/Hud/Hud_*.png。
+    /// 絵は Tools/UIArt/HudSource/ の元画像を Tools/UIArt/make_hud_panel_art.py で切り分けた Assets/_Game/UI/Art/Hud/Hud_*.png
+    /// （コアのバーの Hud_CoreBar*.png だけは Tools/UIArt/make_ingame_header_art.py で作る）。
     /// </summary>
     public static class HudPanelsBuilder
     {
@@ -33,8 +35,10 @@ namespace MS2026.UI.EditorTools
         private const string DotPath = "Assets/_Game/UI/Art/Session/Session_Dot.png";
 
         // 見本（1920×1080）から測った置き場所。
-        private const float CoreTop = 26f;                                 // 絵（640×163）の上端
-        private static readonly Vector2 CoreSize = new Vector2(640f, 163f);
+        // 絵（576×118、見本と同じ大きさ）の上端。2026-11-11 からは上の中央にウェーブの帯（HudHeaderBuilder）があるので、その下（見本どおり）。前は 26。
+        internal const float CoreTop = 104f;
+        private static readonly Vector2 CoreSize = new Vector2(576f, 118f);
+        private static readonly Color ToothNumber = new Color(0.33f, 0.19f, 0.65f); // 歯の中の数字（見本の紫）
         private static readonly Vector2 PanelPos = new Vector2(39f, 25f);  // 左下からの位置
         private static readonly Vector2 PanelSize = new Vector2(1000f, 320f);
         private const float PanelScale = 0.615f;
@@ -48,7 +52,7 @@ namespace MS2026.UI.EditorTools
 
         private static readonly string[] ArtFiles =
         {
-            "Hud_CoreTooth.png", "Hud_CoreFrame.png", "Hud_CoreFill.png",
+            "Hud_CoreBarFrame.png", "Hud_CoreBarFill.png", "Hud_CoreBarTrail.png",
             "Hud_PlayerFrame.png", "Hud_PlayerGaugeBack.png", "Hud_PlayerGaugeFill.png", "Hud_OtherIcon.png"
         };
 
@@ -132,7 +136,7 @@ namespace MS2026.UI.EditorTools
             B.AddMotion(root.gameObject, UiMotionTrigger.OnShow, UiPreset.SlideFadeInTop, 0.45f);
             var core = H.Body(root, CoreSize, 1f); // 大きさは Body の Scale で変える（外側の出る動きとぶつからないように）
 
-            // 3割を切ったら、バーの後ろが赤くゆっくり脈打つ（強い点滅はしない）。出し入れは外枠、脈打つのは中の絵。
+            // 3割を切ったら、枠の後ろが赤くゆっくり脈打つ（強い点滅はしない）。出し入れは外枠、脈打つのは中の絵。
             var danger = B.Rect(core, "Danger");
             B.Stretch(danger);
             danger.gameObject.AddComponent<CanvasGroup>();
@@ -140,27 +144,24 @@ namespace MS2026.UI.EditorTools
             dangerVisible.key = FortressUiKeys.CoreHp01;
             dangerVisible.condition = UiVisibleCondition.WhenLess;
             dangerVisible.threshold = 0.3f;
-            var glow = H.Picture(danger, "Glow", "Hud_CoreFrame.png", Danger);
-            Px(glow.rectTransform, CoreSize, 152f, 38f, 498f, 78f);
+            var glow = H.Picture(danger, "Glow", "Hud_CoreBarFrame.png", Danger);
+            Px(glow.rectTransform, CoreSize, -10f, -8f, 596f, 134f);
             B.AddMotion(glow.gameObject, UiMotionTrigger.Loop, UiPreset.Breathe, 1.2f);
 
-            var tooth = H.Picture(core, "Tooth", "Hud_CoreTooth.png", Color.white);
-            Px(tooth.rectTransform, CoreSize, 0f, 0f, 160f, 163f);
-            B.AddMotion(tooth.gameObject, UiMotionTrigger.Loop, UiPreset.Float, 2.2f);
-            B.AddMotion(tooth.gameObject, UiMotionTrigger.OnValueDown, UiPreset.PunchRotation, 0.3f, 0f, FortressUiKeys.CoreHp01);
+            // 歯の場所の目印（絵は枠と1枚。回復の演出 HudCoreHealFx が、この後ろに光を出す）。
+            var tooth = B.Rect(core, "Tooth");
+            Px(tooth, CoreSize, 4f, 4f, 96f, 108f);
 
-            // バー（減った所の紺・白い残像・グラデーションの中身）。バーは揺らさず、右から減るだけ（ユーザー決定 2026-10-17。揺れるのは歯だけ）。
+            // 枠（歯＋バーの枠＋空の溝が1枚の絵）。バーは溝の上に重ねる。
+            var frame = H.Picture(core, "Frame", "Hud_CoreBarFrame.png", Color.white);
+            Px(frame.rectTransform, CoreSize, 0f, 0f, 576f, 118f);
+
+            // バー（白い残像・グラデーションの中身。両端の丸い絵を、左から右へ塗る）。バーは揺らさず、右から減るだけ（ユーザー決定 2026-10-17）。
             var gauge = B.Rect(core, "Gauge");
-            Px(gauge, CoreSize, 172f, 60f, 459f, 35f);
-            var back = B.Rect(gauge, "Back").gameObject.AddComponent<Image>();
-            B.Stretch(back.rectTransform);
-            back.color = new Color(Navy.r, Navy.g, Navy.b, 0.85f);
-            back.raycastTarget = false;
-            var trail = B.Rect(gauge, "Trail").gameObject.AddComponent<Image>();
-            B.Stretch(trail.rectTransform);
-            trail.color = new Color(1f, 1f, 1f, 0.8f);
-            trail.raycastTarget = false;
-            var fill = H.Picture(gauge, "Fill", "Hud_CoreFill.png", Color.white);
+            Px(gauge, CoreSize, 111f, 45f, 450f, 25f);
+            var trail = H.Picture(gauge, "Trail", "Hud_CoreBarTrail.png", new Color(1f, 1f, 1f, 0.8f));
+            H.FillHorizontal(trail);
+            var fill = H.Picture(gauge, "Fill", "Hud_CoreBarFill.png", Color.white);
             H.FillHorizontal(fill);
             var bindFill = fill.gameObject.AddComponent<UiBindFill>();
             bindFill.key = FortressUiKeys.CoreHp01;
@@ -168,18 +169,30 @@ namespace MS2026.UI.EditorTools
             bindFill.trail = trail;
             bindFill.smoothSeconds = 0.12f;
 
-            var frame = H.Picture(core, "Frame", "Hud_CoreFrame.png", Color.white);
-            Px(frame.rectTransform, CoreSize, 162f, 48f, 478f, 58f);
-
-            // 残りの割合（「100%」の % だけ小さく。見本どおり）。
-            var percent = B.Text(core, "Percent", "100%", 50, Color.white, TextAnchor.MiddleCenter, true);
+            // 残りの割合（歯の中。見本どおり紫の数字、% だけ小さく）。減ったら弾む（前は歯が揺れていた）。
+            var percent = B.Text(core, "Percent", "100%", 34, ToothNumber, TextAnchor.MiddleCenter, true);
             percent.horizontalOverflow = HorizontalWrapMode.Overflow;
             percent.supportRichText = true;
-            Px(percent.rectTransform, CoreSize, 172f, 44f, 459f, 66f);
-            var outline = percent.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(0.32f, 0.22f, 0.62f, 0.75f);
-            outline.effectDistance = new Vector2(2f, -2f);
-            H.Bind(percent, FortressUiKeys.CoreHp01, "{0:0'<size=34>'%'</size>'}", 0f);
+            Px(percent.rectTransform, CoreSize, 15f, 30f, 76f, 40f);
+            H.Bind(percent, FortressUiKeys.CoreHp01, "{0:0'<size=18>'%'</size>'}", 0f);
+            B.AddMotion(percent.gameObject, UiMotionTrigger.OnValueDown, UiPreset.PunchScale, 0.25f, 0f, FortressUiKeys.CoreHp01);
+        }
+
+        /// <summary>コアのバーだけ作り直す（ほかの部品は触らない）。<see cref="HudHeaderBuilder"/> から呼ぶ。</summary>
+        internal static void RebuildCore(Transform screen)
+        {
+            var old = screen.Find(CoreName);
+            var index = old != null ? old.GetSiblingIndex() : -1;
+            if (old != null)
+            {
+                Object.DestroyImmediate(old.gameObject);
+            }
+
+            BuildCore(screen);
+            if (index >= 0)
+            {
+                screen.Find(CoreName).SetSiblingIndex(index);
+            }
         }
 
         // ───────── 左下: 自分のパネル ─────────
@@ -275,14 +288,15 @@ namespace MS2026.UI.EditorTools
             rect.anchoredPosition = new Vector2(x + w * 0.5f - parentSize.x * 0.5f, parentSize.y * 0.5f - (y + h * 0.5f));
         }
 
-        private static void ConfigureArt()
+        internal static void ConfigureArt()
         {
             foreach (var file in ArtFiles)
             {
                 var path = $"{H.ArtFolder}/{file}";
+                AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
                 if (!(AssetImporter.GetAtPath(path) is TextureImporter importer))
                 {
-                    Debug.LogWarning($"[UIスタジオ] HUD の絵「{path}」がありません（Tools/UIArt/make_hud_panel_art.py で作れます）。");
+                    Debug.LogWarning($"[UIスタジオ] HUD の絵「{path}」がありません（Tools/UIArt/make_hud_panel_art.py・make_ingame_header_art.py で作れます）。");
                     continue;
                 }
 
