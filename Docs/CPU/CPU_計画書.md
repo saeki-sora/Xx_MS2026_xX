@@ -1,7 +1,15 @@
 # CPU プレイヤー 計画書（案）
 
 > 作成: 2026-11-15。改訂: 2026-11-15（実験中の要素を外せる作りに直した。2-0 章）。
-> ブランチ「佐伯＿ちょっと移動の実験」で作る。まだ何も実装していない。
+> ブランチ「佐伯＿ちょっと移動の実験」で作る。
+> 進み具合: **段0 できた**（2026-11-15。Unity の外でコンパイル・決まりのテスト 34 件が通る。Unity での動作はまだ確かめていない）。
+
+### 段0 で作った物（2026-11-15）
+- Fortress 側（main にもある物だけに頼る）: 操縦者の差し替え口 `PlayerPilots`（`Runtime/Laser/`）。砲台は `LaserTurret.ReadGrip`（操縦者 → `GripSourceOverride` → センサーの順）で読む。歯みがきタイム（`BrushingRunner`）はオフラインでも Host でも操縦者の席を数え、通信中の「試合にいる人」（`FortressWaveRunner.ComputePlayerMask`）に操縦者の席を足す。
+- 実験中のファイルの中だけの変更: `TurretDownSystem` の連打の読み取りを `LaserTurret.ReadGrip` に（CPU も抜け出せる）。
+- CPU 本体 `Assets/_Game/CPU/`（`MS2026.CPU.Runtime` / `.Editor` / `.Tests.EditMode`、名前空間 `MS2026.Cpu`）: `CpuDirector`（自動で作られ、0.5 秒ごとに席を決め直す）、`CpuSeatRules`（どの席を CPU にするか）、`CpuPlayer`（1人）、`CpuBrain`＋`CpuChoice`（点数で行動を選ぶ）、`CpuHands`（握力）、`CpuContext`、`CpuSettings`（Resources/CpuSettings。メニュー `Tools/CPU/CPU の設定を開く`）、`CpuLaunchOptions`（`-cpu 2,3,4` / `-cpu all` / `-cpu-all` / `-cpu none` / `-cpu-level` / `-cpu-seed`）、差し込み口 `CpuPlugins`・`ICpuBehavior`・`ICpuMovePlanner`・`ICpuMoveOutput`・`ICpuViewSource`（`CpuView`）・`ICpuTeammateStatus`。
+- 席の決まり: 通信していなければ自分以外の席が CPU（設定で切れる）。通信中は起動オプションのときだけ（キャラ選択の空いた席は段9）。ほかのPCから人が入っている席は人が優先。CPU は Host・オフラインだけで動く。砲台が作り直されたら（新しい試合）CPU も作り直す。
+- 行動はまだ何も登録していないので、CPU の席の砲台は握らない（何もしない CPU が座る）。オフラインでほかの席をキーボードで動かしたいときは、設定の「通信していないとき、自分以外の席を CPU にする」を OFF。
 
 ---
 
@@ -151,7 +159,7 @@ CPU 1人を、人間と同じ「目 → 頭 → 手」に分ける。**ゲーム
 
 | つなぐ所 | main にあるか | 今の作り | やること |
 |---|---|---|---|
-| 握力 | ある | `LaserTurret.GripSourceOverride`（Host では `TurretNetworkHub` が全員分を返す。オフラインは null で `GripInputBridge` を直接読む） | 「CPU の席だけ差し替える」入口を足す。CPU は **Host（オフラインなら自分）だけで動かす** |
+| 握力 | ある | `LaserTurret.GripSourceOverride`（Host では `TurretNetworkHub` が全員分を返す。オフラインは null で `GripInputBridge` を直接読む） | 「CPU の席だけ差し替える」入口 `PlayerPilots` を足した（段0）。CPU は **Host（オフラインなら自分）だけで動かす** |
 | 歯みがきタイム | ある | `BrushingRunner` は各 PC のセンサーを直接数えて Host に送る | Host が CPU の席の分も数えられる口を足す |
 | キャラ選択 | ある | 全員が決めたら開始（`GameSession.CharacterSelect`） | 空いている席を CPU として「決定済み」にし、残ったキャラを割り当てる |
 | 途中参加 | ある | 空いている一番小さい席に入る（`AutoMatchRules.FirstFreeSeat`） | CPU の席は「人が入れる席」として扱い、人が入ったら CPU を止めて引き渡す。熱・スキル・撃破数は Host が持っているのでそのまま残る |

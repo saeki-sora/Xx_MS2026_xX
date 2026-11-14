@@ -45,6 +45,10 @@ namespace MS2026.Fortress
         private readonly GripPulseCounter[] _counters =
             { new GripPulseCounter(), new GripPulseCounter(), new GripPulseCounter(), new GripPulseCounter() };
 
+        // ネット対戦の Host が数える、操縦者（CPU など。PlayerPilots）の席の分。プレイヤー番号ごと。
+        private readonly GripPulseCounter[] _pilotCounters =
+            { new GripPulseCounter(), new GripPulseCounter(), new GripPulseCounter(), new GripPulseCounter() };
+
         private readonly float[] _lastPulseTime = new float[Players];
         private readonly int[] _seenCounts = new int[Players];
         private BrushingEvent _settings;
@@ -134,12 +138,15 @@ namespace MS2026.Fortress
             for (var p = 0; p < Players; p++)
             {
                 _counters[p].Reset();
+                _pilotCounters[p].Reset();
                 _lastPulseTime[p] = float.NegativeInfinity;
                 _seenCounts[p] = 0;
                 if (_settings != null)
                 {
                     _counters[p].pressThreshold = _settings.pressThreshold;
                     _counters[p].releaseThreshold = Mathf.Min(_settings.releaseThreshold, _settings.pressThreshold - 0.01f);
+                    _pilotCounters[p].pressThreshold = _counters[p].pressThreshold;
+                    _pilotCounters[p].releaseThreshold = _counters[p].releaseThreshold;
                 }
             }
 
@@ -174,7 +181,7 @@ namespace MS2026.Fortress
             FortressWaves.SetLocalBreakInput(0);
         }
 
-        // 自分のセンサー（オフラインでは4つとも）の「にぎにぎ」を数える。
+        // 自分のセンサー（オフラインでは4つとも）の「にぎにぎ」を数える。操縦者（CPU など。PlayerPilots）の席は、その操縦者の握力で数える。
         private void CountLocal()
         {
             var provider = global::MS2026.GripInputBridge.GripInputBridge.Provider;
@@ -186,20 +193,28 @@ namespace MS2026.Fortress
             var now = Elapsed;
             if (FortressNet.IsNetworked)
             {
-                // ネット対戦: このPCのセンサー（0番）が自分のプレイヤー。
-                if (_counters[0].Feed(provider.GetGripValue(0), now))
+                // ネット対戦: このPCのセンサー（0番）が自分のプレイヤー（自分の席に操縦者がいれば、その握力）。
+                var local = Context.LocalPlayer;
+                var localGrip = PlayerPilots.TryReadGrip(local, out _, out var localPilotGrip) ? localPilotGrip : provider.GetGripValue(0);
+                if (_counters[0].Feed(localGrip, now))
                 {
                     FortressWaves.SetLocalBreakInput(_counters[0].Count);
-                    Play(_settings.onPulse, Context.LocalPlayer);
+                    Play(_settings.onPulse, local);
+                }
+
+                if (Context.HasAuthority)
+                {
+                    CountPilotsOnHost(local, now);
                 }
 
                 return;
             }
 
-            // オフライン: センサー p = P(p+1)（キーボードなら Q/W/O/P）。
+            // オフライン: センサー p = P(p+1)（キーボードなら Q/W/O/P）。操縦者がいる席はその握力。
             for (var p = 0; p < Players; p++)
             {
-                if (!_counters[p].Feed(provider.GetGripValue(p), now))
+                var grip = PlayerPilots.TryReadGrip(p, out _, out var pilotGrip) ? pilotGrip : provider.GetGripValue(p);
+                if (!_counters[p].Feed(grip, now))
                 {
                     continue;
                 }
@@ -214,6 +229,24 @@ namespace MS2026.Fortress
                 }
 
                 Play(_settings.onPulse, p);
+            }
+        }
+
+        // ネット対戦の Host: 自分以外で操縦者（CPU など）がいる席の「にぎにぎ」を数え、Client から届いた回数と同じ所に入れる。
+        // 音は鳴らさない（人の席の「にぎにぎ」の音も、その人の PC でしか鳴らないのに合わせる）。
+        private void CountPilotsOnHost(int local, float now)
+        {
+            for (var p = 0; p < Players; p++)
+            {
+                if (p == local || !PlayerPilots.TryReadGrip(p, out _, out var grip))
+                {
+                    continue;
+                }
+
+                if (_pilotCounters[p].Feed(grip, now))
+                {
+                    FortressWaves.SetBreakInput(p, _pilotCounters[p].Count);
+                }
             }
         }
 

@@ -76,6 +76,36 @@ namespace MS2026.Fortress
         public ITurretGripSource GripSourceOverride { get; set; }
 
         /// <summary>
+        /// この砲台の今の握力（握るのをやめさせる <see cref="InputLocked"/> などは掛けない、入力そのもの）。
+        /// 読む順番: 操縦者（<see cref="PlayerPilots"/>。CPU など）→ <see cref="GripSourceOverride"/> → GripInputBridge のセンサー。
+        /// 握力を読む所（倒れたときの連打など）は、ここを通すと CPU の席でも同じように動く。
+        /// </summary>
+        public void ReadGrip(out bool isGripping, out float grip01)
+        {
+            if (PlayerPilots.TryReadGrip(playerIndex, out isGripping, out grip01))
+            {
+                return;
+            }
+
+            if (GripSourceOverride != null)
+            {
+                GripSourceOverride.GetGrip(playerIndex, out isGripping, out grip01);
+                return;
+            }
+
+            var provider = global::MS2026.GripInputBridge.GripInputBridge.Provider;
+            if (provider == null)
+            {
+                isGripping = false;
+                grip01 = 0f;
+                return;
+            }
+
+            isGripping = provider.IsGripping(playerIndex);
+            grip01 = provider.GetGripValue(playerIndex);
+        }
+
+        /// <summary>
         /// true の間、全部の砲台が「握っていない」扱いになり、回転も止まる（ウェーブの合間＝歯みがきタイムなど。2026-10-24）。
         /// 撃てないので熱は冷える。全員のPCで同じ値にする（Host の砲台の状態が Client に届くので、Client で外れていても見た目は合う）。
         /// </summary>
@@ -227,18 +257,7 @@ namespace MS2026.Fortress
 
         private void UpdateGripState(float dt)
         {
-            bool isGripping;
-            float grip;
-            if (GripSourceOverride != null)
-            {
-                GripSourceOverride.GetGrip(playerIndex, out isGripping, out grip);
-            }
-            else
-            {
-                var provider = global::MS2026.GripInputBridge.GripInputBridge.Provider;
-                isGripping = provider.IsGripping(playerIndex);
-                grip = provider.GetGripValue(playerIndex);
-            }
+            ReadGrip(out var isGripping, out var grip);
 
             if (InputLocked || ForceIdle)
             {

@@ -322,7 +322,8 @@ namespace MS2026.Fortress
                 }
             }
 
-            return mask;
+            // 操縦者（CPU など）がいる席も試合にいる人として数える（歯みがきタイムの人数など）。入れるのは Host だけ。
+            return mask | PlayerPilots.Mask;
         }
 
         private static int LocalPlayer()
