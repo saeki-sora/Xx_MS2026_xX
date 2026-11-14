@@ -212,16 +212,11 @@ namespace MS2026.Fortress
             }
         }
 
-        // その人の握力（Host では TurretNetworkHub が他人の分を Client から届いた値で返す。オフラインはセンサー p）。
+        // その人の握力（CPU の席は CPU、Host では TurretNetworkHub が他人の分を Client から届いた値で返す。オフラインはセンサー p）。
         private static bool ReadGripping(LaserTurret turret)
         {
-            if (turret.GripSourceOverride != null)
-            {
-                turret.GripSourceOverride.GetGrip(turret.playerIndex, out var isGripping, out _);
-                return isGripping;
-            }
-
-            return global::MS2026.GripInputBridge.GripInputBridge.Provider.IsGripping(turret.playerIndex);
+            turret.ReadGrip(out var isGripping, out _);
+            return isGripping;
         }
 
         // 倒れている砲台 downed の上を、いま通っている味方のビームの数。ビームは歯や壁で止まった所まで（その先の仲間は助けられない）。
