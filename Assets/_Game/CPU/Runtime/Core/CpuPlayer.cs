@@ -5,16 +5,18 @@ namespace MS2026.Cpu
 {
     /// <summary>
     /// CPU 1人（目 → 頭 → 手）。作るのは <see cref="CpuDirector"/>。結果を決める PC（Host・オフライン）だけで動く。
-    /// 段0: 頭と手と行き先の枠だけ（行動が何も登録されていなければ、何もしない CPU が席に座る）。
+    /// 毎フレーム: 目が新しい写しを見る → 頭が行動を選んで進める → 手が握力を動かす → 行き先（差し込まれていれば）。
     /// </summary>
     public sealed class CpuPlayer
     {
         private readonly ICpuMovePlanner _movePlanner;
 
-        public CpuPlayer(int player, CpuLevel level, int seed, float thinkInterval)
+        public CpuPlayer(int player, CpuLevel level, int seed, float thinkInterval, in CpuSkillValues skill)
         {
-            Hands = new CpuHands(player);
-            Context = new CpuContext(player, level, seed, Hands);
+            Hands = new CpuHands(player, unchecked(seed * 31 + 7));
+            Eyes = new CpuEyes();
+            Context = new CpuContext(player, level, seed, Hands, Eyes) { Skill = skill };
+            Hands.Apply(skill);
             Brain = new CpuBrain(CpuPlugins.CreateBehaviors()) { ThinkInterval = thinkInterval };
             _movePlanner = CpuPlugins.CreateMovePlanner();
         }
@@ -23,6 +25,7 @@ namespace MS2026.Cpu
         public CpuLevel Level => Context.Level;
         public CpuContext Context { get; }
         public CpuHands Hands { get; }
+        public CpuEyes Eyes { get; }
         public CpuBrain Brain { get; }
 
         /// <summary>行き先を決める係があるか（実験中の移動が差し込まれているか）。</summary>
@@ -31,11 +34,19 @@ namespace MS2026.Cpu
         /// <summary>最後に決めた行きたい向き（頭の中の表示用）。</summary>
         public Vector2 MoveIntent { get; private set; }
 
-        internal void Tick(LaserTurret turret, float deltaTime)
+        /// <summary>上手さを入れ替える（段6 から、慣れで上がるたびに呼ばれる）。</summary>
+        public void SetSkill(in CpuSkillValues skill)
+        {
+            Context.Skill = skill;
+            Hands.Apply(skill);
+        }
+
+        internal void Tick(LaserTurret turret, CpuSwarmSampler sampler, float deltaTime)
         {
             Context.Turret = turret;
             Context.Time += deltaTime;
 
+            Eyes.Tick(Context, sampler);
             Brain.Tick(Context, deltaTime);
             Hands.Tick(deltaTime);
             TickMove(deltaTime);

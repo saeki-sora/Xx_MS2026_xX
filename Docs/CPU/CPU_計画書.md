@@ -2,7 +2,7 @@
 
 > 作成: 2026-11-15。改訂: 2026-11-15（実験中の要素を外せる作りに直した。2-0 章）。
 > ブランチ「佐伯＿ちょっと移動の実験」で作る。
-> 進み具合: **段0 できた**（2026-11-15。Unity の外でコンパイル・決まりのテスト 34 件が通る。Unity での動作はまだ確かめていない）。
+> 進み具合: **段1 まで できた**（2026-11-15。Unity の外でコンパイル・決まりのテスト 51 件が通る。Unity での動作はまだ確かめていない）。
 
 ### 段0 で作った物（2026-11-15）
 - Fortress 側（main にもある物だけに頼る）: 操縦者の差し替え口 `PlayerPilots`（`Runtime/Laser/`）。砲台は `LaserTurret.ReadGrip`（操縦者 → `GripSourceOverride` → センサーの順）で読む。歯みがきタイム（`BrushingRunner`）はオフラインでも Host でも操縦者の席を数え、通信中の「試合にいる人」（`FortressWaveRunner.ComputePlayerMask`）に操縦者の席を足す。
@@ -10,6 +10,14 @@
 - CPU 本体 `Assets/_Game/CPU/`（`MS2026.CPU.Runtime` / `.Editor` / `.Tests.EditMode`、名前空間 `MS2026.Cpu`）: `CpuDirector`（自動で作られ、0.5 秒ごとに席を決め直す）、`CpuSeatRules`（どの席を CPU にするか）、`CpuPlayer`（1人）、`CpuBrain`＋`CpuChoice`（点数で行動を選ぶ）、`CpuHands`（握力）、`CpuContext`、`CpuSettings`（Resources/CpuSettings。メニュー `Tools/CPU/CPU の設定を開く`）、`CpuLaunchOptions`（`-cpu 2,3,4` / `-cpu all` / `-cpu-all` / `-cpu none` / `-cpu-level` / `-cpu-seed`）、差し込み口 `CpuPlugins`・`ICpuBehavior`・`ICpuMovePlanner`・`ICpuMoveOutput`・`ICpuViewSource`（`CpuView`）・`ICpuTeammateStatus`。
 - 席の決まり: 通信していなければ自分以外の席が CPU（設定で切れる）。通信中は起動オプションのときだけ（キャラ選択の空いた席は段9）。ほかのPCから人が入っている席は人が優先。CPU は Host・オフラインだけで動く。砲台が作り直されたら（新しい試合）CPU も作り直す。
 - 行動はまだ何も登録していないので、CPU の席の砲台は握らない（何もしない CPU が座る）。オフラインでほかの席をキーボードで動かしたいときは、設定の「通信していないとき、自分以外の席を CPU にする」を OFF。
+
+### 段1 で作った物（2026-11-15）
+- 目 `Senses/`: `CpuSwarmSampler`（CPU 全員で1つ。群衆の配列を読める瞬間 `SwarmSystem.StorageReadable` に、`senseInterval`（既定 0.1 秒）ごとに位置だけ写す）、`CpuEyes`（CPU ごと。砲台のまわりを 60 の向き（6 度ずつ）に分けて敵を数える。数えるのは画面に映る範囲（`ICpuViewSource`、無ければ `CpuDefaultView` = 席のカメラの決まった視点）の中・射程の中・ビームと同じ当たり判定で壁より手前だけ。コアに近い敵は多めに数える。見積もりは少し外れ、反応の秒数だけ遅れて `Perceived` に届く）、`CpuSectorMath`（向きの計算）。
+- 手 `CpuHands`: 握る強さは少しずつしか変わらない・握っている間は少しぶれる・握る ⇄ 離すは最短の間隔より速く切り替えられない。
+- 上手さ `CpuSkillValues`（反応・見積もりの外れ・先読み・握り始め/続ける敵の数・強く握る敵の数・弱い握り・冷まし始め/危ない熱・手の速さ/ぶれ/切り替え間隔）。今は設定の1組（ふつうの仮の値）をどの強さでも使う。段6 でここを「強さ × 慣れ」から作る。
+- 行動 `Behaviors/`: 「撃つ」`CpuShootBehavior`（回ってくる砲身が、先読みの角度の中に敵の多い向きを捉えたら握り始め、今と次の向きに敵が残っている間は握り続ける。敵が多いほど強く、熱が上がると弱く）、「冷ます」`CpuCoolDownBehavior`（熱が冷まし始めを超えると点が上がり、敵が少ない向きでは撃つより高くなる。危ない熱を超えたら冷めきるまで離す）。判断は `CpuShootMath`。登録は `CpuCoreBehaviors`（差し込みと同じやり方）。
+- 倒れている間（実験中の要素）は撃たない判断を、差し込み口 `ICpuTeammateStatus` で知る形にした（本体は `ForceIdle` などを直接見ない）。
+- 確かめ: メニュー `Tools/CPU/今の CPU の席を Console に出す`（Play 中。行動ごとの点・握力・見えている敵の数）。
 
 ---
 

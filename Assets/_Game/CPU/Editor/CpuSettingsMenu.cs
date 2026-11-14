@@ -50,7 +50,15 @@ namespace MS2026.Cpu.EditorTools
                 }
 
                 var current = cpu.Brain.Current;
-                Debug.Log($"[CPU]   P{p + 1}: 行動 {(current != null ? current.Id : "なし")}・握力 {cpu.Hands.Grip01:0.00}" +
+                var scores = string.Empty;
+                for (var i = 0; i < cpu.Brain.Behaviors.Count; i++)
+                {
+                    scores += $" {cpu.Brain.Behaviors[i].Id}={cpu.Brain.Scores[i]:0.00}";
+                }
+
+                var sight = cpu.Eyes.Perceived;
+                Debug.Log($"[CPU]   P{p + 1}: 行動 {(current != null ? current.Id : "なし")}（点{scores}）・握力 {cpu.Hands.Grip01:0.00}" +
+                          $"・見えている敵 {sight.Total:0}（{(sight.HasView ? "画面の範囲" : "射程の中すべて")}）" +
                           (cpu.CanMove ? $"・行きたい向き {cpu.MoveIntent}" : string.Empty));
             }
         }

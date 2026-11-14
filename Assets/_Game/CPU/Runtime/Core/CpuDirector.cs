@@ -24,6 +24,7 @@ namespace MS2026.Cpu
         private readonly LaserTurret[] _turrets = new LaserTurret[PlayerCount];
         private readonly LaserTurret[] _playerTurrets = new LaserTurret[PlayerCount]; // CPU を作ったときの砲台
         private readonly LaserTurret[] _lastTurrets = new LaserTurret[PlayerCount];
+        private readonly CpuSwarmSampler _sampler = new CpuSwarmSampler();
 
         private CpuSettings _settings;
         private float _refreshTimer;
@@ -47,6 +48,9 @@ namespace MS2026.Cpu
 
         /// <summary>今の強さ（起動オプション → 設定）。</summary>
         public CpuLevel Level => CpuLaunchOptions.Current.Level ?? (_settings != null ? _settings.level : CpuLevel.Normal);
+
+        /// <summary>CPU 全員で使う、群衆の敵の位置の写し。</summary>
+        public CpuSwarmSampler Sampler => _sampler;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetOnLoad()
@@ -80,6 +84,7 @@ namespace MS2026.Cpu
         private void OnDisable()
         {
             StopAll();
+            _sampler.Dispose();
             if (Current == this)
             {
                 Current = null;
@@ -95,6 +100,17 @@ namespace MS2026.Cpu
                 Refresh();
             }
 
+            // 群衆の写しは CPU がいる間だけ取る（写すのは次の、群衆の配列を読める瞬間）。
+            if (CpuMask != 0)
+            {
+                _sampler.Interval = _settings != null ? _settings.senseInterval : 0.1f;
+                _sampler.Track();
+            }
+            else
+            {
+                _sampler.Dispose();
+            }
+
             var dt = Time.deltaTime;
             for (var p = 0; p < PlayerCount; p++)
             {
@@ -106,7 +122,7 @@ namespace MS2026.Cpu
 
                 try
                 {
-                    cpu.Tick(_turrets[p], dt);
+                    cpu.Tick(_turrets[p], _sampler, dt);
                 }
                 catch (Exception e)
                 {
@@ -172,8 +188,9 @@ namespace MS2026.Cpu
         private void StartPlayer(int player)
         {
             var seed = CpuLaunchOptions.Current.Seed ?? (_settings != null ? _settings.randomSeed : 0);
+            var skill = _settings != null ? _settings.skill : CpuSkillValues.Default;
             var cpu = new CpuPlayer(player, Level, CpuSeatRules.SeedFor(seed, player, _matchCount, _randomBase),
-                _settings != null ? _settings.thinkInterval : 0.15f);
+                _settings != null ? _settings.thinkInterval : 0.15f, skill);
             _players[player] = cpu;
             _playerTurrets[player] = _turrets[player];
             PlayerPilots.Set(player, cpu.Hands);

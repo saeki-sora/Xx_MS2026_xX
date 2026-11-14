@@ -4,17 +4,19 @@ namespace MS2026.Cpu
 {
     /// <summary>
     /// 行動（<see cref="ICpuBehavior"/>）・行き先（<see cref="ICpuMovePlanner"/>）に渡す、CPU 1人ぶんの持ち物。
-    /// 目（見えている物）・上手さ・学びは、段1 以降でここに足していく。
+    /// 学び・性格は、段7 以降でここに足していく。
     /// </summary>
     public sealed class CpuContext
     {
-        public CpuContext(int player, CpuLevel level, int seed, CpuHands hands)
+        public CpuContext(int player, CpuLevel level, int seed, CpuHands hands, CpuEyes eyes = null)
         {
             Player = player;
             Level = level;
             Seed = seed;
             Random = new System.Random(seed);
             Hands = hands;
+            Eyes = eyes ?? new CpuEyes();
+            Skill = CpuSkillValues.Default;
         }
 
         /// <summary>プレイヤーの番号（0〜3）。</summary>
@@ -31,6 +33,12 @@ namespace MS2026.Cpu
 
         /// <summary>手（握力）。</summary>
         public CpuHands Hands { get; }
+
+        /// <summary>目（行動は <see cref="CpuEyes.Perceived"/> の、反応の遅れのある様子を使う）。</summary>
+        public CpuEyes Eyes { get; }
+
+        /// <summary>今の上手さ（実際の数値）。</summary>
+        public CpuSkillValues Skill { get; set; }
 
         /// <summary>自分の砲台（見つかっていなければ null）。</summary>
         public LaserTurret Turret { get; internal set; }

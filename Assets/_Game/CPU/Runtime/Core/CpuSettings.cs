@@ -26,10 +26,18 @@ namespace MS2026.Cpu
         [Tooltip("0 なら毎回ばらばらの動き。0 以外なら毎回同じ動き（自動プレイで同じ試合を再現する用。起動オプション -cpu-seed）。")]
         public int randomSeed;
 
-        [Header("頭")]
+        [Header("頭と目")]
         [Tooltip("CPU が「次に何をするか」を考え直す間隔（秒）。短いほど素早く切り替わるが重くなる。")]
         [Range(0.05f, 0.5f)]
         public float thinkInterval = 0.15f;
+
+        [Tooltip("CPU の目が敵の様子を見直す間隔（秒、実時間）。CPU 全員で1回だけ群衆の位置を写す。短いほど正確だが重くなる。")]
+        [Range(0.05f, 0.5f)]
+        public float senseInterval = 0.1f;
+
+        [Header("上手さ（仮。段6 で強さごとに分ける）")]
+        [Tooltip("今はどの強さでもこの値を使う（ふつうの仮の値）。")]
+        public CpuSkillValues skill = CpuSkillValues.Default;
 
         [Header("開発用")]
         [Tooltip("CPU の席が変わったとき、Console（ビルドでは Player.log）に出す。")]
