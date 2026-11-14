@@ -66,6 +66,22 @@ namespace MS2026.Fortress.EditorTools
             set => SessionState.SetBool(Prefix + "ShowPreviewGuides", value);
         }
 
+        /// <summary>上に固定したプレビューに全員(P1〜P4＋全体)を並べるか。false なら編集中の視点だけを大きく映す。</summary>
+        public static bool PreviewShowAll
+        {
+            get => SessionState.GetBool(Prefix + "PreviewShowAll", false);
+            set => SessionState.SetBool(Prefix + "PreviewShowAll", value);
+        }
+
+        public const float DefaultPreviewPaneHeight = 300f;
+
+        /// <summary>上に固定したプレビューの高さ(境目のドラッグで変える)。エディタを閉じても覚えておく。</summary>
+        public static float PreviewPaneHeight
+        {
+            get => EditorPrefs.GetFloat(Prefix + "PreviewPaneHeight", DefaultPreviewPaneHeight);
+            set => EditorPrefs.SetFloat(Prefix + "PreviewPaneHeight", value);
+        }
+
         public static bool SnapRollTo90
         {
             get => SessionState.GetBool(Prefix + "SnapRollTo90", true);

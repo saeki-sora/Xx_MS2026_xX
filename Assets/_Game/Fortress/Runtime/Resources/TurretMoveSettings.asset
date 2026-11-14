@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 236c43684fb54f319313e09bea37ec52, type: 3}
+  m_Name: TurretMoveSettings
+  m_EditorClassIdentifier: 
+  movementEnabled: 1
+  moveSpeed: 8.5
+  acceleration: 45
+  deceleration: 30
+  screenRelative: 1
+  bodyRadius: 0.55
+  obstacleLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  coreBlockRadius: 1.6
+  area: 0
+  rangeRadius: 6
+  rangeSoftEdge: 1.2
+  showRangeRing: 1
+  ringShowDistance: 2
+  pushedByEnemies: 1
+  enemyPushStrength: 9
+  maxEnemyPushSpeed: 4
+  enemyPushResponse: 12
+  cameraFollow: 0.85
+  cameraSmoothTime: 0.22
+  cameraLookAheadSeconds: 0.3
+  cameraMaxLookAhead: 1.4
+  cameraLookAheadSmoothTime: 0.45
+  cameraZoomOutWhileMoving: 0.05
+  cameraZoomSmoothTime: 0.6
+  sendRate: 30
+  remoteSharpness: 14
+  remoteSnapDistance: 3

@@ -547,7 +547,8 @@ namespace MS2026.GripInputBridge.EditorTools
 
         private static string GetKeyHint(int playerIndex)
         {
-            var keys = new[] { "Q", "W", "O", "P" };
+            // 【実験ブランチ】P2 は WASD 移動とぶつからないよう I（SimulatedGripTransport.DefaultKeyBindings と合わせる）。
+            var keys = new[] { "Q", "I", "O", "P" };
             return playerIndex < keys.Length ? $"キーボード操作キー: {keys[playerIndex]}" : string.Empty;
         }
 

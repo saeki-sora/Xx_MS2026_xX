@@ -83,6 +83,8 @@ namespace MS2026.Stages
         private static void Register()
         {
             FortressWaves.AddReadyBlocker(() => IsHolding);
+            // 【実験ブランチ「佐伯＿ちょっと移動の実験」】落としている間（試しの再生も）は WASD 移動とカメラの追従を止め、カメラを元の視点のままにする。
+            TurretMoveHooks.AddHold(() => _active != null && _active.IsRunning);
             StageLayout.Applied -= OnLayoutApplied;
             StageLayout.Applied += OnLayoutApplied;
         }

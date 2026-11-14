@@ -26,7 +26,10 @@ namespace MS2026.Fortress.EditorTools
 
         public Texture Get(int viewer) => _textures.TryGetValue(viewer, out var texture) ? texture : null;
 
-        public void RenderAll(CameraTabContext context, int width)
+        public void RenderAll(CameraTabContext context, int width) => Render(context, width, ViewerIndex.All);
+
+        /// <summary>指定した視点だけを描く(「編集中の視点だけ」表示のときは1枚だけ描けば済む)。</summary>
+        public void Render(CameraTabContext context, int width, IReadOnlyList<int> viewers)
         {
             var preset = context.Preset;
             if (preset == null)
@@ -43,7 +46,7 @@ namespace MS2026.Fortress.EditorTools
             BeginEditModeBillboards(preset);
             try
             {
-                foreach (var viewer in ViewerIndex.All)
+                foreach (var viewer in viewers)
                 {
                     var texture = EnsureTexture(viewer, width, height);
                     CopySettings(source);

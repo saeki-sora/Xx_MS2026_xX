@@ -14,8 +14,11 @@ namespace MS2026.GripInputBridge.Transports
     {
         public const int PlayerCount = 4;
 
-        /// <summary>設計書 8.2 のデフォルトキー割当。</summary>
-        public static readonly Key[] DefaultKeyBindings = { Key.Q, Key.W, Key.O, Key.P };
+        /// <summary>
+        /// 設計書 8.2 のデフォルトキー割当。
+        /// 【実験・ブランチ「佐伯＿ちょっと移動の実験」だけ】WASD 移動の W とぶつかるので、P2 を W → I に変えている（main は Q/W/O/P）。
+        /// </summary>
+        public static readonly Key[] DefaultKeyBindings = { Key.Q, Key.I, Key.O, Key.P };
 
         private const float DefaultRiseSpeedPerSecond = 3.0f;
         private const float DefaultDecaySpeedPerSecond = 1.5f;

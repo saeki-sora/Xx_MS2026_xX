@@ -18,7 +18,8 @@ namespace MS2026.Skills.Blue.EditorTools
     {
         private const int PlayerCount = PlayerSkillInstaller.PlayerCount;
 
-        private static readonly string[] PlayerKeys = { "Q", "W", "O", "P" };
+        // 【実験ブランチ】P2 は WASD 移動とぶつからないよう I。
+        private static readonly string[] PlayerKeys = { "Q", "I", "O", "P" };
 
         private readonly List<CharacterSkill> _skills = new List<CharacterSkill>();
         private readonly List<CharacterDefinition> _characters = new List<CharacterDefinition>();

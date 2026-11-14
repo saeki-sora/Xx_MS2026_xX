@@ -6,6 +6,14 @@ using UnityEngine.UIElements;
 namespace MS2026.Fortress.EditorTools
 {
     /// <summary>
+    /// ウィンドウの高さいっぱいに置くタブ。外側のスクロールには入れず、タブ自身がどこをスクロールさせるか決める
+    /// (例: カメラタブはプレビューを上に固定し、設定だけをスクロールさせる)。
+    /// </summary>
+    public interface IFillsDesignerWindow
+    {
+    }
+
+    /// <summary>
     /// 「握れ、灼ける前に」の土台システム（砲台配置／握力とレーザーの連動／敵の湧き）を
     /// インスペクターの隣にタブとしてドッキングできる専用ツール。設計はGripInputBridgeWindowに揃えてある。
     /// タブ構成: はじめに / 砲台配置 / 敵ウェーブ / 経路・障害物 / 破壊可能物 / スマッシュボール / 群衆 / カメラ / テスト。
@@ -30,6 +38,7 @@ namespace MS2026.Fortress.EditorTools
 
         private Tab _currentTab = Tab.GettingStarted;
         private VisualElement _contentRoot;
+        private VisualElement _fillRoot;
         private readonly Dictionary<Tab, Button> _tabButtons = new Dictionary<Tab, Button>();
 
         private GettingStartedTabView _gettingStartedTab;
@@ -82,6 +91,10 @@ namespace MS2026.Fortress.EditorTools
             _contentRoot.AddToClassList("fd-content-root");
             rootVisualElement.Add(_contentRoot);
 
+            _fillRoot = new VisualElement();
+            _fillRoot.AddToClassList("fd-fill-root");
+            rootVisualElement.Add(_fillRoot);
+
             SwitchTab(Tab.GettingStarted);
 
             rootVisualElement.schedule.Execute(OnTick).Every(150);
@@ -123,6 +136,7 @@ namespace MS2026.Fortress.EditorTools
             }
 
             _contentRoot.Clear();
+            _fillRoot.Clear();
 
             VisualElement content = tab switch
             {
@@ -138,7 +152,10 @@ namespace MS2026.Fortress.EditorTools
                 _ => _gettingStartedTab
             };
 
-            _contentRoot.Add(content);
+            var fills = content is IFillsDesignerWindow;
+            _contentRoot.style.display = fills ? DisplayStyle.None : DisplayStyle.Flex;
+            _fillRoot.style.display = fills ? DisplayStyle.Flex : DisplayStyle.None;
+            (fills ? _fillRoot : _contentRoot).Add(content);
             RefreshCurrentTab();
         }
 

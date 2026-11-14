@@ -27,6 +27,10 @@
     flex-grow: 1;
 }
 
+.fd-fill-root {
+    flex-grow: 1;
+}
+
 .fd-tab-content {
     padding: 4px 2px;
 }
@@ -58,4 +62,51 @@
 .fd-step-button {
     margin-top: 6px;
     max-width: 220px;
+}
+
+/* カメラタブ: 上にプレビューを固定し、下の設定だけをスクロールさせる */
+.fd-camera-tab {
+    flex-grow: 1;
+    padding-bottom: 0;
+}
+
+.fd-camera-pinned {
+    flex-shrink: 0;
+}
+
+.fd-camera-preview-cells {
+    flex-grow: 1;
+    min-height: 40px;
+    margin-top: 4px;
+}
+
+.fd-camera-settings {
+    flex-grow: 1;
+}
+
+/* 上下の境目(ドラッグで高さを変える) */
+.fd-pane-splitter {
+    height: 8px;
+    flex-shrink: 0;
+    margin: 1px 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.04);
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-top-color: rgba(0, 0, 0, 0.35);
+    border-bottom-color: rgba(0, 0, 0, 0.35);
+    cursor: resize-vertical;
+}
+
+.fd-pane-splitter:hover,
+.fd-pane-splitter--dragging {
+    background-color: rgba(90, 140, 220, 0.35);
+}
+
+.fd-pane-splitter__grip {
+    width: 40px;
+    height: 2px;
+    border-radius: 1px;
+    background-color: rgba(255, 255, 255, 0.35);
 }

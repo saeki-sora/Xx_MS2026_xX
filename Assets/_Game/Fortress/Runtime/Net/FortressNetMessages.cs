@@ -10,7 +10,10 @@ namespace MS2026.Fortress.Net
 
         // 1〜3 は以前の群衆の補正方式で使っていた(2026-10-05 削除)。混ざらないよう再利用しない。
         SwarmSnapshot = 4,
-        SwarmKeyframe = 5
+        SwarmKeyframe = 5,
+
+        /// <summary>【実験・ブランチ「佐伯＿ちょっと移動の実験」だけ】WASD で動く砲台の位置（Client→Host、Host→全員）。</summary>
+        TurretMove = 6
     }
 
     /// <summary>

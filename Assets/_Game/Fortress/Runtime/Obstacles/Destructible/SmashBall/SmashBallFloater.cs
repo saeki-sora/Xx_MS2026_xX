@@ -40,6 +40,15 @@ namespace MS2026.Fortress
         private Rect _returnArea;
         private NavigationField _navigationField;
 
+        // 【実験・ブランチ「佐伯＿ちょっと移動の実験」だけ】ステージの枠（stage_frame）の外側の帯の中だけを漂う。
+        // 帯 = 枠の外側のふち + 隙間 〜 枠の外側のふち + 帯の幅（TurretMoveSettings）。枠に張り付いたプレイヤーの画面から出ない幅にしてある。
+        private const float FrameRefreshInterval = 1f;
+        private readonly TurretMoveRegion _frameRegion = new TurretMoveRegion();
+        private TurretMoveFrame _frame;
+        private float _frameRefreshTimer;
+        private bool _wasInFrameMode;
+        private float _orbitSign = 1f;
+
         private SmashBallFloatSettings Settings => _module.settings.floating;
 
         /// <summary>画面内へ戻る途中か(デバッグ表示用)。</summary>
@@ -71,6 +80,10 @@ namespace MS2026.Fortress
             _hasReplicaTarget = false;
             _snapToNextReplicaTarget = true;
             _bobPhase = Random.value * Mathf.PI * 2f;
+            _orbitSign = Random.value < 0.5f ? -1f : 1f;
+            _frame = null;
+            _frameRefreshTimer = 0f;
+            _wasInFrameMode = false;
             PickNewDirection();
         }
 
@@ -101,8 +114,139 @@ namespace MS2026.Fortress
                 return;
             }
 
+            RefreshFrame();
             Steer();
             Move();
+        }
+
+        // ───────── 【実験】枠の外側の帯 ─────────
+
+        private void RefreshFrame()
+        {
+            var settings = TurretMoveSettings.Load();
+            if (!settings.smashBallOutsideFrame)
+            {
+                _frame = null;
+                _wasInFrameMode = false;
+                return;
+            }
+
+            _frameRefreshTimer -= Time.unscaledDeltaTime;
+            // 落下演出の間は枠も画面の外へ出ているので取り直さない。
+            if (_frameRefreshTimer <= 0f && !TurretMoveHooks.IsHeld)
+            {
+                _frameRefreshTimer = FrameRefreshInterval;
+                _frame = null;
+                if (TurretMoveHooks.TryGetFloorArea(settings.areaFrameName, _frameRegion))
+                {
+                    // 枠が何個かあれば、いちばん近い枠のまわりを漂う。
+                    var bestSq = float.PositiveInfinity;
+                    foreach (var shape in _frameRegion.Shapes)
+                    {
+                        var sq = (shape.Center - _position).sqrMagnitude;
+                        if (sq < bestSq)
+                        {
+                            bestSq = sq;
+                            _frame = shape;
+                        }
+                    }
+                }
+            }
+
+            var inFrameMode = _frame != null;
+            if (inFrameMode && !_wasInFrameMode && !IsInBand(_position))
+            {
+                // 枠のまわりを漂い始めた（試合の始め）。置かれた場所が帯の外なら、帯の中へ置き直す。
+                _position = PickBandPosition();
+                transform.position = new Vector3(_position.x, _position.y, transform.position.z);
+                PickNewDirection();
+            }
+
+            _wasInFrameMode = inFrameMode;
+        }
+
+        private void BandLimits(Vector2 direction, out float inner, out float outer)
+        {
+            var settings = TurretMoveSettings.Load();
+            var edge = _frame.OuterAt(direction);
+            inner = edge + settings.smashBallGap + AvoidanceRadius();
+            outer = Mathf.Max(inner, edge + settings.smashBallBandWidth);
+        }
+
+        private bool IsInBand(Vector2 p)
+        {
+            var d = p - _frame.Center;
+            var r = d.magnitude;
+            if (r < 1e-4f)
+            {
+                return false;
+            }
+
+            BandLimits(d / r, out var inner, out var outer);
+            return r >= inner && r <= outer;
+        }
+
+        // 帯からはみ出したら帯のふちへ戻す。reflect なら、外へ（内へ）向かう分の向きを跳ね返す。
+        private Vector2 KeepInBand(Vector2 p, bool reflect)
+        {
+            var d = p - _frame.Center;
+            var r = d.magnitude;
+            var dir = r > 1e-4f ? d / r : Vector2.right;
+            BandLimits(dir, out var inner, out var outer);
+            if (r < inner)
+            {
+                p = _frame.Center + dir * inner;
+                if (reflect)
+                {
+                    ReflectRadial(dir, outward: true);
+                }
+            }
+            else if (r > outer)
+            {
+                p = _frame.Center + dir * outer;
+                if (reflect)
+                {
+                    ReflectRadial(dir, outward: false);
+                }
+            }
+
+            return p;
+        }
+
+        // 枠の中心から見た向き radial について、outward なら外向きに、そうでなければ内向きに直す。
+        private void ReflectRadial(Vector2 radial, bool outward)
+        {
+            var sign = outward ? 1f : -1f;
+            var along = Vector2.Dot(_direction, radial) * sign;
+            if (along < 0f)
+            {
+                _direction = (_direction - 2f * along * sign * radial).normalized;
+            }
+
+            var desiredAlong = Vector2.Dot(_desiredDirection, radial) * sign;
+            if (desiredAlong < 0f)
+            {
+                _desiredDirection = (_desiredDirection - 2f * desiredAlong * sign * radial).normalized;
+            }
+        }
+
+        private Vector2 PickBandPosition()
+        {
+            var radius = AvoidanceRadius();
+            var candidate = _position;
+            for (var i = 0; i < RespawnAttempts; i++)
+            {
+                var angle = Random.value * Mathf.PI * 2f;
+                var dir = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+                BandLimits(dir, out var inner, out var outer);
+                candidate = _frame.Center + dir * Random.Range(inner, outer);
+                if (FindBlockingCollider(candidate, radius) == null)
+                {
+                    return candidate;
+                }
+            }
+
+            return candidate;
         }
 
         private void FollowReplicaTarget()
@@ -124,7 +268,16 @@ namespace MS2026.Fortress
 
         private void Steer()
         {
-            UpdateReturnToScreen();
+            if (_frame != null)
+            {
+                // 枠のまわりを漂う間は帯の中に収まっているので、「画面内に戻る」はしない（画面の中央へ引き戻されてしまうため）。
+                _isReturning = false;
+                _offScreenSeconds = 0f;
+            }
+            else
+            {
+                UpdateReturnToScreen();
+            }
 
             if (_isReturning)
             {
@@ -192,8 +345,14 @@ namespace MS2026.Fortress
             var step = settings.driftSpeed * (_isReturning ? settings.returnSpeedMultiplier : 1f) * Time.deltaTime;
             var next = _position + _direction * step;
 
-            next = BounceWithinBounds(next);
+            next = _frame != null ? KeepInBand(next, reflect: true) : BounceWithinBounds(next);
             next = AvoidObstacles(next, step);
+            if (_frame != null)
+            {
+                // 障害物から押し出された分で帯から出ないように。
+                next = KeepInBand(next, reflect: false);
+            }
+
             _position = next;
 
             _bobPhase += settings.bobFrequency * Mathf.PI * 2f * Time.deltaTime;
@@ -322,6 +481,28 @@ namespace MS2026.Fortress
             var angle = Random.value * Mathf.PI * 2f;
             _desiredDirection = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
 
+            if (_frame != null)
+            {
+                // 【実験】枠のまわりでは、枠に沿って回る向きを強めにする（帯が細いので、ばらばらだと帯のふちで跳ね返ってばかりになる）。
+                var radial = _position - _frame.Center;
+                if (radial.sqrMagnitude > 1e-4f)
+                {
+                    radial.Normalize();
+                    var tangent = new Vector2(-radial.y, radial.x) * _orbitSign;
+                    if (Random.value < 0.15f)
+                    {
+                        _orbitSign = -_orbitSign; // たまに回る向きを変える
+                    }
+
+                    var along = TurretMoveSettings.Load().smashBallAlongFrame;
+                    _desiredDirection = Vector2.Lerp(_desiredDirection, tangent, along).normalized;
+                    if (_desiredDirection.sqrMagnitude < 1e-4f)
+                    {
+                        _desiredDirection = tangent;
+                    }
+                }
+            }
+
             var interval = Random.Range(Settings.directionChangeInterval.x, Settings.directionChangeInterval.y);
             _nextDirectionChangeTime = Time.time + Mathf.Max(0.1f, interval);
         }
@@ -346,6 +527,12 @@ namespace MS2026.Fortress
 
         private Vector2 PickRespawnPosition()
         {
+            if (_frame != null)
+            {
+                // 【実験】枠のまわりでは、帯の中のどこかに出る。
+                return PickBandPosition();
+            }
+
             Rect area;
             if (!Settings.returnToScreen || !TryGetScreenArea(FortressCameraRig.Active, out area))
             {

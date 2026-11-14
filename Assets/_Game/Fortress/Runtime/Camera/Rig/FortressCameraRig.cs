@@ -68,6 +68,9 @@ namespace MS2026.Fortress.Cameras
 
         public event Action<int> ViewerChanged;
 
+        /// <summary>【実験】ずっと続く追従（WASD で動く砲台を追う）。null なら追従しない（今までと同じ）。</summary>
+        public static ICameraFollowSource FollowSource { get; set; }
+
         private void Awake()
         {
             EnsureCamera();
@@ -177,7 +180,9 @@ namespace MS2026.Fortress.Cameras
             }
 
             BaseView = _blend.Evaluate(preset.GetView(slot), deltaTime);
-            CurrentView = _modifiers.Apply(BaseView, deltaTime);
+            // 追従は補間の後に重ねる（補間の始まりと終わりの両方に同じ追従が乗るので、視点の切り替えでも跳ばない）。
+            var followed = FollowSource != null && Application.isPlaying ? FollowSource.Apply(CurrentViewer, BaseView, deltaTime) : BaseView;
+            CurrentView = _modifiers.Apply(followed, deltaTime);
             ApplyToCamera(CurrentView);
             EnemyScreenAlign.Apply(preset.enemiesFaceScreen, targetCamera);
         }
