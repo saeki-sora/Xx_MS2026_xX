@@ -22,12 +22,14 @@ namespace MS2026.Cpu.Experimental
             CpuPlugins.SetMovePlanner(() => new CpuMovePlanner());
             CpuPlugins.ViewSource = new CpuFollowViewSource();
             CpuPlugins.RegisterSkillArea(MoveAreaId, "動き");
+            CpuPlugins.RegisterAreaReview(MoveAreaId, CpuExperimentalReviews.Move);
 
             // 菌にやられて倒れる・復活（Rescue フォルダ）。
             CpuPlugins.TeammateStatus = new CpuTurretDownStatus();
             CpuPlugins.RegisterBehavior(CpuReviveBehavior.BehaviorId, () => new CpuReviveBehavior());
             CpuPlugins.RegisterBehavior(CpuStruggleBehavior.BehaviorId, () => new CpuStruggleBehavior());
             CpuPlugins.RegisterSkillArea(RescueAreaId, "救助");
+            CpuPlugins.RegisterAreaReview(RescueAreaId, CpuExperimentalReviews.Rescue);
         }
     }
 }
