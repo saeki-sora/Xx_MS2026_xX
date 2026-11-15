@@ -20,6 +20,8 @@ namespace MS2026.Fortress
     /// ・菌に触れ続けると倒れる。倒れている間は撃てない・動けない・菌は素通り。味方のビーム／握る連打で復活し、直後は少しやられない
     ///   （<see cref="TurretDownSystem"/>。Host・オフラインが決め、Client へ配る。倒れた人の画面にだけ案内 <see cref="TurretDownOverlay"/>）。
     /// ・LAN: 各 PC が自分の砲台を動かして位置を送る（<see cref="TurretMoveNet"/>）。他の人の砲台は届いた位置へなめらかに追う。
+    /// ・操縦者（CPU など）: <see cref="TurretMoveHooks.SetPilotMove"/> で向きが入っている砲台は、Host・オフラインがその向きで
+    ///   人の WASD と同じ計算で動かし、位置を配る（2026-11-15）。
     /// 設定: Resources/TurretMoveSettings（<see cref="TurretMoveSettings"/>）。
     /// </summary>
     [AddComponentMenu("")]
@@ -59,12 +61,13 @@ namespace MS2026.Fortress
         // 落下演出など、別の係が砲台を動かしている間（TurretMoveHooks.IsHeld）。
         private bool _held;
 
-        // 自分の砲台
+        // この PC が動かす砲台（自分の砲台と、操縦者（CPU など）の砲台）。プレイヤーごと。
         private int _localPlayer = -1;
-        private Vector2 _inputVelocity;
-        private Vector2 _pushVelocity;
-        private Vector2 _rawPush;
-        private Vector2 _measuredVelocity;
+        private int _ownedMask;
+        private readonly Vector2[] _inputVelocity = new Vector2[PlayerCount];
+        private readonly Vector2[] _pushVelocity = new Vector2[PlayerCount];
+        private readonly Vector2[] _rawPush = new Vector2[PlayerCount];
+        private readonly Vector2[] _measuredVelocity = new Vector2[PlayerCount];
 
         // カメラ
         private Vector2 _cameraOffset;
@@ -150,10 +153,11 @@ namespace MS2026.Fortress
             }
 
             _localPlayer = FortressSeatMover.LocalPlayer();
-            _net.Tick(Time.unscaledDeltaTime, _settings, _turrets, _localPlayer, _held, _down);
+            _ownedMask = OwnedMask();
+            _net.Tick(Time.unscaledDeltaTime, _settings, _turrets, _localPlayer, _ownedMask, _held, _down);
 
             TickDown(dt);
-            TickLocal(dt);
+            TickMovers(dt);
             TickRemotes(dt);
         }
 
@@ -274,50 +278,99 @@ namespace MS2026.Fortress
             return global::MS2026.GripInputBridge.GripInputBridge.Provider.IsGripping(sensor);
         }
 
-        // ───────── 自分の砲台 ─────────
+        // ───────── この PC が動かす砲台（自分・操縦者） ─────────
 
-        private void TickLocal(float dt)
+        // この PC が動かす砲台: 自分の砲台と、操縦者（CPU など。TurretMoveHooks.SetPilotMove）が動かしている砲台（Client では操縦者は使わない）。
+        private int OwnedMask()
         {
-            var turret = TurretOf(_localPlayer);
+            var mask = _localPlayer >= 0 && _localPlayer < PlayerCount ? 1 << _localPlayer : 0;
+            if (_net.IsClient)
+            {
+                return mask;
+            }
+
+            for (var p = 0; p < PlayerCount; p++)
+            {
+                if (TurretMoveHooks.TryGetPilotMove(p, out _))
+                {
+                    mask |= 1 << p;
+                }
+            }
+
+            return mask;
+        }
+
+        private bool IsPiloted(int player) => !_net.IsClient && TurretMoveHooks.TryGetPilotMove(player, out _);
+
+        private void TickMovers(float dt)
+        {
+            var ringShown = false;
+            for (var p = 0; p < PlayerCount; p++)
+            {
+                if ((_ownedMask & (1 << p)) == 0)
+                {
+                    _measuredVelocity[p] = Vector2.zero;
+                    continue;
+                }
+
+                // 操縦者が動かしている砲台は操縦者の向き、自分の砲台は WASD。
+                var input = TurretMoveHooks.TryGetPilotMove(p, out var pilot) && !_net.IsClient ? pilot : ReadInput();
+                ringShown |= TickMover(p, input, dt, p == _localPlayer);
+            }
+
+            if (!ringShown)
+            {
+                _ring.Update(transform, false, default, 0f, 0f, 0f, 0, Time.unscaledDeltaTime);
+            }
+        }
+
+        // 1台ぶん動かす。自分の砲台（isLocal）のときだけ範囲の輪を出す。輪を受け持ったら true。
+        private bool TickMover(int player, Vector2 input, float dt, bool isLocal)
+        {
+            var turret = TurretOf(player);
             if (turret == null || dt <= 0f)
             {
-                _measuredVelocity = Vector2.zero;
-                _ring.Update(transform, false, default, 0f, 0f, 0f, 0, Time.unscaledDeltaTime);
-                return;
+                _measuredVelocity[player] = Vector2.zero;
+                return false;
             }
 
             var t = turret.transform;
             var from = (Vector2)t.position;
-            var home = HomeOfPlayer(_localPlayer, from);
+            var home = HomeOfPlayer(player, from);
             var range = _settings.rangeRadius;
             var radius = _settings.bodyRadius;
             var useFloor = _settings.area == TurretMoveArea.WholeFloor && !_region.IsEmpty;
             // 枠の内側では、体の半径に加えて「枠からさらに内側」の幅も空ける。
             var margin = radius + (_region.Frames.Count > 0 ? _settings.frameInset : 0f);
 
-            if (!CanMove())
+            if (!CanMove(player))
             {
                 // 動けない間は勢いを捨てる（席替え・歯みがきタイムの後に、前の勢いで滑り出さないように）。
-                _inputVelocity = Vector2.zero;
-                _pushVelocity = Vector2.zero;
-                _rawPush = Vector2.zero;
-                _measuredVelocity = Vector2.zero;
-                _ring.Update(transform, false, home, range, t.position.z, 0f, _localPlayer, Time.unscaledDeltaTime);
-                return;
+                _inputVelocity[player] = Vector2.zero;
+                _pushVelocity[player] = Vector2.zero;
+                _rawPush[player] = Vector2.zero;
+                _measuredVelocity[player] = Vector2.zero;
+                if (isLocal)
+                {
+                    _ring.Update(transform, false, home, range, t.position.z, 0f, _localPlayer, Time.unscaledDeltaTime);
+                }
+
+                return isLocal;
             }
 
-            var desired = ReadInput() * _settings.moveSpeed;
-            _inputVelocity = TurretMoveMath.StepVelocity(_inputVelocity, desired, _settings.acceleration, _settings.deceleration, dt);
-            _inputVelocity = useFloor
-                ? _region.Soften(_inputVelocity, from, margin, _settings.rangeSoftEdge)
-                : TurretMoveMath.SoftenAtEdge(_inputVelocity, from, home, range, _settings.rangeSoftEdge);
+            var desired = input * _settings.moveSpeed;
+            var inputVelocity = TurretMoveMath.StepVelocity(_inputVelocity[player], desired, _settings.acceleration, _settings.deceleration, dt);
+            inputVelocity = useFloor
+                ? _region.Soften(inputVelocity, from, margin, _settings.rangeSoftEdge)
+                : TurretMoveMath.SoftenAtEdge(inputVelocity, from, home, range, _settings.rangeSoftEdge);
 
             var pushTarget = _settings.pushedByEnemies
-                ? TurretMoveMath.PushToVelocity(_rawPush, _settings.enemyPushStrength, _settings.maxEnemyPushSpeed)
+                ? TurretMoveMath.PushToVelocity(_rawPush[player], _settings.enemyPushStrength, _settings.maxEnemyPushSpeed)
                 : Vector2.zero;
-            _pushVelocity = Vector2.Lerp(_pushVelocity, pushTarget, TurretMoveMath.Blend(_settings.enemyPushResponse, dt));
+            var pushVelocity = Vector2.Lerp(_pushVelocity[player], pushTarget, TurretMoveMath.Blend(_settings.enemyPushResponse, dt));
+            _pushVelocity[player] = pushVelocity;
 
-            var delta = (_inputVelocity + _pushVelocity) * dt;
+            var delta = (inputVelocity + pushVelocity) * dt;
             var to = TurretMoveCollision.Move(from, delta, radius, _settings.obstacleLayers);
             LogBlocker();
             to = PushOutOfCores(to, radius);
@@ -326,16 +379,23 @@ namespace MS2026.Fortress
             to = TurretMoveCollision.Depenetrate(to, radius, _settings.obstacleLayers);
 
             t.position = new Vector3(to.x, to.y, t.position.z);
-            _measuredVelocity = (to - from) / dt;
+            var measured = (to - from) / dt;
+            _measuredVelocity[player] = measured;
 
             // 壁に当たって動けなかった分の勢いは捨てる（壁から離れるときに、溜まった勢いで飛び出さないように）。
-            if (_inputVelocity.sqrMagnitude > 1e-4f)
+            if (inputVelocity.sqrMagnitude > 1e-4f)
             {
-                var along = Vector2.Dot(_measuredVelocity - _pushVelocity, _inputVelocity.normalized);
-                if (along < _inputVelocity.magnitude)
+                var along = Vector2.Dot(measured - pushVelocity, inputVelocity.normalized);
+                if (along < inputVelocity.magnitude)
                 {
-                    _inputVelocity = _inputVelocity.normalized * Mathf.Max(0f, along);
+                    inputVelocity = inputVelocity.normalized * Mathf.Max(0f, along);
                 }
+            }
+
+            _inputVelocity[player] = inputVelocity;
+            if (!isLocal)
+            {
+                return false;
             }
 
             // 輪は「席のまわり」のときだけ（床全域なら床の端そのものが見えている）。
@@ -343,11 +403,12 @@ namespace MS2026.Fortress
             var closeness = Mathf.Clamp01(1f - distToEdge / Mathf.Max(0.1f, _settings.ringShowDistance));
             var showRing = !useFloor && _settings.showRangeRing && _settings.movementEnabled;
             _ring.Update(transform, showRing, home, range, t.position.z, closeness, _localPlayer, Time.unscaledDeltaTime);
+            return true;
         }
 
-        private bool CanMove()
+        private bool CanMove(int player)
         {
-            return _settings.movementEnabled && !LaserTurret.InputLocked && !FortressSeats.IsMoving && !_held && !_down.IsDowned(_localPlayer);
+            return _settings.movementEnabled && !LaserTurret.InputLocked && !FortressSeats.IsMoving && !_held && !_down.IsDowned(player);
         }
 
         // 動ける範囲: ステージの枠の内側（無ければ床、床も無ければ敵の通り道の範囲 NavigationField）。
@@ -529,7 +590,7 @@ namespace MS2026.Fortress
         // ・4人とも: 菌との重なり（汚れの溜まり方。Host・オフラインだけ。倒れている・守られている間は調べない＝菌は素通り）
         private void OnSwarmReadable()
         {
-            _rawPush = Vector2.zero;
+            System.Array.Clear(_rawPush, 0, _rawPush.Length);
             if (_swarm == null)
             {
                 return;
@@ -540,7 +601,7 @@ namespace MS2026.Fortress
             {
                 var turret = _turrets[p];
                 var needContact = authority && turret != null && _settings.downEnabled && _down.States[p].Condition == TurretCondition.Normal;
-                var needPush = p == _localPlayer && turret != null && _settings.pushedByEnemies && CanMove();
+                var needPush = (_ownedMask & (1 << p)) != 0 && turret != null && _settings.pushedByEnemies && CanMove(p);
                 if (!needContact && !needPush)
                 {
                     _down.Contact[p] = 0f;
@@ -551,7 +612,7 @@ namespace MS2026.Fortress
                 _down.Contact[p] = needContact ? overlap : 0f;
                 if (needPush)
                 {
-                    _rawPush = push;
+                    _rawPush[p] = push;
                 }
             }
         }
@@ -570,7 +631,8 @@ namespace MS2026.Fortress
             for (var p = 0; p < PlayerCount; p++)
             {
                 var turret = _turrets[p];
-                if (p == _localPlayer || turret == null || !_net.TryGetTarget(p, out var target))
+                // 自分の砲台・この PC の操縦者が動かしている砲台は、届いた位置で動かさない。
+                if (p == _localPlayer || IsPiloted(p) || turret == null || !_net.TryGetTarget(p, out var target))
                 {
                     continue;
                 }
@@ -611,7 +673,7 @@ namespace MS2026.Fortress
                 var seatHome = HomeOfSeat(FortressSeats.CameraSeatOf(viewer), turret.transform.position);
                 targetOffset = ((Vector2)turret.transform.position - seatHome) * _settings.cameraFollow;
 
-                var velocity = viewer == _localPlayer ? _measuredVelocity : Vector2.zero;
+                var velocity = viewer == _localPlayer ? _measuredVelocity[viewer] : Vector2.zero;
                 targetLookAhead = Vector2.ClampMagnitude(velocity * _settings.cameraLookAheadSeconds, _settings.cameraMaxLookAhead);
                 speed01 = _settings.moveSpeed > 0f ? Mathf.Clamp01(velocity.magnitude / _settings.moveSpeed) : 0f;
             }
@@ -674,10 +736,10 @@ namespace MS2026.Fortress
                 _hasCapturedHome[p] = false;
             }
 
-            _inputVelocity = Vector2.zero;
-            _pushVelocity = Vector2.zero;
-            _rawPush = Vector2.zero;
-            _measuredVelocity = Vector2.zero;
+            System.Array.Clear(_inputVelocity, 0, _inputVelocity.Length);
+            System.Array.Clear(_pushVelocity, 0, _pushVelocity.Length);
+            System.Array.Clear(_rawPush, 0, _rawPush.Length);
+            System.Array.Clear(_measuredVelocity, 0, _measuredVelocity.Length);
             _region.Clear();
             ResetCameraFollow();
             _net.Clear();

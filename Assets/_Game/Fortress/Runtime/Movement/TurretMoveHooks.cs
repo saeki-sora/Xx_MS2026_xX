@@ -12,6 +12,8 @@ namespace MS2026.Fortress
     {
         private static readonly List<Func<bool>> Holds = new List<Func<bool>>();
         private static readonly bool[] Downed = new bool[4];
+        private static readonly Vector2[] PilotMoves = new Vector2[4];
+        private static readonly bool[] PilotMoving = new bool[4];
         private static Action<string, TurretMoveRegion> _floorProvider;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -20,6 +22,69 @@ namespace MS2026.Fortress
             Holds.Clear();
             _floorProvider = null;
             Array.Clear(Downed, 0, Downed.Length);
+            Array.Clear(PilotMoves, 0, PilotMoves.Length);
+            Array.Clear(PilotMoving, 0, PilotMoving.Length);
+        }
+
+        /// <summary>
+        /// 操縦者（CPU など。<see cref="PlayerPilots"/>）がこのプレイヤーの砲台を動かしたい向き（ワールド、長さ 0〜1）を入れる。
+        /// 入れている間は、この PC（Host・オフラインだけ）がその砲台を、人の WASD と同じ計算（加速・壁・歯・敵に押される・動ける範囲）で動かし、
+        /// 位置を全員に配る。キーボードの WASD はその砲台には効かない。
+        /// </summary>
+        public static void SetPilotMove(int player, Vector2 direction)
+        {
+            if (player >= 0 && player < PilotMoves.Length)
+            {
+                PilotMoves[player] = Vector2.ClampMagnitude(direction, 1f);
+                PilotMoving[player] = true;
+            }
+        }
+
+        /// <summary>操縦者の移動をやめる（CPU が止まる・人と入れ替わるとき）。</summary>
+        public static void ClearPilotMove(int player)
+        {
+            if (player >= 0 && player < PilotMoves.Length)
+            {
+                PilotMoves[player] = Vector2.zero;
+                PilotMoving[player] = false;
+            }
+        }
+
+        /// <summary>操縦者がこのプレイヤーの砲台を動かしているか（動かしていれば、その向き）。</summary>
+        public static bool TryGetPilotMove(int player, out Vector2 direction)
+        {
+            var ok = player >= 0 && player < PilotMoves.Length && PilotMoving[player];
+            direction = ok ? PilotMoves[player] : Vector2.zero;
+            return ok;
+        }
+
+        /// <summary>
+        /// プレイヤーの今の席の場所（ステージが知らせた席。席替えで変わる）。知らせが無いステージでは false。
+        /// </summary>
+        public static bool TryGetHome(int player, out Vector2 home)
+        {
+            home = default;
+            if (!FortressSeats.TryGetRegisteredSeats(out var seats, out _))
+            {
+                return false;
+            }
+
+            var seat = FortressSeats.SeatOf(player);
+            if (seat < 0 || seat >= seats.Length)
+            {
+                return false;
+            }
+
+            home = seats[seat];
+            return true;
+        }
+
+        /// <summary>今、砲台を動かしてよいか（動けるのは: 移動が ON・歯みがきタイムでない・席替えでない・落下演出でない・倒れていない）。</summary>
+        public static bool CanMove(int player)
+        {
+            var settings = TurretMoveSettings.Load();
+            return settings != null && settings.movementEnabled && !LaserTurret.InputLocked && !FortressSeats.IsMoving && !IsHeld &&
+                   !IsDowned(player);
         }
 
         /// <summary>

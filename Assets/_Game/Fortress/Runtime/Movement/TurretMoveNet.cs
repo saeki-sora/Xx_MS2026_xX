@@ -75,7 +75,8 @@ namespace MS2026.Fortress
 
         /// <summary>毎フレーム呼ぶ。届いた位置の受け取り口を用意し、決まった間隔で送る。</summary>
         /// <param name="held">落下演出などで砲台を別の係が動かしている間。その間は位置を送らない（画面の外の位置を配らないように）。</param>
-        public void Tick(float dt, TurretMoveSettings settings, LaserTurret[] turrets, int localPlayer, bool held, TurretDownSystem down)
+        /// <param name="ownedMask">この PC が動かしている砲台（bit p。自分の砲台と、操縦者（CPU など）の砲台）。Host はその位置を配る。</param>
+        public void Tick(float dt, TurretMoveSettings settings, LaserTurret[] turrets, int localPlayer, int ownedMask, bool held, TurretDownSystem down)
         {
             EnsureRegistered();
             if (!IsActive)
@@ -103,7 +104,7 @@ namespace MS2026.Fortress
             var sendPositions = !FortressSeats.IsMoving && !held;
             if (_manager.IsServer)
             {
-                Broadcast(turrets, localPlayer, sendPositions, down);
+                Broadcast(turrets, localPlayer, ownedMask, sendPositions, down);
             }
             else if (sendPositions)
             {
@@ -135,7 +136,7 @@ namespace MS2026.Fortress
             }
         }
 
-        private void Broadcast(LaserTurret[] turrets, int localPlayer, bool sendPositions, TurretDownSystem down)
+        private void Broadcast(LaserTurret[] turrets, int localPlayer, int ownedMask, bool sendPositions, TurretDownSystem down)
         {
             var clients = _manager.ConnectedClientsIds;
             if (clients.Count <= 1)
@@ -148,7 +149,7 @@ namespace MS2026.Fortress
             {
                 for (var p = 0; p < PlayerCount; p++)
                 {
-                    var known = HasBroadcastPosition(turrets, localPlayer, p, out var position);
+                    var known = HasBroadcastPosition(turrets, localPlayer, ownedMask, p, out var position);
                     var hasPosition = sendPositions && known;
                     var state = down.States[p];
                     writer.WriteValueSafe((byte)(hasPosition ? 1 : 0));
@@ -174,10 +175,10 @@ namespace MS2026.Fortress
             }
         }
 
-        // Host の自分の分は砲台の今の場所、他の人の分は届いたそのままの位置（Host でなめらかにした後の位置ではない）。
-        private bool HasBroadcastPosition(LaserTurret[] turrets, int localPlayer, int player, out Vector2 position)
+        // Host が動かしている分（自分・操縦者）は砲台の今の場所、他の人の分は届いたそのままの位置（Host でなめらかにした後の位置ではない）。
+        private bool HasBroadcastPosition(LaserTurret[] turrets, int localPlayer, int ownedMask, int player, out Vector2 position)
         {
-            if (player == localPlayer && turrets[player] != null)
+            if ((player == localPlayer || (ownedMask & (1 << player)) != 0) && turrets[player] != null)
             {
                 position = turrets[player].transform.position;
                 return true;
