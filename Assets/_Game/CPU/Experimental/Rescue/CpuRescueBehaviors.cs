@@ -37,12 +37,13 @@ namespace MS2026.Cpu.Experimental
             public float ShareWithHelpers;
             public float HitReach;
 
-            public static Tuning From(CpuRescueSettings s) => new Tuning
+            /// <summary>設定と、分野「救助」の上手さの目盛り（0〜3）から作る。</summary>
+            public static Tuning From(CpuRescueSettings s, float scale) => new Tuning
             {
-                ReviveAttention = s.reviveAttention,
-                HealAttention = s.healAttention,
+                ReviveAttention = s.reviveAttention.Evaluate(scale),
+                HealAttention = s.healAttention.Evaluate(scale),
                 HealBelowHealth = s.healBelowHealth,
-                ShareWithHelpers = s.shareWithHelpers,
+                ShareWithHelpers = s.shareWithHelpers.Evaluate(scale),
                 HitReach = s.hitReach
             };
         }
@@ -186,7 +187,7 @@ namespace MS2026.Cpu.Experimental
             }
 
             return CpuRescueMath.Pick(context.Eyes.Perceived.Teammates, turret.AimDegrees, turret.RotationSign, turret.IdleRotationSpeed,
-                CpuRescueMath.Tuning.From(CpuRescueSettings.Load()));
+                CpuRescueMath.Tuning.From(CpuRescueSettings.Load(), context.ScaleOf(CpuExperimentalInstaller.RescueAreaId)));
         }
     }
 
@@ -221,7 +222,8 @@ namespace MS2026.Cpu.Experimental
         public void Tick(CpuContext context, float deltaTime)
         {
             var settings = CpuRescueSettings.Load();
-            var period = 1f / Mathf.Max(0.5f, settings.strugglePressesPerSecond);
+            var rate = settings.strugglePressesPerSecond.Evaluate(context.ScaleOf(CpuExperimentalInstaller.RescueAreaId));
+            var period = 1f / Mathf.Max(0.5f, rate);
             var pressed = _rhythm.Tick(context.Time, period, 0.5f);
             if (pressed && !_wasPressed)
             {

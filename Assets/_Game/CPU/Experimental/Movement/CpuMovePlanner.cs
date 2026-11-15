@@ -14,11 +14,12 @@ namespace MS2026.Cpu.Experimental
         public float HomeWeight;
         public float DeadZone;
 
-        public static CpuMoveTuning From(CpuMoveSettings settings) => new CpuMoveTuning
+        /// <summary>設定と、分野「動き」の上手さの目盛り（0〜3）から作る。</summary>
+        public static CpuMoveTuning From(CpuMoveSettings settings, float scale) => new CpuMoveTuning
         {
-            AvoidWeight = settings.avoidWeight,
+            AvoidWeight = settings.avoidWeight.Evaluate(scale),
             ThreatFullCount = settings.threatFullCount,
-            ThreatIgnoreCount = settings.threatIgnoreCount,
+            ThreatIgnoreCount = settings.threatIgnoreCount.Evaluate(scale),
             HomeFreeRadius = settings.homeFreeRadius,
             HomePullRange = settings.homePullRange,
             HomeWeight = settings.homeWeight,
@@ -126,14 +127,16 @@ namespace MS2026.Cpu.Experimental
 
             var position = (Vector2)turret.transform.position;
             var sight = context.Eyes.Perceived;
+            var scale = context.ScaleOf(CpuExperimentalInstaller.MoveAreaId);
+            var planInterval = Mathf.Max(0.05f, settings.planInterval.Evaluate(scale));
 
             _planTimer -= deltaTime;
             if (_planTimer <= 0f)
             {
-                _planTimer = settings.planInterval;
+                _planTimer = planInterval;
                 var threat = CpuMoveMath.Threat(sight, settings.outerRingShare, out var count);
                 var hasHome = TryGetHome(context.Player, turret, position, out var home);
-                _target = context.Eyes.HasSeen ? CpuMoveMath.Plan(position, hasHome, home, threat, count, CpuMoveTuning.From(settings)) : Vector2.zero;
+                _target = context.Eyes.HasSeen ? CpuMoveMath.Plan(position, hasHome, home, threat, count, CpuMoveTuning.From(settings, scale)) : Vector2.zero;
 
                 if (sight.RingCount > 0)
                 {
@@ -145,12 +148,12 @@ namespace MS2026.Cpu.Experimental
 
                     if (inner >= settings.surroundedCount)
                     {
-                        context.Stats.Add(SurroundedSeconds, settings.planInterval);
+                        context.Stats.Add(SurroundedSeconds, planInterval);
                     }
                 }
             }
 
-            _current = Vector2.Lerp(_current, _target, 1f - Mathf.Exp(-settings.turnResponse * deltaTime));
+            _current = Vector2.Lerp(_current, _target, 1f - Mathf.Exp(-settings.turnResponse.Evaluate(scale) * deltaTime));
             if (_current.magnitude > 0.2f)
             {
                 context.Stats.Add(MovedSeconds, deltaTime);

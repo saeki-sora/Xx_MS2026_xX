@@ -4,7 +4,8 @@ namespace MS2026.Cpu.Experimental
 {
     /// <summary>
     /// 【実験】CPU の移動の設定（Resources/CpuMoveSettings。無ければ初期値）。移動が不採用になったら、このフォルダごと消す。
-    /// 強さごとの分け方（段6）は、本体の上手さと同じ仕組みで「動き」の分野として足す。
+    /// 強さで変わる値は「4つの目安」（<see cref="CpuLevelCurve"/>。初めて遊ぶ人／少し慣れた人／上手い人／とても上手い人）で持ち、
+    /// 分野「動き」の上手さの目盛り（強さ + 慣れ）で決める。
     /// </summary>
     [CreateAssetMenu(fileName = "CpuMoveSettings", menuName = "MS2026/CPU/CPU の移動の設定（実験）")]
     public sealed class CpuMoveSettings : ScriptableObject
@@ -12,9 +13,8 @@ namespace MS2026.Cpu.Experimental
         public const string ResourcePath = "CpuMoveSettings";
 
         [Header("敵を避ける")]
-        [Tooltip("すぐそば（射程を 10 等分した、いちばん内側の輪）の敵をどれだけ避けるか。")]
-        [Range(0f, 3f)]
-        public float avoidWeight = 1.2f;
+        [Tooltip("すぐそば（射程を 10 等分した、いちばん内側の輪）の敵をどれだけ避けるか（4つの目安）。")]
+        public CpuLevelCurve avoidWeight = new CpuLevelCurve(0.4f, 0.8f, 1.2f, 1.5f);
 
         [Tooltip("ひとつ外側の輪の敵をどれだけ数えるか（すぐそばを 1 として）。")]
         [Range(0f, 1f)]
@@ -24,9 +24,8 @@ namespace MS2026.Cpu.Experimental
         [Min(0.5f)]
         public float threatFullCount = 6f;
 
-        [Tooltip("この数より少なければ、避けない（少しの敵は撃って倒す）。")]
-        [Min(0f)]
-        public float threatIgnoreCount = 1f;
+        [Tooltip("この数より少なければ、避けない（少しの敵は撃って倒す。4つの目安）。")]
+        public CpuLevelCurve threatIgnoreCount = new CpuLevelCurve(3f, 2f, 1f, 0.5f);
 
         [Header("席のまわりにいる")]
         [Tooltip("席からこの距離までは、戻ろうとしない（m）。")]
@@ -42,13 +41,11 @@ namespace MS2026.Cpu.Experimental
         public float homeWeight = 1f;
 
         [Header("動き方")]
-        [Tooltip("行き先を決め直す間隔（秒）。長いほど反応が遅い。")]
-        [Range(0.05f, 1.5f)]
-        public float planInterval = 0.3f;
+        [Tooltip("行き先を決め直す間隔（秒）。長いほど反応が遅い（4つの目安）。")]
+        public CpuLevelCurve planInterval = new CpuLevelCurve(1f, 0.6f, 0.35f, 0.2f);
 
-        [Tooltip("行きたい向きが変わる速さ（大きいほどキビキビ向きを変える）。")]
-        [Range(0.5f, 30f)]
-        public float turnResponse = 6f;
+        [Tooltip("行きたい向きが変わる速さ（大きいほどキビキビ向きを変える。4つの目安）。")]
+        public CpuLevelCurve turnResponse = new CpuLevelCurve(2f, 4f, 6f, 9f);
 
         [Tooltip("この長さより短い「行きたい向き」は、動かないのと同じにする（細かく震えないように）。")]
         [Range(0f, 0.5f)]
