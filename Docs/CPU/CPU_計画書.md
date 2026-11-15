@@ -2,7 +2,7 @@
 
 > 作成: 2026-11-15。改訂: 2026-11-15（実験中の要素を外せる作りに直した。2-0 章）。
 > ブランチ「佐伯＿ちょっと移動の実験」で作る。
-> 進み具合: **段3 まで できた**（2026-11-15。Unity の外でコンパイル・決まりのテスト 76 件が通る。Unity の Play での動作はまだ確かめていない）。
+> 進み具合: **段4 まで できた**（2026-11-15。Unity の外でコンパイル・決まりのテスト 81 件が通る。Unity の Play での動作はまだ確かめていない）。
 
 ### 段0 で作った物（2026-11-15）
 - Fortress 側（main にもある物だけに頼る）: 操縦者の差し替え口 `PlayerPilots`（`Runtime/Laser/`）。砲台は `LaserTurret.ReadGrip`（操縦者 → `GripSourceOverride` → センサーの順）で読む。歯みがきタイム（`BrushingRunner`）はオフラインでも Host でも操縦者の席を数え、通信中の「試合にいる人」（`FortressWaveRunner.ComputePlayerMask`）に操縦者の席を足す。
@@ -42,6 +42,22 @@
 - 点の並び: 歯みがき 2 ＞ 危ない熱 1.5 ＞ スキル 1.25 ＞ スマッシュボール 最大 1.1 ＞ 撃つ 0.25〜1.0 ／ 冷ます 最大 0.9。
 - 本体はスキルのアセンブリ（`MS2026.RedSkill.Runtime`・`MS2026.BlueSkill.Runtime`。どちらも main にある）を参照する。
 - 確かめていないこと: 実際のスキル（カットイン中の待ち・青の「1本ずつ順番に」の続き）での動き、効きの目安の数（`Full`）の当たり具合。
+
+### 段4 で作った物（2026-11-15・ここから実験中の要素）
+- 実験中のファイルの中だけの変更（移動が不採用ならファイルごと無くなる）:
+  - `TurretMoveHooks`: 操縦者の移動の口 `SetPilotMove` / `ClearPilotMove` / `TryGetPilotMove`、席の場所 `TryGetHome`、今動いてよいか `CanMove`。
+  - `TurretMoveDirector`: 1台ぶんの動かし方をプレイヤーごとにした（`TickMovers` → `TickMover(player, …)`。勢い・敵に押される量もプレイヤーごと）。この PC が動かす砲台 = 自分の砲台 ＋ 操縦者が向きを入れている砲台（Client では操縦者は使わない）。操縦者の砲台は人の WASD と同じ計算で動き、届いた位置では動かさない。範囲の輪・カメラの先読みは自分の砲台だけ。
+  - `TurretMoveNet`: Host は自分の砲台に加えて、操縦者が動かしている砲台の位置も配る（`ownedMask`）。
+- つなぎのアセンブリ `Assets/_Game/CPU/Experimental/`（`MS2026.CPU.Experimental`。本体からは参照しない。記号 `MS2026_CPU_NO_EXPERIMENTAL` があるとコンパイルされない）:
+  - `CpuExperimentalInstaller`: 起動時に本体の差し込み口へ登録する（移動の出口・行き先・見える範囲・分野「動き」）。
+  - `CpuTurretMoveOutput`: 行きたい向きを `TurretMoveHooks.SetPilotMove` へ。
+  - `CpuMovePlanner`＋`CpuMoveMath`: 目が頭に届けた様子（反応の遅れあり）で、すぐそば（いちばん内側の輪と、ひとつ外側の輪を少し）の敵から離れる。四方から囲まれて向きが打ち消し合うときは強く避けない。席から `homeFreeRadius` より離れたら戻る。決め直しは `planInterval` ごと、向きはなめらかに変える。記録「移動した秒」「囲まれた秒」。
+  - `CpuFollowViewSource`: カメラが砲台に付いていく分（席から離れた分 × `cameraFollow`）だけ、席のカメラの視点をずらして見える範囲にする（カメラの遅れ・先読み・引きは見込まない）。
+  - `CpuMoveSettings`（Resources/CpuMoveSettings。無ければ初期値）: 避ける強さ・全速で避ける敵の数・無視する数・席の自由な距離・戻る強さ・決め直しの間隔・向きの変わる速さ など。
+  - テスト `Experimental/Tests`（`MS2026.CPU.Experimental.Tests`。同じ記号で切れる）。
+- 本体（エディタ）: メニュー `Tools/CPU/実験中の要素とのつなぎを切る（移動しない CPU で試す）`。PC の Scripting Define Symbols に `MS2026_CPU_NO_EXPERIMENTAL` を足す／消す（チェックが付いていれば切れている）。
+- 切った版の確かめ: 本体（Runtime・Editor・Tests）はつなぎのアセンブリ無しでコンパイルできる（Unity の外で確かめた）。
+- 確かめていないこと: Play で CPU の砲台が動くか・壁や歯に当たって止まるか・LAN で Client に CPU の砲台の位置が届くか、切ったときに Unity が正しくつなぎを外すか。
 
 ---
 
