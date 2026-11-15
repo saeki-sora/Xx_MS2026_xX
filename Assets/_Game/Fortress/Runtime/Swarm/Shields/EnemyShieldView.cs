@@ -6,18 +6,25 @@ namespace MS2026.Fortress
     /// <summary>
     /// 盾1枚分（<see cref="EnemyShieldDirector"/> が盾持ちごとに作って使い回す。Play 中だけの物）。
     /// ・コの字の板3枚の当たり判定（BoxCollider2D）: ビームの判定（Physics2D のレイ）がここで止まる。群衆の押し合い・経路には関係しない
-    /// ・仮の見た目（板を立てた形のメッシュ）か、差し替え用の Prefab
+    /// ・殻の絵（前の殻＝敵より上、後ろの殻＝敵より下。2026-11-15）か、仮の見た目（板を立てた形のメッシュ）か、差し替え用の Prefab
+    /// ・殻の絵があり <see cref="EnemyShieldSettings.collisionFromShellArt"/> が ON なら、当たり判定は前の殻の絵の輪郭（PolygonCollider2D）
     /// ・にらんでいる人の色の印
     /// +X が正面（にらんでいる向き）。
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class EnemyShieldView : MonoBehaviour
     {
+        /// <summary>後ろの殻を描く順番。群衆（<see cref="SwarmSettings.renderQueue"/> 2990）と足元の影（2989）より前に描いて、敵の下に来るようにする。</summary>
+        private const int BackShellQueue = 2985;
+
         private static Material s_material;
+        private static Material s_backShellMaterial;
         private static Sprite s_dot;
+        private static readonly System.Collections.Generic.List<Vector2> s_points = new System.Collections.Generic.List<Vector2>(256);
 
         private readonly ShieldBox[] _boxes = new ShieldBox[3];
         private readonly BoxCollider2D[] _colliders = new BoxCollider2D[3];
+        private PolygonCollider2D _artCollider;
         private EnemyShieldSettings _settings;
         private GameObject _visual;
         private Mesh _mesh;
@@ -79,7 +86,12 @@ namespace MS2026.Fortress
                 Destroy(_visual);
             }
 
-            if (settings.visualPrefab != null)
+            var artCollision = false;
+            if (settings.frontShellSprite != null)
+            {
+                artCollision = BuildShellArt(settings);
+            }
+            else if (settings.visualPrefab != null)
             {
                 _visual = Instantiate(settings.visualPrefab, transform, false);
             }
@@ -91,8 +103,100 @@ namespace MS2026.Fortress
                 _visual.AddComponent<MeshRenderer>().sharedMaterial = Material;
             }
 
+            for (var i = 0; i < _colliders.Length; i++)
+            {
+                _colliders[i].enabled = !artCollision;
+            }
+
+            if (_artCollider != null)
+            {
+                _artCollider.enabled = artCollision;
+            }
+
             BuildMarker();
             _focus = int.MinValue;
+        }
+
+        /// <summary>
+        /// 殻の絵を置く。前の殻の絵の輪郭（Unity が取り込み時に作る物理用の形。無ければ絵の範囲）を、盾の形の外枠に合わせる:
+        /// 絵の左端（正面の縁）→ 正面の板の外側、絵の縦の長さ → 盾の幅。絵は左が正面なので左右反転して +X を正面にする。
+        /// 後ろの殻も同じ大きさ・位置で置く（同じ大きさの画像に、同じ位置関係で描いてある前提）。
+        /// 当たり判定を絵の形にできたら true。
+        /// </summary>
+        private bool BuildShellArt(EnemyShieldSettings s)
+        {
+            var front = s.frontShellSprite;
+            s_points.Clear();
+            var pathCount = front.GetPhysicsShapeCount();
+            var min = new Vector2(float.MaxValue, float.MaxValue);
+            var max = new Vector2(float.MinValue, float.MinValue);
+            for (var i = 0; i < pathCount; i++)
+            {
+                front.GetPhysicsShape(i, s_points);
+                foreach (var p in s_points)
+                {
+                    min = Vector2.Min(min, p);
+                    max = Vector2.Max(max, p);
+                }
+            }
+
+            if (pathCount == 0 || max.y - min.y < 1e-4f)
+            {
+                min = front.bounds.min;
+                max = front.bounds.max;
+            }
+
+            var targetHeight = 2f * s.halfWidth + s.thickness;
+            var scale = targetHeight / Mathf.Max(1e-4f, max.y - min.y) * s.shellArtScale;
+            // 反転後: ローカル x = offsetX - scale * 絵の x、ローカル y = offsetY + scale * 絵の y
+            var offsetX = s.frontDistance + s.thickness * 0.5f + scale * min.x;
+            var offsetY = -scale * (min.y + max.y) * 0.5f;
+
+            _visual = new GameObject("ShellArt");
+            _visual.transform.SetParent(transform, false);
+            AddShellPart("FrontShell", front, Material, new Vector3(offsetX, offsetY, -s.wallHeight), scale, 0);
+            if (s.backShellSprite != null)
+            {
+                AddShellPart("BackShell", s.backShellSprite, BackShellMaterial, new Vector3(offsetX, offsetY, -0.01f), scale, 0);
+            }
+
+            if (!s.collisionFromShellArt || pathCount == 0)
+            {
+                return false;
+            }
+
+            if (_artCollider == null)
+            {
+                _artCollider = new GameObject("ShellCollision").AddComponent<PolygonCollider2D>();
+                _artCollider.transform.SetParent(transform, false);
+            }
+
+            _artCollider.pathCount = pathCount;
+            for (var i = 0; i < pathCount; i++)
+            {
+                front.GetPhysicsShape(i, s_points);
+                var path = new Vector2[s_points.Count];
+                for (var k = 0; k < path.Length; k++)
+                {
+                    path[k] = new Vector2(offsetX - scale * s_points[k].x, offsetY + scale * s_points[k].y);
+                }
+
+                _artCollider.SetPath(i, path);
+            }
+
+            return true;
+        }
+
+        private void AddShellPart(string partName, Sprite sprite, Material material, Vector3 position, float scale, int order)
+        {
+            var part = new GameObject(partName).AddComponent<SpriteRenderer>();
+            part.transform.SetParent(_visual.transform, false);
+            part.transform.localPosition = position;
+            part.transform.localScale = new Vector3(scale, scale, 1f);
+            part.sprite = sprite;
+            part.flipX = true;
+            part.sharedMaterial = material;
+            part.sortingOrder = order;
         }
 
         /// <summary>位置・向き・印の色を反映する。</summary>
@@ -135,6 +239,9 @@ namespace MS2026.Fortress
             var s = _settings;
             _marker.transform.localPosition = new Vector3(s.frontDistance + s.thickness * 0.5f + 0.3f, 0f, -s.wallHeight - 0.02f);
             _marker.transform.localScale = Vector3.one * 0.42f;
+            // 殻の絵（並び順 0）より手前に出す。
+            _marker.sortingOrder = 2;
+            _pupil.sortingOrder = 3;
         }
 
         /// <summary>板3枚を、地面（z=0）から上（-Z）へ立てた箱にする。上の面を明るく、横の面を暗くして形を見やすくする。</summary>
@@ -208,6 +315,10 @@ namespace MS2026.Fortress
                 h = h * 31 + s.wallHeight.GetHashCode();
                 h = h * 31 + s.color.GetHashCode();
                 h = h * 31 + (s.visualPrefab != null ? s.visualPrefab.GetInstanceID() : 0);
+                h = h * 31 + (s.frontShellSprite != null ? s.frontShellSprite.GetInstanceID() : 0);
+                h = h * 31 + (s.backShellSprite != null ? s.backShellSprite.GetInstanceID() : 0);
+                h = h * 31 + s.shellArtScale.GetHashCode();
+                h = h * 31 + (s.collisionFromShellArt ? 1 : 0);
                 return h;
             }
         }
@@ -236,6 +347,22 @@ namespace MS2026.Fortress
                 }
 
                 return s_material;
+            }
+        }
+
+        private static Material BackShellMaterial
+        {
+            get
+            {
+                if (s_backShellMaterial == null)
+                {
+                    s_backShellMaterial = new Material(Shader.Find("Sprites/Default"))
+                    {
+                        name = "ShieldBackShell", hideFlags = HideFlags.DontSave, renderQueue = BackShellQueue
+                    };
+                }
+
+                return s_backShellMaterial;
             }
         }
 

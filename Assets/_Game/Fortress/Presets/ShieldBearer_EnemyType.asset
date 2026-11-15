@@ -25,10 +25,10 @@ MonoBehaviour:
     mass: 4
     acceleration: 8
     speedVariance: 0.15
-    spriteSize: 1.1
-    spriteSheet: {fileID: 2800000, guid: 645e5268fc2141a5ba84a296b97a13ff, type: 3}
+    spriteSize: 1.2
+    spriteSheet: {fileID: 2800000, guid: 69feaae5448d4af48f9c27ff7bbfcaeb, type: 3}
     frameCount: 1
-    directionCount: 1
+    directionCount: 2
     animationFps: 8
   bomb:
     explodeOnDeath: 0
@@ -76,8 +76,12 @@ MonoBehaviour:
     escortCount: 12
     escortSpacing: 0.46
     escortLeashDistance: 5
-    color: {r: 0.62, g: 0.68, b: 0.74, a: 1}
+    color: {r: 0.62, g: 0.3, b: 0.78, a: 1}
     wallHeight: 0.6
+    frontShellSprite: {fileID: 21300000, guid: 7d5314e78f444df6b5cf32120d0f01cf, type: 3}
+    backShellSprite: {fileID: 21300000, guid: dd90faa5a9e24e62b60b53bc787fd52c, type: 3}
+    shellArtScale: 1
+    collisionFromShellArt: 1
     visualPrefab: {fileID: 0}
     showFocusMarker: 1
     onBreak:

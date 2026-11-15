@@ -63,7 +63,21 @@ namespace MS2026.Fortress
         [Tooltip("盾の高さ（仮の見た目。m）。")]
         [Min(0f)] public float wallHeight = 0.6f;
 
-        [Tooltip("差し替え用の見た目。入れると仮の板の代わりにこれを置く（+X が正面、盾持ちの中心が原点。当たり判定は上の形のまま）。")]
+        [Tooltip("前の殻の絵（盾持ちとお供より上に描く）。絵は「左が正面（盾の外側）」で描いたもの。入れると仮の板の代わりに殻の絵を出し、" +
+                 "絵の縦の長さが盾の幅（横の板から横の板まで）になるよう大きさを合わせる。")]
+        public Sprite frontShellSprite;
+
+        [Tooltip("後ろの殻の絵（盾持ちとお供より下に描く。殻の内側）。前の殻と同じ大きさの画像に、同じ位置関係で描いたもの。空なら出さない。")]
+        public Sprite backShellSprite;
+
+        [Tooltip("殻の絵の大きさの倍率。1 で盾の形（上の値）にぴったり。正面の縁の位置は変えずに、後ろと横へ大きくなる。")]
+        [Range(0.5f, 2f)] public float shellArtScale = 1f;
+
+        [Tooltip("ON にすると、当たり判定（ビームが止まる所）を前の殻の絵の形にする（絵の輪郭は Unity が画像の取り込み時に作る）。" +
+                 "OFF なら上の形（コの字の板3枚）のまま。")]
+        public bool collisionFromShellArt = true;
+
+        [Tooltip("差し替え用の見た目。入れると仮の板の代わりにこれを置く（+X が正面、盾持ちの中心が原点。当たり判定は上の形のまま）。殻の絵が入っているときは使わない。")]
         public GameObject visualPrefab;
 
         [Tooltip("にらんでいる人の色の印を、正面の板の前に出す。")]
