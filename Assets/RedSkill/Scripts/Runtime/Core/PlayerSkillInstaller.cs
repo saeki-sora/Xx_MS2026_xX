@@ -59,6 +59,17 @@ namespace MS2026.Skills
             InstallAll();
         }
 
+        // キャラ選択の結果があとから届いた（途中から入った人の PC にホストから届いた）ら、スキルを配り直す。
+        private void OnEnable()
+        {
+            CharacterSelectionResult.Changed += InstallAll;
+        }
+
+        private void OnDisable()
+        {
+            CharacterSelectionResult.Changed -= InstallAll;
+        }
+
         /// <summary>シーン内の全ての砲台にスキル欄を付けてスキルを配る（もう付いていれば配り直すだけ）。</summary>
         public void InstallAll()
         {

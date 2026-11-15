@@ -26,6 +26,9 @@ namespace MS2026.CharacterSelect
         [Tooltip("選べるキャラの一覧。キャラを足す・並べ替えるときはこの一覧を直す（中身の差し替えは各キャラのファイルで）。")]
         public CharacterRoster roster;
 
+        [Tooltip("決まったとき、空いている席（人がいない席）に、選ばれなかったキャラを一覧の順に割り当てる（CPU がそのキャラで遊ぶ。2026-11-15）。")]
+        public bool fillEmptySeats = true;
+
         [Header("ルール")]
         [Tooltip("OFF: 誰かが決定したキャラは、ほかの人は選べない（早い者勝ち）。\nON: 同じキャラを何人でも選べる。\nネット対戦ではホストのPCの設定が全員に使われる。再生中に切り替えてもよい。")]
         public bool allowSameCharacter;
@@ -572,6 +575,11 @@ namespace MS2026.CharacterSelect
             for (var seat = 0; seat < chosen.Length; seat++)
             {
                 definitions[seat] = GetCharacter(chosen[seat]);
+            }
+
+            if (fillEmptySeats && roster != null)
+            {
+                definitions = CharacterSelectionResult.FillAbsent(definitions, roster.characters);
             }
 
             CharacterSelectionResult.Store(definitions);
