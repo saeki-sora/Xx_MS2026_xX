@@ -15,7 +15,7 @@ MonoBehaviour:
   cpuEnabled: 1
   fillOtherSeatsOffline: 1
   fillEmptySeatsOnline: 1
-  level: 1
+  level: 2
   randomSeed: 0
   thinkInterval: 0.15
   senseInterval: 0.1
@@ -104,8 +104,8 @@ MonoBehaviour:
     maxGrowth: 1.6
     expectedWaves: 0
   csvMode: 1
-  autoplayMatches: 5
-  autoplayTimeScale: 2
+  autoplayMatches: 1
+  autoplayTimeScale: 1
   autoplayWaitSeconds: 3
   autoplayMaxMinutes: 20
   logSeatChanges: 1
