@@ -12,6 +12,9 @@ namespace MS2026.Fortress
     {
         private static readonly List<Func<bool>> Holds = new List<Func<bool>>();
         private static readonly bool[] Downed = new bool[4];
+        private static readonly TurretCondition[] Conditions = new TurretCondition[4];
+        private static readonly float[] Health = { 1f, 1f, 1f, 1f };
+        private static readonly float[] Revive = new float[4];
         private static readonly Vector2[] PilotMoves = new Vector2[4];
         private static readonly bool[] PilotMoving = new bool[4];
         private static Action<string, TurretMoveRegion> _floorProvider;
@@ -22,6 +25,13 @@ namespace MS2026.Fortress
             Holds.Clear();
             _floorProvider = null;
             Array.Clear(Downed, 0, Downed.Length);
+            Array.Clear(Conditions, 0, Conditions.Length);
+            Array.Clear(Revive, 0, Revive.Length);
+            for (var p = 0; p < Health.Length; p++)
+            {
+                Health[p] = 1f;
+            }
+
             Array.Clear(PilotMoves, 0, PilotMoves.Length);
             Array.Clear(PilotMoving, 0, PilotMoving.Length);
         }
@@ -107,6 +117,26 @@ namespace MS2026.Fortress
             if (player >= 0 && player < Downed.Length)
             {
                 Downed[player] = downed;
+            }
+        }
+
+        /// <summary>このプレイヤー（0〜3）の調子（全PCで同じ。Host が決めて配った値）。</summary>
+        public static TurretCondition GetCondition(int player) =>
+            player >= 0 && player < Conditions.Length ? Conditions[player] : TurretCondition.Normal;
+
+        /// <summary>このプレイヤーの体力（0〜1。1 − 汚れ。倒れていれば 0）。</summary>
+        public static float GetHealth01(int player) => player >= 0 && player < Health.Length ? Health[player] : 1f;
+
+        /// <summary>倒れている間の復活の進み具合（0〜1）。</summary>
+        public static float GetRevive01(int player) => player >= 0 && player < Revive.Length ? Revive[player] : 0f;
+
+        internal static void SetCondition(int player, TurretCondition condition, float health01, float revive01)
+        {
+            if (player >= 0 && player < Conditions.Length)
+            {
+                Conditions[player] = condition;
+                Health[player] = Mathf.Clamp01(health01);
+                Revive[player] = Mathf.Clamp01(revive01);
             }
         }
 

@@ -122,6 +122,7 @@ namespace MS2026.Fortress
             {
                 _fades[p].Apply(_turrets[p], false, 0f, 1f, 1f);
                 TurretMoveHooks.SetDowned(p, false);
+                TurretMoveHooks.SetCondition(p, TurretCondition.Normal, 1f, 0f);
                 _downedFx[p].Dispose();
                 if (_downBlockers[p] != null)
                 {
@@ -194,6 +195,9 @@ namespace MS2026.Fortress
             {
                 var downed = _settings.downEnabled && _down.IsDowned(p);
                 TurretMoveHooks.SetDowned(p, downed);
+                var state = _down.States[p];
+                TurretMoveHooks.SetCondition(p, _settings.downEnabled ? state.Condition : TurretCondition.Normal,
+                    _settings.downEnabled ? state.Health01 : 1f, _settings.downEnabled ? state.Revive01 : 0f);
                 UpdateDownBlocker(p, downed);
                 _downedFx[p].Update(transform, _turrets[p], downed, _settings.bodyRadius, Time.unscaledDeltaTime);
             }
@@ -727,6 +731,7 @@ namespace MS2026.Fortress
             {
                 _fades[p].Apply(_turrets[p], false, 0f, 1f, 1f);
                 TurretMoveHooks.SetDowned(p, false);
+                TurretMoveHooks.SetCondition(p, TurretCondition.Normal, 1f, 0f);
                 UpdateDownBlocker(p, false);
                 _downedFx[p].Update(transform, null, false, 0f, 0f);
             }
