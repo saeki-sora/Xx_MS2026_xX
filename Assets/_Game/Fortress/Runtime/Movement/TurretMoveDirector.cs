@@ -64,6 +64,7 @@ namespace MS2026.Fortress
         // この PC が動かす砲台（自分の砲台と、操縦者（CPU など）の砲台）。プレイヤーごと。
         private int _localPlayer = -1;
         private int _ownedMask;
+        private int _lastOwnedMask;
         private readonly Vector2[] _inputVelocity = new Vector2[PlayerCount];
         private readonly Vector2[] _pushVelocity = new Vector2[PlayerCount];
         private readonly Vector2[] _rawPush = new Vector2[PlayerCount];
@@ -155,6 +156,7 @@ namespace MS2026.Fortress
 
             _localPlayer = FortressSeatMover.LocalPlayer();
             _ownedMask = OwnedMask();
+            HandOverReleasedSeats();
             _net.Tick(Time.unscaledDeltaTime, _settings, _turrets, _localPlayer, _ownedMask, _held, _down);
 
             TickDown(dt);
@@ -306,6 +308,28 @@ namespace MS2026.Fortress
 
         private bool IsPiloted(int player) => !_net.IsClient && TurretMoveHooks.TryGetPilotMove(player, out _);
 
+        // Host: 操縦者（CPU）が動かすのをやめた砲台（人が途中から来た席など）は、最後の位置を「届いた位置」として配り続ける。
+        // 途中から入った人は、それを引き継いでから自分で動かし始める（TurretMoveNet.TryTakeAdoption）。
+        private void HandOverReleasedSeats()
+        {
+            var localBit = _localPlayer >= 0 && _localPlayer < PlayerCount ? 1 << _localPlayer : 0;
+            var released = _lastOwnedMask & ~_ownedMask & ~localBit;
+            _lastOwnedMask = _ownedMask;
+            if (released == 0 || _net.IsClient)
+            {
+                return;
+            }
+
+            for (var p = 0; p < PlayerCount; p++)
+            {
+                var turret = TurretOf(p);
+                if ((released & (1 << p)) != 0 && turret != null)
+                {
+                    _net.SeedTarget(p, turret.transform.position);
+                }
+            }
+        }
+
         private void TickMovers(float dt)
         {
             var ringShown = false;
@@ -315,6 +339,15 @@ namespace MS2026.Fortress
                 {
                     _measuredVelocity[p] = Vector2.zero;
                     continue;
+                }
+
+                // 途中から入ったばかり: Host から届いた自分の席の位置（CPU が動かしていた場所）から始める。
+                if (p == _localPlayer && _net.TryTakeAdoption(out var adopted) && TurretOf(p) != null)
+                {
+                    var t = TurretOf(p).transform;
+                    t.position = new Vector3(adopted.x, adopted.y, t.position.z);
+                    _inputVelocity[p] = Vector2.zero;
+                    _pushVelocity[p] = Vector2.zero;
                 }
 
                 // 操縦者が動かしている砲台は操縦者の向き、自分の砲台は WASD。
@@ -745,6 +778,7 @@ namespace MS2026.Fortress
             System.Array.Clear(_pushVelocity, 0, _pushVelocity.Length);
             System.Array.Clear(_rawPush, 0, _rawPush.Length);
             System.Array.Clear(_measuredVelocity, 0, _measuredVelocity.Length);
+            _lastOwnedMask = 0;
             _region.Clear();
             ResetCameraFollow();
             _net.Clear();

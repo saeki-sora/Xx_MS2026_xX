@@ -11,6 +11,8 @@ namespace MS2026.Fortress
     /// ・Host → 全 Client: 4人分の位置（Client は自分の分は使わない）＋ 4人分の調子（倒れている・汚れ・復活の進み具合。Host が決める）。
     /// 席替えの回数（<see cref="FortressSeats.Shift"/>）を一緒に送り、回数が違う古い位置は捨てる（席替えの直後に前の席へ戻らないように）。
     /// NetworkObject は使わない（名前なしメッセージ <see cref="FortressNetChannel.TurretMove"/>）。取りこぼしても次がすぐ届くので Unreliable。
+    /// 途中から入った Client は、最初に Host から届いた自分の席の位置（CPU が動かしていた場所など）を引き継いでから、自分の位置を送り始める
+    /// （<see cref="TryTakeAdoption"/>。2秒届かなければ、今の場所のまま送り始める）。
     /// </summary>
     internal sealed class TurretMoveNet
     {
@@ -35,6 +37,12 @@ namespace MS2026.Fortress
         private float _sendTimer;
         private int _lastShift;
 
+        // Client: Host から最初の位置が届いて、自分の席の位置を引き継いだか（引き継ぐまでは自分の位置を送らない）。
+        private const float AdoptTimeout = 2f;
+        private bool _adoptedOwn;
+        private float _sinceRegistered;
+        private Vector2? _adoption;
+
         /// <summary>通信中（Host か Client）か。</summary>
         public bool IsActive { get; private set; }
 
@@ -55,6 +63,27 @@ namespace MS2026.Fortress
             dirt01 = ok ? _dirt[player] : 0f;
             revive01 = ok ? _revive[player] : 0f;
             return ok;
+        }
+
+        /// <summary>Client: Host から届いた、自分の席の引き継ぐ位置（1回だけ取れる）。</summary>
+        public bool TryTakeAdoption(out Vector2 position)
+        {
+            position = _adoption ?? default;
+            var ok = _adoption.HasValue;
+            _adoption = null;
+            return ok;
+        }
+
+        /// <summary>
+        /// Host: このプレイヤーの「届いた位置」を入れる（操縦者が動かすのをやめた砲台の最後の位置。Client から位置が届くまで、これを全員に配る）。
+        /// </summary>
+        public void SeedTarget(int player, Vector2 position)
+        {
+            if (player >= 0 && player < PlayerCount)
+            {
+                _targets[player] = position;
+                _hasTarget[player] = true;
+            }
         }
 
         public void Clear()
@@ -93,6 +122,15 @@ namespace MS2026.Fortress
                 Clear();
             }
 
+            if (!_adoptedOwn)
+            {
+                _sinceRegistered += dt;
+                if (_sinceRegistered >= AdoptTimeout)
+                {
+                    _adoptedOwn = true; // Host から位置が届かない（ほかに誰もいない など）。今の場所のまま送り始める。
+                }
+            }
+
             _sendTimer -= dt;
             if (_sendTimer > 0f)
             {
@@ -106,7 +144,7 @@ namespace MS2026.Fortress
             {
                 Broadcast(turrets, localPlayer, ownedMask, sendPositions, down);
             }
-            else if (sendPositions)
+            else if (sendPositions && _adoptedOwn)
             {
                 SendOwn(turrets, localPlayer);
             }
@@ -211,6 +249,7 @@ namespace MS2026.Fortress
             }
 
             var local = FortressSeatMover.LocalPlayer();
+            var adoptNow = !_adoptedOwn;
             for (var p = 0; p < PlayerCount; p++)
             {
                 reader.ReadValue(out byte hasPosition);
@@ -230,8 +269,15 @@ namespace MS2026.Fortress
                     _targets[p] = new Vector2(x, y);
                     _hasTarget[p] = true;
                 }
+
+                // 途中から入ったばかり: Host が知っている自分の席の位置（CPU が動かしていた場所）を引き継ぐ。
+                if (adoptNow && hasPosition != 0 && p == local && !FortressSeats.IsMoving && shift == (byte)FortressSeats.Shift)
+                {
+                    _adoption = new Vector2(x, y);
+                }
             }
 
+            _adoptedOwn = true;
             _hasConditions = true;
         }
 
@@ -284,6 +330,9 @@ namespace MS2026.Fortress
             _lastShift = FortressSeats.Shift;
             _sendTimer = 0f;
             _hasConditions = false;
+            _adoptedOwn = manager.IsServer;
+            _sinceRegistered = 0f;
+            _adoption = null;
             Clear();
             FortressNetMessages.Register(manager, FortressNetChannel.TurretMove, OnMessage);
         }
