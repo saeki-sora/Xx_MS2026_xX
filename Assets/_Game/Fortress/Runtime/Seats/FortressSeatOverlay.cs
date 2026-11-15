@@ -85,6 +85,12 @@ namespace MS2026.Fortress
             var settings = Settings;
             _title.text = string.IsNullOrEmpty(settings.bannerText) ? "席替え！" : settings.bannerText;
             _subtitle.text = !string.IsNullOrEmpty(settings.bannerSubText) ? settings.bannerSubText : FortressSeats.Clockwise ? "時計回りに1つ移動" : "反時計回りに1つ移動";
+            if (FortressSeats.IsFormationMove)
+            {
+                // ボス戦の並び替え（2026-11-15）。
+                _title.text = string.IsNullOrEmpty(FortressSeats.FormationBannerText) ? "FINAL WAVE" : FortressSeats.FormationBannerText;
+                _subtitle.text = FortressSeats.FormationBannerSubText;
+            }
             var font = settings.bannerFont != null ? settings.bannerFont : DefaultFont;
             _title.font = _subtitle.font = font;
         }
@@ -170,7 +176,7 @@ namespace MS2026.Fortress
         private void UpdateStreaks(WaveSeatRotation settings, float time)
         {
             var p = Mathf.Clamp01((time - settings.CameraStartTime) / Mathf.Max(0.01f, settings.cameraBlendSeconds));
-            var strength = settings.speedLines && _moving && p > 0f && p < 1f ? Mathf.Sin(Mathf.PI * p) : 0f;
+            var strength = settings.speedLines && _moving && !FortressSeats.IsFormationMove && p > 0f && p < 1f ? Mathf.Sin(Mathf.PI * p) : 0f;
             var size = _canvasRect.rect.size;
             var radius = size.magnitude * 0.5f;
             var seed = Mathf.FloorToInt(Time.unscaledTime * 30f);

@@ -37,8 +37,30 @@ namespace MS2026.Fortress
 
         private static List<SeatJumper> Jumpers => FortressSeats.JumperList;
 
+        private void OnEnable()
+        {
+            FortressSeats.FormationMoveHandler = BeginFormation;
+            FortressSeats.SnapHandler = SnapToCurrent;
+        }
+
+        private void SnapToCurrent()
+        {
+            if (_moving)
+            {
+                FinishMove(false);
+            }
+
+            SnapTo(FortressSeats.Shift);
+        }
+
         private void OnDisable()
         {
+            if (ReferenceEquals(FortressSeats.FormationMoveHandler?.Target, this))
+            {
+                FortressSeats.FormationMoveHandler = null;
+                FortressSeats.SnapHandler = null;
+            }
+
             if (_moving)
             {
                 FinishMove(false);
@@ -49,6 +71,25 @@ namespace MS2026.Fortress
         {
             DetectMatch();
             var target = FortressSeats.Shift;
+            if (FortressSeats.FormationLocked)
+            {
+                // ボス戦の配置の間: 席替えの回数だけ覚え直し、砲台は動かさない（並び替えの跳ぶ動きは続ける）。
+                if (_moving && !FortressSeats.IsFormationMove)
+                {
+                    FinishMove(false);
+                }
+
+                if (_moving)
+                {
+                    _toShift = target;
+                    TickMove(Time.deltaTime);
+                }
+
+                _appliedShift = target;
+                FortressSeats.CameraShift = target;
+                return;
+            }
+
             if (_moving)
             {
                 if (target != _toShift)
@@ -99,10 +140,73 @@ namespace MS2026.Fortress
 
         // ───────── 跳ぶ ─────────
 
+        // ボス戦の並び替え: 席替えと同じ跳び方で、指定の場所・向きへ。席の番号・カメラは変えない（2026-11-15）。
+        private bool BeginFormation(Vector3[] targets, float[] angles)
+        {
+            if (_moving)
+            {
+                FinishMove(false);
+            }
+
+            _settings = Settings;
+            Jumpers.Clear();
+            var local = LocalPlayer();
+            foreach (var turret in FindTurrets())
+            {
+                var p = turret.playerIndex;
+                if (p >= targets.Length || p >= angles.Length)
+                {
+                    continue;
+                }
+
+                var position = turret.transform.position;
+                var euler = turret.transform.eulerAngles;
+                Jumpers.Add(new SeatJumper
+                {
+                    Turret = turret,
+                    Player = p,
+                    From = position,
+                    To = new Vector3(targets[p].x, targets[p].y, position.z),
+                    Ground = position,
+                    Rank = (p - local + FortressSeats.SeatCount) % FortressSeats.SeatCount, // 自分から順に着地
+                    BaseScale = turret.transform.localScale,
+                    BaseRotation = Quaternion.Euler(euler.x, euler.y, angles[p])
+                });
+            }
+
+            if (Jumpers.Count == 0)
+            {
+                return false;
+            }
+
+            _moving = true;
+            _toShift = _appliedShift;
+            _time = 0f;
+            _hitStopLeft = 0f;
+            _cameraMoved = true; // カメラはボスの係が全員同じ引きの視点へ移す
+            FortressSeats.IsFormationMove = true;
+            FortressSeats.IsMoving = true;
+            FortressSeats.MoveTime = 0f;
+            FortressSeats.IsHitStopped = false;
+            LockInput();
+            if (_settings.AnticipationTime > 0f)
+            {
+                foreach (var jumper in Jumpers)
+                {
+                    PlayEffect(_settings.onAnticipate, jumper, jumper.From, jumper.Rank == 0);
+                }
+            }
+
+            FortressSeats.RaiseMoveStarted(_toShift);
+            TickMove(0f);
+            return true;
+        }
+
         private void BeginMove(int to)
         {
             EnsureSeats();
             _settings = Settings;
+            FortressSeats.IsFormationMove = false;
             Jumpers.Clear();
             var local = LocalPlayer();
             foreach (var turret in FindTurrets())
@@ -233,7 +337,7 @@ namespace MS2026.Fortress
             }
 
             var motionEnd = settings.TotalSeconds - settings.HitStopTotal;
-            if (_time >= motionEnd && _time >= settings.CameraStartTime && _hitStopLeft <= 0f)
+            if (_time >= motionEnd && (_cameraMoved || _time >= settings.CameraStartTime) && _hitStopLeft <= 0f)
             {
                 FinishMove(true);
             }
@@ -288,6 +392,7 @@ namespace MS2026.Fortress
             FortressSeats.MoveTime = 0f;
             FortressSeats.LastMoveCompleted = completed;
             UnlockInput();
+            var wasFormation = FortressSeats.IsFormationMove;
             if (completed)
             {
                 var settings = _settings ?? Settings;
@@ -296,6 +401,10 @@ namespace MS2026.Fortress
             }
 
             FortressSeats.RaiseMoveFinished(_toShift);
+            if (wasFormation)
+            {
+                FortressSeats.IsFormationMove = false;
+            }
         }
 
         // 跳ばずに、その場（shift 回進めた席）へ置く。
@@ -386,7 +495,7 @@ namespace MS2026.Fortress
             }
 
             _lockedInput = false;
-            if (FortressWaves.Phase != WavePhase.Break && FortressWaves.Phase != WavePhase.SeatChange)
+            if (FortressWaves.Phase != WavePhase.Break && FortressWaves.Phase != WavePhase.SeatChange && FortressWaves.Phase != WavePhase.BossFormation)
             {
                 LaserTurret.InputLocked = false;
             }

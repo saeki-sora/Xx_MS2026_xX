@@ -34,7 +34,22 @@ namespace MS2026.Fortress
         SeatChange = 8,
 
         /// <summary>試合の始まりの「コアを守れ！」（全員の準備ができた後、WAVE 1 の発表の前。HUD はまだ隠したまま。敵は来ない。2026-11-11）。</summary>
-        Opening = 9
+        Opening = 9,
+
+        /// <summary>ボスウェーブの前の並び替え（「FINAL WAVE」の帯。コアが左へ滑り、4人が跳んで縦一列に並ぶ。敵は来ない。2026-11-15）。</summary>
+        BossFormation = 10,
+
+        /// <summary>「WARNING」とボスの登場（右から入ってくる。まだ撃ってこない）。</summary>
+        BossWarning = 11,
+
+        /// <summary>ボスと戦っている（部位を壊すと HP が減る。ボスは少しずつ近づく）。制限時間は減らない。</summary>
+        BossCombat = 12,
+
+        /// <summary>部位を全部壊した（HP 0）。最後の「全員で握れ！」（失敗しない）。</summary>
+        BossFinale = 13,
+
+        /// <summary>ボスがコアに届いた（コアの体力が減る。コアが残ればクリア）。</summary>
+        BossReached = 14
     }
 
     /// <summary>ウェーブの計画が終わった理由。</summary>
@@ -115,7 +130,24 @@ namespace MS2026.Fortress
 
         public bool clockRunsDuringBreaks;
 
+        /// <summary>ウェーブごとに、ボスウェーブか（並びの長さはウェーブの数。足りなければ「ボスではない」）。</summary>
+        public bool[] bossWaves = Array.Empty<bool>();
+
+        /// <summary>ボスウェーブの前の並び替えの秒数（「FINAL WAVE」の帯と、4人が跳んで並ぶまで）。</summary>
+        public float bossFormationSeconds = 3.2f;
+
+        /// <summary>「WARNING」とボスが入ってくるまでの秒数。</summary>
+        public float bossWarningSeconds = 4.4f;
+
+        /// <summary>最後の「全員で握れ！」の最長の秒数（係が「終わった」と言わなくても、これで終わる）。</summary>
+        public float bossFinaleMaxSeconds = 30f;
+
+        /// <summary>ボスがコアに届いてから、クリアになるまでの秒数。</summary>
+        public float bossReachedSeconds = 3f;
+
         public int WaveCount => targets?.Length ?? 0;
+
+        public bool IsBossWave(int index) => bossWaves != null && index >= 0 && index < bossWaves.Length && bossWaves[index];
 
         public static WaveFlowConfig From(WavePlan plan)
         {
@@ -124,13 +156,15 @@ namespace MS2026.Fortress
             {
                 targets = new int[count],
                 breakSeconds = new float[count],
-                breakWaitsForEvent = new bool[count]
+                breakWaitsForEvent = new bool[count],
+                bossWaves = new bool[count]
             };
             if (plan == null)
             {
                 return config;
             }
 
+            BossDefinition firstBoss = null;
             for (var i = 0; i < count; i++)
             {
                 var wave = plan.waves[i];
@@ -138,6 +172,19 @@ namespace MS2026.Fortress
                 var ev = wave?.intervalEvent;
                 config.breakSeconds[i] = ev != null ? Mathf.Max(0f, ev.DurationSeconds) : Mathf.Max(0f, wave?.restSeconds ?? 0f);
                 config.breakWaitsForEvent[i] = ev != null;
+                config.bossWaves[i] = wave != null && wave.boss != null;
+                if (firstBoss == null && wave != null)
+                {
+                    firstBoss = wave.boss;
+                }
+            }
+
+            if (firstBoss != null)
+            {
+                config.bossFormationSeconds = firstBoss.FormationSeconds;
+                config.bossWarningSeconds = firstBoss.WarningSeconds;
+                config.bossFinaleMaxSeconds = firstBoss.finaleMaxSeconds;
+                config.bossReachedSeconds = firstBoss.reachedSeconds;
             }
 
             config.startDelaySeconds = plan.startDelaySeconds;
@@ -170,6 +217,15 @@ namespace MS2026.Fortress
 
         /// <summary>合間の係が「終わった」と言っているか。</summary>
         public bool breakFinished;
+
+        /// <summary>ボスの残りの部位の数（ボスがいない・まだ分からないときは −1）。0 になったら最後の「全員で握れ！」へ。</summary>
+        public int bossPartsLeft;
+
+        /// <summary>ボスがコアに届いたか。</summary>
+        public bool bossReachedCore;
+
+        /// <summary>最後の「全員で握れ！」が終わったか（ボスを倒し切った）。</summary>
+        public bool bossFinaleDone;
     }
 
     /// <summary>
@@ -253,7 +309,8 @@ namespace MS2026.Fortress
                 }
             }
 
-            if (TimeLeft >= 0f && (Phase == WavePhase.Combat || _config.clockRunsDuringBreaks) && !IsPreMatch(Phase))
+            // ボス戦の間は時間が止まる（2026-11-15 ユーザー決定。近づいてくるボスが実質の制限時間）。
+            if (TimeLeft >= 0f && (Phase == WavePhase.Combat || _config.clockRunsDuringBreaks) && !IsPreMatch(Phase) && !IsBossPhase(Phase))
             {
                 TimeLeft = Mathf.Max(0f, TimeLeft - dt);
                 if (TimeLeft <= 0f)
@@ -274,7 +331,7 @@ namespace MS2026.Fortress
                 case WavePhase.Opening:
                     if (PhaseTime >= _config.openingSeconds)
                     {
-                        signal |= EnterAnnounce();
+                        signal |= EnterWaveStart();
                     }
 
                     break;
@@ -296,7 +353,47 @@ namespace MS2026.Fortress
                     if (PhaseTime >= _config.clearBannerSeconds && (input.retreatingVisible <= 0 || PhaseTime >= _config.retreatMaxSeconds))
                     {
                         signal |= WaveFlowSignal.FinishRetreat;
-                        signal |= Enter(WavePhase.Break, BreakSeconds(WaveIndex), WaveFlowSignal.BeginBreak);
+                        signal |= AfterRetreat();
+                    }
+
+                    break;
+                case WavePhase.BossFormation:
+                    if (PhaseTime >= _config.bossFormationSeconds)
+                    {
+                        signal |= Enter(WavePhase.BossWarning, _config.bossWarningSeconds, WaveFlowSignal.None);
+                    }
+
+                    break;
+                case WavePhase.BossWarning:
+                    if (PhaseTime >= _config.bossWarningSeconds)
+                    {
+                        signal |= StartBossCombat(input.totalKills);
+                    }
+
+                    break;
+                case WavePhase.BossCombat:
+                    if (input.bossReachedCore)
+                    {
+                        signal |= Enter(WavePhase.BossReached, _config.bossReachedSeconds, WaveFlowSignal.StopSpawning);
+                    }
+                    else if (input.bossPartsLeft == 0)
+                    {
+                        signal |= Enter(WavePhase.BossFinale, _config.bossFinaleMaxSeconds, WaveFlowSignal.StopSpawning);
+                    }
+
+                    break;
+                case WavePhase.BossFinale:
+                    if (input.bossFinaleDone || PhaseTime >= PhaseDuration)
+                    {
+                        signal |= ClearWave(WaveFlowSignal.None);
+                    }
+
+                    break;
+                case WavePhase.BossReached:
+                    if (PhaseTime >= PhaseDuration)
+                    {
+                        // コアが残っていれば、倒したときと同じくクリア（コアが壊れたら、その前に試合の係がゲームオーバーにする）。
+                        signal |= ClearWave(WaveFlowSignal.None);
                     }
 
                     break;
@@ -311,7 +408,7 @@ namespace MS2026.Fortress
                 case WavePhase.SeatChange:
                     if (PhaseTime >= _config.seatChangeSeconds)
                     {
-                        signal |= EnterAnnounce();
+                        signal |= EnterWaveStart();
                     }
 
                     break;
@@ -328,7 +425,7 @@ namespace MS2026.Fortress
                 case WavePhase.WaitingForPlayers:
                     return AfterWaiting();
                 case WavePhase.Opening:
-                    return EnterAnnounce();
+                    return EnterWaveStart();
                 case WavePhase.Hint:
                     return StartCombat(totalKills);
                 case WavePhase.Announce:
@@ -337,11 +434,21 @@ namespace MS2026.Fortress
                     KillsInWave = Target;
                     return ClearWave(WaveFlowSignal.None);
                 case WavePhase.Retreat:
-                    return WaveFlowSignal.FinishRetreat | Enter(WavePhase.Break, BreakSeconds(WaveIndex), WaveFlowSignal.BeginBreak);
+                    return WaveFlowSignal.FinishRetreat | AfterRetreat();
                 case WavePhase.Break:
                     return EndBreak();
                 case WavePhase.SeatChange:
-                    return EnterAnnounce();
+                    return EnterWaveStart();
+                case WavePhase.BossFormation:
+                    return Enter(WavePhase.BossWarning, _config.bossWarningSeconds, WaveFlowSignal.None);
+                case WavePhase.BossWarning:
+                    return StartBossCombat(totalKills);
+                case WavePhase.BossCombat:
+                    // テスト用: 部位を全部壊したことにする。
+                    return Enter(WavePhase.BossFinale, _config.bossFinaleMaxSeconds, WaveFlowSignal.StopSpawning);
+                case WavePhase.BossFinale:
+                case WavePhase.BossReached:
+                    return ClearWave(WaveFlowSignal.None);
                 default:
                     return WaveFlowSignal.None;
             }
@@ -355,16 +462,24 @@ namespace MS2026.Fortress
                 return WaveFlowSignal.None;
             }
 
-            var stop = Phase == WavePhase.Combat ? WaveFlowSignal.StopSpawning : WaveFlowSignal.None;
+            var stop = Phase == WavePhase.Combat || Phase == WavePhase.BossCombat ? WaveFlowSignal.StopSpawning : WaveFlowSignal.None;
             var endBreak = Phase == WavePhase.Break ? WaveFlowSignal.EndBreak : WaveFlowSignal.None;
             var endRetreat = Phase == WavePhase.Retreat ? WaveFlowSignal.FinishRetreat : WaveFlowSignal.None;
             WaveIndex = Mathf.Clamp(index, 0, WaveCount - 1);
             EndKind = WaveEndKind.None;
-            return stop | endBreak | endRetreat | EnterAnnounce();
+            return stop | endBreak | endRetreat | EnterWaveStart();
         }
 
         /// <summary>試合の始まりの、まだ戦いの前の段階か（時間が減らない）。</summary>
         public static bool IsPreMatch(WavePhase phase) => phase == WavePhase.WaitingForPlayers || phase == WavePhase.Opening || phase == WavePhase.Hint;
+
+        /// <summary>ボスウェーブの段階か（並び替え・WARNING・戦い・最後の握り・コアに届いた）。時間が減らない。</summary>
+        public static bool IsBossPhase(WavePhase phase) =>
+            phase == WavePhase.BossFormation || phase == WavePhase.BossWarning || phase == WavePhase.BossCombat ||
+            phase == WavePhase.BossFinale || phase == WavePhase.BossReached;
+
+        /// <summary>今のウェーブがボスウェーブか。</summary>
+        public bool IsBossWave => _config.IsBossWave(WaveIndex);
 
         /// <summary>WAVE 1 の発表の後の「YOU の矢印・HUD → 3・2・1」の秒数（0 なら発表からすぐ戦い）。</summary>
         public float PreludeSeconds => Mathf.Max(0f, _config.hintSeconds) + Mathf.Max(0f, _config.countdownSeconds);
@@ -373,9 +488,34 @@ namespace MS2026.Fortress
         private WaveFlowSignal AfterWaiting() =>
             _config.openingSeconds > 0f
                 ? Enter(WavePhase.Opening, _config.openingSeconds, WaveFlowSignal.None)
-                : EnterAnnounce();
+                : EnterWaveStart();
 
         private WaveFlowSignal EnterAnnounce() => Enter(WavePhase.Announce, _config.announceSeconds, WaveFlowSignal.None);
+
+        // 今のウェーブの始まり: ふつうのウェーブは発表、ボスウェーブは並び替え（「FINAL WAVE」の帯）。
+        private WaveFlowSignal EnterWaveStart() =>
+            IsBossWave
+                ? Enter(WavePhase.BossFormation, _config.bossFormationSeconds, WaveFlowSignal.None)
+                : EnterAnnounce();
+
+        // 撤退が終わったら合間へ。次がボスウェーブなら、合間（歯みがきタイム）も席替えもせず、すぐ並び替え（2026-11-15 ユーザー決定）。
+        private WaveFlowSignal AfterRetreat()
+        {
+            if (_config.IsBossWave(WaveIndex + 1))
+            {
+                WaveIndex++;
+                return Enter(WavePhase.BossFormation, _config.bossFormationSeconds, WaveFlowSignal.None);
+            }
+
+            return Enter(WavePhase.Break, BreakSeconds(WaveIndex), WaveFlowSignal.BeginBreak);
+        }
+
+        private WaveFlowSignal StartBossCombat(int totalKills)
+        {
+            KillsAtWaveStart = totalKills;
+            KillsInWave = 0;
+            return Enter(WavePhase.BossCombat, 0f, WaveFlowSignal.StartSpawning);
+        }
 
         // 発表が終わったら戦い。WAVE 1 だけは、先に YOU の矢印と HUD を出し、最後に 3・2・1（ヒントの段階）。
         private WaveFlowSignal AfterAnnounce(int totalKills) =>
@@ -387,9 +527,9 @@ namespace MS2026.Fortress
         private WaveFlowSignal EndBreak()
         {
             WaveIndex++;
-            var next = _config.seatChangeSeconds > 0f
+            var next = _config.seatChangeSeconds > 0f && !IsBossWave
                 ? Enter(WavePhase.SeatChange, _config.seatChangeSeconds, WaveFlowSignal.None)
-                : EnterAnnounce();
+                : EnterWaveStart();
             return WaveFlowSignal.EndBreak | next;
         }
 

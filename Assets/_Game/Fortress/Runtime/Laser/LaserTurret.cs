@@ -95,6 +95,28 @@ namespace MS2026.Fortress
         public bool HoldForSkill { get; set; }
 
         /// <summary>
+        /// 入っている間は 360 度回らず、決まった扇形の中を行ったり来たりする（ボス戦。2026-11-15 ユーザー決定「右向きの扇形を往復」）。
+        /// 回る速さは今までと同じ（太く撃つほど遅くなる）。全員のPCで同じ値を入れる（Client の見た目は Host の向きに追いつく）。
+        /// </summary>
+        public TurretSweep Sweep
+        {
+            get => _sweep;
+            set
+            {
+                if (!_sweep.enabled && value.enabled)
+                {
+                    _sweepSign = 1f;
+                }
+
+                _sweep = value;
+            }
+        }
+
+        private TurretSweep _sweep;
+        private float _sweepSign = 1f;
+        private float _signedSpeed;
+
+        /// <summary>
         /// trueの間は自分で計算せず、<see cref="ApplySnapshot"/>で受け取った状態をそのまま見せる(ネット対戦のClient側)。
         /// </summary>
         public bool IsReplica { get; private set; }
@@ -130,6 +152,11 @@ namespace MS2026.Fortress
         public TurretSnapshot CaptureSnapshot()
         {
             var sign = rotationDirection == TurretRotationDirection.Clockwise ? -1f : 1f;
+            if (_sweep.enabled)
+            {
+                sign = CurrentRotationSpeed > 1e-4f ? Mathf.Sign(_signedSpeed) : sign;
+            }
+
             return new TurretSnapshot
             {
                 State = (byte)State,
@@ -312,9 +339,51 @@ namespace MS2026.Fortress
             CurrentRotationMultiplier = Mathf.Lerp(CurrentRotationMultiplier, targetMultiplier, blend);
             CurrentRotationSpeed = tuning.rotationSpeedDegPerSec * rotationSpeedScale * CurrentRotationMultiplier;
 
+            if (_sweep.enabled)
+            {
+                CurrentRotationSpeed *= Mathf.Max(0f, _sweep.speedMultiplier);
+                RotateInSweep(dt);
+                return;
+            }
+
             // Unityの回転は反時計回りが正。時計回りは負の向きに回す。
             var sign = rotationDirection == TurretRotationDirection.Clockwise ? -1f : 1f;
-            transform.Rotate(0f, 0f, sign * CurrentRotationSpeed * dt);
+            _signedSpeed = sign * CurrentRotationSpeed;
+            transform.Rotate(0f, 0f, _signedSpeed * dt);
+        }
+
+        // 扇形の端で向きを変えて往復する。扇形の外にいる（入った直前）なら、近い端へ向かって回り込む。
+        private void RotateInSweep(float dt)
+        {
+            var half = Mathf.Max(0f, _sweep.halfAngleDegrees);
+            var offset = Mathf.DeltaAngle(_sweep.centerDegrees, transform.eulerAngles.z);
+            var step = CurrentRotationSpeed * dt;
+            float next;
+            if (Mathf.Abs(offset) > half + 0.01f)
+            {
+                _sweepSign = offset > 0f ? -1f : 1f;
+                next = Mathf.MoveTowards(offset, offset > 0f ? half : -half, Mathf.Max(step, 0f));
+            }
+            else
+            {
+                next = offset + _sweepSign * step;
+                if (next >= half)
+                {
+                    next = half - (next - half);
+                    _sweepSign = -1f;
+                }
+                else if (next <= -half)
+                {
+                    next = -half + (-half - next);
+                    _sweepSign = 1f;
+                }
+
+                next = Mathf.Clamp(next, -half, half);
+            }
+
+            _signedSpeed = _sweepSign * CurrentRotationSpeed;
+            var euler = transform.eulerAngles;
+            transform.rotation = Quaternion.Euler(euler.x, euler.y, _sweep.centerDegrees + next);
         }
 
         /// <summary>

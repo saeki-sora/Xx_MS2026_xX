@@ -65,6 +65,50 @@ namespace MS2026.Fortress
 
         internal static float FinaleStart { get; set; } = -1000f;
 
+        /// <summary>
+        /// 今の跳ぶ動きが、席替えではなく「ボス戦の配置への並び替え」か（2026-11-15）。
+        /// 並び替えでは席の番号もカメラも変わらない。帯の文字は <see cref="FormationBannerText"/>、コアのまわりの矢印の輪は出さない。
+        /// </summary>
+        public static bool IsFormationMove { get; internal set; }
+
+        /// <summary>
+        /// ボス戦の配置にしている間 true（ボスの係が入れる）。この間は席替えの回数が変わっても砲台を動かさない
+        /// （テストで最終ウェーブへ飛ばした・途中から入ったとき、席替えの係が砲台を元の席へ置き直さないように）。
+        /// </summary>
+        public static bool FormationLocked { get; set; }
+
+        /// <summary>並び替えのときの帯の文字（空なら「FINAL WAVE」）。</summary>
+        public static string FormationBannerText { get; internal set; } = "";
+
+        /// <summary>並び替えのときの帯の小さい文字。</summary>
+        public static string FormationBannerSubText { get; internal set; } = "";
+
+        /// <summary>並び替えのとき、コアが滑っていく先（締めの光が集まる場所）。</summary>
+        public static Vector3 FormationCoreTarget { get; internal set; }
+
+        internal static Func<Vector3[], float[], bool> FormationMoveHandler;
+        internal static Action SnapHandler;
+
+        /// <summary>跳ばずに、全員の砲台を今の席替えの回数の席へ置き直す（ボス戦の配置をやめたとき）。</summary>
+        public static void SnapToSeats() => SnapHandler?.Invoke();
+
+        /// <summary>
+        /// 全員の砲台を、席替えと同じ跳び方で指定の場所・向きへ移す（ボス戦の並び替え。各PCが自分で動かす）。
+        /// targets・anglesDegrees はプレイヤーの番号順（P1〜P4）。向きは <see cref="LaserTurret.AimAngleDegrees"/> と同じ。始められたら true。
+        /// </summary>
+        public static bool BeginFormationMove(Vector3[] targets, float[] anglesDegrees, Vector3 coreTarget, string banner, string subText)
+        {
+            if (FormationMoveHandler == null || targets == null || anglesDegrees == null)
+            {
+                return false;
+            }
+
+            FormationBannerText = banner ?? "";
+            FormationBannerSubText = subText ?? "";
+            FormationCoreTarget = coreTarget;
+            return FormationMoveHandler(targets, anglesDegrees);
+        }
+
         /// <summary>席の並び（時計回り。席の場所が分かるまでは番号順）。</summary>
         public static int[] Order => _order ??= DefaultOrder();
 
@@ -153,6 +197,7 @@ namespace MS2026.Fortress
             JumperList.Clear();
             YouMarkerUntil = -1f;
             FinaleStart = -1000f;
+            IsFormationMove = false;
             if (_registeredSeats == null)
             {
                 _order = null;
@@ -202,6 +247,9 @@ namespace MS2026.Fortress
             TurretLanded = null;
             DebugRotateHandler = null;
             DebugResetHandler = null;
+            FormationMoveHandler = null;
+            SnapHandler = null;
+            FormationLocked = false;
         }
     }
 

@@ -215,7 +215,10 @@ namespace MS2026.Fortress
                 totalKills = EnemyKillCounter.Total,
                 playersReady = AllPlayersReady(),
                 retreatingVisible = WaveRetreat.VisibleCount,
-                breakFinished = FortressWaves.BreakRunner != null && FortressWaves.BreakRunner.IsFinished
+                breakFinished = FortressWaves.BreakRunner != null && FortressWaves.BreakRunner.IsFinished,
+                bossPartsLeft = FortressBoss.PartsLeft,
+                bossReachedCore = FortressBoss.ReachedCore,
+                bossFinaleDone = FortressBoss.FinaleDone
             };
             var signal = _flow.Tick(dt, input);
             CopyFlowState();
@@ -241,10 +244,17 @@ namespace MS2026.Fortress
         }
 
         // 席替えの回数: ウェーブの番号と同じ（合間が終わって次のウェーブの番号になった瞬間に1つ進む）＋テスト用に足した分。
+        // ボスウェーブでは席替えをしない（並び替えはボスの係が行う）ので、前のウェーブの回数のまま。
         private int SeatShift()
         {
             var rotate = _plan != null && _plan.seatRotation != null && _plan.seatRotation.enabled;
-            return (rotate ? _flow.WaveIndex : 0) + _seatExtra;
+            var index = _flow.WaveIndex;
+            while (index > 0 && _flow.Config.IsBossWave(index))
+            {
+                index--;
+            }
+
+            return (rotate ? index : 0) + _seatExtra;
         }
 
         private void Apply(WaveFlowSignal signal)
@@ -257,7 +267,8 @@ namespace MS2026.Fortress
             if ((signal & WaveFlowSignal.StartSpawning) != 0 && _director != null)
             {
                 var wave = _plan.Get(_flow.WaveIndex);
-                if (wave != null)
+                // ボスウェーブの湧きはボス（菌を出す口）が受け持つ。湧きの行も一緒に流すかはボスの設定で決める。
+                if (wave != null && (wave.boss == null || wave.boss.alsoPlayWaveSpawns))
                 {
                     _director.PlayEntries(wave.spawnEntries, wave.repeatUntilCleared, wave.repeatGapSeconds);
                 }
@@ -436,7 +447,8 @@ namespace MS2026.Fortress
             }
 
             // 合間（歯みがきタイムなど）の間は撃てない・回らない（握るのはイベントのため）。席替えの間も（跳んで移っている）。
-            LaserTurret.InputLocked = next == WavePhase.Break || next == WavePhase.SeatChange;
+            // ボス戦の並び替えの間も（跳んで移っている）。
+            LaserTurret.InputLocked = next == WavePhase.Break || next == WavePhase.SeatChange || next == WavePhase.BossFormation;
             WaveRetreat.SetRetreatLook(next == WavePhase.Retreat);
             _lastCountdownTick = -1;
             PlayPhaseEffect(next);

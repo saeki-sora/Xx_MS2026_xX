@@ -12,10 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99359cf5400741688f5eb57655e20b80, type: 3}
   m_Name: WavePlan_Stage2_Bath
   m_EditorClassIdentifier: MS2026.Fortress.Runtime::MS2026.Fortress.WavePlan
-  memo: "\u4eee\u306e\u30ec\u30d9\u30eb\u30c7\u30b6\u30a4\u30f3\uff08Claude 2026-10-24\uff09\u3002\u30b9\u30c6\u30fc\u30b81\u3068\u540c\u3058\u96e3\u3057\u3055\uff08\u76ee\u6a19 120/250/400/530/700\uff09\u3002WAVE 1\u301c2 \u306f\u4e0a\u306e\u3075\u3061\u3001WAVE 3 \u3067\u6a4b\u304c\u5d29\u308c\u3066\uff08StageCoreDrop.collapseAtWave\uff09\u5e8a\u306e\u6a2a\u304c\u4e2d\u5fc3\u3002\u5236\u9650\u6642\u9593\u306f\u6226\u3063\u3066\u3044\u308b\u9593\u3060\u3051 5 \u5206\u3002"
+  memo: "\u4EEE\u306E\u30EC\u30D9\u30EB\u30C7\u30B6\u30A4\u30F3\uFF08Claude 2026-10-24\uFF09\u3002\u30B9\u30C6\u30FC\u30B81\u3068\u540C\u3058\u96E3\u3057\u3055\uFF08\u76EE\u6A19
+    120/250/400/530/700\uFF09\u3002WAVE 1\u301C2 \u306F\u4E0A\u306E\u3075\u3061\u3001WAVE
+    3 \u3067\u6A4B\u304C\u5D29\u308C\u3066\uFF08StageCoreDrop.collapseAtWave\uFF09\u5E8A\u306E\u6A2A\u304C\u4E2D\u5FC3\u3002\u5236\u9650\u6642\u9593\u306F\u6226\u3063\u3066\u3044\u308B\u9593\u3060\u3051
+    5 \u5206\u3002"
   waves:
-  - label: ""
-    announceText: "\u4e0a\u306e\u3075\u3061\u304b\u3089\u6765\u308b\u305e\uff01"
+  - label: 
+    announceText: "\u4E0A\u306E\u3075\u3061\u304B\u3089\u6765\u308B\u305E\uFF01"
     targetKills: 120
     spawnEntries:
     - triggerTime: 0
@@ -50,8 +53,9 @@ MonoBehaviour:
     repeatGapSeconds: 2
     intervalEvent: {fileID: 11400000, guid: 2526502f71e844809aacc98223d4e078, type: 2}
     restSeconds: 3
-  - label: ""
-    announceText: "\u6a2a\u306e\u51fa\u53e3\u304b\u3089\u3082\u6765\u308b\uff01"
+    boss: {fileID: 0}
+  - label: 
+    announceText: "\u6A2A\u306E\u51FA\u53E3\u304B\u3089\u3082\u6765\u308B\uFF01"
     targetKills: 250
     spawnEntries:
     - triggerTime: 0
@@ -100,8 +104,9 @@ MonoBehaviour:
     repeatGapSeconds: 2
     intervalEvent: {fileID: 11400000, guid: 2526502f71e844809aacc98223d4e078, type: 2}
     restSeconds: 3
-  - label: ""
-    announceText: "\u6a4b\u304c\u5d29\u308c\u308b\uff01\u5e8a\u3092\u5b88\u308c\uff01"
+    boss: {fileID: 0}
+  - label: 
+    announceText: "\u6A4B\u304C\u5D29\u308C\u308B\uFF01\u5E8A\u3092\u5B88\u308C\uFF01"
     targetKills: 400
     spawnEntries:
     - triggerTime: 0
@@ -164,8 +169,9 @@ MonoBehaviour:
     repeatGapSeconds: 2
     intervalEvent: {fileID: 11400000, guid: 2526502f71e844809aacc98223d4e078, type: 2}
     restSeconds: 3
-  - label: ""
-    announceText: "\u4e0a\u3068\u4e0b\u304b\u3089\u540c\u6642\u306b\uff01"
+    boss: {fileID: 0}
+  - label: 
+    announceText: "\u4E0A\u3068\u4E0B\u304B\u3089\u540C\u6642\u306B\uFF01"
     targetKills: 530
     spawnEntries:
     - triggerTime: 0
@@ -242,8 +248,9 @@ MonoBehaviour:
     repeatGapSeconds: 2
     intervalEvent: {fileID: 11400000, guid: 2526502f71e844809aacc98223d4e078, type: 2}
     restSeconds: 3
-  - label: ""
-    announceText: "\u6700\u5f8c\u306e\u5927\u7fa4\uff01"
+    boss: {fileID: 0}
+  - label: 
+    announceText: "\u6700\u5F8C\u306E\u5927\u7FA4\uFF01"
     targetKills: 700
     spawnEntries:
     - triggerTime: 0
@@ -348,6 +355,7 @@ MonoBehaviour:
     repeatGapSeconds: 2
     intervalEvent: {fileID: 0}
     restSeconds: 3
+    boss: {fileID: 11400000, guid: b6d9c654d58c03b49aba8f03e46ba22d, type: 2}
   timeLimitSeconds: 300
   timeUpRule: 0
   clockRunsDuringBreaks: 0
@@ -360,6 +368,122 @@ MonoBehaviour:
   clearBannerSeconds: 1.6
   retreatMaxSeconds: 5
   retreatSpeedMultiplier: 2.4
+  seatRotation:
+    enabled: 1
+    direction: 0
+    jumpSeconds: 0.9
+    jumpHeight: 2.5
+    jumpScale: 0.15
+    landSquash: 0.4
+    landSquashSeconds: 0.3
+    anticipation: 1
+    anticipationSeconds: 0.6
+    crouchAmount: 0.24
+    crouchShake: 0.06
+    launchStretch: 0.2
+    showPathPreview: 1
+    showDirectionRing: 1
+    showBanner: 1
+    bannerText: "\u5E2D\u66FF\u3048\uFF01"
+    bannerSubText: 
+    bannerFont: {fileID: 0}
+    darkenEdges: 1
+    darkenAmount: 0.6
+    showShadow: 1
+    showTrail: 1
+    spinInAir: 1
+    spinTurns: 1
+    hangAtApex: 1
+    hangSeconds: 0.25
+    hangPower: 2.1
+    cameraPullBack: 1
+    cameraPullAmount: 0.16
+    speedLines: 1
+    cameraDelaySeconds: 0.1
+    cameraBlendSeconds: 1.4
+    shakeOnLand: 0
+    landShake:
+      amplitude: 0.18
+      rollAmplitude: 0.4
+      frequency: 18
+      duration: 0.3
+    staggerLanding: 1
+    staggerSeconds: 0.12
+    shockwave: 1
+    shockwaveRadius: 4.4
+    hitStop: 1
+    hitStopSeconds: 0.06
+    floorWave: 1
+    floorTileSize: 1.6
+    sparkle: 1
+    showYouMarker: 1
+    youMarkerSeconds: 2
+    youPillar: 1
+    gatherToCore: 1
+    okMarks: 1
+    onAnticipate:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onJump:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onLand:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onSparkle:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onGather:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 0
+      colorParam: Color
+    onOk:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+  onOpening:
+    vfx:
+      value: 0
+      type: 0
+    se:
+      value: 0
+      type: 0
+    tintWithPlayerColor: 0
+    colorParam: Color
   onAnnounce:
     vfx:
       value: 0

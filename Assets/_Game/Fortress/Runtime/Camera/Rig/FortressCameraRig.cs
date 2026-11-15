@@ -42,6 +42,8 @@ namespace MS2026.Fortress.Cameras
         private LocalViewerResolver _viewerResolver;
         private bool _initialized;
         private int _currentSlot = ViewerIndex.Overview;
+        private bool _hasViewOverride;
+        private CameraViewSettings _viewOverride;
 
         /// <summary>シーンで有効なリグ(1つだけ置く想定)。演出やデバッグ機能はここから辿る。</summary>
         public static FortressCameraRig Active { get; private set; }
@@ -117,6 +119,43 @@ namespace MS2026.Fortress.Cameras
             preset = next;
         }
 
+        /// <summary>
+        /// 全員同じ視点にするなど、プリセットの代わりにこの視点を使う（ボス戦の引きの画面。2026-11-15）。blendSeconds かけて移る。
+        /// 止めるときは <see cref="ClearViewOverride"/>。
+        /// </summary>
+        public void SetViewOverride(CameraViewSettings view, float blendSeconds)
+        {
+            if (_initialized)
+            {
+                _blend.Begin(BaseView, blendSeconds, blendCurve);
+            }
+
+            _viewOverride = view.Sanitized();
+            _hasViewOverride = true;
+        }
+
+        /// <summary>視点の上書きをやめ、プリセットの視点へ blendSeconds かけて戻る。</summary>
+        public void ClearViewOverride(float blendSeconds)
+        {
+            if (!_hasViewOverride)
+            {
+                return;
+            }
+
+            if (_initialized)
+            {
+                _blend.Begin(BaseView, blendSeconds, blendCurve);
+            }
+
+            _hasViewOverride = false;
+        }
+
+        /// <summary>視点を上書きしているか。</summary>
+        public bool HasViewOverride => _hasViewOverride;
+
+        /// <summary>今の視点セット（プリセット）で、この持ち主が見る視点（上書きは入れない）。</summary>
+        public CameraViewSettings PresetView(int viewer) => preset != null ? preset.GetView(viewer) : CameraViewSettings.Default;
+
         /// <summary>一時演出(ズーム・揺れ等)を重ねる。終われば自動で取り除かれる。</summary>
         public void AddModifier(ICameraViewModifier modifier) => _modifiers.Add(modifier);
 
@@ -176,7 +215,7 @@ namespace MS2026.Fortress.Cameras
                 _currentSlot = slot;
             }
 
-            BaseView = _blend.Evaluate(preset.GetView(slot), deltaTime);
+            BaseView = _blend.Evaluate(_hasViewOverride ? _viewOverride : preset.GetView(slot), deltaTime);
             CurrentView = _modifiers.Apply(BaseView, deltaTime);
             ApplyToCamera(CurrentView);
             EnemyScreenAlign.Apply(preset.enemiesFaceScreen, targetCamera);

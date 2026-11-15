@@ -45,6 +45,13 @@ namespace MS2026.Fortress
         [Min(0f)]
         public float restSeconds = 3f;
 
+        [Tooltip("ボスウェーブにするときのボス（空ならふつうのウェーブ）。入れると、このウェーブは撃破数ではなく「ボスを倒す（またはボスがコアに届いても、コアが残る）」で終わる。" +
+                 "前のウェーブの後は歯みがきタイムも席替えもせず、すぐボス戦の配置に並び替える。湧きの行・目標撃破数は使わない。")]
+        public BossDefinition boss;
+
+        /// <summary>ボスウェーブか。</summary>
+        public bool IsBossWave => boss != null;
+
         public WaveDefinition Clone()
         {
             var copy = (WaveDefinition)MemberwiseClone();
@@ -218,6 +225,7 @@ namespace MS2026.Fortress
                 {
                     Mix(waves[i]?.targetKills ?? 0);
                     Mix(waves[i]?.spawnEntries?.Count ?? 0);
+                    Mix(waves[i]?.boss != null ? waves[i].boss.parts.Count + 1 : 0);
                 }
 
                 Mix(Mathf.RoundToInt(timeLimitSeconds * 10f));

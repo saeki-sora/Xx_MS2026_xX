@@ -49,6 +49,12 @@ namespace MS2026.Fortress
         /// <summary>今のウェーブの定義（このPCの計画から。無ければ null）。</summary>
         public static WaveDefinition CurrentWave => Plan != null ? Plan.Get(WaveIndex) : null;
 
+        /// <summary>今のウェーブのボス（ボスウェーブでなければ null）。</summary>
+        public static BossDefinition CurrentBoss => CurrentWave?.boss;
+
+        /// <summary>ボスウェーブの段階か（並び替え・WARNING・戦い・最後の握り・コアに届いた）。</summary>
+        public static bool IsBossPhase => WaveFlow.IsBossPhase(Phase);
+
         /// <summary>次に発表されるウェーブの番号（合間の間は次、それ以外は今）。</summary>
         public static int UpcomingWaveIndex => Phase == WavePhase.Break || Phase == WavePhase.Retreat ? WaveIndex + 1 : WaveIndex;
 
@@ -278,6 +284,8 @@ namespace MS2026.Fortress
             go.AddComponent<FortressSeatMover>();
             go.AddComponent<FortressSeatFx>();
             go.AddComponent<FortressSeatOverlay>();
+            go.AddComponent<BossWaveRunner>();
+            go.AddComponent<BossOverlay>();
         }
     }
 }

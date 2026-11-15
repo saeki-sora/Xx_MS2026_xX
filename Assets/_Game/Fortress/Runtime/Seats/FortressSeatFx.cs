@@ -139,6 +139,11 @@ namespace MS2026.Fortress
             var core = FindFirstObjectByType<CoreCrystalController>();
             var hasSeats = FortressSeats.TryGetRegisteredSeats(out _, out var center);
             _core = core != null ? core.transform.position : hasSeats ? (Vector3)center : Vector3.zero;
+            if (FortressSeats.IsFormationMove)
+            {
+                // 並び替えではコアも滑っていくので、締めの光は行き先へ集める。
+                _core = new Vector3(FortressSeats.FormationCoreTarget.x, FortressSeats.FormationCoreTarget.y, _core.z);
+            }
             _ringRadius = float.MaxValue;
             _lastLanding = 0f;
             foreach (var jumper in FortressSeats.Jumpers)
@@ -317,7 +322,8 @@ namespace MS2026.Fortress
         // コアのまわりを回る矢印の輪。全員が着地したら消える。
         private void UpdateRing(WaveSeatRotation settings, float time)
         {
-            var alpha = settings.showDirectionRing ? Mathf.Clamp01(time / 0.3f) * (1f - Mathf.Clamp01((time - _lastLanding) / 0.4f)) : 0f;
+            // ボス戦の並び替えでは回る向きが無いので、矢印の輪は出さない。
+            var alpha = settings.showDirectionRing && !FortressSeats.IsFormationMove ? Mathf.Clamp01(time / 0.3f) * (1f - Mathf.Clamp01((time - _lastLanding) / 0.4f)) : 0f;
             EnsureRing();
             _ring.enabled = alpha > 0.01f;
             foreach (var arrow in _ringArrows)
