@@ -1,4 +1,6 @@
 using System;
+using MS2026.Fortress.Net;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -141,6 +143,8 @@ namespace MS2026.Cpu
                 return;
             }
 
+            ReleaseOfflineNetworkManagers();
+
             var index = SceneUtility.GetBuildIndexByScenePath(path);
             if (index >= 0)
             {
@@ -154,6 +158,24 @@ namespace MS2026.Cpu
             }
 
             Finish($"[CPU] 自動プレイ: シーン {path} を読み直せないので止めます（ビルドの設定に入っていない）。");
+        }
+
+        // Game のシーンの NetworkManager は、自分を「シーンをまたいで残る置き場」へ移す。シーンを読み直すたびに増えないよう、
+        // 通信していない（自動プレイはオフラインだけ）ときは、読み直す前に片付ける（読み直した Game のシーンが新しく作る）。
+        private static void ReleaseOfflineNetworkManagers()
+        {
+            if (FortressNet.IsNetworked)
+            {
+                return;
+            }
+
+            foreach (var manager in UnityEngine.Object.FindObjectsByType<NetworkManager>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (manager != null && !manager.IsListening && manager.gameObject.scene.name == "DontDestroyOnLoad")
+                {
+                    UnityEngine.Object.Destroy(manager.gameObject);
+                }
+            }
         }
 
         private void ApplyTimeScale()
