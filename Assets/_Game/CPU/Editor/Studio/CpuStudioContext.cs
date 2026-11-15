@@ -1,4 +1,5 @@
 using System.IO;
+using MS2026.StudioKit;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -61,6 +62,8 @@ namespace MS2026.Cpu.EditorTools
             var property = Object.FindProperty(path);
             var field = new PropertyField(property, label);
             field.style.flexGrow = 1f;
+            field.style.flexShrink = 1f;
+            field.style.minWidth = 0f;
             field.tooltip = property != null ? property.tooltip : null;
             field.Bind(Object);
             // 設定ファイルの見出し（[Header]）はスタジオでは出さない（ページの見出しと二重になるので）。
@@ -94,6 +97,26 @@ namespace MS2026.Cpu.EditorTools
                 }
             };
             return row;
+        }
+
+        /// <summary>
+        /// 見出し付きのまとまり: 見出し（StudioUi.Section は見出しの1行だけで、中身を入れる箱ではない）を parent に足し、
+        /// その下に縦に並べる箱を返す。中身はこの箱に入れる（見出しの横に詰まって潰れないように）。
+        /// </summary>
+        public static VisualElement Group(VisualElement parent, string title, string tooltip = null)
+        {
+            parent.Add(StudioUi.Section(title, tooltip));
+            var body = new VisualElement();
+            parent.Add(body);
+            return body;
+        }
+
+        /// <summary>折り返す文（狭いウィンドウでも横にはみ出さない）。</summary>
+        public static Label Text(string text)
+        {
+            var label = new Label(text);
+            label.style.whiteSpace = WhiteSpace.Normal;
+            return label;
         }
 
         public void Dispose()

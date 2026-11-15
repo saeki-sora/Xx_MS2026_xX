@@ -39,7 +39,7 @@ namespace MS2026.Cpu.EditorTools
             root.Add(StudioUi.Lead("強さはゲームの画面では選ばない。ここ（または .exe の起動オプション -cpu-level）で決める。" +
                                    "CPU はウェーブごとに慣れて、表の「試合の始め」から「上限」へ上手くなる。"));
 
-            var choose = StudioUi.Section("CPU の強さ");
+            var choose = CpuStudioContext.Group(root, "CPU の強さ");
             choose.Add(StudioUi.Segment(new[]
                 {
                     (CpuLevel.Easy, "1", "やさしい", "初めて遊ぶ人 → 少し慣れた人"),
@@ -59,9 +59,8 @@ namespace MS2026.Cpu.EditorTools
             choose.Add(Track(_context.Field("startFamiliarity", "試合の始めの慣れ", out var r1), r1));
             choose.Add(Track(_context.Field("learning.enabled", "ウェーブごとに学ぶ", out var r2), r2));
             choose.Add(Track(_context.Field("personalityMix", "性格の組み合わせ", out var r3), r3));
-            root.Add(choose);
 
-            var table = StudioUi.Section("この強さの上手さ（試合の始め → 上限）",
+            var table = CpuStudioContext.Group(root, "この強さの上手さ（試合の始め → 上限）",
                 "4つの目安（初めて遊ぶ人／少し慣れた人／上手い人／とても上手い人）のうち、選んだ強さが受け持つ区間。");
             AddRow(table, "反応", v => v.reactionSeconds, "0.00", " 秒（見えてから動くまで）");
             AddRow(table, "狙い", v => v.leadSeconds, "0.00", " 秒（砲身が来る前から握る）");
@@ -69,7 +68,6 @@ namespace MS2026.Cpu.EditorTools
             AddRow(table, "スキルの判断", v => v.skillPatienceSeconds, "0.0", " 秒（良い時を待つ長さ）");
             AddRow(table, "周りを見る", v => v.smashBallAttention * 100f, "0", "%（ボールを狙う気持ち）");
             AddRow(table, "歯みがき", v => v.brushPulsesPerSecond, "0.0", " 回/秒");
-            root.Add(table);
 
             var detail = new Foldout { text = "詳しく（4つの目安の数値を直す）", value = false };
             detail.tooltip = "数値ごとの4つの目安。直すと、3つの強さがまとめて変わる。移動・救助（実験中）の数値は、それぞれの設定（CpuMoveSettings・CpuRescueSettings）で直す。";
@@ -111,8 +109,10 @@ namespace MS2026.Cpu.EditorTools
 
         private void AddRow(VisualElement parent, string name, Func<CpuSkillValues, float> get, string format, string unit)
         {
-            var value = new Label();
-            var row = StudioUi.Row(new Label(name) { style = { width = 110 } }, value);
+            // 値は名前の横の残りの幅に収め、足りなければ折り返す（狭いウィンドウで横にはみ出さない）。
+            var value = new Label { style = { whiteSpace = WhiteSpace.Normal, flexGrow = 1f, flexShrink = 1f, flexBasis = 0f } };
+            var row = StudioUi.Row(new Label(name) { style = { width = 110, flexShrink = 0f } }, value);
+            row.style.flexWrap = Wrap.NoWrap;
             parent.Add(row);
             _rows.Add((value, get, format, unit));
         }

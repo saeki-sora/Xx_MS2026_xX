@@ -24,7 +24,7 @@ namespace MS2026.Cpu.EditorTools
             var root = new VisualElement();
             root.Add(StudioUi.PageTitle("頭の中"));
             root.Add(StudioUi.Lead("Play 中だけ。上手さは 0（初めて遊ぶ人）〜 3（とても上手い人）の目盛り。ゲームの画面には F10 でも出せる。"));
-            _header = new Label();
+            _header = CpuStudioContext.Text(string.Empty);
             root.Add(_header);
             root.Add(StudioUi.Row(
                 StudioUi.Button("ゲームの画面の表示を切り替える（F10 と同じ）", CycleOverlay, "出さない → 表 → 表と線。")));
@@ -65,12 +65,11 @@ namespace MS2026.Cpu.EditorTools
                 var info = new CpuTurretInfo(cpu.Context.Turret);
                 var current = cpu.Brain.Current;
                 var mood = cpu.Context.Mood;
-                var section = StudioUi.Section($"P{p + 1}　{cpu.Context.Personality.Label}");
-                section.Add(new Label($"今の行動 {(current != null ? current.Id : "なし")}　握力 {cpu.Hands.Grip01:0.00}　熱 {(info.Valid ? info.Heat01 * 100f : 0f):0}%" +
+                var section = CpuStudioContext.Group(_list, $"P{p + 1}　{cpu.Context.Personality.Label}");
+                section.Add(CpuStudioContext.Text($"今の行動 {(current != null ? current.Id : "なし")}　握力 {cpu.Hands.Grip01:0.00}　熱 {(info.Valid ? info.Heat01 * 100f : 0f):0}%" +
                                       $"　見える敵 {cpu.Eyes.Perceived.Total:0}　協力 {mood.Coop:0.00}　稼ぐ {mood.Greed:0.00}"));
                 var areas = string.Join("　", CpuPlugins.SkillAreas.Select(a => $"{a.Label} {cpu.Context.ScaleOf(a.Id):0.00}"));
-                section.Add(new Label("上手さ　" + areas) { style = { whiteSpace = WhiteSpace.Normal } });
-                _list.Add(section);
+                section.Add(CpuStudioContext.Text("上手さ　" + areas));
             }
         }
 

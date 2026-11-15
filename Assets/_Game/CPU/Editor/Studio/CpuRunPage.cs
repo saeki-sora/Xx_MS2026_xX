@@ -41,7 +41,7 @@ namespace MS2026.Cpu.EditorTools
             root.Add(StudioUi.PageTitle("試合を回す"));
             root.Add(StudioUi.Lead("Game かステージのシーンを開いて「自動プレイで Play する」。試合が終わるたびに結果の表（Logs/CPU）に書く。"));
 
-            var run = StudioUi.Section("自動プレイ");
+            var run = CpuStudioContext.Group(root, "自動プレイ");
             run.Add(Track(_context.Field("autoplayMatches", "回す試合の数", out var r1), r1));
             run.Add(Track(_context.Field("autoplayTimeScale", "早送りの倍率", out var r2), r2));
             run.Add(Track(_context.Field("csvMode", "結果の表を書く", out var r3), r3));
@@ -49,12 +49,10 @@ namespace MS2026.Cpu.EditorTools
                 StudioUi.Button("自動プレイで Play する", () => EditorApplication.ExecuteMenuItem("Tools/CPU/自動プレイで Play する"),
                     "設定の試合数・早送りで、全部の席を CPU にして今のシーンを Play する。", primary: true),
                 StudioUi.Button("結果の表のフォルダを開く", () => EditorApplication.ExecuteMenuItem("Tools/CPU/結果の表のフォルダを開く"))));
-            root.Add(run);
 
-            var latest = StudioUi.Section("最新の結果の表", "Logs/CPU のいちばん新しい表の「試合の合計」の行を、強さ・操作ごとに平均したもの。");
+            var latest = CpuStudioContext.Group(root, "最新の結果の表", "Logs/CPU のいちばん新しい表の「試合の合計」の行を、強さ・操作ごとに平均したもの。");
             _summary = new VisualElement();
             latest.Add(_summary);
-            root.Add(latest);
 
             var options = new Foldout { text = "LAN・性能テストの起動オプション（.exe・bat 用）", value = false };
             AddOption(options, "-cpu 2,3,4", "P2〜P4 を CPU にする（人が入っている席は人が優先）。");
@@ -90,7 +88,7 @@ namespace MS2026.Cpu.EditorTools
             var field = new TextField { value = option, isReadOnly = true, tooltip = body };
             field.style.flexGrow = 1f;
             parent.Add(StudioUi.Row(field, StudioUi.Button("写す", () => EditorGUIUtility.systemCopyBuffer = option, "クリップボードに写す。", small: true)));
-            parent.Add(new Label(body) { style = { marginLeft = 4, marginBottom = 6, opacity = 0.8f } });
+            parent.Add(new Label(body) { style = { marginLeft = 4, marginBottom = 6, opacity = 0.8f, whiteSpace = WhiteSpace.Normal } });
         }
 
         // いちばん新しい表を読み、試合の合計の行を「強さ × 操作（CPU/人）」で平均する（変わったときだけ読み直す）。
@@ -122,10 +120,14 @@ namespace MS2026.Cpu.EditorTools
             try
             {
                 var rows = CpuCsvReader.Read(file);
-                _summary.Add(new Label($"{Path.GetFileName(file)}（{time:MM/dd HH:mm}）") { style = { opacity = 0.8f } });
+                var name = CpuStudioContext.Text($"{Path.GetFileName(file)}（{time:MM/dd HH:mm}）");
+                name.style.opacity = 0.8f;
+                _summary.Add(name);
                 foreach (var line in CpuCsvReader.Summarize(rows))
                 {
-                    _summary.Add(new Label(line));
+                    var item = CpuStudioContext.Text(line);
+                    item.style.marginTop = 2f;
+                    _summary.Add(item);
                 }
             }
             catch (Exception e)
