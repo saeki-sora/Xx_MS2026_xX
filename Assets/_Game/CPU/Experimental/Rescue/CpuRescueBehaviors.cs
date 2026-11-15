@@ -147,7 +147,8 @@ namespace MS2026.Cpu.Experimental
                 return 0f;
             }
 
-            return (aim.Downed ? ReviveScore : HealScore) * aim.Want;
+            // 助けに行く気持ち × 今の気持ち（協力の気持ちが強いほど、仲間を助ける）。
+            return (aim.Downed ? ReviveScore : HealScore) * aim.Want * CpuMoodMath.RescueFactor(context.Mood);
         }
 
         public void Enter(CpuContext context)
