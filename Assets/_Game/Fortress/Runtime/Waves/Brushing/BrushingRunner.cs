@@ -293,8 +293,9 @@ namespace MS2026.Fortress
                 State[SSyncCount] += 1f;
             }
 
-            // オフラインは、何人で握っても1人分で 100%（ひとりでテストできるように）。
-            var participants = offline ? 1 : Mathf.Max(1, CountBits(mask));
+            // オフラインは、人の席は何人で握っても1人分で 100%（ひとりでテストできるように）。
+            // 操縦者（CPU など。PlayerPilots）の席は1人ずつ数える（CPU と遊ぶときに、すぐ 100% になって終わらないように）。
+            var participants = offline ? OfflineParticipants(mask) : Mathf.Max(1, CountBits(mask));
             var required = _settings.pulsesPerPlayer * participants;
             var clean = BrushingMath.Clean01(team + _bonus, required);
             State[SRequired] = required;
@@ -386,6 +387,14 @@ namespace MS2026.Fortress
 
             var core = FindFirstObjectByType<CoreCrystalController>();
             FortressEffectPlayer.PlayOnce(effect, core != null ? core.transform.position : Vector3.zero, Quaternion.identity, player);
+        }
+
+        // オフラインの「数える人」: 握った操縦者（CPU）の席の数 ＋ 人の席（何人いても 1）。誰も握っていなければ 1。
+        private static int OfflineParticipants(int mask)
+        {
+            var pilots = mask & PlayerPilots.Mask;
+            var humans = mask & ~PlayerPilots.Mask;
+            return Mathf.Max(1, CountBits(pilots) + (humans != 0 ? 1 : 0));
         }
 
         private static int CountBits(int mask)
