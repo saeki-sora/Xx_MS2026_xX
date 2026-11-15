@@ -14,18 +14,211 @@ MonoBehaviour:
   m_EditorClassIdentifier: MS2026.RedSkill.Runtime::MS2026.Skills.Green.GreenMintSkill
   skillId: green_mint_satellite
   displayName: "\u30DF\u30F3\u30C8\u30FB\u30B5\u30C6\u30E9\u30A4\u30C8"
-  description: "光の柱とともに巨大な守護霊が降りてきて、着地の衝撃でコアを大きく回復する。その後はコアの周りを8枚の葉が寄せては返しながら回り、触れた敵を倒す。コアもじわじわ回復する。"
+  description: "\u5149\u306E\u67F1\u3068\u3068\u3082\u306B\u5DE8\u5927\u306A\u5B88\u8B77\u970A\u304C\u964D\u308A\u3066\u304D\u3066\u3001\u7740\u5730\u306E\u885D\u6483\u3067\u30B3\u30A2\u3092\u5927\u304D\u304F\u56DE\u5FA9\u3059\u308B\u3002\u305D\u306E\u5F8C\u306F\u30B3\u30A2\u306E\u5468\u308A\u30928\u679A\u306E\u8449\u304C\u5BC4\u305B\u3066\u306F\u8FD4\u3057\u306A\u304C\u3089\u56DE\u308A\u3001\u89E6\u308C\u305F\u6575\u3092\u5012\u3059\u3002\u30B3\u30A2\u3082\u3058\u308F\u3058\u308F\u56DE\u5FA9\u3059\u308B\u3002"
   themeColor: {r: 0.25, g: 0.8, b: 0.5, a: 1}
   chargeBySmashBall: 1
   chargeByKills: 1
   killsToCharge: 120
+  countOwnSkillKills: 0
   ignoreChargeWhileActive: 1
   replacesNormalLaser: 1
   hideNormalLaserUntilRelease: 1
+  timing:
+    descendStart: 0.35
+    landSeconds: 1.5
+    leafAppearSeconds: 0.8
+    shrinkStart: 2.7
+    shrinkEnd: 3.5
+    guardSeconds: 12
+    suckSeconds: 1
   heal:
-    burstPercent: 20
+    burstPercent: 10
     regenPercent: 15
     stopWhenMatchEnded: 1
+  leaves:
+    count: 8
+    minRadius: 2.6
+    maxRadius: 8.4
+    pulseSeconds: 3.2
+    alternateDelay: 0.07
+    spinDegreesPerSecond: 63
+    length: 1.75
+    wobbleDegrees: 12.6
+    damage: 14
+    hitRadius: 0.9
+    rehitSeconds: 0.4
+    maxHitsPerFrame: 10
+    hitActors: 1
+    trailSeconds: 0.26
+    trailWidth: 0.37
+    showPathRing: 1
+    hitPowder: 5
+    hitSparkles: 7
+    hitSlashSize: 3
+  boost:
+    pulseSeconds: 2.2
+    spinDegreesPerSecond: 109
+    sizeScale: 1.22
+    response: 8
+  spirit:
+    giantHeight: 26
+    stayHeight: 11
+    startAbove: 30
+    fillOpacity: 0.74
+    bobAmount: 0.15
+    bobSpeed: 1.6
+    glow: {x: 0.7, y: 1, z: 0.3}
+    tailWidth: {x: 0.14, y: 0.42}
+    tailSegments: 44
+  tube:
+    enabled: 1
+    length: 2.2
+    screenOffset: {x: 1.25, y: 0.35}
+    tiltDegrees: 31.5
+    smokeRate: 16
+    puffInterval: 1.5
+    puffSmoke: 7
+    appearSeconds: 0.35
+  art:
+    spiritMode: 0
+    poseDescend: {fileID: 0}
+    poseSpread: {fileID: 0}
+    poseHug: {fileID: 0}
+    partBody: {fileID: 0}
+    partArmLeft: {fileID: 0}
+    partArmRight: {fileID: 0}
+    shoulder: {x: -0.11, y: 0.27}
+    armDegrees: {x: -40, y: 10, z: 75}
+    tailRoot: {x: 0, y: -0.17}
+    leaf: {fileID: 0}
+    tube: {fileID: 0}
+    tubeNozzle: {x: 0.52, y: 0}
+    smoke: {fileID: 0}
+  palette:
+    spiritTop: {r: 0.973, g: 1, b: 0.878, a: 1}
+    spiritMiddle: {r: 0.89, g: 1, b: 0.75, a: 1}
+    spiritBottom: {r: 0.776, g: 0.965, b: 0.635, a: 1}
+    spiritOutline: {r: 0.373, g: 0.878, b: 0.29, a: 1}
+    spiritLines: {r: 0.31, g: 0.78, b: 0.24, a: 0.6}
+    spiritGlow: {r: 0.51, g: 1, b: 0.39, a: 0.95}
+    leafLight: {r: 0.608, g: 0.961, b: 0.541, a: 1}
+    leafDark: {r: 0.169, g: 0.682, b: 0.322, a: 1}
+    leafEdge: {r: 0.055, g: 0.353, b: 0.18, a: 1}
+    leafVein: {r: 0.9, g: 1, b: 0.84, a: 0.85}
+    smoke: {r: 0.894, g: 1, b: 0.769, a: 0.42}
+    smokeEdge: {r: 0.39, g: 0.86, b: 0.31, a: 0.3}
+    cross: {r: 0.357, g: 0.918, b: 0.494, a: 1}
+    powder: {r: 0.94, g: 1, b: 0.96, a: 0.85}
+    ring: {r: 0.59, g: 1, b: 0.67, a: 1}
+    glow: {r: 0.75, g: 1.6, b: 0.8, a: 1}
+    tubeBody: {r: 0.969, g: 1, b: 0.976, a: 1}
+    tubeGreen: {r: 0.239, g: 0.859, b: 0.416, a: 1}
+    tubeOutline: {r: 0.141, g: 0.125, b: 0.498, a: 1}
+  burst:
+    waveSize: 40
+    waveSeconds: 1.1
+    flashSize: 12
+    screenEdgeStrength: 0.5
+    screenFlash: 0.22
+    screenEdgeSeconds: 1.1
+    sparkleCount: 70
+    leafCount: 18
+    crossCount: 10
+    smokeCount: 28
+    regenCrossRate: 2.2
+    pillar: {x: 3.2, y: 1.9}
+    endFlashSize: 7
+  cameraShake:
+    ownerViewOnly: 0
+    land:
+      amplitude: 0.3
+      rollAmplitude: 0.6
+      frequency: 16
+      duration: 0.6
+    landStrength: 1
+  sounds:
+    onReady:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onTubePuff:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onPillar:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onLand:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    landVoice:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    whileGuarding:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onLeafHit:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    leafHitInterval: 0.07
+    onSuck:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    onEnd:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
   shaders:
     radial: {fileID: 4800000, guid: 527d8e270d474a6488fcfeac9ed5f61a, type: 3}
     particle: {fileID: 4800000, guid: b2109d45b11a4d1495705b82af89f548, type: 3}
