@@ -205,7 +205,8 @@ namespace MS2026.Cpu
                     _wasCpu[p] = true;
                     var stats = cpu.Context.Stats.EndWave(cleared);
                     row.Counters.CopyFrom(stats.Counters);
-                    CpuCsv.Accumulate(_matchTotals[p], stats.Counters);
+                    AddSkillScales(cpu, row.Counters);
+                    CpuCsv.Accumulate(_matchTotals[p], row.Counters);
                 }
 
                 _rows.Add(row);
@@ -254,6 +255,19 @@ namespace MS2026.Cpu
             row.Fixed.Add(CpuCsv.Number(seconds));
             row.Fixed.Add(corePercent >= 0f ? CpuCsv.Number(corePercent) : string.Empty);
             return row;
+        }
+
+        /// <summary>
+        /// 分野ごとの上手さの目盛り（0 = 初めて遊ぶ人 … 3 = とても上手い人）。名前に「最大」を含むので、試合の合計の行では最後（いちばん上）の値になる。
+        /// </summary>
+        public const string SkillScalePrefix = "上手さ最大:";
+
+        private static void AddSkillScales(CpuPlayer cpu, CpuCounters counters)
+        {
+            foreach (var area in CpuPlugins.SkillAreas)
+            {
+                counters.Set(SkillScalePrefix + area.Label, cpu.Context.ScaleOf(area.Id));
+            }
         }
 
         private static string Outcome(MatchResult? result)

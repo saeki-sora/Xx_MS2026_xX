@@ -48,9 +48,14 @@ namespace MS2026.Cpu
         [Range(0.05f, 0.5f)]
         public float senseInterval = 0.1f;
 
-        [Header("上手さ（仮。段6 で強さごとに分ける）")]
-        [Tooltip("今はどの強さでもこの値を使う（ふつうの仮の値）。")]
-        public CpuSkillValues skill = CpuSkillValues.Default;
+        [Header("上手さ（4つの目安。強さはこの間の区間を受け持つ）")]
+        [Tooltip("やさしい = 初めて遊ぶ人 → 少し慣れた人、ふつう = 少し慣れた人 → 上手い人、つよい = 上手い人 → とても上手い人。\n" +
+                 "区間の中のどこになるかは、分野ごとの慣れ（試合の始めは下の値。ウェーブごとに学んで上がる）で決まる。")]
+        public CpuSkillProfile profile = new CpuSkillProfile();
+
+        [Tooltip("試合の始めの慣れ（0〜1。0 = チュートリアルを終えたばかり）。試しに上限の強さを見たいときに 1。")]
+        [Range(0f, 1f)]
+        public float startFamiliarity;
 
         [Header("自動プレイ・結果の表（開発用）")]
         [Tooltip("結果の表（CSV）をいつ書くか。置き場所はエディタならプロジェクトの Logs/CPU/、ビルドなら persistentDataPath/CPU/。")]

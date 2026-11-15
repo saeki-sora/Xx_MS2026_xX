@@ -5,7 +5,7 @@ namespace MS2026.Cpu
 {
     /// <summary>
     /// CPU の今の上手さ（実際の数値）。行動・目・手はここを読む。
-    /// 段1 では設定の1組（ふつうの仮の値）をそのまま使う。段6 からは「強さ × 分野ごとの慣れ」からこの値を作る（行動は直さなくてよい）。
+    /// 「強さ × 分野ごとの慣れ」から <see cref="CpuSkillProfile.Evaluate"/> が作る（2026-11-15 段6）。4つの目安も同じ形で持つ。
     /// </summary>
     [Serializable]
     public struct CpuSkillValues
@@ -89,8 +89,11 @@ namespace MS2026.Cpu
         [Range(0f, 0.5f)]
         public float minToggleSeconds;
 
-        /// <summary>ふつうの仮の値（段6 で強さごとに分ける）。</summary>
-        public static CpuSkillValues Default => new CpuSkillValues
+        /// <summary>ふつうの試合の始め（少し慣れた人 = <see cref="CpuSkillProfile.Novice"/>）。</summary>
+        public static CpuSkillValues Default => CpuSkillProfile.Novice;
+
+        /// <summary>段5 までの仮の値（残しておく。テストの見本などに）。</summary>
+        public static CpuSkillValues Legacy => new CpuSkillValues
         {
             reactionSeconds = 0.35f,
             judgementNoise = 0.25f,

@@ -245,9 +245,9 @@ namespace MS2026.Cpu
         private void StartPlayer(int player)
         {
             var seed = Seed;
-            var skill = _settings != null ? _settings.skill : CpuSkillValues.Default;
             var cpu = new CpuPlayer(player, Level, CpuSeatRules.SeedFor(seed, player, _matchCount, _randomBase),
-                _settings != null ? _settings.thinkInterval : 0.15f, skill);
+                _settings != null ? _settings.thinkInterval : 0.15f, _settings != null ? _settings.profile : null,
+                _settings != null ? _settings.startFamiliarity : 0f);
             _players[player] = cpu;
             _playerTurrets[player] = _turrets[player];
             PlayerPilots.Set(player, cpu.Hands);

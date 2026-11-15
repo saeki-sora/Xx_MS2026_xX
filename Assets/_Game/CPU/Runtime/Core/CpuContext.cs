@@ -40,8 +40,17 @@ namespace MS2026.Cpu
         /// <summary>記録（ウェーブごと）。行動は好きな名前の数を足してよい（結果の表に列が増える）。</summary>
         public CpuStats Stats { get; } = new CpuStats();
 
-        /// <summary>今の上手さ（実際の数値）。</summary>
+        /// <summary>今の上手さ（実際の数値。強さ × 分野ごとの慣れから作る）。</summary>
         public CpuSkillValues Skill { get; set; }
+
+        /// <summary>分野ごとの慣れ（0〜1。試合ごとに 0 から。上げるのは学び）。</summary>
+        public CpuFamiliarity Familiarity { get; internal set; } = new CpuFamiliarity();
+
+        /// <summary>
+        /// その分野の上手さの目盛り（0 = 初めて遊ぶ人 … 3 = とても上手い人。= 強さ + 慣れ）。
+        /// 差し込む側の行動も、自分の分野の数値をこれと <see cref="CpuLevelCurve"/> で決める。
+        /// </summary>
+        public float ScaleOf(string area) => CpuLevels.Scale(Level, Familiarity.Get(area));
 
         /// <summary>自分の砲台（見つかっていなければ null）。</summary>
         public LaserTurret Turret { get; internal set; }

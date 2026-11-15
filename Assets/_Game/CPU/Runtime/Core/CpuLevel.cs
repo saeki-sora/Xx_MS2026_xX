@@ -19,6 +19,9 @@ namespace MS2026.Cpu
     {
         public const int Count = 3;
 
+        /// <summary>上手さの目盛り（0 = 初めて遊ぶ人、1 = 少し慣れた人、2 = 上手い人、3 = とても上手い人）。強さ + その分野の慣れ（0〜1）。</summary>
+        public static float Scale(CpuLevel level, float familiarity01) => (int)level + Mathf.Clamp01(familiarity01);
+
         public static string Label(CpuLevel level)
         {
             switch (level)

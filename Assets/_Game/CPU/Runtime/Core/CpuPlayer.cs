@@ -10,16 +10,32 @@ namespace MS2026.Cpu
     public sealed class CpuPlayer
     {
         private readonly ICpuMovePlanner _movePlanner;
+        private readonly CpuSkillProfile _profile;
         private bool _wasOverheated;
+        private int _skillVersion = -1;
 
-        public CpuPlayer(int player, CpuLevel level, int seed, float thinkInterval, in CpuSkillValues skill)
+        public CpuPlayer(int player, CpuLevel level, int seed, float thinkInterval, CpuSkillProfile profile, float startFamiliarity = 0f)
         {
+            _profile = profile ?? new CpuSkillProfile();
             Hands = new CpuHands(player, unchecked(seed * 31 + 7));
             Eyes = new CpuEyes();
-            Context = new CpuContext(player, level, seed, Hands, Eyes) { Skill = skill };
-            Hands.Apply(skill);
+            Context = new CpuContext(player, level, seed, Hands, Eyes) { Familiarity = new CpuFamiliarity(startFamiliarity) };
+            RefreshSkill();
             Brain = new CpuBrain(CpuPlugins.CreateBehaviors()) { ThinkInterval = thinkInterval };
             _movePlanner = CpuPlugins.CreateMovePlanner();
+        }
+
+        /// <summary>今の慣れで上手さを作り直す（慣れが変わっていなければ何もしない）。</summary>
+        public void RefreshSkill()
+        {
+            var familiarity = Context.Familiarity;
+            if (familiarity.Version == _skillVersion)
+            {
+                return;
+            }
+
+            _skillVersion = familiarity.Version;
+            SetSkill(_profile.Evaluate(Context.ScaleOf));
         }
 
         public int Player => Context.Player;
@@ -35,7 +51,7 @@ namespace MS2026.Cpu
         /// <summary>最後に決めた行きたい向き（頭の中の表示用）。</summary>
         public Vector2 MoveIntent { get; private set; }
 
-        /// <summary>上手さを入れ替える（段6 から、慣れで上がるたびに呼ばれる）。</summary>
+        /// <summary>上手さを直接入れ替える（ふつうは <see cref="RefreshSkill"/> が慣れから作る。試し用）。</summary>
         public void SetSkill(in CpuSkillValues skill)
         {
             Context.Skill = skill;
@@ -47,6 +63,7 @@ namespace MS2026.Cpu
             Context.Turret = turret;
             Context.Time += deltaTime;
 
+            RefreshSkill();
             Eyes.Tick(Context, sampler);
             Brain.Tick(Context, deltaTime);
             Hands.Tick(deltaTime);

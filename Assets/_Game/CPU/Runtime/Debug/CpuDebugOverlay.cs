@@ -152,7 +152,22 @@ namespace MS2026.Cpu
                    $"  握力 {cpu.Hands.Grip01:0.00}  熱 {(info.Valid ? info.Heat01 * 100f : 0f):0}%" +
                    $"  見える敵 {sight.Total:0}{(sight.HasView ? string.Empty : "（範囲なし）")}" +
                    $"  OH {stats.Get(CpuStats.Overheats):0}  空振り {stats.Get(CpuStats.WhiffSeconds):0}秒" +
+                   $"  上手さ {AverageScale(cpu):0.00}/3" +
                    (cpu.CanMove ? $"  移動 {cpu.MoveIntent.magnitude:0.0}" : string.Empty);
+        }
+
+        // 分野ごとの上手さの目盛りの平均（0 = 初めて遊ぶ人 … 3 = とても上手い人）。
+        private static float AverageScale(CpuPlayer cpu)
+        {
+            var sum = 0f;
+            var count = 0;
+            foreach (var area in CpuPlugins.SkillAreas)
+            {
+                sum += cpu.Context.ScaleOf(area.Id);
+                count++;
+            }
+
+            return count > 0 ? sum / count : CpuLevels.Scale(cpu.Level, 0f);
         }
 
         private void EnsureStyles()
