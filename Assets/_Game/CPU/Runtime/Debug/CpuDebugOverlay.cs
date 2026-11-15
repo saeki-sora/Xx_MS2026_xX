@@ -16,7 +16,7 @@ namespace MS2026.Cpu
     {
         public const Key ToggleKey = Key.F10;
 
-        private const float PanelWidth = 560f;
+        private const float PanelWidth = 470f;
         private const float RowHeight = 20f;
 
         private static readonly string[] ModeNames = { "出さない", "表", "表と線" };
@@ -84,8 +84,9 @@ namespace MS2026.Cpu
                 rows += _director.GetPlayer(p) != null ? 1 : 0;
             }
 
+            // 左上（HUD の右上の体力・右下のスキルのゲージ・左の仲間の列と重ならない所）。
             var height = rows * RowHeight + 12f;
-            var rect = new Rect(Screen.width - PanelWidth - 10f, Screen.height - height - 10f, PanelWidth, height);
+            var rect = new Rect(10f, 10f, PanelWidth, height);
             GUI.Box(rect, GUIContent.none, _boxStyle);
 
             var line = new Rect(rect.x + 8f, rect.y + 6f, rect.width - 16f, RowHeight);
@@ -116,17 +117,17 @@ namespace MS2026.Cpu
 
         private string Header()
         {
-            var text = $"CPU の頭の中（{ToggleKey}: {ModeNames[Mode]}）・{CpuLevels.Label(_director.Level)}";
+            var text = $"CPU（{ToggleKey}: {ModeNames[Mode]}）{CpuLevels.Label(_director.Level)}";
             var recorder = _director.Recorder;
             if (recorder != null && recorder.InMatch)
             {
-                text += $"・試合 {recorder.MatchNumber}" + (FortressWaves.IsActive ? $"・ウェーブ {FortressWaves.WaveNumber}" : string.Empty);
+                text += $"・試合 {recorder.MatchNumber}" + (FortressWaves.IsActive ? $"・W{FortressWaves.WaveNumber}" : string.Empty);
             }
 
             var autoplay = _director.Autoplay;
             if (autoplay.Active)
             {
-                text += $"・自動プレイ {autoplay.DoneMatches}/{autoplay.TotalMatches}・{autoplay.TimeScale:0.#}倍速";
+                text += $"・自動 {autoplay.DoneMatches}/{autoplay.TotalMatches}・{autoplay.TimeScale:0.#}倍";
                 if (autoplay.WaitingSeconds > 0f)
                 {
                     text += $"（次まで {autoplay.WaitingSeconds:0} 秒）";
@@ -136,24 +137,48 @@ namespace MS2026.Cpu
             return text;
         }
 
+        // 1行に収まるよう、大事な数を前に、行動の点は「今の行動」と「次に高い行動」だけ（全部の点は結果の表・Console のメニューで見る）。
         private static string Row(CpuPlayer cpu)
         {
-            var current = cpu.Brain.Current;
-            var scores = string.Empty;
-            for (var i = 0; i < cpu.Brain.Behaviors.Count; i++)
+            var brain = cpu.Brain;
+            var current = brain.Current;
+            var currentIndex = -1;
+            var nextIndex = -1;
+            for (var i = 0; i < brain.Behaviors.Count; i++)
             {
-                scores += (i > 0 ? " / " : string.Empty) + $"{cpu.Brain.Behaviors[i].Id} {cpu.Brain.Scores[i]:0.00}";
+                if (ReferenceEquals(brain.Behaviors[i], current))
+                {
+                    currentIndex = i;
+                }
+                else if (brain.Scores[i] > 0f && (nextIndex < 0 || brain.Scores[i] > brain.Scores[nextIndex]))
+                {
+                    nextIndex = i;
+                }
             }
 
             var info = new CpuTurretInfo(cpu.Context.Turret);
             var sight = cpu.Eyes.Perceived;
-            var stats = cpu.Context.Stats.Current.Counters;
-            return $"P{cpu.Player + 1}  {(current != null ? current.Id : "なし"),-6}（{scores}）" +
-                   $"  握力 {cpu.Hands.Grip01:0.00}  熱 {(info.Valid ? info.Heat01 * 100f : 0f):0}%" +
-                   $"  見える敵 {sight.Total:0}{(sight.HasView ? string.Empty : "（範囲なし）")}" +
-                   $"  OH {stats.Get(CpuStats.Overheats):0}  空振り {stats.Get(CpuStats.WhiffSeconds):0}秒" +
-                   $"  上手さ {AverageScale(cpu):0.00}/3" +
-                   (cpu.CanMove ? $"  移動 {cpu.MoveIntent.magnitude:0.0}" : string.Empty);
+            var now = currentIndex >= 0 ? $"{Label(current.Id)} {brain.Scores[currentIndex]:0.00}" : "なし";
+            var next = nextIndex >= 0 ? $"  次 {Label(brain.Behaviors[nextIndex].Id)} {brain.Scores[nextIndex]:0.00}" : string.Empty;
+            return $"P{cpu.Player + 1} {now}｜握 {cpu.Hands.Grip01:0.00} 熱 {(info.Valid ? info.Heat01 * 100f : 0f):0}%" +
+                   $" 敵 {sight.Total:0}{(sight.HasView ? string.Empty : "?")} 上手さ {AverageScale(cpu):0.0}" +
+                   (cpu.CanMove ? $" 移動 {cpu.MoveIntent.magnitude:0.0}" : string.Empty) + next;
+        }
+
+        // 行動の名前（日本語。知らない行動は Id のまま）。
+        private static string Label(string id)
+        {
+            switch (id)
+            {
+                case CpuShootBehavior.BehaviorId: return "撃つ";
+                case CpuCoolDownBehavior.BehaviorId: return "冷ます";
+                case CpuSkillBehavior.BehaviorId: return "スキル";
+                case CpuSmashBallBehavior.BehaviorId: return "ボール";
+                case CpuBrushingBehavior.BehaviorId: return "歯みがき";
+                case "revive": return "救助";
+                case "struggle": return "抜け出す";
+                default: return id;
+            }
         }
 
         // 分野ごとの上手さの目盛りの平均（0 = 初めて遊ぶ人 … 3 = とても上手い人）。
