@@ -58,5 +58,6 @@ MonoBehaviour:
     anchor: 0
     targets: 15
     alphaCutoff: 0.5
+  enemiesFaceScreen: 1
   nearClip: 0.3
   farClip: 1000
