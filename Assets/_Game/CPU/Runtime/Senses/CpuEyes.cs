@@ -28,6 +28,13 @@ namespace MS2026.Cpu
         private static CoreCrystalController[] _cores = NoCores;
         private static int _coreRefreshFrame = -CoreRefreshFrames;
         private static SmashBallModule[] _balls = new SmashBallModule[0];
+        private static LaserTurret[] _turrets = new LaserTurret[0];
+
+        // 仲間まで届くかを確かめるとき、仲間の手前のこの距離までにある当たりは数えない（倒れた仲間に付く当たりなど）。
+        private const float TeammateBodyAllowance = 1f;
+
+        // ほかの人のビームが仲間の上を通っているとみなす、ビームの線から仲間までの距離（m）。
+        private const float HelperReach = 0.9f;
 
         private readonly CpuSight[] _history = new CpuSight[HistoryLength];
         private readonly CpuSight _perceived;
@@ -147,6 +154,98 @@ namespace MS2026.Cpu
             }
 
             LookAtBalls(sight, origin, range);
+            LookAtTeammates(context.Player, sight, origin, range);
+        }
+
+        // 画面に映っていて射程の中にいる仲間の砲台。調子は差し込み口（仲間の調子）から。
+        private void LookAtTeammates(int self, CpuSight sight, Vector2 origin, float range)
+        {
+            var status = CpuPlugins.TeammateStatus;
+            if (status != null)
+            {
+                sight.SelfCondition = status.GetCondition(self);
+                sight.SelfHealth01 = status.GetHealth01(self);
+            }
+
+            var filter = new ContactFilter2D { useTriggers = false };
+            filter.SetLayerMask(_beam != null ? _beam.targetLayerMask : (LayerMask)~0);
+            foreach (var mate in _turrets)
+            {
+                if (mate == null || !mate.isActiveAndEnabled || mate.playerIndex == self || mate.playerIndex < 0)
+                {
+                    continue;
+                }
+
+                var position = (Vector2)mate.transform.position;
+                var toMate = position - origin;
+                var distance = toMate.magnitude;
+                if (distance > range || distance < 0.01f || (sight.HasView && !sight.View.Contains(position)))
+                {
+                    continue;
+                }
+
+                sight.Teammates.Add(new CpuTeammateSight
+                {
+                    Player = mate.playerIndex,
+                    Position = position,
+                    Angle = CpuSectorMath.AngleOf(toMate),
+                    Distance = distance,
+                    Condition = status != null ? status.GetCondition(mate.playerIndex) : CpuTeammateCondition.Normal,
+                    Health01 = status != null ? status.GetHealth01(mate.playerIndex) : 1f,
+                    InLine = ClearUntil(origin, toMate / distance, distance - TeammateBodyAllowance, filter),
+                    Helpers = CountHelpers(self, mate, position)
+                });
+            }
+        }
+
+        // origin から direction へ distance まで、ビームを止める当たりが無いか。
+        private static bool ClearUntil(Vector2 origin, Vector2 direction, float distance, ContactFilter2D filter)
+        {
+            if (distance <= 0.01f)
+            {
+                return true;
+            }
+
+            var hits = Physics2D.Raycast(origin, direction, filter, HitBuffer, distance);
+            for (var i = 0; i < hits; i++)
+            {
+                if (HitBuffer[i].distance > 1e-4f)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // 今その仲間の上をビームで通している、ほかの人の数（撃っていて、砲身の線が仲間の近くを通る砲台）。
+        private static int CountHelpers(int self, LaserTurret mate, Vector2 position)
+        {
+            var count = 0;
+            foreach (var other in _turrets)
+            {
+                if (other == null || other == mate || other.playerIndex == self || !other.IsFiring || other.tuning == null)
+                {
+                    continue;
+                }
+
+                Vector2 from = other.MuzzlePosition;
+                var to = from + other.AimDirection * other.tuning.range;
+                if (DistanceToSegment(position, from, to) <= HelperReach)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private static float DistanceToSegment(Vector2 p, Vector2 a, Vector2 b)
+        {
+            var ab = b - a;
+            var lengthSq = ab.sqrMagnitude;
+            var t = lengthSq > 1e-8f ? Mathf.Clamp01(Vector2.Dot(p - a, ab) / lengthSq) : 0f;
+            return (a + ab * t - p).magnitude;
         }
 
         // 画面に映っていて、射程の中にあるスマッシュボール（割れている・待っている物は見えない）。
@@ -288,6 +387,7 @@ namespace MS2026.Cpu
             _coreRefreshFrame = UnityEngine.Time.frameCount;
             _cores = UnityEngine.Object.FindObjectsByType<CoreCrystalController>(FindObjectsSortMode.None);
             _balls = UnityEngine.Object.FindObjectsByType<SmashBallModule>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            _turrets = UnityEngine.Object.FindObjectsByType<LaserTurret>(FindObjectsSortMode.None);
         }
 
         private static CoreCrystalController NearestCore(Vector2 from)

@@ -2,7 +2,7 @@
 
 > 作成: 2026-11-15。改訂: 2026-11-15（実験中の要素を外せる作りに直した。2-0 章）。
 > ブランチ「佐伯＿ちょっと移動の実験」で作る。
-> 進み具合: **段4 まで できた**（2026-11-15。Unity の外でコンパイル・決まりのテスト 81 件が通る。Unity の Play での動作はまだ確かめていない）。
+> 進み具合: **段5 まで できた**（2026-11-15。Unity の外でコンパイル・決まりのテスト 86 件が通る。Unity の Play での動作はまだ確かめていない）。
 
 ### 段0 で作った物（2026-11-15）
 - Fortress 側（main にもある物だけに頼る）: 操縦者の差し替え口 `PlayerPilots`（`Runtime/Laser/`）。砲台は `LaserTurret.ReadGrip`（操縦者 → `GripSourceOverride` → センサーの順）で読む。歯みがきタイム（`BrushingRunner`）はオフラインでも Host でも操縦者の席を数え、通信中の「試合にいる人」（`FortressWaveRunner.ComputePlayerMask`）に操縦者の席を足す。
@@ -58,6 +58,17 @@
 - 本体（エディタ）: メニュー `Tools/CPU/実験中の要素とのつなぎを切る（移動しない CPU で試す）`。PC の Scripting Define Symbols に `MS2026_CPU_NO_EXPERIMENTAL` を足す／消す（チェックが付いていれば切れている）。
 - 切った版の確かめ: 本体（Runtime・Editor・Tests）はつなぎのアセンブリ無しでコンパイルできる（Unity の外で確かめた）。
 - 確かめていないこと: Play で CPU の砲台が動くか・壁や歯に当たって止まるか・LAN で Client に CPU の砲台の位置が届くか、切ったときに Unity が正しくつなぎを外すか。
+
+### 段5 で作った物（2026-11-15）
+- 実験中のファイルの中だけの変更: `TurretMoveHooks` に仲間の調子の読み口 `GetCondition` / `GetHealth01` / `GetRevive01`（全PCで同じ。Host が決めた値）。`TurretMoveDirector` が毎フレーム `SetCondition` で入れる（試合の始め・止めたときはふつうに戻す）。
+- 本体の目（main にある物だけ）: 見えている仲間の砲台 `CpuSight.Teammates`（角度・距離・ビームが途中で止められずに届くか `InLine`・今その上をビームで通しているほかの人の数 `Helpers`）と、自分の調子 `SelfCondition` / `SelfHealth01`。調子・体力は差し込み口 `ICpuTeammateStatus` から（無ければいつもふつう）。
+- つなぎ `Experimental/Rescue/`（倒れる仕組みが不採用ならフォルダごと消し、`CpuExperimentalInstaller` の登録から外す）:
+  - `CpuTurretDownStatus`: `TurretMoveHooks` の調子を「仲間の調子」の口へ（倒れている → Downed、体力 0.9 未満 → Hurt、復活の直後 → ふつう）。これで本体の「撃つ」「スキル」は倒れている間は撃たない。
+  - 行動「救助」`CpuReviveBehavior`＋`CpuRescueMath`: ビームが届く、倒れた仲間（点 1.15 × `reviveAttention`）・体力が `healBelowHealth` より低い仲間（点 0.9 × `healAttention` × 弱り具合）に砲身が重なる・もうすぐ着くとき握る。ほかの人がもう助けていれば `shareWithHelpers` 倍（誰も助けていない仲間を先に）。記録「助けた秒」「洗った秒」。
+  - 行動「抜け出す」`CpuStruggleBehavior`: 自分が倒れたら（目が見た、反応の遅れのある様子で）、ほかの何より優先して `strugglePressesPerSecond` の速さでにぎにぎ（リズムは本体の `CpuBrushRhythm`）。記録「倒れた回」「抜け出しの握り回」。
+  - `CpuRescueSettings`（Resources/CpuRescueSettings。無ければ初期値）。分野「救助」を登録。
+- 点の並び（段5 まで）: 抜け出す 3 ＞ 歯みがき 2 ＞ 危ない熱 1.5 ＞ スキル 1.25 ＞ 倒れた仲間の救助 最大 1.15 ＞ スマッシュボール 最大 1.1 ＞ 撃つ 0.25〜1.0 ／ 冷ます 最大 0.9 ／ 弱った仲間を洗う 最大 0.9。
+- 確かめていないこと: Play で倒れた仲間を本当に起こせるか（当てる幅 `hitReach` が体の半径＋ビームの太さに合っているか）、抜け出しの速さ。
 
 ---
 

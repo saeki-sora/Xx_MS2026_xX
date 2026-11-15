@@ -28,6 +28,34 @@ namespace MS2026.Cpu
         public float HalfAngle => Distance > 0.01f ? Mathf.Atan2(Radius, Distance) * Mathf.Rad2Deg : 90f;
     }
 
+    /// <summary>目に見えている仲間の砲台1台（自分は入らない）。</summary>
+    public struct CpuTeammateSight
+    {
+        /// <summary>プレイヤーの番号（0〜3）。</summary>
+        public int Player;
+
+        public Vector2 Position;
+
+        /// <summary>撃ち出し口から見た角度（度）と距離。</summary>
+        public float Angle;
+
+        public float Distance;
+
+        /// <summary>調子（差し込みが無ければいつもふつう）と体力（0〜1）。</summary>
+        public CpuTeammateCondition Condition;
+
+        public float Health01;
+
+        /// <summary>ビームが途中で壁などに止められずに、その仲間まで届くか。</summary>
+        public bool InLine;
+
+        /// <summary>今その仲間の上をビームで通している、ほかの人の数（自分は数えない）。</summary>
+        public int Helpers;
+
+        /// <summary>撃ち出し口から見た、助けるのに当てる幅の半分の角度（度）。</summary>
+        public float HalfAngle(float reach) => Distance > 0.01f ? Mathf.Atan2(reach, Distance) * Mathf.Rad2Deg : 90f;
+    }
+
     /// <summary>
     /// CPU の目が見た様子1回ぶん（その時刻の、砲台のまわりの敵の分布・コア・スマッシュボール）。
     /// 敵は「向き」（扇）と「向き × 距離」（輪）の2通りで数える。どちらもビームが届く所（射程の中・壁より手前）・画面に映る所だけ。
@@ -87,6 +115,14 @@ namespace MS2026.Cpu
         /// <summary>見えているスマッシュボール。</summary>
         public readonly List<CpuBallSight> Balls = new List<CpuBallSight>();
 
+        /// <summary>見えている仲間の砲台（画面に映っていて射程の中。自分は入らない）。</summary>
+        public readonly List<CpuTeammateSight> Teammates = new List<CpuTeammateSight>();
+
+        /// <summary>自分の調子（差し込みが無ければいつもふつう）。</summary>
+        public CpuTeammateCondition SelfCondition;
+
+        public float SelfHealth01 = 1f;
+
         public float RingSize => Range / RingCount;
 
         public int SectorCount => Weights.Length;
@@ -134,6 +170,9 @@ namespace MS2026.Cpu
             CoreHealth01 = 1f;
             NearCoreCount = 0f;
             Balls.Clear();
+            Teammates.Clear();
+            SelfCondition = CpuTeammateCondition.Normal;
+            SelfHealth01 = 1f;
         }
 
         internal void CopyFrom(CpuSight other)
@@ -154,6 +193,10 @@ namespace MS2026.Cpu
             NearCoreCount = other.NearCoreCount;
             Balls.Clear();
             Balls.AddRange(other.Balls);
+            Teammates.Clear();
+            Teammates.AddRange(other.Teammates);
+            SelfCondition = other.SelfCondition;
+            SelfHealth01 = other.SelfHealth01;
         }
     }
 }
