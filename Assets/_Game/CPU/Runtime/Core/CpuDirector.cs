@@ -203,6 +203,7 @@ namespace MS2026.Cpu
                 RemoteHumanMask = RemoteHumanMask(),
                 TurretMask = TurretMask(),
                 FillOtherSeatsOffline = _settings == null || _settings.fillOtherSeatsOffline,
+                FillEmptySeatsOnline = _settings == null || _settings.fillEmptySeatsOnline,
                 // 自動プレイは、席の指定が無ければ全部の席を CPU にする。
                 Mode = _autoplay.Active && launch.SeatMode == CpuSeatMode.Default ? CpuSeatMode.All : launch.SeatMode,
                 ListMask = launch.SeatMask
@@ -229,7 +230,7 @@ namespace MS2026.Cpu
 
                 if (want && cpu == null)
                 {
-                    StartPlayer(p);
+                    StartPlayer(p, CountBits(mask & ((1 << p) - 1)));
                     changed = true;
                 }
             }
@@ -242,13 +243,28 @@ namespace MS2026.Cpu
             }
         }
 
-        private void StartPlayer(int player)
+        private static int CountBits(int mask)
+        {
+            var count = 0;
+            for (; mask != 0; mask &= mask - 1)
+            {
+                count++;
+            }
+
+            return count;
+        }
+
+        // cpuOrdinal = CPU の何人目か（席の番号順。性格を配る順番に使う）。
+        private void StartPlayer(int player, int cpuOrdinal)
         {
             var seed = Seed;
             var cpu = new CpuPlayer(player, Level, CpuSeatRules.SeedFor(seed, player, _matchCount, _randomBase),
                 _settings != null ? _settings.thinkInterval : 0.15f, _settings != null ? _settings.profile : null,
                 _settings != null ? _settings.startFamiliarity : 0f,
                 () => _settings != null ? _settings.learning : CpuLearningTuning.Default);
+            // 性格を配る順番は試合ごとに1つの種で決める（CPU ごとの種だと、同じ性格が重なる）。
+            cpu.Context.Personality = CpuPersonalities.For(_settings != null ? _settings.personalityMix : CpuPersonalityMix.Mixed, cpuOrdinal,
+                CpuSeatRules.SeedFor(seed, 0, _matchCount, _randomBase));
             _players[player] = cpu;
             _playerTurrets[player] = _turrets[player];
             PlayerPilots.Set(player, cpu.Hands);

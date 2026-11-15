@@ -32,6 +32,10 @@ namespace MS2026.Cpu
                  "OFF にすると今まで通り、ほかの席もキーボードで動かせる。")]
         public bool fillOtherSeatsOffline = true;
 
+        [Tooltip("通信中（LAN）、人がいない席を CPU にする（キャラは、キャラ選択で選ばれなかったキャラ）。\n" +
+                 "人が途中から来たら、その席の CPU は止まって人に引き渡す（キャラ・場所・熱・スキルの溜まり・撃破数はそのまま）。人が抜けたら CPU が引き継ぐ。")]
+        public bool fillEmptySeatsOnline = true;
+
         [Header("強さ")]
         [Tooltip("CPU の強さ（起動オプション -cpu-level で変えられる）。ゲームの画面では選ばない。")]
         public CpuLevel level = CpuLevel.Normal;
@@ -56,6 +60,11 @@ namespace MS2026.Cpu
         [Tooltip("試合の始めの慣れ（0〜1。0 = チュートリアルを終えたばかり）。試しに上限の強さを見たいときに 1。")]
         [Range(0f, 1f)]
         public float startFamiliarity;
+
+        [Header("性格（協力と個人スコアの塩梅）")]
+        [Tooltip("CPU たちの性格の組み合わせ。切り替えて比べられる。世話焼き = 手薄な方向を埋める・仲間を助ける・ボールを譲る、" +
+                 "欲張り = 敵の多い所とボールを取りに行く。コアが危ないときは、どの性格も協力に寄る。")]
+        public CpuPersonalityMix personalityMix = CpuPersonalityMix.Mixed;
 
         [Header("学び（ウェーブごとの振り返り）")]
         [Tooltip("ウェーブが終わるたびに分野ごとに振り返り、失敗が多かった分野ほど大きく慣れを上げる。試合ごとに 0 から。")]

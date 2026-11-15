@@ -8,6 +8,8 @@ namespace MS2026.Cpu
     {
         public const string BehaviorId = "shoot";
 
+        private float[] _shared;
+
         public string Id => BehaviorId;
 
         /// <summary>最後の判断（頭の中の表示用）。</summary>
@@ -40,15 +42,23 @@ namespace MS2026.Cpu
         {
         }
 
-        private static CpuShootDecision Decide(CpuContext context)
+        // 協力の気持ちの分だけ、ほかの人のビームがもう当たっている敵は仲間に任せて数えない（手薄な所を撃つ）。
+        private CpuShootDecision Decide(CpuContext context)
         {
             if (!context.Eyes.HasSeen)
             {
                 return default;
             }
 
+            var sight = context.Eyes.Perceived;
+            if (_shared == null || _shared.Length != sight.Weights.Length)
+            {
+                _shared = new float[sight.Weights.Length];
+            }
+
+            CpuMoodMath.ShareWeights(sight.Weights, sight.ContestedWeights, context.Mood, _shared);
             var turret = new CpuTurretInfo(context.Turret);
-            return CpuShootMath.Decide(context.Eyes.Perceived.Weights, turret, context.Skill);
+            return CpuShootMath.Decide(_shared, turret, context.Skill);
         }
     }
 

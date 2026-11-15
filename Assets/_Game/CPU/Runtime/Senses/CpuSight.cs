@@ -24,6 +24,9 @@ namespace MS2026.Cpu
         /// <summary>ビームが途中で止まらずに届くか（ボールの手前に壁などが無いか）。</summary>
         public bool InLine;
 
+        /// <summary>今そのボールをビームで撃っている、ほかの人の数。</summary>
+        public int Contenders;
+
         /// <summary>撃ち出し口から見た、ボールの幅の半分の角度（度）。</summary>
         public float HalfAngle => Distance > 0.01f ? Mathf.Atan2(Radius, Distance) * Mathf.Rad2Deg : 90f;
     }
@@ -70,6 +73,7 @@ namespace MS2026.Cpu
             ObstacleDistances = new float[sectorCount];
             RingCount = Mathf.Max(1, ringCount);
             RingWeights = new float[sectorCount * RingCount];
+            ContestedWeights = new float[sectorCount];
         }
 
         /// <summary>見た時刻（ゲームの時間）。</summary>
@@ -89,6 +93,9 @@ namespace MS2026.Cpu
 
         /// <summary>扇 × 輪ごとの敵の重み（番号 = 扇 × <see cref="RingCount"/> + 輪）。</summary>
         public readonly float[] RingWeights;
+
+        /// <summary>扇ごとの敵の重みのうち、ほかの人のビームがもう当たっている敵の分（仲間に任せられる分）。</summary>
+        public readonly float[] ContestedWeights;
 
         /// <summary>見た場所（撃ち出し口）と射程。</summary>
         public Vector2 Origin;
@@ -165,6 +172,7 @@ namespace MS2026.Cpu
         {
             Array.Clear(Weights, 0, Weights.Length);
             Array.Clear(RingWeights, 0, RingWeights.Length);
+            Array.Clear(ContestedWeights, 0, ContestedWeights.Length);
             Total = 0f;
             HasCore = false;
             CoreHealth01 = 1f;
@@ -182,6 +190,7 @@ namespace MS2026.Cpu
             Array.Copy(other.Weights, Weights, Weights.Length);
             Array.Copy(other.ObstacleDistances, ObstacleDistances, ObstacleDistances.Length);
             Array.Copy(other.RingWeights, RingWeights, Math.Min(RingWeights.Length, other.RingWeights.Length));
+            Array.Copy(other.ContestedWeights, ContestedWeights, Math.Min(ContestedWeights.Length, other.ContestedWeights.Length));
             Origin = other.Origin;
             Range = other.Range;
             Total = other.Total;

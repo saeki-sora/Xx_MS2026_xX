@@ -24,6 +24,9 @@ namespace MS2026.Cpu
         /// <summary>通信していないとき、自分以外の席を CPU にするか。</summary>
         public bool FillOtherSeatsOffline;
 
+        /// <summary>通信中、人がいない席（Host の自分の席とほかのPCの人の席以外）を CPU にするか。</summary>
+        public bool FillEmptySeatsOnline;
+
         /// <summary>起動オプションの席。</summary>
         public CpuSeatMode Mode;
 
@@ -35,7 +38,8 @@ namespace MS2026.Cpu
     /// どの席を CPU にするか（決まりだけ。テストできるように Unity に頼らない）。
     /// ・CPU は結果を決める PC（Host・オフライン）だけで動く。
     /// ・ほかのPCから人が入っている席は、いつでも人が優先（人が来たら CPU は止まる）。
-    /// ・起動オプションが無ければ: 通信していないときは「自分以外の席」（設定で切れる）、通信中は無し（キャラ選択の空いた席は段9）。
+    /// ・起動オプションが無ければ: 通信していないときは「自分以外の席」、通信中は「人がいない席」（どちらも設定で切れる）。
+    ///   通信中は、人が来た席から CPU は止まり（人に引き渡す）、人が抜けた席は CPU が引き継ぐ。
     /// ・-cpu 2,3: その席だけ（自分の席でも、書いてあれば CPU）。-cpu all: 全部の席（自分の席も。自動プレイ用）。-cpu none: 無し。
     /// </summary>
     public static class CpuSeatRules
@@ -63,7 +67,8 @@ namespace MS2026.Cpu
                     wanted = inputs.ListMask & AllMask;
                     break;
                 default:
-                    wanted = !inputs.Networked && inputs.FillOtherSeatsOffline ? AllMask & ~LocalBit(inputs.LocalPlayer) : 0;
+                    var fill = inputs.Networked ? inputs.FillEmptySeatsOnline : inputs.FillOtherSeatsOffline;
+                    wanted = fill ? AllMask & ~LocalBit(inputs.LocalPlayer) : 0;
                     break;
             }
 

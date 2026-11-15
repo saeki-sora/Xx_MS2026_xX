@@ -1,0 +1,111 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23849d8931b8afe4a8b0d08cd94f4df4, type: 3}
+  m_Name: CpuSettings
+  m_EditorClassIdentifier: MS2026.CPU.Runtime::MS2026.Cpu.CpuSettings
+  cpuEnabled: 1
+  fillOtherSeatsOffline: 1
+  fillEmptySeatsOnline: 1
+  level: 1
+  randomSeed: 0
+  thinkInterval: 0.15
+  senseInterval: 0.1
+  profile:
+    beginner:
+      reactionSeconds: 0.7
+      judgementNoise: 0.5
+      leadSeconds: 0
+      startThreshold: 2.8
+      keepThreshold: 1.2
+      denseCount: 16
+      minGrip: 0.5
+      heatCoolStart01: 0.95
+      heatPanic01: 1.1
+      skillPatienceSeconds: 0
+      skillGoodValue: 0.2
+      skillMinValue: 0
+      smashBallAttention: 0.3
+      brushPulsesPerSecond: 2
+      brushSync: 0
+      gripChangePerSecond: 3
+      gripJitter: 0.1
+      minToggleSeconds: 0.25
+    novice:
+      reactionSeconds: 0.45
+      judgementNoise: 0.3
+      leadSeconds: 0.1
+      startThreshold: 2.3
+      keepThreshold: 0.9
+      denseCount: 12
+      minGrip: 0.62
+      heatCoolStart01: 0.9
+      heatPanic01: 1
+      skillPatienceSeconds: 1.5
+      skillGoodValue: 0.4
+      skillMinValue: 0.05
+      smashBallAttention: 0.6
+      brushPulsesPerSecond: 2.6
+      brushSync: 0.25
+      gripChangePerSecond: 4.5
+      gripJitter: 0.07
+      minToggleSeconds: 0.16
+    skilled:
+      reactionSeconds: 0.28
+      judgementNoise: 0.18
+      leadSeconds: 0.25
+      startThreshold: 2
+      keepThreshold: 0.8
+      denseCount: 10
+      minGrip: 0.7
+      heatCoolStart01: 0.82
+      heatPanic01: 0.96
+      skillPatienceSeconds: 4
+      skillGoodValue: 0.6
+      skillMinValue: 0.1
+      smashBallAttention: 0.85
+      brushPulsesPerSecond: 3.2
+      brushSync: 0.6
+      gripChangePerSecond: 6
+      gripJitter: 0.04
+      minToggleSeconds: 0.12
+    expert:
+      reactionSeconds: 0.15
+      judgementNoise: 0.08
+      leadSeconds: 0.35
+      startThreshold: 1.5
+      keepThreshold: 0.5
+      denseCount: 6
+      minGrip: 0.85
+      heatCoolStart01: 0.8
+      heatPanic01: 0.95
+      skillPatienceSeconds: 6
+      skillGoodValue: 0.7
+      skillMinValue: 0.15
+      smashBallAttention: 1
+      brushPulsesPerSecond: 3.8
+      brushSync: 0.9
+      gripChangePerSecond: 9
+      gripJitter: 0.02
+      minToggleSeconds: 0.08
+  startFamiliarity: 0
+  personalityMix: 0
+  learning:
+    enabled: 1
+    minGrowth: 0.5
+    maxGrowth: 1.6
+    expectedWaves: 0
+  csvMode: 1
+  autoplayMatches: 5
+  autoplayTimeScale: 2
+  autoplayWaitSeconds: 3
+  autoplayMaxMinutes: 20
+  logSeatChanges: 1

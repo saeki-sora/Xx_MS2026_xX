@@ -122,11 +122,28 @@ namespace MS2026.Cpu.Tests.EditMode
         }
 
         [Test]
-        public void Networked_DefaultHasNoCpu()
+        public void Networked_FillOff_HasNoCpu()
         {
             var inputs = Offline();
             inputs.Networked = true;
+            inputs.FillEmptySeatsOnline = false;
             Assert.AreEqual(0, CpuSeatRules.ComputeCpuMask(inputs));
+        }
+
+        [Test]
+        public void Networked_FillsSeatsWithoutHumans_AndHandsOverWhenSomeoneJoins()
+        {
+            var inputs = Offline();
+            inputs.Networked = true;
+            inputs.FillEmptySeatsOnline = true;
+            inputs.RemoteHumanMask = 0b0100; // P3 に人
+            Assert.AreEqual(0b1010, CpuSeatRules.ComputeCpuMask(inputs)); // P1（Host）と P3 以外
+
+            inputs.RemoteHumanMask = 0b0110; // P2 にも人が来た → P2 の CPU は止まる
+            Assert.AreEqual(0b1000, CpuSeatRules.ComputeCpuMask(inputs));
+
+            inputs.RemoteHumanMask = 0b0010; // P3 の人が抜けた → P3 は CPU が引き継ぐ
+            Assert.AreEqual(0b1100, CpuSeatRules.ComputeCpuMask(inputs));
         }
 
         [Test]

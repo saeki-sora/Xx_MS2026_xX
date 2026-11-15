@@ -160,7 +160,9 @@ namespace MS2026.Cpu
             var sight = cpu.Eyes.Perceived;
             var now = currentIndex >= 0 ? $"{Label(current.Id)} {brain.Scores[currentIndex]:0.00}" : "なし";
             var next = nextIndex >= 0 ? $"  次 {Label(brain.Behaviors[nextIndex].Id)} {brain.Scores[nextIndex]:0.00}" : string.Empty;
-            return $"P{cpu.Player + 1} {now}｜握 {cpu.Hands.Grip01:0.00} 熱 {(info.Valid ? info.Heat01 * 100f : 0f):0}%" +
+            var mood = cpu.Context.Mood;
+            return $"P{cpu.Player + 1} {cpu.Context.Personality.Label.Substring(0, 1)} {now}｜握 {cpu.Hands.Grip01:0.00} 熱 {(info.Valid ? info.Heat01 * 100f : 0f):0}%" +
+                   $" 協{mood.Coop:0.0}稼{mood.Greed:0.0}" +
                    $" 敵 {sight.Total:0}{(sight.HasView ? string.Empty : "?")} 上手さ {AverageScale(cpu):0.0}" +
                    (cpu.CanMove ? $" 移動 {cpu.MoveIntent.magnitude:0.0}" : string.Empty) + next;
         }

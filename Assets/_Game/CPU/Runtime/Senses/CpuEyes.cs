@@ -36,6 +36,13 @@ namespace MS2026.Cpu
         // ほかの人のビームが仲間の上を通っているとみなす、ビームの線から仲間までの距離（m）。
         private const float HelperReach = 0.9f;
 
+        // ほかの人のビームがもう当たっているとみなす、ビームの線から敵までの距離（m）。
+        private const float ContestReach = 1.2f;
+
+        private readonly Vector2[] _otherBeamFrom = new Vector2[4];
+        private readonly Vector2[] _otherBeamTo = new Vector2[4];
+        private int _otherBeams;
+
         private readonly CpuSight[] _history = new CpuSight[HistoryLength];
         private readonly CpuSight _perceived;
         private readonly int _sectorCount;
@@ -108,6 +115,8 @@ namespace MS2026.Cpu
                 sight.CoreHealth01 = core.maxHealth > 0f ? Mathf.Clamp01(core.CurrentHealth / core.maxHealth) : 1f;
             }
 
+            CollectOtherBeams(context.Player);
+
             var rings = sight.RingCount;
             var ringSize = Mathf.Max(0.01f, sight.RingSize);
             var nearCoreSqr = NearCoreRadius * NearCoreRadius;
@@ -129,6 +138,10 @@ namespace MS2026.Cpu
                 var weight = WeightOf(point);
                 sight.Weights[sector] += weight;
                 sight.RingWeights[sector * rings + Mathf.Min(rings - 1, (int)(distance / ringSize))] += weight;
+                if (IsContested(point))
+                {
+                    sight.ContestedWeights[sector] += weight;
+                }
             }
 
             // 見積もりの外れ（扇ごとに、見るたびに少し違う数に見える）。
@@ -139,6 +152,7 @@ namespace MS2026.Cpu
                 {
                     var factor = Mathf.Max(0f, 1f + (context.NextFloat() * 2f - 1f) * noise);
                     sight.Weights[s] *= factor;
+                    sight.ContestedWeights[s] *= factor;
                     for (var r = 0; r < rings; r++)
                     {
                         sight.RingWeights[s * rings + r] *= factor;
@@ -277,9 +291,48 @@ namespace MS2026.Cpu
                     Distance = distance,
                     Radius = radius,
                     Health01 = ball.Obstacle.Health01,
-                    InLine = FirstHitIs(origin, toBall / distance, distance + radius, ball, filter)
+                    InLine = FirstHitIs(origin, toBall / distance, distance + radius, ball, filter),
+                    Contenders = CountBeamsNear(position, radius + 0.5f)
                 });
             }
+        }
+
+        // ほかの人（自分以外）の、今撃っているビームの線（撃ち出し口から射程まで）。
+        private void CollectOtherBeams(int self)
+        {
+            _otherBeams = 0;
+            foreach (var other in _turrets)
+            {
+                if (_otherBeams >= _otherBeamFrom.Length)
+                {
+                    break;
+                }
+
+                if (other == null || other.playerIndex == self || !other.IsFiring || other.tuning == null)
+                {
+                    continue;
+                }
+
+                _otherBeamFrom[_otherBeams] = other.MuzzlePosition;
+                _otherBeamTo[_otherBeams] = (Vector2)other.MuzzlePosition + other.AimDirection * other.tuning.range;
+                _otherBeams++;
+            }
+        }
+
+        private bool IsContested(Vector2 point) => CountBeamsNear(point, ContestReach) > 0;
+
+        private int CountBeamsNear(Vector2 point, float reach)
+        {
+            var count = 0;
+            for (var i = 0; i < _otherBeams; i++)
+            {
+                if (DistanceToSegment(point, _otherBeamFrom[i], _otherBeamTo[i]) <= reach)
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
 
         // ビームと同じ当たり判定で、いちばん近い当たりがそのボールか。

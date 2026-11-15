@@ -81,6 +81,8 @@ namespace MS2026.Cpu.Tests.EditMode
                 Assert.GreaterOrEqual(anchors[i].skillPatienceSeconds, anchors[i - 1].skillPatienceSeconds);
                 Assert.GreaterOrEqual(anchors[i].smashBallAttention, anchors[i - 1].smashBallAttention);
                 Assert.GreaterOrEqual(anchors[i].brushPulsesPerSecond, anchors[i - 1].brushPulsesPerSecond);
+                Assert.GreaterOrEqual(anchors[i].minGrip, anchors[i - 1].minGrip); // 上手いほど強く握る（ダメージは太さに比例）
+                Assert.LessOrEqual(anchors[i].startThreshold, anchors[i - 1].startThreshold); // 上手いほど少しの敵でも撃つ
             }
         }
 

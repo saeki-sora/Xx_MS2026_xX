@@ -77,11 +77,11 @@ namespace MS2026.Cpu
 
         // ───────── 4つの目安の初期値（段11 の調整で直す） ─────────
 
-        /// <summary>初めて遊ぶ人: 反応が遅い・見積もりが粗い・少しの敵でも撃ち、強く握りっぱなし・熱を見ない・スキルはすぐ撃つ・周りを見ない。</summary>
+        /// <summary>初めて遊ぶ人: 反応が遅い・見積もりが粗い・こわごわ弱く握る・大きな群れしか撃たず、すぐやめる・熱を見ない・スキルはすぐ撃つ・周りを見ない。</summary>
         public static CpuSkillValues Beginner => new CpuSkillValues
         {
             reactionSeconds = 0.7f, judgementNoise = 0.5f, gripChangePerSecond = 3f, gripJitter = 0.1f, minToggleSeconds = 0.25f,
-            leadSeconds = 0f, startThreshold = 1.5f, keepThreshold = 0.3f, denseCount = 10f, minGrip = 0.8f,
+            leadSeconds = 0f, startThreshold = 2.8f, keepThreshold = 1.2f, denseCount = 16f, minGrip = 0.5f,
             heatCoolStart01 = 0.95f, heatPanic01 = 1.1f,
             skillPatienceSeconds = 0f, skillGoodValue = 0.2f, skillMinValue = 0f,
             smashBallAttention = 0.3f,
@@ -92,8 +92,8 @@ namespace MS2026.Cpu
         public static CpuSkillValues Novice => new CpuSkillValues
         {
             reactionSeconds = 0.45f, judgementNoise = 0.3f, gripChangePerSecond = 4.5f, gripJitter = 0.07f, minToggleSeconds = 0.16f,
-            leadSeconds = 0.1f, startThreshold = 2.5f, keepThreshold = 0.8f, denseCount = 15f, minGrip = 0.6f,
-            heatCoolStart01 = 0.8f, heatPanic01 = 1f,
+            leadSeconds = 0.1f, startThreshold = 2.3f, keepThreshold = 0.9f, denseCount = 12f, minGrip = 0.62f,
+            heatCoolStart01 = 0.9f, heatPanic01 = 1f,
             skillPatienceSeconds = 1.5f, skillGoodValue = 0.4f, skillMinValue = 0.05f,
             smashBallAttention = 0.6f,
             brushPulsesPerSecond = 2.6f, brushSync = 0.25f
@@ -103,19 +103,19 @@ namespace MS2026.Cpu
         public static CpuSkillValues Skilled => new CpuSkillValues
         {
             reactionSeconds = 0.28f, judgementNoise = 0.18f, gripChangePerSecond = 6f, gripJitter = 0.04f, minToggleSeconds = 0.12f,
-            leadSeconds = 0.25f, startThreshold = 3f, keepThreshold = 1.2f, denseCount = 20f, minGrip = 0.45f,
-            heatCoolStart01 = 0.65f, heatPanic01 = 0.9f,
+            leadSeconds = 0.25f, startThreshold = 2f, keepThreshold = 0.8f, denseCount = 10f, minGrip = 0.7f,
+            heatCoolStart01 = 0.82f, heatPanic01 = 0.96f,
             skillPatienceSeconds = 4f, skillGoodValue = 0.6f, skillMinValue = 0.1f,
             smashBallAttention = 0.85f,
             brushPulsesPerSecond = 3.2f, brushSync = 0.6f
         };
 
-        /// <summary>とても上手い人: 反応が速い・砲身が来る前から握る・敵が多い所だけ撃つ・山に合わせて冷ます・スキルは一番効く時に・周りをよく見る。</summary>
+        /// <summary>とても上手い人: 反応が速い・砲身が来る前から握る・強く握って少しの敵でも撃ち続ける・熱は限界近くまで使うがオーバーヒートしない・スキルは一番効く時に・周りをよく見る。</summary>
         public static CpuSkillValues Expert => new CpuSkillValues
         {
             reactionSeconds = 0.15f, judgementNoise = 0.08f, gripChangePerSecond = 9f, gripJitter = 0.02f, minToggleSeconds = 0.08f,
-            leadSeconds = 0.35f, startThreshold = 3f, keepThreshold = 1.5f, denseCount = 22f, minGrip = 0.4f,
-            heatCoolStart01 = 0.6f, heatPanic01 = 0.88f,
+            leadSeconds = 0.35f, startThreshold = 1.5f, keepThreshold = 0.5f, denseCount = 6f, minGrip = 0.85f,
+            heatCoolStart01 = 0.8f, heatPanic01 = 0.95f,
             skillPatienceSeconds = 6f, skillGoodValue = 0.7f, skillMinValue = 0.15f,
             smashBallAttention = 1f,
             brushPulsesPerSecond = 3.8f, brushSync = 0.9f

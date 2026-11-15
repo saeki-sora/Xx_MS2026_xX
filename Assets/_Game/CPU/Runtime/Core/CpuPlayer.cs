@@ -71,10 +71,37 @@ namespace MS2026.Cpu
 
             RefreshSkill();
             Eyes.Tick(Context, sampler);
+            UpdateMood();
             Brain.Tick(Context, deltaTime);
             Hands.Tick(deltaTime);
             TickMove(deltaTime);
             Record(turret, deltaTime);
+        }
+
+        private readonly int[] _kills = new int[CpuSeatRules.PlayerCount];
+
+        // 今の気持ち: 性格 ＋ 目が見た様子（コアの体力・倒れている仲間）＋ 撃破数の順位（HUD で誰でも分かる）。
+        private void UpdateMood()
+        {
+            var players = 0;
+            for (var p = 0; p < _kills.Length; p++)
+            {
+                _kills[p] = EnemyKillCounter.ByPlayer(p);
+                players++;
+            }
+
+            var sight = Eyes.Perceived;
+            var downed = 0;
+            foreach (var mate in sight.Teammates)
+            {
+                if (mate.Condition == CpuTeammateCondition.Downed)
+                {
+                    downed++;
+                }
+            }
+
+            var rank = CpuMoodMath.Rank(_kills, Player, players);
+            Context.Mood = CpuMoodMath.Evaluate(Context.Personality, sight.CoreHealth01, downed, rank, players);
         }
 
         // 本体が数える記録（撃った秒・空振り・オーバーヒート・熱の最大・行動ごとの秒数）。

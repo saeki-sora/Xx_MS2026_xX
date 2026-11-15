@@ -52,6 +52,12 @@ namespace MS2026.Cpu
         /// </summary>
         public float ScaleOf(string area) => CpuLevels.Scale(Level, Familiarity.Get(area));
 
+        /// <summary>性格（変わらない分。協力と個人スコアの塩梅）。</summary>
+        public CpuPersonality Personality { get; set; } = CpuPersonality.Balanced;
+
+        /// <summary>今の気持ち（性格 ＋ 試合の様子。CpuPlayer が毎フレーム決め直す）。</summary>
+        public CpuMood Mood { get; internal set; } = CpuMood.Neutral;
+
         /// <summary>自分の砲台（見つかっていなければ null）。</summary>
         public LaserTurret Turret { get; internal set; }
 
