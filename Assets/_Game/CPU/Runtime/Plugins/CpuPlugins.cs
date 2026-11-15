@@ -39,6 +39,7 @@ namespace MS2026.Cpu
         private static readonly List<BehaviorEntry> Behaviors = new List<BehaviorEntry>();
         private static readonly List<CpuSkillArea> Areas = new List<CpuSkillArea>();
         private static readonly List<ICpuSkillJudge> SkillJudges = new List<ICpuSkillJudge>();
+        private static readonly Dictionary<string, Func<CpuWaveStats, float>> AreaReviews = new Dictionary<string, Func<CpuWaveStats, float>>();
         private static Func<ICpuMovePlanner> _movePlanner;
 
         /// <summary>行き先を決めた向きを砲台の移動へ渡す口（無ければ動かない）。</summary>
@@ -59,6 +60,7 @@ namespace MS2026.Cpu
             Behaviors.Clear();
             Areas.Clear();
             SkillJudges.Clear();
+            AreaReviews.Clear();
             _movePlanner = null;
             MoveOutput = null;
             ViewSource = null;
@@ -203,5 +205,42 @@ namespace MS2026.Cpu
         }
 
         public static IReadOnlyList<CpuSkillArea> SkillAreas => Areas;
+
+        // ───────── 振り返り（学び） ─────────
+
+        /// <summary>
+        /// 分野の振り返りを登録する。ウェーブが終わると、その CPU のそのウェーブの記録から「苦手さ」（0 = うまくいった … 1 = 失敗が多い）を出す。
+        /// 苦手な分野ほど大きく慣れが上がる。振り返りが無い分野は、ふつう（0.5）として少しずつ上がる。
+        /// </summary>
+        public static void RegisterAreaReview(string area, Func<CpuWaveStats, float> need)
+        {
+            if (string.IsNullOrEmpty(area) || need == null)
+            {
+                return;
+            }
+
+            AreaReviews[area] = need;
+            Changed?.Invoke();
+        }
+
+        /// <summary>そのウェーブの、その分野の苦手さ（振り返りが無い・失敗したらふつう 0.5）。</summary>
+        public static float ReviewArea(string area, CpuWaveStats wave)
+        {
+            if (area == null || wave == null || !AreaReviews.TryGetValue(area, out var review))
+            {
+                return CpuLearningMath.NeutralNeed;
+            }
+
+            try
+            {
+                var need = review(wave);
+                return float.IsNaN(need) ? CpuLearningMath.NeutralNeed : Mathf.Clamp01(need);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                return CpuLearningMath.NeutralNeed;
+            }
+        }
     }
 }

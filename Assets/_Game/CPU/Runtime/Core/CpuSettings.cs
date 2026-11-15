@@ -57,6 +57,10 @@ namespace MS2026.Cpu
         [Range(0f, 1f)]
         public float startFamiliarity;
 
+        [Header("学び（ウェーブごとの振り返り）")]
+        [Tooltip("ウェーブが終わるたびに分野ごとに振り返り、失敗が多かった分野ほど大きく慣れを上げる。試合ごとに 0 から。")]
+        public CpuLearningTuning learning = CpuLearningTuning.Default;
+
         [Header("自動プレイ・結果の表（開発用）")]
         [Tooltip("結果の表（CSV）をいつ書くか。置き場所はエディタならプロジェクトの Logs/CPU/、ビルドなら persistentDataPath/CPU/。")]
         public CpuCsvMode csvMode = CpuCsvMode.AutoplayOnly;

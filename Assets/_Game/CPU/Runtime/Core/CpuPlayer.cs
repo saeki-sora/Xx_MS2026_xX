@@ -1,3 +1,4 @@
+using System;
 using MS2026.Fortress;
 using UnityEngine;
 
@@ -14,7 +15,8 @@ namespace MS2026.Cpu
         private bool _wasOverheated;
         private int _skillVersion = -1;
 
-        public CpuPlayer(int player, CpuLevel level, int seed, float thinkInterval, CpuSkillProfile profile, float startFamiliarity = 0f)
+        public CpuPlayer(int player, CpuLevel level, int seed, float thinkInterval, CpuSkillProfile profile, float startFamiliarity = 0f,
+            Func<CpuLearningTuning> learning = null)
         {
             _profile = profile ?? new CpuSkillProfile();
             Hands = new CpuHands(player, unchecked(seed * 31 + 7));
@@ -23,7 +25,11 @@ namespace MS2026.Cpu
             RefreshSkill();
             Brain = new CpuBrain(CpuPlugins.CreateBehaviors()) { ThinkInterval = thinkInterval };
             _movePlanner = CpuPlugins.CreateMovePlanner();
+            Learner = new CpuLearner(Context, learning);
         }
+
+        /// <summary>学び（ウェーブごとの振り返り）。</summary>
+        public CpuLearner Learner { get; }
 
         /// <summary>今の慣れで上手さを作り直す（慣れが変わっていなければ何もしない）。</summary>
         public void RefreshSkill()
@@ -83,6 +89,19 @@ namespace MS2026.Cpu
                 stats.Add(CpuStats.BehaviorSecondsPrefix + current.Id, deltaTime);
             }
 
+            // スマッシュボールが見えていて、ビームが届いた時間（「周りを見る」の振り返りに使う）。
+            if (Eyes.HasSeen)
+            {
+                foreach (var ball in Eyes.Perceived.Balls)
+                {
+                    if (ball.InLine)
+                    {
+                        stats.Add(CpuStats.BallVisibleSeconds, deltaTime);
+                        break;
+                    }
+                }
+            }
+
             var info = new CpuTurretInfo(turret);
             if (!info.Valid)
             {
@@ -113,6 +132,7 @@ namespace MS2026.Cpu
 
         internal void Stop()
         {
+            Learner.Dispose();
             Brain.Stop(Context);
             _movePlanner?.Reset();
             MoveIntent = Vector2.zero;

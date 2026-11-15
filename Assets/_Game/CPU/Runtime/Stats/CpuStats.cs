@@ -110,6 +110,7 @@ namespace MS2026.Cpu
         public const string Overheats = "オーバーヒート回";
         public const string MaxHeat = "熱の最大%";
         public const string BehaviorSecondsPrefix = "行動秒:";
+        public const string BallVisibleSeconds = "ボールが見えた秒";
 
         private readonly List<CpuWaveStats> _finished = new List<CpuWaveStats>();
         private CpuWaveStats _current = new CpuWaveStats { WaveIndex = -1 };
@@ -130,10 +131,20 @@ namespace MS2026.Cpu
         /// <summary>今のウェーブにいた秒数を進める（CpuPlayer が毎フレーム呼ぶ）。</summary>
         public void Tick(float deltaTime) => _current.Seconds += deltaTime;
 
-        /// <summary>新しいウェーブの記録を始める（それまでの数は捨てる）。</summary>
+        /// <summary>
+        /// 新しいウェーブの記録を始める。
+        /// ・まだ1つもウェーブを閉じていない（試合の始めの前）なら、それまでの数は捨てる
+        /// ・前のウェーブを閉じた後なら、合間に数えた分（歯みがきの回など）は新しいウェーブの記録に引き継ぐ
+        /// </summary>
         public void BeginWave(int waveIndex)
         {
-            _current = new CpuWaveStats { WaveIndex = waveIndex };
+            if (_finished.Count == 0)
+            {
+                _current = new CpuWaveStats { WaveIndex = waveIndex };
+                return;
+            }
+
+            _current.WaveIndex = waveIndex;
         }
 
         /// <summary>今のウェーブの記録を閉じて返す（次の記録は同じ番号で続く）。</summary>
