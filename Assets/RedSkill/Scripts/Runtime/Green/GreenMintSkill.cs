@@ -79,6 +79,14 @@ namespace MS2026.Skills.Green
         [SkillLabel("シェーダー（通常は触らない）")]
         public GreenMintShaders shaders = new GreenMintShaders();
 
+        [Tooltip("普段のレーザーに付く緑の副砲。レーザーが通った所に種を落とし、少しあとで芽が開いてまわりの敵をはじく。強く握るほど輪が大きい。")]
+        [SkillTab(SkillTab.SubGun)]
+        [SkillLabel("副砲：置き種")]
+        public MS2026.Skills.SubGuns.SeedSubGun subGun = new MS2026.Skills.SubGuns.SeedSubGun();
+
+        /// <summary>このキャラの副砲。</summary>
+        public override MS2026.Skills.SubGuns.SubGunSettings SubGun => subGun;
+
         public override CharacterSkillRunner CreateRunner(PlayerSkillSlot slot)
         {
             var runner = slot.gameObject.AddComponent<GreenMintSkillRunner>();

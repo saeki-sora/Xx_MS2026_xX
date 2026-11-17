@@ -128,7 +128,12 @@ namespace MS2026.SkillStudio
                 }
                 else
                 {
-                    menu.AddItem(label, false, () => slot.SetSkill(skill));
+                    menu.AddItem(label, false, () =>
+                    {
+                        slot.SetSkill(skill);
+                        // 副砲もそのキャラの物に付け替える。
+                        MS2026.Skills.SubGuns.SubGunRunner.Install(slot.Turret, skill);
+                    });
                 }
             }
 

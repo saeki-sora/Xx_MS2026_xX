@@ -88,6 +88,14 @@ namespace MS2026.Skills.Blue
             themeColor = new Color(0.2f, 0.55f, 1f, 1f);
         }
 
+        [Tooltip("普段のレーザーに付く青の副砲。一定の間隔で左右から泡の弾が出て、近い敵を追いかけてはじける。強く握るほど間隔が短い。")]
+        [SkillTab(SkillTab.SubGun)]
+        [SkillLabel("副砲：追尾バブル")]
+        public MS2026.Skills.SubGuns.HomingBubbleSubGun subGun = new MS2026.Skills.SubGuns.HomingBubbleSubGun();
+
+        /// <summary>このキャラの副砲。</summary>
+        public override MS2026.Skills.SubGuns.SubGunSettings SubGun => subGun;
+
         public override CharacterSkillRunner CreateRunner(PlayerSkillSlot slot)
         {
             var runner = slot.gameObject.AddComponent<BlueVortexSkillRunner>();

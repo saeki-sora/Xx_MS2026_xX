@@ -68,6 +68,12 @@ namespace MS2026.Skills
         public string DisplayName => string.IsNullOrWhiteSpace(displayName) ? name : displayName;
 
         /// <summary>
+        /// このキャラの副砲（普段のレーザーに付く小さな攻撃。2026-11-17）。無ければ null。
+        /// 派生クラスで副砲の設定（<see cref="SubGun.SubGunSettings"/>）を持ち、それを返す。
+        /// </summary>
+        public virtual SubGuns.SubGunSettings SubGun => null;
+
+        /// <summary>
         /// このスキルを実際に動かす係（<see cref="CharacterSkillRunner"/>）を砲台に付けて返す。
         /// <see cref="PlayerSkillSlot"/> がスキルを設定されたときに1回だけ呼ぶ。
         /// </summary>

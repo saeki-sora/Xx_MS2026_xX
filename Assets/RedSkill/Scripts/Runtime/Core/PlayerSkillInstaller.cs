@@ -83,7 +83,10 @@ namespace MS2026.Skills
                 slot = turret.gameObject.AddComponent<PlayerSkillSlot>();
             }
 
-            slot.SetSkill(ResolveSkill(turret.playerIndex));
+            var skill = ResolveSkill(turret.playerIndex);
+            slot.SetSkill(skill);
+            // そのキャラの副砲（スキルの設定ファイルの中にある）。無いキャラは何も付かない。
+            SubGuns.SubGunRunner.Install(turret, skill);
             // 砲台にキャラの絵を出す係（一覧に合うキャラが無ければ何もしない）。
             SkillTurretPortrait.Ensure(slot, turretPortraits);
             if (startReady)

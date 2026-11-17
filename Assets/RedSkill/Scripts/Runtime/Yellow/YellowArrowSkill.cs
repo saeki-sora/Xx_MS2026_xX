@@ -28,6 +28,14 @@ namespace MS2026.Skills.Yellow
         [SkillLabel("効果音・追加エフェクト（D-Drive）")]
         public YellowArrowSounds sounds = new YellowArrowSounds();
 
+        [Tooltip("普段のレーザーに付く黄の副砲。レーザーの先から近くの敵へ稲妻が飛び、次の敵へ乗り移る。強く握るほど乗り移る数が多い。")]
+        [SkillTab(SkillTab.SubGun)]
+        [SkillLabel("副砲：稲妻チェイン")]
+        public MS2026.Skills.SubGuns.ChainLightningSubGun subGun = new MS2026.Skills.SubGuns.ChainLightningSubGun();
+
+        /// <summary>このキャラの副砲。</summary>
+        public override MS2026.Skills.SubGuns.SubGunSettings SubGun => subGun;
+
         public override CharacterSkillRunner CreateRunner(PlayerSkillSlot slot)
         {
             var runner = slot.gameObject.AddComponent<YellowArrowSkillRunner>();

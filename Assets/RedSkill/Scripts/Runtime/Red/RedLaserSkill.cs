@@ -91,6 +91,14 @@ namespace MS2026.Skills.Red
         [SkillLabel("シェーダー（通常は触らない）")]
         public RedLaserShaders shaders = new RedLaserShaders();
 
+        [Tooltip("普段のレーザーに付く赤の副砲。細いレーザー2本が、本体のまわりを二重らせんで巻きつく。強く握るほど巻きが細かく速い。")]
+        [SkillTab(SkillTab.SubGun)]
+        [SkillLabel("副砲：螺旋ツイン")]
+        public MS2026.Skills.SubGuns.HelixSubGun subGun = new MS2026.Skills.SubGuns.HelixSubGun();
+
+        /// <summary>このキャラの副砲。</summary>
+        public override MS2026.Skills.SubGuns.SubGunSettings SubGun => subGun;
+
         public override CharacterSkillRunner CreateRunner(PlayerSkillSlot slot)
         {
             var runner = slot.gameObject.AddComponent<RedLaserSkillRunner>();

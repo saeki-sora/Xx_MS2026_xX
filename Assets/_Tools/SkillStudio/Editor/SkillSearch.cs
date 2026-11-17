@@ -44,9 +44,9 @@ namespace MS2026.SkillStudio
                 return result;
             }
 
-            foreach (var tab in new[] { SkillTab.Level, SkillTab.Look })
+            foreach (var tab in new[] { SkillTab.Level, SkillTab.Look, SkillTab.SubGun })
             {
-                var tabName = tab == SkillTab.Level ? "レベルデザイン" : "見た目";
+                var tabName = tab == SkillTab.Level ? "レベルデザイン" : tab == SkillTab.SubGun ? "副砲" : "見た目";
                 if (tab == SkillTab.Level)
                 {
                     AddBase(result, words, tabName + " › 溜まり方", "溜まり方 ゲージ", SkillTabs.ChargeFields);

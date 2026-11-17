@@ -12,7 +12,10 @@ namespace MS2026.Skills
         Look,
 
         /// <summary>スタジオには出さない（シェーダーの指定など、ふだん触らない物）。</summary>
-        Hidden
+        Hidden,
+
+        /// <summary>副砲（普段のレーザーに付く、キャラごとの小さな攻撃。強さ・間隔・見た目・音をまとめて出す。2026-11-17）。</summary>
+        SubGun
     }
 
     /// <summary>

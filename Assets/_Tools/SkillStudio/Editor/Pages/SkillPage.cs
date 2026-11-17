@@ -65,7 +65,7 @@ namespace MS2026.SkillStudio
             _search = new ToolbarSearchField
             {
                 placeholderText = "項目を探す（Ctrl+F）",
-                tooltip = "項目を名前で探す（レベルデザイン・見た目の両方から）。ひらがな・カタカナどちらでもよい。空白で区切ると全部の言葉を含む物だけ。Ctrl+F でここに入る。"
+                tooltip = "項目を名前で探す（レベルデザイン・見た目・副砲の全部から）。ひらがな・カタカナどちらでもよい。空白で区切ると全部の言葉を含む物だけ。Ctrl+F でここに入る。"
             };
             _search.style.width = 190;
             _search.style.marginRight = 6;
@@ -101,7 +101,8 @@ namespace MS2026.SkillStudio
             var segment = StudioUi.Segment(new (SkillTab, string, string, string)[]
                 {
                     (SkillTab.Level, "⚖", "レベルデザイン", "強さ・時間・範囲・溜まり方など、ゲームの手ごたえに関わる数字。"),
-                    (SkillTab.Look, "✦", "見た目", "色・光・演出・揺れ・効果音。")
+                    (SkillTab.Look, "✦", "見た目", "色・光・演出・揺れ・効果音。"),
+                    (SkillTab.SubGun, "✚", "副砲", "普段のレーザーに付く、このキャラの副砲（強さ・間隔・見た目・音）。本体のレーザーを撃っている間だけ出る。")
                 },
                 () => _context.TabOf(_color),
                 tab =>
@@ -195,7 +196,7 @@ namespace MS2026.SkillStudio
             {
                 var hits = SkillSearch.Find(type, _query);
                 _content.Add(StudioUi.Section(hits.Count > 0 ? $"「{_query.Trim()}」で見つかった項目  {hits.Count}" : $"「{_query.Trim()}」に合う項目はありません",
-                    "レベルデザイン・見た目の両方から探している。Esc か ✕ で元の画面に戻る。"));
+                    "レベルデザイン・見た目・副砲の全部から探している。Esc か ✕ で元の画面に戻る。"));
                 if (hits.Count > 0)
                 {
                     _content.Add(new SkillSearchResults(serializedObject, hits));
