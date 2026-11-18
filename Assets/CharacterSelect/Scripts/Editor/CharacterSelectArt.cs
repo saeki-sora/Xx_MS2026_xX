@@ -49,6 +49,9 @@ namespace MS2026.CharacterSelect.EditorTools
         /// <summary>仮のキャラ（斜め上から見た白いキューブ。キャラのファイルの「立ち絵にかける色」でキャラの色になる）。</summary>
         public const string CharaCube = Folder + "/CS_CharaCube.png";
 
+        /// <summary>「GO!」の絵（UIデザイナーの絵。ゲーム中HUD のウェーブの「GO!」と同じファイル。2026-11-17）。</summary>
+        public const string Go = "Assets/_Game/UI/Art/Hud/Wave_Go.png";
+
         private const int PillBorder = 30;
         private const int PanelBorder = 24;
         private const int NameTagBorder = 30;

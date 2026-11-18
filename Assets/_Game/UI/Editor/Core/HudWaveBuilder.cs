@@ -34,6 +34,10 @@ namespace MS2026.UI.EditorTools
         internal const string AnnounceName = "WaveAnnounce";
         internal const string CountdownName = "WaveCountdown";
         internal const string GoName = "WaveGo";
+
+        /// <summary>「GO!」の絵（UIデザイナーの絵。2026-11-17）。キャラ選択の「GO!」も同じ絵を使う。</summary>
+        internal const string GoArt = "Wave_Go.png";
+        internal const string GoArtPath = H.ArtFolder + "/" + GoArt;
         internal const string ClearName = "WaveClear";
         internal const string TimeUpName = "WaveTimeUp";
 
@@ -46,7 +50,7 @@ namespace MS2026.UI.EditorTools
 
         internal static readonly string[] ArtFiles =
         {
-            "Wave_Bar.png", "Wave_Banner.png", "Wave_Ring.png", "Wave_Arrow.png", "Wave_Panel.png",
+            "Wave_Bar.png", "Wave_Banner.png", "Wave_Ring.png", "Wave_Arrow.png", "Wave_Panel.png", GoArt,
             "Brush_Title.png", "Brush_Card.png", "Brush_Chip.png", "Brush_Stage.png", "Brush_Tooth.png", "Brush_Brush.png", "Brush_BrushStripe.png",
             "Brush_Hand.png", "Brush_TimerBack.png", "Brush_TimerFill.png", "Brush_Burst.png", "Brush_Bubble.png", "Brush_Sparkle.png"
         };
@@ -274,8 +278,9 @@ namespace MS2026.UI.EditorTools
             Visible(root, FortressUiKeys.WaveGo, UiVisibleCondition.WhenOn, 0.5f);
             B.AddMotion(root.gameObject, UiMotionTrigger.OnShow, UiPreset.ZoomInFade, 0.3f);
             B.AddMotion(root.gameObject, UiMotionTrigger.OnHide, UiPreset.ZoomOutFade, 0.25f);
-            var go = H.Number(root, "Label", 220, H.Cyan, TextAnchor.MiddleCenter, Navy, 6f, 8f);
-            go.text = "GO!";
+            // 文字ではなく UIデザイナーの「GO!」の絵（縦横比はそのまま）。
+            var go = H.Picture(root, "Label", GoArt, Color.white);
+            go.preserveAspect = true;
             B.Stretch(go.rectTransform);
         }
 
