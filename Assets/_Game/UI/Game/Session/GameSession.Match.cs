@@ -265,6 +265,7 @@ namespace MS2026.UI.Game
                 return;
             }
 
+            LeavingForTitle?.Invoke();
             UiRoot.Active?.Close(pauseScreen);
             _expectingDisconnect = true;
             StopNetworking();

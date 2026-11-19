@@ -30,6 +30,7 @@ namespace MS2026.UI.Game
         private bool _holdArmed;
         private bool _leaving;
         private MatchResult _result;
+        private GameOverResultView _gameOverView;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Install()
@@ -43,15 +44,32 @@ namespace MS2026.UI.Game
         private void OnEnable()
         {
             FortressMatch.Ended += OnEnded;
+            GameSession.LeavingForTitle += CloseIfShowing;
+            SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
         private void OnDisable()
         {
             FortressMatch.Ended -= OnEnded;
+            GameSession.LeavingForTitle -= CloseIfShowing;
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            _showing = false;
+            CloseGameOverView();
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (mode == LoadSceneMode.Single) CloseIfShowing();
+        }
+
+        private void CloseIfShowing()
+        {
+            if (_showing) Close();
         }
 
         private void OnEnded(MatchResult result)
         {
+            CloseGameOverView();
             _result = result;
             _clear = result.outcome == MatchOutcome.Clear;
             _startedAt = Time.unscaledTime;
@@ -67,6 +85,16 @@ namespace MS2026.UI.Game
             UiValues.Set(FortressUiKeys.ResultSubtitle, WaveHudLogic.ResultSubtitle(result.reason, result.reachedWave, result.waveCount));
 
             var root = UiRoot.Active;
+            if (!_clear)
+            {
+                _gameOverView = GameOverResultView.Create(transform, result, Brightness());
+                if (_gameOverView != null)
+                {
+                    root?.Close(HudScreenId);
+                    return;
+                }
+            }
+
             if (root == null || !root.Open(ResultScreenId))
             {
                 Debug.LogWarning($"[Result] リザルト画面「{ResultScreenId}」がありません。UIスタジオの「はじめに」の「リザルト画面を作る」で作ってください（今回はそのまま進みます）。");
@@ -100,6 +128,7 @@ namespace MS2026.UI.Game
             var panelAt = ResultRules.PanelTime(_clear);
             var autoLeft = Mathf.Max(0f, AutoSeconds - Mathf.Max(0f, elapsed - panelAt));
             UiValues.Set(FortressUiKeys.ResultAutoSeconds, Mathf.Ceil(autoLeft));
+            _gameOverView?.Render(elapsed, _hold, autoLeft);
             if (_step < ResultRules.StepNext)
             {
                 return;
@@ -239,6 +268,8 @@ namespace MS2026.UI.Game
             }
 
             _leaving = true;
+            // 次のシーンや通信終了を待つ間も、全面のリザルトを残さない。
+            Close();
             var session = GameSession.Active;
             if (session != null)
             {
@@ -247,8 +278,7 @@ namespace MS2026.UI.Game
             }
 
             // ゲームのシーンだけで遊んでいるとき。
-            Close();
-            var title = session != null ? session.titleSceneName : "Title";
+            const string title = "Title";
             if (Application.CanStreamedLevelBeLoaded(title))
             {
                 SceneManager.LoadScene(title);
@@ -262,8 +292,17 @@ namespace MS2026.UI.Game
         private void Close()
         {
             _showing = false;
+            CloseGameOverView();
             UiRoot.Active?.Close(ResultScreenId);
             ClearValues();
+        }
+
+        private void CloseGameOverView()
+        {
+            if (_gameOverView == null) return;
+            _gameOverView.gameObject.SetActive(false);
+            Destroy(_gameOverView.gameObject);
+            _gameOverView = null;
         }
 
         private static void ClearValues()

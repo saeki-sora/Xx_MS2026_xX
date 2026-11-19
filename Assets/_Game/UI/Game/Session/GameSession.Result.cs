@@ -22,6 +22,8 @@ namespace MS2026.UI.Game
 
         private bool _toTitleRequested;
 
+        internal static event System.Action LeavingForTitle;
+
         /// <summary>リザルトのあと、全員でタイトルへ戻る（オフラインなら自分だけ）。</summary>
         public void ReturnToTitleFromResult()
         {

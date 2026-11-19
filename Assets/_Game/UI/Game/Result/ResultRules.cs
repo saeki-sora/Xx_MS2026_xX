@@ -22,9 +22,18 @@ namespace MS2026.UI.Game
         // クリア: 各段階が始まる秒数（StepBanner から StepNext まで）。
         private static readonly float[] ClearTimes = { 0f, 2.6f, 3.2f, 4.2f, 5.2f, 6.7f, 7.7f, 8.7f };
 
-        // ゲームオーバー（仮）: 「GAME OVER」→ パネル → すぐ「タイトルへ」。
-        private const float GameOverPanelTime = 2.6f;
-        private const float GameOverNextTime = 3.4f;
+        // ゲームオーバー: 連番の5秒後にパネル、プレイヤー行が出揃ってから入力を受け付ける。
+        public const float GameOverPanelTime = 5f;
+        public const float GameOverNextTime = 8.7f;
+        private const float GameOverGaugeDrainStart = 1f;
+        private const float GameOverGaugeDrainEnd = 1.9f;
+
+        /// <summary>参考動画の冒頭と同じく、満タンを少し見せてから最終耐久まで減らす。</summary>
+        public static float GameOverGaugeHealth(float elapsed, float finalHealth)
+        {
+            var progress = Mathf.InverseLerp(GameOverGaugeDrainStart, GameOverGaugeDrainEnd, elapsed);
+            return Mathf.SmoothStep(1f, Mathf.Clamp01(finalHealth), progress);
+        }
 
         /// <summary>結果が出てから elapsed 秒たったときの段階。</summary>
         public static int StepAt(bool clear, float elapsed)
@@ -53,6 +62,22 @@ namespace MS2026.UI.Game
 
         /// <summary>パネルが出る秒数（自動でタイトルへ戻るまでの時間は、ここから数える）。</summary>
         public static float PanelTime(bool clear) => clear ? ClearTimes[StepPanel - StepBanner] : GameOverPanelTime;
+
+        public static int KillsAt(int[] kills, int player) =>
+            kills != null && player >= 0 && player < kills.Length ? kills[player] : 0;
+
+        /// <summary>撃破数の多い順。同数の並びはプレイヤー番号順。</summary>
+        public static int[] PlayersByKills(int[] kills, int playerCount)
+        {
+            var players = new int[playerCount];
+            for (var i = 0; i < players.Length; i++) players[i] = i;
+            System.Array.Sort(players, (a, b) =>
+            {
+                var order = KillsAt(kills, b).CompareTo(KillsAt(kills, a));
+                return order != 0 ? order : a.CompareTo(b);
+            });
+            return players;
+        }
 
         public static string Rank(float durability01)
         {
