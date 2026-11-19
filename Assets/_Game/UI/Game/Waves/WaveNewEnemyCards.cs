@@ -22,7 +22,15 @@ namespace MS2026.UI.Game
             public Image fallback;
             public Text title;
             public Text body;
+
+            /// <summary>紹介文のいちばん大きい文字の大きさ（文ごとに1行に収めるため小さくした後、次の敵で元に戻す）。</summary>
+            [System.NonSerialized] public int bodyMaxSize;
+
+            [System.NonSerialized] public int bodyMinSize;
         }
+
+        /// <summary>文ごとに1行に収めるとき、ここまでは小さくしてよい。</summary>
+        private const int SentenceLineMinSize = 14;
 
         public Card[] cards = new Card[0];
 
@@ -74,6 +82,153 @@ namespace MS2026.UI.Game
             text.verticalOverflow = VerticalWrapMode.Truncate;
         }
 
+        // 行の頭に来てはいけない文字（句読点・閉じかっこ・小さい字・伸ばし棒など）と、行の終わりに来てはいけない文字（開きかっこ）。
+        private const string NoLineStart = "。、，．・：；？！ー…‥）」』】〕〉》］｝ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮヵヶ!?.,:;)]}%";
+        private const string NoLineEnd = "（「『【〔〈《［｛([{";
+
+        /// <summary>
+        /// 文字を入れ、折り返しで行の頭に「。」などが来るときは、その前の1文字ごと次の行へ送る（日本語の禁則処理。
+        /// Unity の Text は日本語をどこでも折り返すので、ここで改行を足す。2026-11-18、ユーザー依頼「2行目の先頭に。が来てキモい」）。
+        /// </summary>
+        private static void SetTextWithKinsoku(Text text, string value)
+        {
+            value = BreakAfterSentences(value);
+            text.text = value;
+            var size = text.rectTransform.rect.size;
+            if (string.IsNullOrEmpty(value) || size.x <= 0f || text.font == null)
+            {
+                return;
+            }
+
+            var s = value;
+            var generator = new TextGenerator();
+
+            // まず、文ごとにちょうど1行（途中で折り返さない）に収まる、いちばん大きい文字の大きさを探す。
+            var maxSize = text.resizeTextForBestFit ? text.resizeTextMaxSize : text.fontSize;
+            var minSize = Mathf.Min(SentenceLineMinSize, text.resizeTextMinSize);
+            for (var fontSize = maxSize; fontSize >= minSize; fontSize--)
+            {
+                var settings = text.GetGenerationSettings(size);
+                settings.fontSize = fontSize;
+                settings.resizeTextForBestFit = false;
+                generator.Populate(s, settings);
+                if (OnlyExplicitBreaks(s, generator))
+                {
+                    if (text.resizeTextForBestFit)
+                    {
+                        // 一番小さい大きさより小さくしたときは、そちらも下げる（Unity は最小より小さくしない）。
+                        text.resizeTextMaxSize = fontSize;
+                        text.resizeTextMinSize = Mathf.Min(text.resizeTextMinSize, fontSize);
+                    }
+                    else
+                    {
+                        text.fontSize = fontSize;
+                    }
+
+                    text.text = s;
+                    return;
+                }
+            }
+
+            // 収まらないときは今までどおり折り返し、行の頭の「。」などだけ直す。
+            for (var guard = 0; guard < 8; guard++)
+            {
+                generator.Populate(s, text.GetGenerationSettings(size));
+                var lines = generator.lines;
+                var breakAt = -1;
+                for (var i = 1; i < lines.Count; i++)
+                {
+                    var start = lines[i].startCharIdx;
+                    if (start <= 1 || start >= s.Length || s[start - 1] == '\n')
+                    {
+                        continue;
+                    }
+
+                    if (NoLineStart.IndexOf(s[start]) >= 0 || NoLineEnd.IndexOf(s[start - 1]) >= 0)
+                    {
+                        breakAt = start - 1;
+                        break;
+                    }
+                }
+
+                // 前の行が1文字だけになるときは送らない（空の行ができるだけなので）。
+                if (breakAt <= 0 || s[breakAt - 1] == '\n')
+                {
+                    break;
+                }
+
+                s = s.Insert(breakAt, "\n");
+            }
+
+            text.text = s;
+        }
+
+        /// <summary>全部の行が出ていて、行の切れ目がどれも自分で入れた改行か（勝手な折り返し・はみ出して消えた行が無いか）。</summary>
+        private static bool OnlyExplicitBreaks(string s, TextGenerator generator)
+        {
+            var explicitLines = 1;
+            foreach (var c in s)
+            {
+                if (c == '\n')
+                {
+                    explicitLines++;
+                }
+            }
+
+            var lines = generator.lines;
+            if (lines.Count != explicitLines)
+            {
+                return false;
+            }
+
+            for (var i = 1; i < lines.Count; i++)
+            {
+                var start = lines[i].startCharIdx;
+                if (start <= 0 || start > s.Length || s[start - 1] != '\n')
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // 文の終わりの字。この後にまだ文が続くなら、そこで改行する。
+        private const string SentenceEnd = "。！？!?";
+
+        /// <summary>
+        /// 文の終わり（「。」「！」「？」）の後にまだ文が続くときは、そこで改行する（「〜まっすぐ来る。／ビームで倒そう！」。2026-11-18、ユーザー依頼）。
+        /// 「！！」のように続くときは、最後の字の後で改行する。
+        /// </summary>
+        private static string BreakAfterSentences(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return value;
+            }
+
+            var sb = new System.Text.StringBuilder(value.Length + 4);
+            for (var i = 0; i < value.Length; i++)
+            {
+                var c = value[i];
+                sb.Append(c);
+                if (SentenceEnd.IndexOf(c) < 0 || i + 1 >= value.Length)
+                {
+                    continue;
+                }
+
+                var next = value[i + 1];
+                if (SentenceEnd.IndexOf(next) >= 0 || NoLineStart.IndexOf(next) >= 0 || next == '\n')
+                {
+                    continue;
+                }
+
+                sb.Append('\n');
+            }
+
+            return sb.ToString();
+        }
+
         private static void Fill(Card card, EnemyTypeDefinition type)
         {
             // 長い名前・紹介文でも枠からはみ出さないよう、文字を小さくして収める（紹介文は上限を超えた分を「…」に）。
@@ -86,7 +241,15 @@ namespace MS2026.UI.Game
             if (card.body != null)
             {
                 FitText(card.body, 14);
-                card.body.text = type.IntroTextForCard;
+                if (card.bodyMaxSize <= 0)
+                {
+                    card.bodyMaxSize = card.body.resizeTextMaxSize;
+                    card.bodyMinSize = card.body.resizeTextMinSize;
+                }
+
+                card.body.resizeTextMaxSize = card.bodyMaxSize;
+                card.body.resizeTextMinSize = card.bodyMinSize;
+                SetTextWithKinsoku(card.body, type.IntroTextForCard);
             }
 
             Texture texture = null;

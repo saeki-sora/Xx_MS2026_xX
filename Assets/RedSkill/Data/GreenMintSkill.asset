@@ -224,3 +224,37 @@ MonoBehaviour:
     particle: {fileID: 4800000, guid: b2109d45b11a4d1495705b82af89f548, type: 3}
     tail: {fileID: 4800000, guid: 698ddccdb643414aa6bf56f29b6fa0bc, type: 3}
     sprite: {fileID: 4800000, guid: 13c6d6d42d3846b98e1768dc19ad7fee, type: 3}
+  subGun:
+    enabled: 1
+    whiten: 0.2
+    opacity: 1
+    outlineWidth: 0.035
+    outlineAlpha: 0.8
+    hitFlashSize: 0.55
+    hitFlashSeconds: 0.16
+    dropInterval: 0.45
+    sproutDelay: 0.75
+    radius:
+      weak: 0.8
+      strong: 1.3
+    damage: 10
+    obstacleDamage: 3
+    minDistance: 1
+    maxSeeds: 24
+    seedRadius: 0.26
+    warnSeconds: 0.3
+    sproutDuration: 0.6
+    leafCount: 6
+    leafLength: 0.6
+    ringWidth: 0.16
+    burstAlpha: 0.4
+    landSeconds: 0.15
+    sproutEffect:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color

@@ -510,7 +510,7 @@ namespace MS2026.CharacterSelect.EditorTools
             // 全員が決まったら「GO!」（画面の真ん中）
             var banner = new GameObject("DecidedBanner", typeof(RectTransform), typeof(CanvasGroup));
             banner.transform.SetParent(root, false);
-            Place((RectTransform)banner.transform, new Vector2(0.5f, 0.5f), new Vector2(0f, 60f), new Vector2(560f, 310f));
+            Place((RectTransform)banner.transform, new Vector2(0.5f, 0.5f), new Vector2(0f, 60f), new Vector2(784f, 434f));
             var group = banner.GetComponent<CanvasGroup>();
             group.alpha = 0f;
             group.blocksRaycasts = false;
@@ -523,7 +523,7 @@ namespace MS2026.CharacterSelect.EditorTools
             for (var side = -1; side <= 1; side += 2)
             {
                 var tooth = NewImage(side < 0 ? "ToothLeft" : "ToothRight", banner.transform, CharacterSelectArt.Load(CharacterSelectArt.Tooth), Color.white);
-                Place(tooth.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(side * 360f, 10f), new Vector2(150f, 150f));
+                Place(tooth.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(side * 472f, 10f), new Vector2(150f, 150f));
                 tooth.rectTransform.localRotation = Quaternion.Euler(0f, 0f, side * -14f);
             }
             view.decidedBanner = group;

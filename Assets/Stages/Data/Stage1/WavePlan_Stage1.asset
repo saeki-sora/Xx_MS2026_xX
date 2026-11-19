@@ -56,7 +56,7 @@ MonoBehaviour:
     restSeconds: 3
     boss: {fileID: 0}
   - label: 
-    announceText: "\u7206\u5F3E\u30B9\u30D4\u30AD\u306B\u6CE8\u610F\uFF01"
+    announceText: "\u7206\u5F3E\u30D0\u30A4\u30AD\u30F3\u306B\u6CE8\u610F\uFF01"
     targetKills: 250
     spawnEntries:
     - triggerTime: 0
