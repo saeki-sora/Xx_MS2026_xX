@@ -447,7 +447,7 @@ namespace MS2026.Skills
             var wait = SkillCutIn.StartDelayFor(skill);
             if (wait > 0f)
             {
-                // カットインが閉じ始めるまでスキル本体を待たせる。その間、砲台は止めておく（設定でON のとき）。
+                // カットインが終わるまで（設定による）スキル本体を待たせる。その間、砲台は止めておく（設定でON のとき）。
                 _waitingForCutIn = true;
                 _cutInWaitRemaining = wait;
                 if (Turret != null)

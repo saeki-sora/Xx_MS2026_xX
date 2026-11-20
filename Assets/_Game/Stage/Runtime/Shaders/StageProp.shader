@@ -3,6 +3,7 @@
 // ・追加の反応: 砲台・コアを隠す所に穴をあける / 全体を薄く / 熱で光る・焦げる / 壊れると溶ける / 被弾で光る / 暗くなる。
 //   値は C# の StagePropRenderer・StageFocusPoints が渡す（Runtime/Rendering/StageShaderIds.cs）。
 // ・ステンシルに印（64）を書き、群衆の敵がこの裏に隠れたときだけシルエットを出せるようにする（床用は 0 にする）。
+// ・「空気遠近法を使う」を ON にすると、遠く・足もとほど霞の色に霞む（StageAerialPerspective.hlsl。OFF なら何もしない）。
 // ・影・深度は URP の Lit のパスをそのまま使う（穴は色の描画にだけ効く。デプスプライミングOFFが前提）。
 Shader "MS2026/Stage/Prop"
 {
@@ -42,6 +43,17 @@ Shader "MS2026/Stage/Prop"
         [Header(Stage)]
         [Toggle(_STAGE_NO_HOLES)] _StageNoHoles("透け穴をあけない（床用）", Float) = 0.0
         [IntRange] _StencilRef("敵の影の印（64=出す / 0=出さない）", Range(0, 255)) = 64
+
+        // 空気遠近法（StageAerialPerspective.hlsl）。ON のときだけ下の項目がインスペクターに出る（StagePropShaderGUI）。
+        [Toggle(_STAGE_AERIAL)] _StageAerial("空気遠近法を使う（遠くが霞む）", Float) = 0.0
+        _AerialColor("霞の色（空気の色）", Color) = (0.24, 0.13, 0.40, 1)
+        _AerialStrength("霞の強さ（いちばん霞んだとき）", Range(0.0, 1.0)) = 0.7
+        _AerialDesaturate("霞むときに色を抜く量", Range(0.0, 1.0)) = 0.5
+        _AerialCenter("霞の中心（XY・ふつうはステージの中心）", Vector) = (0, 0, 0, 0)
+        _AerialNear("中心からこの距離までは霞まない（m）", Float) = 12
+        _AerialFar("中心からこの距離で霞みきる（m）", Float) = 40
+        _AerialFloor("足もとの霞の強さ", Range(0.0, 1.0)) = 0.5
+        _AerialFloorHeight("足もとの霞が消える高さ（m）", Float) = 2.5
 
         // URP の Lit と同じ内部用の値（触らない）
         [HideInInspector] _Surface("__surface", Float) = 0.0
@@ -99,6 +111,7 @@ Shader "MS2026/Stage/Prop"
             #pragma shader_feature_local_fragment _ENVIRONMENTREFLECTIONS_OFF
             #pragma shader_feature_local_fragment _SPECULAR_SETUP
             #pragma shader_feature_local_fragment _STAGE_NO_HOLES
+            #pragma shader_feature_local_fragment _STAGE_AERIAL
 
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
             #pragma multi_compile _ _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS
@@ -135,6 +148,7 @@ Shader "MS2026/Stage/Prop"
             #include "Packages/com.unity.render-pipelines.universal/Shaders/LitForwardPass.hlsl"
             #include "Assets/_Game/Stage/Runtime/Shaders/StagePropEffects.hlsl"
             #include "Assets/_Game/Fortress/Runtime/Laser/Light/Shaders/FortressBeamLight.hlsl"
+            #include "Assets/_Game/Stage/Runtime/Shaders/StageAerialPerspective.hlsl"
 
             // URP の LitPassFragment と同じ流れに、背景の反応（StageClip / StageModifySurface）を足したもの。
             void StagePropFragment(
@@ -181,6 +195,10 @@ Shader "MS2026/Stage/Prop"
                 half4 color = UniversalFragmentPBR(inputData, surfaceData);
                 // 撃っているビームが、線に沿ってプレイヤー色で照らす（要塞の LaserBeamLight。ビームが無ければ0）。
                 color.rgb += FortressBeamSurfaceLight(inputData.positionWS, inputData.normalWS, surfaceData.albedo);
+            #if defined(_STAGE_AERIAL)
+                // 空気遠近法: 光を付け終わった色を、遠く・足もとほど霞の色へ寄せる。
+                color.rgb = StageApplyAerialPerspective(color.rgb, inputData.positionWS);
+            #endif
                 color.rgb = MixFog(color.rgb, inputData.fogCoord);
                 color.a = 1.0;
 

@@ -33,7 +33,7 @@ namespace MS2026.Skills
         /// <summary>撃ったときに、スキル本体を何秒待たせるか（待たせないなら 0）。</summary>
         public static float StartDelayFor(CharacterSkill skill)
         {
-            return Settings != null && Settings.timing == SkillCutInTiming.OnActivate && Has(skill) ? Settings.skillStartDelay : 0f;
+            return Settings != null && Settings.timing == SkillCutInTiming.OnActivate && Has(skill) ? Settings.StartDelaySeconds : 0f;
         }
 
         /// <summary>待っている間、砲台を止める（回転・熱）か。</summary>

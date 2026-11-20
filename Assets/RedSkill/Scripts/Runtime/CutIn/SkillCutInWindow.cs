@@ -4,7 +4,7 @@ using UnityEngine.UI;
 namespace MS2026.Skills
 {
     /// <summary>
-    /// カットイン1回分（窓1つ）。部品（絵・白い光・稲妻2本・技名）を作り、<see cref="Tick"/> で動かす。消え終わったら自分で部品を消す。
+    /// カットイン1回分（窓1つ）。部品（背景の連番・絵の後ろの縁取り・絵・白い光・稲妻2本・技名）を作り、<see cref="Tick"/> で動かす。消え終わったら自分で部品を消す。
     /// 小さい窓では、欄の丸いアイコンの上に出す顔（色の輪・光つき）も持ち、窓はそのアイコンに吸い込まれて消える（設定による）。
     /// 形と動きの計算は <see cref="SkillCutInMath"/>、置き場所（大きい窓か、どの欄のそばの小さい窓か）は <see cref="SkillCutInDirector"/> が決める。
     /// </summary>
@@ -21,6 +21,8 @@ namespace MS2026.Skills
         private readonly bool _big;
         private readonly bool _shrink;
         private readonly GameObject _root;
+        private readonly CutInQuadGraphic _background;
+        private readonly CutInQuadGraphic _backdrop;
         private readonly CutInQuadGraphic _picture;
         private readonly CutInQuadGraphic _flash;
         private readonly CutInBoltGraphic _edge;
@@ -30,16 +32,20 @@ namespace MS2026.Skills
         private readonly CutInDiscGraphic _iconGlow;
         private readonly CutInDiscGraphic _iconWhite;
         private readonly CutInDiscGraphic _iconRing;
+        private readonly CutInDiscGraphic _iconBackground;
+        private readonly CutInDiscGraphic _iconBackdrop;
         private readonly CutInDiscGraphic _iconFace;
         private readonly CutInDiscGraphic _iconBurst;
         private Shadow[] _textEffects;
 
         private SkillCutInMath.Shapes _shapes;
         private Rect _pictureRect;
+        private Rect _backgroundRect;
         private Vector2 _anchor;
         private Vector2 _iconCenter;
         private float _iconRadius;
         private Rect _iconPictureRect;
+        private Rect _iconBackgroundRect;
         private float _time;
         private float _closeAt = -1f;
         private float _sinceDone;
@@ -57,6 +63,19 @@ namespace MS2026.Skills
             var rect = (RectTransform)_root.transform;
             rect.SetParent(parent, false);
             Stretch(rect);
+
+            // 背景の連番 → 縁取り → 絵 の順に重ねる（背景が無い行では作らない）。
+            if (entry.HasBackground)
+            {
+                _background = Add<CutInQuadGraphic>("Background");
+                _background.Sprite = entry.BackgroundAt(0f);
+            }
+
+            if (entry.backdrop != null)
+            {
+                _backdrop = Add<CutInQuadGraphic>("Backdrop");
+                _backdrop.Sprite = entry.backdrop;
+            }
 
             _picture = Add<CutInQuadGraphic>("Picture");
             _picture.Sprite = entry.picture;
@@ -106,6 +125,18 @@ namespace MS2026.Skills
                 _iconGlow = Add<CutInDiscGraphic>("IconGlow");
                 _iconWhite = Add<CutInDiscGraphic>("IconWhite");
                 _iconRing = Add<CutInDiscGraphic>("IconRing");
+                if (entry.HasBackground)
+                {
+                    _iconBackground = Add<CutInDiscGraphic>("IconBackground");
+                    _iconBackground.Sprite = entry.BackgroundAt(0f);
+                }
+
+                if (entry.backdrop != null)
+                {
+                    _iconBackdrop = Add<CutInDiscGraphic>("IconBackdrop");
+                    _iconBackdrop.Sprite = entry.backdrop;
+                }
+
                 _iconFace = Add<CutInDiscGraphic>("IconFace");
                 _iconFace.Sprite = entry.picture;
                 _iconBurst = Add<CutInDiscGraphic>("IconBurst");
@@ -132,7 +163,12 @@ namespace MS2026.Skills
             _anchor = anchor;
             var sprite = _entry.picture;
             var size = sprite != null ? sprite.rect.size : Vector2.one;
-            _pictureRect = SkillCutInMath.PictureRect(size, _entry.face, anchor, pictureHeight * _entry.faceScale, SkillCutInMath.Bounds(shapes.Open));
+            var openBounds = SkillCutInMath.Bounds(shapes.Open);
+            // 背景の連番があるときは、絵（背景が透明のキャラ）で窓を埋めなくてよいので、顔の大きさどおりに置く（小さくすると後ろの背景が見える）。
+            var pictureCover = _entry.HasBackground ? new Rect(anchor, Vector2.zero) : openBounds;
+            _pictureRect = SkillCutInMath.PictureRect(size, _entry.face, anchor, pictureHeight * _entry.faceScale, pictureCover);
+            var backgroundSize = BackgroundSize();
+            _backgroundRect = SkillCutInMath.PictureRect(backgroundSize, new Vector2(0.5f, 0.5f), openBounds.center, 0f, openBounds);
 
             if (_iconFace != null)
             {
@@ -142,6 +178,7 @@ namespace MS2026.Skills
                 var d = _iconRadius * 2f;
                 var cover = new Rect(_iconCenter.x - _iconRadius, _iconCenter.y - _iconRadius, d, d);
                 _iconPictureRect = SkillCutInMath.PictureRect(size, _entry.face, _iconCenter, d * small.iconPictureHeight * _entry.faceScale, cover);
+                _iconBackgroundRect = SkillCutInMath.PictureRect(backgroundSize, new Vector2(0.5f, 0.5f), _iconCenter, 0f, cover);
             }
         }
 
@@ -209,10 +246,27 @@ namespace MS2026.Skills
                 pose.BottomRight = pivot + (pose.BottomRight - pivot) * pose.Scale;
             }
 
+            var pictureRect = SkillCutInMath.ScaleAround(SkillCutInMath.ScaleAround(_pictureRect, _anchor, pose.Zoom), pivot, pose.Scale);
+            var tint = new Color(1f, 1f, 1f, pose.Alpha);
+            if (_background != null)
+            {
+                _background.SetCorners(pose.BottomLeft, pose.TopLeft, pose.TopRight, pose.BottomRight);
+                _background.PictureRect = SkillCutInMath.ScaleAround(_backgroundRect, pivot, pose.Scale);
+                _background.Sprite = _entry.BackgroundAt(_time);
+                _background.color = tint;
+            }
+
+            if (_backdrop != null)
+            {
+                _backdrop.SetCorners(pose.BottomLeft, pose.TopLeft, pose.TopRight, pose.BottomRight);
+                _backdrop.PictureRect = pictureRect;
+                _backdrop.color = tint;
+            }
+
             _picture.SetCorners(pose.BottomLeft, pose.TopLeft, pose.TopRight, pose.BottomRight);
-            _picture.PictureRect = SkillCutInMath.ScaleAround(SkillCutInMath.ScaleAround(_pictureRect, _anchor, pose.Zoom), pivot, pose.Scale);
+            _picture.PictureRect = pictureRect;
             _picture.Sprite = pose.Later && _entry.laterPicture != null ? _entry.laterPicture : _entry.picture;
-            _picture.color = new Color(1f, 1f, 1f, pose.Alpha);
+            _picture.color = tint;
 
             _flash.SetCorners(pose.BottomLeft, pose.TopLeft, pose.TopRight, pose.BottomRight);
             _flash.color = new Color(1f, 1f, 1f, pose.Flash * pose.Alpha);
@@ -274,8 +328,24 @@ namespace MS2026.Skills
             _iconWhite.SetRing(c, r, r + IconWhiteWidth, Color.white, Color.white);
             _iconRing.SetRing(c, inner, r, col, col);
             _iconFace.SetDisc(c, inner);
-            _iconFace.PictureRect = SkillCutInMath.ScaleAround(_iconPictureRect, c, scale);
+            var iconPictureRect = SkillCutInMath.ScaleAround(_iconPictureRect, c, scale);
+            _iconFace.PictureRect = iconPictureRect;
             var tint = new Color(1f, 1f, 1f, alpha);
+            if (_iconBackground != null)
+            {
+                _iconBackground.SetDisc(c, inner);
+                _iconBackground.PictureRect = SkillCutInMath.ScaleAround(_iconBackgroundRect, c, scale);
+                _iconBackground.Sprite = _entry.BackgroundAt(_time);
+                _iconBackground.color = tint;
+            }
+
+            if (_iconBackdrop != null)
+            {
+                _iconBackdrop.SetDisc(c, inner);
+                _iconBackdrop.PictureRect = iconPictureRect;
+                _iconBackdrop.color = tint;
+            }
+
             _iconGlow.color = tint;
             _iconWhite.color = tint;
             _iconRing.color = tint;
@@ -286,6 +356,13 @@ namespace MS2026.Skills
             var burst = _iconRadius * Mathf.Lerp(0.9f, 2.4f, SkillCutInMath.EaseOut(u));
             _iconBurst.SetRing(c, burst, burst + IconRingWidth, col, col);
             _iconBurst.color = new Color(1f, 1f, 1f, pose.Done ? 1f - u : 0f);
+        }
+
+        // 背景の連番の1枚の大きさ（全部同じ大きさの前提）。
+        private Vector2 BackgroundSize()
+        {
+            var first = _entry.BackgroundAt(0f);
+            return first != null ? first.rect.size : new Vector2(16f, 9f);
         }
 
         private void SetEffectAlpha(float alpha)

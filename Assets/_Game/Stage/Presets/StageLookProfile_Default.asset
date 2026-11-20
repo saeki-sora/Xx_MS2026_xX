@@ -14,14 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: MS2026.Stage.Runtime::MS2026.Stage.StageLookProfile
   lightRays:
     enabled: 1
-    color: {r: 1, g: 0.96, b: 0.86, a: 1}
-    intensity: 0.3
-    angle: 28
-    density: 9
-    sharpness: 3
-    reach: 2.4
-    driftSpeed: 0.25
-    shimmer: 0.15
+    color: {r: 0.047288083, g: 0.022190502, b: 0.6415094, a: 0.18431373}
+    intensity: 0.124
+    angle: 24
+    density: 5
+    sharpness: 4.58
+    reach: 1.97
+    driftSpeed: 0.604
+    shimmer: 0.356
   turretHoleRadius: 1.6
   coreHoleRadius: 2.4
   localTurretHoleScale: 1.3

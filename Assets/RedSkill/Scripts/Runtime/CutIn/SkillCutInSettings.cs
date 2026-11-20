@@ -32,10 +32,22 @@ namespace MS2026.Skills
         [SkillLabel("カットインを出すとき")]
         public SkillCutInTiming timing = SkillCutInTiming.OnActivate;
 
-        [Tooltip("「撃ったとき」のとき、握ってからスキル本体が始まるまでの秒数。カットインが閉じ始めるころ（開く＋見せる時間）に合わせてある。")]
+        [Tooltip("「撃ったとき」のとき、ONならカットインが消え終わってからスキル本体が始まる（待つ時間は「動き」の開く＋見せる＋閉じる時間から自動で決まる）。OFFなら下の「スキルを待たせる時間」だけ待つ。")]
+        [SkillLabel("カットインが消えてから撃つ")]
+        public bool waitUntilCutInEnds = true;
+
+        [Tooltip("「カットインが消えてから撃つ」のとき、消え終わる何秒前にスキルを始めるか。0 で消え終わった瞬間。閉じる時間（帯につぶれて消える間）に重ねると、消えながら撃ち出す感じになる。")]
+        [SkillLabel("消え終わる何秒前に撃つか")]
+        [Min(0f)]
+        public float fireBeforeEndSeconds = 0.1f;
+
+        [Tooltip("「撃ったとき」で「カットインが消えてから撃つ」がOFFのとき、握ってからスキル本体が始まるまでの秒数。")]
         [SkillLabel("スキルを待たせる時間（秒）")]
         [Min(0f)]
         public float skillStartDelay = 1.37f;
+
+        /// <summary>「撃ったとき」に、握ってからスキル本体が始まるまでの秒数。</summary>
+        public float StartDelaySeconds => waitUntilCutInEnds ? Mathf.Max(0f, motion.TotalSeconds - fireBeforeEndSeconds) : skillStartDelay;
 
         [Tooltip("ONなら、スキルを待たせている間（カットイン中）は撃った人の砲台が回らず、握っていても熱が上がらない。")]
         [SkillLabel("待っている間は砲台を止める（回転・熱）")]

@@ -13,17 +13,82 @@ MonoBehaviour:
   m_Name: SkillCutIn
   m_EditorClassIdentifier: MS2026.RedSkill.Runtime::MS2026.Skills.SkillCutInSettings
   timing: 1
+  waitUntilCutInEnds: 1
+  fireBeforeEndSeconds: 0.3
   skillStartDelay: 1.37
   freezeTurretWhileWaiting: 1
   entries:
-  - label: "\u8d64\uff08\u30a2\u30eb\u30d5\u30a1\uff09"
+  - label: "\u8D64\uFF08\u30A2\u30EB\u30D5\u30A1\uFF09"
     enabled: 1
     skill: {fileID: 11400000, guid: d9e05d694c934ed48916c489e2893976, type: 2}
-    skillName: "\u6975\u592a\u30ec\u30fc\u30b6\u30fc"
-    picture: {fileID: 21300000, guid: c39c1be53fc54e1d9faa72d20326d807, type: 3}
-    laterPicture: {fileID: 0}
+    skillName: "\u6975\u592A\u30EC\u30FC\u30B6\u30FC"
+    picture: {fileID: 21300000, guid: 27e182d9b41444e0bf4329ca5a8f40de, type: 3}
+    laterPicture: {fileID: 21300000, guid: 11d10ef96cd74c60b11f66ce820b4a71, type: 3}
+    backdrop: {fileID: 0}
+    backgroundFrames:
+    - {fileID: 21300000, guid: 31b44949170e456e9deaee018a3624ba, type: 3}
+    - {fileID: 21300000, guid: bfac3df07f464425bfb2b46c85b283aa, type: 3}
+    - {fileID: 21300000, guid: 427c13d595c141c68a1880eda4a3ccab, type: 3}
+    - {fileID: 21300000, guid: bac69fa4554e479a9c02c52a4e9f7f3a, type: 3}
+    - {fileID: 21300000, guid: 1937171d6dc64ec884edbb296fad8225, type: 3}
+    - {fileID: 21300000, guid: ca92be9a14244718b9d821c620aa4abd, type: 3}
+    - {fileID: 21300000, guid: 62dfa4d2e3ae445bba3ffec7b3cebd02, type: 3}
+    - {fileID: 21300000, guid: 5060a1d052d44e218a0602a47301735b, type: 3}
+    - {fileID: 21300000, guid: 1cee9ec6d9494bbe9245254d1089e28e, type: 3}
+    - {fileID: 21300000, guid: 35126ba39f8d4673a5eb0ce3a05ca55c, type: 3}
+    - {fileID: 21300000, guid: bd45de61ff6843438c777db2edb11814, type: 3}
+    - {fileID: 21300000, guid: 4ccb22f6f4e34903a29d43e6c702b684, type: 3}
+    - {fileID: 21300000, guid: 86913c4824484475b345122be666d8c7, type: 3}
+    - {fileID: 21300000, guid: 62669f758c9f478bb56c0ac16c0b6a6a, type: 3}
+    - {fileID: 21300000, guid: 1befd9d2216f4496b8dc57dbf23bc0da, type: 3}
+    - {fileID: 21300000, guid: 427e647b601c4452ad55f7f00585d8fc, type: 3}
+    - {fileID: 21300000, guid: df7904e448514027b7f2de89692c006c, type: 3}
+    - {fileID: 21300000, guid: 764d7ffded3d4a95b8d6be96b4d05a8d, type: 3}
+    - {fileID: 21300000, guid: cfdad3cd45774317889b805dba15c28c, type: 3}
+    - {fileID: 21300000, guid: 0388fd456af8407c9fe31940bd62264a, type: 3}
+    - {fileID: 21300000, guid: 73faa87e58bf43199100a340a53def4c, type: 3}
+    - {fileID: 21300000, guid: c2d382b78ee64f4b81011b89ab166b0e, type: 3}
+    - {fileID: 21300000, guid: 366c109030724ece98e221f58db57ce5, type: 3}
+    - {fileID: 21300000, guid: 871a0210c37b4d6ea009574293903da3, type: 3}
+    - {fileID: 21300000, guid: 01aca3e8b6d5429eb51fd038ad571080, type: 3}
+    - {fileID: 21300000, guid: 9662c43bd8214c199aea55920003f6e9, type: 3}
+    - {fileID: 21300000, guid: 53c87d30c72a4f888f9ac825190bc137, type: 3}
+    - {fileID: 21300000, guid: dc56fad7cf26494cb00f01b8dfa750b5, type: 3}
+    - {fileID: 21300000, guid: 68d88eb4fce74ab589ade0488355f931, type: 3}
+    - {fileID: 21300000, guid: 0def62c141d84c3b97db47a469f21e6b, type: 3}
+    - {fileID: 21300000, guid: 15451baca5dd450dabc40a566555e396, type: 3}
+    - {fileID: 21300000, guid: d9b04f418ac740b6bf6c786a76d6467f, type: 3}
+    - {fileID: 21300000, guid: 25b5c3ae41414bc9926971279e7abd09, type: 3}
+    - {fileID: 21300000, guid: 48c4210a698d4f72872210840abcad81, type: 3}
+    - {fileID: 21300000, guid: 03d5d116382f4a1ca4466e0eedd5a034, type: 3}
+    - {fileID: 21300000, guid: 6dc2ad72b11d43e88edb2119adb90184, type: 3}
+    - {fileID: 21300000, guid: 4296209ed73547ad94bcc6cb86cb4bef, type: 3}
+    - {fileID: 21300000, guid: 3ac5d9df76144cf0aa6ffa4f4b838400, type: 3}
+    - {fileID: 21300000, guid: 7e33bb056d814ee4acb746b351da1ff2, type: 3}
+    - {fileID: 21300000, guid: 5513b493c17d4abba2c284cb07935a89, type: 3}
+    - {fileID: 21300000, guid: a0564ecec7a44e9ca7358166a2fa0a22, type: 3}
+    - {fileID: 21300000, guid: 5242f31c477f4194adf0acb17f49a4e3, type: 3}
+    - {fileID: 21300000, guid: 241ce28a4a144f40be12b11fd276382f, type: 3}
+    - {fileID: 21300000, guid: 38d0bc056a2f4065837e857160aa0742, type: 3}
+    - {fileID: 21300000, guid: a7dd2999852e4cbe887903dcfd945d8e, type: 3}
+    - {fileID: 21300000, guid: b4ddb542f9b14619b731d4b8963dc822, type: 3}
+    - {fileID: 21300000, guid: 2a962c1d914845f28bd181342bf7f5df, type: 3}
+    - {fileID: 21300000, guid: 2f579b1caf794829b9ac3438b40f066a, type: 3}
+    - {fileID: 21300000, guid: e6a4335513a9423b8cd5f2d0630e7ab6, type: 3}
+    - {fileID: 21300000, guid: f6379a979a134458894730cbd930319b, type: 3}
+    - {fileID: 21300000, guid: 00d140275c254929970a0a9c11f97845, type: 3}
+    - {fileID: 21300000, guid: 7923156fa36449d09e2083f1f8b050ac, type: 3}
+    - {fileID: 21300000, guid: 59abdc557bd04568924d194e1893b98e, type: 3}
+    - {fileID: 21300000, guid: c7387b2617e14d668aa7556eccb6ae24, type: 3}
+    - {fileID: 21300000, guid: 4faf1a64fff84871a9e4acb7120c7d68, type: 3}
+    - {fileID: 21300000, guid: 59124cbe492d4b1180e2a754d54dd9aa, type: 3}
+    - {fileID: 21300000, guid: 9634aa7f7e2946b4af786450bb3c7909, type: 3}
+    - {fileID: 21300000, guid: 6671fab4f15d41c386982c3304a5e87d, type: 3}
+    - {fileID: 21300000, guid: 86e6095e173f410bbdd9bc3d30ec0104, type: 3}
+    - {fileID: 21300000, guid: f188db27472743408c61cf2794ec42cc, type: 3}
+    backgroundFps: 30
     face: {x: 0.48, y: 0.37}
-    faceScale: 1
+    faceScale: 0.55
     color: {r: 1, g: 0.18, b: 0.33, a: 1}
     voice:
       vfx:
@@ -34,12 +99,15 @@ MonoBehaviour:
         type: 0
       tintWithPlayerColor: 1
       colorParam: Color
-  - label: "\u9752\uff08\u30d9\u30fc\u30bf\uff09"
+  - label: "\u9752\uFF08\u30D9\u30FC\u30BF\uFF09"
     enabled: 1
     skill: {fileID: 11400000, guid: 61fd9c7b77354750a9444f3c2e5dac11, type: 2}
-    skillName: "\u3046\u304c\u3044\u85ac\u306e\u6e26"
+    skillName: "\u3046\u304C\u3044\u85AC\u306E\u6E26"
     picture: {fileID: 21300000, guid: 91cf33f94dde40aa880cfab4c0a2d3cf, type: 3}
     laterPicture: {fileID: 0}
+    backdrop: {fileID: 0}
+    backgroundFrames: []
+    backgroundFps: 30
     face: {x: 0.53, y: 0.33}
     faceScale: 1
     color: {r: 0.18, g: 0.53, b: 1, a: 1}
@@ -52,12 +120,15 @@ MonoBehaviour:
         type: 0
       tintWithPlayerColor: 1
       colorParam: Color
-  - label: "\u7dd1\uff08\u30ac\u30f3\u30de\uff09"
+  - label: "\u7DD1\uFF08\u30AC\u30F3\u30DE\uFF09"
     enabled: 1
     skill: {fileID: 11400000, guid: 57d56c6a3ce242c6a13bb3f71bc24bc8, type: 2}
-    skillName: "\u30df\u30f3\u30c8\u30fb\u30b5\u30c6\u30e9\u30a4\u30c8"
+    skillName: "\u30DF\u30F3\u30C8\u30FB\u30B5\u30C6\u30E9\u30A4\u30C8"
     picture: {fileID: 21300000, guid: 786c92708dab491d9701782e774bca54, type: 3}
     laterPicture: {fileID: 0}
+    backdrop: {fileID: 0}
+    backgroundFrames: []
+    backgroundFps: 30
     face: {x: 0.74, y: 0.35}
     faceScale: 1
     color: {r: 0.09, g: 0.83, b: 0.42, a: 1}
@@ -70,12 +141,15 @@ MonoBehaviour:
         type: 0
       tintWithPlayerColor: 1
       colorParam: Color
-  - label: "\u9ec4\u8272\uff08\u30c7\u30eb\u30bf\uff09"
+  - label: "\u9EC4\u8272\uFF08\u30C7\u30EB\u30BF\uFF09"
     enabled: 1
     skill: {fileID: 11400000, guid: e493c07d159f43b4bdf2fa462978c2b9, type: 2}
-    skillName: "\u30ea\u30b3\u30b7\u30a7\u30a2\u30ed\u30fc"
+    skillName: "\u30EA\u30B3\u30B7\u30A7\u30A2\u30ED\u30FC"
     picture: {fileID: 21300000, guid: 7629add2ba4b4d86ab87c9b267ae1a4b, type: 3}
     laterPicture: {fileID: 0}
+    backdrop: {fileID: 0}
+    backgroundFrames: []
+    backgroundFps: 30
     face: {x: 0.3, y: 0.37}
     faceScale: 1
     color: {r: 1, g: 0.75, b: 0.1, a: 1}
@@ -88,4 +162,68 @@ MonoBehaviour:
         type: 0
       tintWithPlayerColor: 1
       colorParam: Color
+  motion:
+    openSeconds: 0.12
+    holdSeconds: 2
+    closeSeconds: 0.23
+    slowZoom: 1.06
+    punchZoom: 0.06
+    punchAt: 0.25
+    flash: 0.85
+  big:
+    edgeTop: 0.34
+    edgeBottom: 0.46
+    faceAnchor: {x: 0.2, y: 0.56}
+    pictureHeight: 2
+    bandHeight: 0.2
+    bandTilt: 0.13
+  small:
+    show: 1
+    size: {x: 560, y: 192}
+    offset: {x: 0, y: 0}
+    slant: 52
+    faceAnchor: {x: 0.33, y: 0.48}
+    pictureHeight: 3
+    end: 0
+    iconFace: 1
+    iconFaceSize: 1.15
+    iconPictureHeight: 5.2
+    fallbackRowPosition: {x: 44, y: 408}
+    fallbackRowSize: {x: 320, y: 80}
+    fallbackRowPitch: 90
+  edge:
+    coreWidth: 5
+    glowWidth: 30
+    jag: 12
+    segments: 14
+    refreshSeconds: 0.045
+    smallScale: 0.6
+  text:
+    show: 1
+    font: {fileID: 0}
+    bigSize: 72
+    smallSize: 42
+    bigPosition: {x: 0.025, y: 0.06}
+    outline: 4
+  sounds:
+    open:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    close:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+    smallPlaysSe: 1
+    smallPlaysVoice: 0
   sortingOrder: 150
