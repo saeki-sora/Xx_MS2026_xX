@@ -25,7 +25,7 @@ namespace MS2026.Fortress
             }
 
             SpawnVfx(effect, position, rotation, playerIndex);
-            PlaySound(effect, position);
+            PlaySound(effect, position, playerIndex);
         }
 
         /// <summary>エフェクトだけをその場に出し、Handle を返す（音は鳴らさない）。エフェクトが空なら Invalid。</summary>
@@ -41,15 +41,41 @@ namespace MS2026.Fortress
             return handle;
         }
 
-        /// <summary>効果音だけを鳴らす。</summary>
-        public static void PlaySound(FortressEffect effect, Vector3 position)
+#if UNITY_EDITOR
+        /// <summary>
+        /// エディタだけ: 効果音を実際に鳴らしたとき（このPCで鳴らすと決まって D-Drive に頼んだ後）に呼ばれる。
+        /// サウンドスタジオが「鳴った行を光らせる」ために使う。ビルドには入らない。
+        /// </summary>
+        public static event System.Action<FortressEffect, int> Played;
+#endif
+
+        /// <summary>
+        /// 効果音だけを鳴らす。<paramref name="playerIndex"/> は「誰の事か」（分からなければ -1）。
+        /// 欄の「鳴らすPC」がその人のPCだけなら、自分の事でないときは鳴らさない（CPU の事は Host で鳴らす）。
+        /// 鳴らしたら、この場所の倍率と全体音量を掛ける。
+        /// </summary>
+        public static void PlaySound(FortressEffect effect, Vector3 position, int playerIndex = -1)
         {
+            if (effect == null || !effect.HasSe || !IsReady)
+            {
+                return;
+            }
+
+            var local = FortressAudioMix.LocalPlayerIndex;
+            var isHost = local >= 0 && FortressAudioMix.IsHost;
+            var ownerIsHuman = !isHost || FortressAudioMix.OwnerIsHuman(playerIndex);
+            if (!FortressSoundRules.ShouldPlay(effect.audience, playerIndex, local, isHost, ownerIsHuman))
+            {
+                return;
+            }
+
             // このゲームの効果音は位置で変わらない（SE の Spatial=None）ので、位置は渡さない。
             // 渡すと D-Drive が「位置の指定は無視されます」という警告を出し続ける。
-            if (effect != null && effect.HasSe && IsReady)
-            {
-                Audio.PlaySe(effect.se);
-            }
+            var handle = Audio.PlaySe(effect.se);
+            FortressAudioMix.ApplySeVolume(handle, effect.se, effect.volumeScale, effect.isVoice);
+#if UNITY_EDITOR
+            Played?.Invoke(effect, playerIndex);
+#endif
         }
 
         /// <summary>
