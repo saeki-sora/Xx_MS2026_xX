@@ -52,13 +52,13 @@ namespace MS2026.Fortress
         /// <summary>
         /// 効果音だけを鳴らす。<paramref name="playerIndex"/> は「誰の事か」（分からなければ -1）。
         /// 欄の「鳴らすPC」がその人のPCだけなら、自分の事でないときは鳴らさない（CPU の事は Host で鳴らす）。
-        /// 鳴らしたら、この場所の倍率と全体音量を掛ける。
+        /// 鳴らしたら、この場所の倍率と全体音量を掛ける。鳴らした音の Handle を返す（鳴らさなかったら Invalid）。
         /// </summary>
-        public static void PlaySound(FortressEffect effect, Vector3 position, int playerIndex = -1)
+        public static Handle<SeMarker> PlaySound(FortressEffect effect, Vector3 position, int playerIndex = -1)
         {
             if (effect == null || !effect.HasSe || !IsReady)
             {
-                return;
+                return Handle<SeMarker>.Invalid;
             }
 
             var local = FortressAudioMix.LocalPlayerIndex;
@@ -66,7 +66,7 @@ namespace MS2026.Fortress
             var ownerIsHuman = !isHost || FortressAudioMix.OwnerIsHuman(playerIndex);
             if (!FortressSoundRules.ShouldPlay(effect.audience, playerIndex, local, isHost, ownerIsHuman))
             {
-                return;
+                return Handle<SeMarker>.Invalid;
             }
 
             // このゲームの効果音は位置で変わらない（SE の Spatial=None）ので、位置は渡さない。
@@ -76,6 +76,7 @@ namespace MS2026.Fortress
 #if UNITY_EDITOR
             Played?.Invoke(effect, playerIndex);
 #endif
+            return handle;
         }
 
         /// <summary>

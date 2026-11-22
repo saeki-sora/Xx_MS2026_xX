@@ -113,13 +113,14 @@ namespace MS2026.Skills.Yellow
                 FortressEffectPlayer.SpawnVfx(effect, position, Quaternion.identity, playerIndex);
             }
 
-            // 発射音だけ音量を変えられるようにするため、FortressEffectPlayer を通さず D-Drive で直接鳴らす。
+            // 発射音だけ音量（launchVolume）を変えられる。鳴らすPC・全体音量は他の音と同じく FortressEffectPlayer に任せ、
+            // 鳴らした後に「発射音の音量 × この場所の倍率 × 全体音量」を入れ直す（サウンドスタジオ、2026-11-22）。
+            var handle = FortressEffectPlayer.PlaySound(effect, position, playerIndex);
             var bootstrap = DDriveRuntimeBootstrap.Instance;
-            if (effect.HasSe && bootstrap != null && bootstrap.IsReady && bootstrap.Audio != null)
+            if (handle != DDrive.Foundation.Handle.Handle<DDrive.Runtime.Audio.SeMarker>.Invalid && bootstrap != null && bootstrap.Audio != null)
             {
-                var audio = bootstrap.Audio;
-                var handle = audio.PlaySe(effect.se);
-                audio.SetVolume(handle, Mathf.Clamp01(definition.sounds.launchVolume));
+                bootstrap.Audio.SetVolume(handle, FortressSoundRules.FinalVolume(definition.sounds.launchVolume, effect.volumeScale,
+                    FortressAudioMix.Master(effect.isVoice)));
             }
         }
     }

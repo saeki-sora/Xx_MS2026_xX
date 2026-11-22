@@ -55,6 +55,12 @@ namespace MS2026.Fortress.Tests.EditMode
         }
 
         [Test]
+        public void PlaySound_NotReady_ReturnsInvalid()
+        {
+            Assert.That(FortressEffectPlayer.PlaySound(new FortressEffect(), Vector3.zero, 2), Is.EqualTo(Handle<SeMarker>.Invalid));
+        }
+
+        [Test]
         public void PlayBgm_NoBootstrap_DoesNotThrow()
         {
             Assert.DoesNotThrow(() => FortressAudioMix.PlayBgm(default));
