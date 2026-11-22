@@ -26,6 +26,17 @@ namespace MS2026.Fortress
         [Tooltip("プレイヤー色を入れる、VFXの調整項目（VFX Editor の Params）のラベル名。")]
         public string colorParam = "Color";
 
+        [Tooltip("効果音をどのPCで鳴らすか。おまかせ = 誰の事かが分かるときはその人のPCだけ、分からないときは全員のPC。サウンドスタジオで変えられる。")]
+        public SoundAudience audience = SoundAudience.Auto;
+
+        [Tooltip("この場所だけの音量の倍率（0〜1）。同じ音を別の所でも使うとき、ここだけ小さくしたいときに下げる。もっと大きくしたいときは音そのものの音量を上げる。")]
+        [Range(0f, 1f)]
+        public float volumeScale = 1f;
+
+        [Tooltip("声の欄か（声全体の音量が効く）。サウンドスタジオが自動で入れる。")]
+        [HideInInspector]
+        public bool isVoice;
+
         public bool HasVfx => vfx.IsValid;
         public bool HasSe => se.IsValid;
         public bool IsEmpty => !HasVfx && !HasSe;
