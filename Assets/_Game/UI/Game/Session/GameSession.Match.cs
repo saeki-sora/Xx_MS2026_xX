@@ -477,7 +477,7 @@ namespace MS2026.UI.Game
 
             if (Audio.IsBound && !IsGameLoaded)
             {
-                Audio.PlayBgm(lobbyBgm);
+                FortressAudioMix.PlayBgm(lobbyBgm);
             }
         }
     }

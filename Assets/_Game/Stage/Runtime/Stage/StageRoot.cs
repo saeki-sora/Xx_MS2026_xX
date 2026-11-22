@@ -197,7 +197,7 @@ namespace MS2026.Stage
                 yield return null;
             }
 
-            Audio.PlayBgm(stage.bgm);
+            MS2026.Fortress.FortressAudioMix.PlayBgm(stage.bgm);
         }
     }
 }

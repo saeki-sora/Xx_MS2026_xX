@@ -105,7 +105,7 @@ namespace MS2026.Fortress
             _muzzleVfx = FortressEffectPlayer.StartFollowing(effect, anchor, _turret.playerIndex);
             if (playSound)
             {
-                FortressEffectPlayer.PlaySound(effect, anchor.position);
+                FortressEffectPlayer.PlaySound(effect, anchor.position, _turret.playerIndex);
             }
         }
 
@@ -147,7 +147,7 @@ namespace MS2026.Fortress
             _steamActive = true;
             var anchor = _turret.muzzle != null ? _turret.muzzle : transform;
             _steamVfx = FortressEffectPlayer.StartFollowing(effect, anchor, _turret.playerIndex);
-            FortressEffectPlayer.PlaySound(effect, anchor.position);
+            FortressEffectPlayer.PlaySound(effect, anchor.position, _turret.playerIndex);
         }
 
         private void StopSteam()
@@ -181,7 +181,7 @@ namespace MS2026.Fortress
 
             _impactActive = true;
             _impactVfx = FortressEffectPlayer.StartFollowing(effect, point, _turret.playerIndex);
-            FortressEffectPlayer.PlaySound(effect, point.position);
+            FortressEffectPlayer.PlaySound(effect, point.position, _turret.playerIndex);
         }
 
         private void StopImpact()

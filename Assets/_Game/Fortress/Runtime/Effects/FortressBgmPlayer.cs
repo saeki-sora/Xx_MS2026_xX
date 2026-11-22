@@ -116,7 +116,7 @@ namespace MS2026.Fortress
             }
 
             _index = (_index + 1) % count;
-            Audio.PlayBgm(Current, fadeInSeconds);
+            FortressAudioMix.PlayBgm(Current, fadeInSeconds);
             Debug.Log("[FortressBgm] " + (_index + 1) + " / " + count + " 曲目に切り替えました。");
         }
 
@@ -164,7 +164,7 @@ namespace MS2026.Fortress
             _index = Mathf.Clamp(startIndex, 0, Mathf.Max(0, Count - 1));
             Debug.Log("[FortressBgm] 再生します: 曲 " + (_index + 1) + " / " + Count + "（ID " + Current.Value + "）, Audio.IsBound=" + Audio.IsBound +
                       ", AudioListener=" + (FindFirstObjectByType<AudioListener>() != null), this);
-            Audio.PlayBgm(Current, fadeInSeconds);
+            FortressAudioMix.PlayBgm(Current, fadeInSeconds);
             _playing = true;
             _starting = null;
         }

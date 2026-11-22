@@ -512,7 +512,7 @@ namespace MS2026.Fortress
             FortressEffectPlayer.SpawnVfx(effect, position, Quaternion.identity, jumper.Player);
             if (withSound)
             {
-                FortressEffectPlayer.PlaySound(effect, position);
+                FortressEffectPlayer.PlaySound(effect, position, jumper.Player);
             }
         }
 

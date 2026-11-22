@@ -23,7 +23,7 @@ namespace MS2026.CharacterSelect
 
             if (effect.HasSe && Audio.IsBound)
             {
-                FortressEffectPlayer.PlaySound(effect, position);
+                FortressEffectPlayer.PlaySound(effect, position, playerIndex);
             }
         }
     }
