@@ -1,0 +1,255 @@
+/* 3Dトゥーン調整ウィンドウ（細長い1列）。色は StudioKit.uss の変数（--sk-*）を使う。 */
+
+.tw-header {
+    flex-direction: row;
+    align-items: center;
+    padding: 6px 10px;
+    background-color: var(--sk-panel);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--sk-line);
+    flex-wrap: wrap;
+}
+
+.tw-header-title {
+    font-size: 14px;
+    -unity-font-style: bold;
+    color: var(--sk-text);
+    flex-grow: 1;
+}
+
+.tw-play {
+    padding: 4px 10px;
+    color: var(--sk-warn);
+    background-color: rgba(255, 200, 87, 0.08);
+    white-space: normal;
+}
+
+.tw-target {
+    flex-direction: row;
+    align-items: center;
+    padding: 5px 10px;
+    background-color: var(--sk-card);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--sk-line);
+}
+
+.tw-target--object {
+    background-color: var(--sk-accent-soft);
+    border-left-width: 3px;
+    border-left-color: var(--sk-accent);
+}
+
+.tw-target-text {
+    flex-grow: 1;
+    flex-shrink: 1;
+    white-space: normal;
+    -unity-font-style: bold;
+}
+
+.tw-scroll {
+    flex-grow: 1;
+}
+
+.tw-body {
+    padding: 8px 10px 20px 10px;
+}
+
+.tw-search {
+    width: auto;
+    margin: 0 0 4px 0;
+}
+
+.tw-summary {
+    flex-direction: row;
+    align-items: center;
+    min-height: 24px;
+}
+
+.tw-summary-text {
+    flex-grow: 1;
+    color: var(--sk-sub);
+}
+
+.tw-missing {
+    flex-direction: row;
+    align-items: center;
+    padding: 5px 8px;
+    margin: 4px 0;
+    border-radius: 6px;
+    border-left-width: 3px;
+    border-left-color: var(--sk-warn);
+    background-color: rgba(255, 200, 87, 0.08);
+}
+
+.tw-missing-text {
+    flex-grow: 1;
+    flex-shrink: 1;
+    white-space: normal;
+}
+
+/* ── 項目の行 ── */
+.tw-row {
+    flex-direction: row;
+    align-items: center;
+    min-height: 22px;
+    padding: 1px 2px;
+    border-radius: 4px;
+    border-left-width: 3px;
+    border-left-color: rgba(0, 0, 0, 0);
+}
+
+.tw-row:hover {
+    background-color: var(--sk-card);
+}
+
+.tw-row-label {
+    width: 108px;
+    min-width: 80px;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--sk-text);
+}
+
+.tw-row-control {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-direction: row;
+    align-items: center;
+    min-width: 90px;
+}
+
+.tw-slider {
+    flex-grow: 1;
+    margin: 0 4px 0 0;
+}
+
+.tw-number {
+    width: 46px;
+    margin: 0;
+}
+
+.tw-color {
+    flex-grow: 1;
+    margin: 0;
+}
+
+.tw-toggle {
+    margin: 0;
+}
+
+.tw-row-reset {
+    width: 20px;
+    height: 18px;
+    margin: 0 0 0 2px;
+    padding: 0;
+    border-width: 0;
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--sk-info);
+    font-size: 13px;
+}
+
+.tw-row--changed {
+    border-left-color: var(--sk-info);
+}
+
+.tw-row--changed .tw-row-label {
+    color: var(--sk-info);
+    -unity-font-style: bold;
+}
+
+.tw-row--off {
+    opacity: 0.45;
+}
+
+.tw-row--missing {
+    display: none;
+}
+
+/* ── 折りたたみ ── */
+.tw-fold {
+    margin-top: 2px;
+}
+
+.tw-fold > .unity-foldout__toggle {
+    margin: 0;
+    padding: 4px 0;
+    border-top-width: 1px;
+    border-top-color: var(--sk-line);
+}
+
+.tw-fold > .unity-foldout__toggle Label {
+    -unity-font-style: bold;
+    color: var(--sk-text);
+}
+
+.tw-fold--changed > .unity-foldout__toggle Label {
+    color: var(--sk-info);
+}
+
+.tw-fold--big {
+    margin-top: 10px;
+}
+
+.tw-fold--big > .unity-foldout__toggle Label {
+    font-size: 13px;
+}
+
+.tw-fold > .unity-foldout__content {
+    margin-left: 6px;
+}
+
+/* ── 物ごと ── */
+.tw-card {
+    margin: 4px 0;
+    padding: 8px;
+}
+
+.tw-card--target {
+    border-color: var(--sk-accent);
+    border-width: 1px;
+}
+
+.tw-card-status {
+    color: var(--sk-sub);
+    white-space: normal;
+    margin: 2px 0 4px 0;
+}
+
+.tw-buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.tw-item {
+    flex-direction: row;
+    align-items: center;
+    min-height: 26px;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--sk-line);
+}
+
+.tw-item--target {
+    background-color: var(--sk-accent-soft);
+}
+
+.tw-item-name {
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 4px;
+}
+
+.tw-setup-toggle {
+    margin: 4px 0;
+}
+
+.tw-muted {
+    color: var(--sk-faint);
+    margin: 8px 0;
+}
+
+.tw-statusbar {
+    min-height: 44px;
+}

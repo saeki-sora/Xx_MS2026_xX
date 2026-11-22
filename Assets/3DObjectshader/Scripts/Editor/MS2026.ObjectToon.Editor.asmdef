@@ -2,7 +2,8 @@
     "name": "MS2026.ObjectToon.Editor",
     "rootNamespace": "MS2026.ObjectToon.EditorTools",
     "references": [
-        "MS2026.ObjectToon.Runtime"
+        "MS2026.ObjectToon.Runtime",
+        "MS2026.StudioKit.Editor"
     ],
     "includePlatforms": [
         "Editor"

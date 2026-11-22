@@ -141,6 +141,52 @@ namespace MS2026.ObjectToon.EditorTools
             return null;
         }
 
+        /// <summary>
+        /// 対象のシーンが使っている材質を探し、表に無い物のトゥーン材質を作って表に足す。結果の文を返す。
+        /// 3D はステージの物の専用シェーダーの材質だけ、はじめからトゥーンにする（URP 標準の材質は候補として並べるだけ）。
+        /// </summary>
+        public static string AddSceneMaterials(ObjectToonProfile profile, bool sprite)
+        {
+            var report = new System.Text.StringBuilder();
+            var entries = sprite ? profile.spriteEntries : profile.entries;
+            int created = 0;
+            Undo.RecordObject(profile, "トゥーン材質を作る");
+            foreach (var sceneName in sprite ? profile.spriteScenes : profile.targetScenes)
+            {
+                var scenePath = FindScenePath(sceneName);
+                if (scenePath == null)
+                {
+                    report.AppendLine("・シーン「" + sceneName + "」が見つかりません");
+                    continue;
+                }
+
+                // 材質はシーンのファイルから探すので、保存していない変更は入らない。
+                var open = UnityEngine.SceneManagement.SceneManager.GetSceneByPath(scenePath);
+                if (open.IsValid() && open.isDirty)
+                {
+                    report.AppendLine("・「" + sceneName + "」は保存されていない変更があります。保存後にもう一度押すと、新しく置いた物の材質も見つかります");
+                }
+
+                foreach (var material in FindSourceMaterials(scenePath, sprite))
+                {
+                    if (profile.FindByOriginal(entries, material) != null)
+                    {
+                        continue;
+                    }
+
+                    var toon = sprite ? CreateSpriteToon(material, profile.spriteCommonSettings) : CreateToon(material, profile.commonSettings);
+                    bool enabled = sprite || material.shader.name == SourceShaderNames[0];
+                    entries.Add(new ObjectToonProfile.Entry { original = material, toon = toon, enabled = enabled });
+                    created++;
+                }
+            }
+
+            EditorUtility.SetDirty(profile);
+            AssetDatabase.SaveAssets();
+            report.Insert(0, "新しく作ったトゥーン材質: " + created + " 個\n（元の材質・シーン・Prefab は変えていません）\n\n");
+            return report.ToString();
+        }
+
         /// <summary>元の材質からトゥーン材質を作って保存する（元の材質は変えない）。</summary>
         public static Material CreateToon(Material original, Material common)
         {
