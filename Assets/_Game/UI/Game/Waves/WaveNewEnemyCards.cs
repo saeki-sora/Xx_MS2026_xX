@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using MS2026.Fortress;
+using MS2026.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -34,8 +35,13 @@ namespace MS2026.UI.Game
 
         public Card[] cards = new Card[0];
 
+        [Tooltip("NEW ENEMY のカードが出た瞬間に鳴らす効果音（初めての敵がいるウェーブだけ。サウンドスタジオ N4）。")]
+        public FortressEffect onCardsShown = new FortressEffect { tintWithPlayerColor = false };
+
         private int _shownWave = -2;
         private WavePlan _shownPlan;
+        private int _shownCount;
+        private bool _wasShowing;
 
         private void Update()
         {
@@ -43,6 +49,15 @@ namespace MS2026.UI.Game
             var announcing = FortressWaves.IsActive && FortressWaves.Phase == WavePhase.Announce && WaveDisplayTiming.Current.showNewEnemyCards;
             var plan = FortressWaves.Plan;
             var wave = announcing ? FortressWaves.WaveIndex : -1;
+
+            // カードが見え始めた瞬間（値 wave.showNewEnemies が ON になった瞬間）に1回だけ鳴らす。
+            var showing = announcing && _shownCount > 0 && UiValues.GetBool(FortressUiKeys.WaveShowNewEnemies);
+            if (showing && !_wasShowing)
+            {
+                FortressEffectPlayer.PlaySound(onCardsShown, Vector3.zero);
+            }
+
+            _wasShowing = showing;
             if (wave == _shownWave && plan == _shownPlan)
             {
                 return;
@@ -51,6 +66,7 @@ namespace MS2026.UI.Game
             _shownWave = wave;
             _shownPlan = plan;
             var types = announcing && plan != null ? WaveIntro.NewTypes(plan.waves, wave) : new List<EnemyTypeDefinition>();
+            _shownCount = System.Math.Min(types.Count, cards.Length);
             for (var i = 0; i < cards.Length; i++)
             {
                 var card = cards[i];

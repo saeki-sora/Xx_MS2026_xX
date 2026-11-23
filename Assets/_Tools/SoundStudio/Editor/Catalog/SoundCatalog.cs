@@ -72,6 +72,7 @@ namespace MS2026.SoundStudio
             E(Fort + "WavePlan", "onTimeWarning", SoundPageId.Match, "試合の進行", "残り時間が少ない（10秒前から1秒ごと）"),
             E(Fort + "WavePlan", "onWaveClear", SoundPageId.Match, "試合の進行", "ウェーブクリア"),
             E(Fort + "WavePlan", "onFinalAnnounce", SoundPageId.Match, "試合の進行", "最後のウェーブのお知らせ"),
+            E("MS2026.UI.Game.WaveNewEnemyCards", "onCardsShown", SoundPageId.Match, "試合の進行", "新しい敵の紹介カードが出た"),
             Bgm(Fort + "FortressBgmPlayer", "bgm", SoundPageId.Match, "試合の BGM"),
             Bgm(Fort + "FortressBgmPlayer", "extraBgms", SoundPageId.Match, "試合の BGM（切り替え用）"),
             Bgm("MS2026.Stage.StageSet", "bgm", SoundPageId.Match, "ステージの BGM"),
@@ -174,7 +175,6 @@ namespace MS2026.SoundStudio
         {
             new SoundCandidate("N1", SoundPageId.Title, "スタート", "握りはじめた（スタートの前）", true),
             new SoundCandidate("N2", CharacterSelect, "カーソル", "キャラの声（カーソルが乗った・キャラごと）", true, voice: true),
-            new SoundCandidate("N4", SoundPageId.Match, "試合の進行", "新しい敵の紹介カードが出る", false),
             new SoundCandidate("N11", SoundPageId.Match, "敵・コア", "敵が画面に出てくる", false),
             new SoundCandidate("N13", Result, "結果画面", "結果画面が出る", false),
             new SoundCandidate("N14", Result, "結果画面", "数字が増えていく", false),
