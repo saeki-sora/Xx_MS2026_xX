@@ -93,6 +93,11 @@ namespace MS2026.Fortress
                 PlayAtTurret(settings.onOverheat);
             }
 
+            if (settings != null && _lastState == TurretState.Overheated && state != TurretState.Overheated)
+            {
+                PlayAtTurret(settings.onRecovered);
+            }
+
             _lastState = state;
 
             if (state == TurretState.Firing)
