@@ -17,6 +17,13 @@ namespace MS2026.Fortress
         [Tooltip("コアのHPが0になって壊れたときの演出。")]
         public FortressEffect onDestroyed = new FortressEffect();
 
+        [Tooltip("コアのHPが少なくなった（下の「ピンチ」の割合を下回った）瞬間に1回出す演出（サウンドスタジオ N9）。" +
+                 "回復して少し上へ戻るまで、2回は出ない。")]
+        public FortressEffect onPinch = new FortressEffect();
+
+        [Range(0f, 1f), Tooltip("「コアがピンチ」を出すHPの割合（0〜1）。")]
+        public float pinchAt = 0.25f;
+
         [Min(0f), Tooltip("ダメージ演出を出す最短の間隔（秒）。")]
         public float damageEffectInterval = 0.25f;
     }

@@ -91,14 +91,21 @@ namespace MS2026.Fortress
         {
             maxHealth = Mathf.Max(1f, max);
             CurrentHealth = refill ? maxHealth : Mathf.Min(CurrentHealth, maxHealth);
+            if (refill)
+            {
+                _pinch.Reset();
+            }
+
             OnHealthChanged?.Invoke(CurrentHealth, maxHealth);
         }
 
         private float _nextDamageEffectTime;
+        private ThresholdTrigger _pinch;
 
         private void Awake()
         {
             CurrentHealth = maxHealth;
+            OnHealthChanged += WatchHealth;
 
             // HPに応じて少しずつ汚れていく見た目（無ければ自動で付ける）。
             if (GetComponent<CoreDirtVisual>() == null)
@@ -199,6 +206,21 @@ namespace MS2026.Fortress
             {
                 _nextDamageEffectTime = Time.time + effects.damageEffectInterval;
                 Play(effects.onDamaged);
+            }
+        }
+
+        /// <summary>HP の変化を見て「ピンチ」を出す（どのPCでも、HP が変わったのを見て自分で出す）。</summary>
+        private void WatchHealth(float current, float max)
+        {
+            if (effects == null || max <= 0f)
+            {
+                return;
+            }
+
+            // 壊れた瞬間は「壊れた」演出だけを出す。
+            if (current > 0f && _pinch.Update(1f - current / max, 1f - effects.pinchAt, 0.1f))
+            {
+                Play(effects.onPinch);
             }
         }
 
