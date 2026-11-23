@@ -32,6 +32,13 @@ namespace MS2026.SoundStudio.Tests
         }
 
         [Test]
+        public void ArrayElements_GetNumberedLabels()
+        {
+            Assert.That(SlotOf("list.Array.data[1]").Label, Does.EndWith("（2）"));
+            Assert.That(SlotOf("a").Label, Does.Not.EndWith("）"));
+        }
+
+        [Test]
         public void CountMissing_IgnoresCandidates()
         {
             var slots = new[]

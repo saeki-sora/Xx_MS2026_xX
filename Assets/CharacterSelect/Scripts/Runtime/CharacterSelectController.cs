@@ -99,6 +99,10 @@ namespace MS2026.CharacterSelect
         [Tooltip("キャラ選択（と遊び方）の BGM（D-Drive の BGM）。キャラ選択が始まったら鳴らす。空なら前の場面の BGM のまま（サウンドスタジオ N18）。")]
         public AssetId<BgmMarker> bgm;
 
+        [Tooltip("カーソルがキャラに乗った瞬間に鳴らす、そのキャラの声（キャラの並びと同じ順。1つ目 = 1番目のキャラ。サウンドスタジオ N2）。" +
+                 "その席の人のPCで鳴る。")]
+        public FortressEffect[] characterVoices = { new FortressEffect(), new FortressEffect(), new FortressEffect(), new FortressEffect() };
+
         [Header("参照")]
         [Tooltip("見た目を受け持つ部品（空なら同じ物・シーンから探す）。")]
         public CharacterSelectView view;
@@ -557,6 +561,11 @@ namespace MS2026.CharacterSelect
                 else if (after.cursor != before.cursor)
                 {
                     Play(onMove, seat, after.cursor);
+                    if (characterVoices != null && after.cursor >= 0 && after.cursor < characterVoices.Length)
+                    {
+                        Play(characterVoices[after.cursor], seat, after.cursor);
+                    }
+
                     SeatMoved?.Invoke(seat);
                 }
             }

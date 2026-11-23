@@ -94,7 +94,7 @@ namespace MS2026.SoundStudio
                 Tooltip = tooltip,
                 Page = entry?.Page ?? SoundPageId.Other,
                 Group = entry?.Group ?? ObjectNames.NicifyVariableName(f.DeclaringType.Name),
-                Label = entry?.Label ?? FallbackLabel(tooltip, f.Field.Name),
+                Label = WithIndex(entry?.Label ?? FallbackLabel(tooltip, f.Field.Name), f.Path),
                 Personal = entry?.Personal ?? false,
                 Voice = entry?.Voice ?? false,
                 Value = f.Value,
@@ -110,6 +110,18 @@ namespace MS2026.SoundStudio
             }
 
             return owner.name;
+        }
+
+        // 配列の中の欄（キャラごとの声・切り替え用の BGM など）は、名前の後ろに何番目かを付ける。
+        private static string WithIndex(string label, string path)
+        {
+            if (!path.EndsWith("]"))
+            {
+                return label;
+            }
+
+            var open = path.LastIndexOf('[');
+            return int.TryParse(path.Substring(open + 1, path.Length - open - 2), out var index) ? label + "（" + (index + 1) + "）" : label;
         }
 
         private static string FallbackLabel(string tooltip, string fieldName)
