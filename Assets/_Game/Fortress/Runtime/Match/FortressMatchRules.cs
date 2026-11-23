@@ -33,5 +33,9 @@ namespace MS2026.Fortress
 
         [Tooltip("ゲームオーバーになった瞬間（各PCで鳴らす）。位置はコア。")]
         public FortressEffect onGameOver = new FortressEffect { tintWithPlayerColor = false };
+
+        [Header("結果画面の演出（サウンドスタジオ。各PCで鳴らす）")]
+        [Tooltip("結果画面が出た瞬間（サウンドスタジオ N13）。")]
+        public FortressEffect onResultShown = new FortressEffect { tintWithPlayerColor = false };
     }
 }

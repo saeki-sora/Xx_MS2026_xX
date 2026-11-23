@@ -30,6 +30,7 @@ namespace MS2026.UI.Game
         private bool _holdArmed;
         private bool _leaving;
         private MatchResult _result;
+        private FortressMatchRules _rules;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Install()
@@ -53,6 +54,7 @@ namespace MS2026.UI.Game
         private void OnEnded(MatchResult result)
         {
             _result = result;
+            _rules = FindFirstObjectByType<FortressMatchRules>();
             _clear = result.outcome == MatchOutcome.Clear;
             _startedAt = Time.unscaledTime;
             _step = ResultRules.StepNone;
@@ -119,6 +121,7 @@ namespace MS2026.UI.Game
             switch (step)
             {
                 case ResultRules.StepPanel:
+                    Cue(_rules != null ? _rules.onResultShown : null);
                     UiRoot.Active?.Close(HudScreenId);
                     PublishCoreColors();
                     UiValues.Set(FortressUiKeys.ResultTotalKills, _result.totalKills);
@@ -157,6 +160,12 @@ namespace MS2026.UI.Game
                     UiValues.Set(FortressUiKeys.ResultRankComment, ResultRules.RankComment(rank));
                     break;
             }
+        }
+
+        /// <summary>結果画面の効果音を鳴らす（欄は試合の決まり FortressMatchRules にある。このPCで鳴らす）。</summary>
+        private static void Cue(FortressEffect effect)
+        {
+            FortressEffectPlayer.PlaySound(effect, Vector3.zero);
         }
 
         private bool IsInResult(int player)
