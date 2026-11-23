@@ -56,6 +56,14 @@ namespace MS2026.UI.Game
             _result = result;
             _rules = FindFirstObjectByType<FortressMatchRules>();
             _clear = result.outcome == MatchOutcome.Clear;
+            if (_rules != null)
+            {
+                var bgm = _clear ? _rules.clearBgm : _rules.gameOverBgm;
+                if (bgm.IsValid)
+                {
+                    FortressAudioMix.PlayBgm(bgm);
+                }
+            }
             _startedAt = Time.unscaledTime;
             _step = ResultRules.StepNone;
             _hold = 0f;

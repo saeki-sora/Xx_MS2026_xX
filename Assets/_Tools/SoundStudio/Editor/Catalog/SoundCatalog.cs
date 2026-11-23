@@ -174,6 +174,8 @@ namespace MS2026.SoundStudio
             E(Fort + "FortressMatchRules", "onCountUp", Result, "結果画面", "数字が増えていく"),
             E(Fort + "FortressMatchRules", "onMaxCombo", Result, "結果画面", "最大コンボの発表"),
             E(Fort + "FortressMatchRules", "onReturnToTitle", Result, "結果画面", "タイトルへ戻る"),
+            Bgm(Fort + "FortressMatchRules", "clearBgm", Result, "クリアの BGM"),
+            Bgm(Fort + "FortressMatchRules", "gameOverBgm", Result, "ゲームオーバーの BGM"),
         };
 
         private static readonly SoundCandidate[] CandidateTable =
@@ -183,7 +185,6 @@ namespace MS2026.SoundStudio
             new SoundCandidate("N17", SoundPageId.Title, "BGM", "タイトルの BGM", false, isBgm: true),
             new SoundCandidate("N18", CharacterSelect, "BGM", "キャラ選択・遊び方の BGM", false, isBgm: true),
             new SoundCandidate("N19", Boss, "BGM", "ボス戦の BGM（試合の BGM から切り替え）", false, isBgm: true),
-            new SoundCandidate("N20", Result, "BGM", "クリア／ゲームオーバーの BGM", false, isBgm: true),
         };
 
         private static readonly Dictionary<string, SoundCatalogEntry> ByKey = BuildIndex();

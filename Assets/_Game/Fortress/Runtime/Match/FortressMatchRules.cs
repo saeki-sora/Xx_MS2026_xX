@@ -1,3 +1,5 @@
+using DDrive.Foundation.Identity;
+using DDrive.Runtime.Audio;
 using UnityEngine;
 
 namespace MS2026.Fortress
@@ -47,5 +49,12 @@ namespace MS2026.Fortress
 
         [Tooltip("結果画面からタイトルへ戻る瞬間（握り続けた・時間がたった。サウンドスタジオ N16）。戻すきっかけになったPCで鳴る。")]
         public FortressEffect onReturnToTitle = new FortressEffect { tintWithPlayerColor = false };
+
+        [Header("結果画面の BGM（サウンドスタジオ N20。空なら試合の BGM のまま）")]
+        [Tooltip("クリアしたときの結果画面の BGM。試合が終わった瞬間に切り替える。")]
+        public AssetId<BgmMarker> clearBgm;
+
+        [Tooltip("ゲームオーバーのときの結果画面の BGM。試合が終わった瞬間に切り替える。")]
+        public AssetId<BgmMarker> gameOverBgm;
     }
 }
