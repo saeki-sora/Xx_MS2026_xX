@@ -28,6 +28,9 @@ namespace MS2026.Fortress
                  "エフェクトは寿命が「ループ」のVFXにすると、湯気の時間が終わるまで出続ける。")]
         public FortressEffect steam = new FortressEffect();
 
+        [Tooltip("握りはじめて溜めに入った瞬間に1回出すエフェクトと効果音（サウンドスタジオ N5）。")]
+        public FortressEffect onChargeStart = new FortressEffect();
+
         [Min(0f), Tooltip("ビームを1秒撃つごとに増える湯気の時間（秒）。1なら、撃った時間と同じだけ湯気が出る。")]
         public float steamSecondsPerFireSecond = 1f;
 

@@ -55,9 +55,14 @@ namespace MS2026.SoundStudio.Tests
         }
 
         [Test]
-        public void Candidates_AreN1ToN20()
+        public void Candidates_AreStillMissingOnesFromN1ToN20InOrder()
         {
-            Assert.That(SoundCatalog.Candidates.Select(c => c.Number), Is.EqualTo(Enumerable.Range(1, 20).Select(i => "N" + i)));
+            // 2段目で足した候補は表から消すので、残っている番号が N1〜N20 の中で順に並んでいればよい。
+            var all = Enumerable.Range(1, 20).Select(i => "N" + i).ToList();
+            var left = SoundCatalog.Candidates.Select(c => c.Number).ToList();
+            Assert.That(left, Is.Unique);
+            Assert.That(left, Is.SubsetOf(all));
+            Assert.That(left.Select(n => all.IndexOf(n)), Is.Ordered);
         }
 
         [Test]

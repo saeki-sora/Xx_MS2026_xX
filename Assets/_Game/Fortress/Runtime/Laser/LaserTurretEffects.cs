@@ -28,6 +28,7 @@ namespace MS2026.Fortress
         private float _steamRemaining;
         private bool _steamActive;
         private bool _impactActive;
+        private TurretState _lastState = TurretState.Idle;
 
         private LaserEffectSettings Settings => _turret != null && _turret.tuning != null ? _turret.tuning.effects : null;
 
@@ -81,6 +82,13 @@ namespace MS2026.Fortress
 
         private void HandleStateChanged(TurretState state)
         {
+            var settings = Settings;
+            if (settings != null && state == TurretState.Charging && _lastState != TurretState.Charging)
+            {
+                PlayAtTurret(settings.onChargeStart);
+            }
+
+            _lastState = state;
 
             if (state == TurretState.Firing)
             {
@@ -90,6 +98,18 @@ namespace MS2026.Fortress
             {
                 FortressEffectPlayer.Stop(ref _muzzleVfx);
             }
+        }
+
+        /// <summary>砲台の場所で1回だけ出す（その人の事なので持ち主の番号を渡す）。</summary>
+        private void PlayAtTurret(FortressEffect effect)
+        {
+            if (effect == null || effect.IsEmpty)
+            {
+                return;
+            }
+
+            var anchor = _turret.muzzle != null ? _turret.muzzle : transform;
+            FortressEffectPlayer.PlayOnce(effect, anchor.position, anchor.rotation, _turret.playerIndex);
         }
 
         private void StartMuzzle(bool playSound)

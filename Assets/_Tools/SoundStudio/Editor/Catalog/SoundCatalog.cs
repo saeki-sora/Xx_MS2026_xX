@@ -81,6 +81,7 @@ namespace MS2026.SoundStudio
             P(Fort + "LaserEffectSettings", "impact", SoundPageId.Match, "レーザー", "当たっている所"),
             P(Fort + "LaserEffectSettings", "swarmHit", SoundPageId.Match, "レーザー", "敵に当たった"),
             P(Fort + "LaserEffectSettings", "steam", SoundPageId.Match, "レーザー", "冷ましている（湯気）"),
+            P(Fort + "LaserEffectSettings", "onChargeStart", SoundPageId.Match, "レーザー", "握りはじめ（溜め）"),
 
             // 試合 › 敵・コア
             P("MS2026.ObjectToon.KillFx.KillFxSettings", "onKill", SoundPageId.Match, "敵・コア", "敵をやっつけた"),
@@ -169,7 +170,6 @@ namespace MS2026.SoundStudio
             new SoundCandidate("N2", CharacterSelect, "カーソル", "キャラの声（カーソルが乗った・キャラごと）", true, voice: true),
             new SoundCandidate("N3", SoundPageId.Match, "試合の進行", "残り10秒（1秒ごと）", false),
             new SoundCandidate("N4", SoundPageId.Match, "試合の進行", "新しい敵の紹介カードが出る", false),
-            new SoundCandidate("N5", SoundPageId.Match, "レーザー", "握りはじめ（溜め）", true),
             new SoundCandidate("N6", SoundPageId.Match, "レーザー", "オーバーヒートした", true),
             new SoundCandidate("N7", SoundPageId.Match, "レーザー", "オーバーヒートから戻った", true),
             new SoundCandidate("N8", SoundPageId.Match, "レーザー", "熱が危ない（もうすぐオーバーヒート）", true),
