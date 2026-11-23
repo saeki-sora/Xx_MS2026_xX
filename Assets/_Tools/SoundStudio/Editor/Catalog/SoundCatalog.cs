@@ -171,13 +171,13 @@ namespace MS2026.SoundStudio
             E(Fort + "FortressMatchRules", "onClear", Result, "試合の終わり", "クリア"),
             E(Fort + "FortressMatchRules", "onGameOver", Result, "試合の終わり", "ゲームオーバー"),
             E(Fort + "FortressMatchRules", "onResultShown", Result, "結果画面", "結果画面が出る"),
+            E(Fort + "FortressMatchRules", "onCountUp", Result, "結果画面", "数字が増えていく"),
         };
 
         private static readonly SoundCandidate[] CandidateTable =
         {
             new SoundCandidate("N1", SoundPageId.Title, "スタート", "握りはじめた（スタートの前）", true),
             new SoundCandidate("N2", CharacterSelect, "カーソル", "キャラの声（カーソルが乗った・キャラごと）", true, voice: true),
-            new SoundCandidate("N14", Result, "結果画面", "数字が増えていく", false),
             new SoundCandidate("N15", Result, "結果画面", "最大コンボの発表", false),
             new SoundCandidate("N16", Result, "結果画面", "タイトルへ戻る", false),
             new SoundCandidate("N17", SoundPageId.Title, "BGM", "タイトルの BGM", false, isBgm: true),

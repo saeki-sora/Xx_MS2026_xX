@@ -125,6 +125,7 @@ namespace MS2026.UI.Game
                     UiRoot.Active?.Close(HudScreenId);
                     PublishCoreColors();
                     UiValues.Set(FortressUiKeys.ResultTotalKills, _result.totalKills);
+                    Cue(_rules != null ? _rules.onCountUp : null);
                     for (var p = 0; p < EnemyKillCounter.PlayerCount; p++)
                     {
                         UiValues.Set(FortressUiKeys.PlayerInResult(p), IsInResult(p));
@@ -133,11 +134,14 @@ namespace MS2026.UI.Game
                     break;
                 case ResultRules.StepDurability:
                     UiValues.Set(FortressUiKeys.ResultDurability01, _result.coreHealth01);
+                    Cue(_rules != null ? _rules.onCountUp : null);
                     break;
                 case ResultRules.StepBrightness:
                     UiValues.Set(FortressUiKeys.ResultBrightness01, Brightness());
+                    Cue(_rules != null ? _rules.onCountUp : null);
                     break;
                 case ResultRules.StepPlayers:
+                    Cue(_rules != null ? _rules.onCountUp : null);
                     for (var p = 0; p < EnemyKillCounter.PlayerCount; p++)
                     {
                         UiValues.Set(FortressUiKeys.PlayerResultKills(p), Get(_result.kills, p));

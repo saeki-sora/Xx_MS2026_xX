@@ -37,5 +37,9 @@ namespace MS2026.Fortress
         [Header("結果画面の演出（サウンドスタジオ。各PCで鳴らす）")]
         [Tooltip("結果画面が出た瞬間（サウンドスタジオ N13）。")]
         public FortressEffect onResultShown = new FortressEffect { tintWithPlayerColor = false };
+
+        [Tooltip("結果画面で数字が数え上がりはじめるたび（倒した数・コアの残り・きれいさ・1人ずつの数。サウンドスタジオ N14）。" +
+                 "数え上がる音そのもの（カタカタ）にしたいときは、ループの音にせず短い音を入れ、SE の「連打の間引き」で間隔を決める。")]
+        public FortressEffect onCountUp = new FortressEffect { tintWithPlayerColor = false };
     }
 }
