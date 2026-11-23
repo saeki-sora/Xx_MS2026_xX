@@ -91,6 +91,14 @@ namespace MS2026.Title
         [Tooltip("タイトルの BGM（D-Drive の BGM）。タイトルが始まったら鳴らす。空なら鳴らさない（サウンドスタジオ N17）。")]
         public AssetId<BgmMarker> bgm;
 
+        [Tooltip("スタートの前に、握りはじめた瞬間（下の「握りはじめの強さ」を越えた瞬間。1人ずつ）に鳴らす効果音（サウンドスタジオ N1）。" +
+                 "センサーが握力を感じていることを、スタートより前に音で伝える。")]
+        public FortressEffect onGripBegin = new() { tintWithPlayerColor = false };
+
+        [Tooltip("「握りはじめた」を鳴らす強さ（0〜1）。スタートの強さより小さくする。")]
+        [Range(0.01f, 1f)]
+        public float gripBeginThreshold = 0.1f;
+
         private enum State { Intro, Ready, Starting }
 
         private State state;
@@ -103,6 +111,7 @@ namespace MS2026.Title
         private bool loadRequested;
         private GripEdgeDetector gripDetector;
         private bool gripArmed;
+        private readonly ThresholdTrigger[] gripBegin = new ThresholdTrigger[4];
 
         private TitleElementMotion[] AllElements =>
             new[] { background }.Concat(afterOpening ?? System.Array.Empty<TitleElementMotion>()).Where(e => e != null).Distinct().ToArray();
@@ -263,6 +272,10 @@ namespace MS2026.Title
         private void Update()
         {
             time += Time.deltaTime;
+            if (state != State.Starting)
+            {
+                CheckGripBegin();
+            }
 
             switch (state)
             {
@@ -398,6 +411,25 @@ namespace MS2026.Title
         }
 
         // 握力センサーを、しきい値をまたいで握った瞬間だけ true（キーを押した瞬間と同じ扱い）。
+        // 1人ずつ、握りはじめた瞬間に音を出す（強さが少し下がるまで2回は鳴らさない）。
+        private void CheckGripBegin()
+        {
+            if (!startByGrip || onGripBegin == null || onGripBegin.IsEmpty)
+            {
+                return;
+            }
+
+            var provider = MS2026.GripInputBridge.GripInputBridge.Provider;
+            var at = Mathf.Min(gripBeginThreshold, gripStartThreshold);
+            for (var player = 0; player < gripBegin.Length; player++)
+            {
+                if (gripBegin[player].Update(provider.GetGripValue(player), at, at * 0.5f))
+                {
+                    FortressEffectPlayer.PlaySound(onGripBegin, Vector3.zero, player);
+                }
+            }
+        }
+
         private bool GripPressed()
         {
             if (!startByGrip)

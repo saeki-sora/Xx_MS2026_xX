@@ -26,6 +26,7 @@ namespace MS2026.SoundStudio
             E(Title + "TitleOpening", "onEject", SoundPageId.Title, "オープニング", "歯みがき粉が飛び出す"),
             E(Title + "TitleOpening", "onCovered", SoundPageId.Title, "オープニング", "画面が覆われた"),
             E(Title + "TitleElementMotion", "onLand", SoundPageId.Title, "オープニング", "文字・部品が着地した"),
+            P(Title + "TitleScreenController", "onGripBegin", SoundPageId.Title, "スタート", "握りはじめた（スタートの前）"),
             E(Title + "TitleScreenController", "onStart", SoundPageId.Title, "スタート", "スタートを押した"),
             Bgm(Title + "TitleScreenController", "bgm", SoundPageId.Title, "タイトルの BGM"),
 
@@ -183,7 +184,6 @@ namespace MS2026.SoundStudio
 
         private static readonly SoundCandidate[] CandidateTable =
         {
-            new SoundCandidate("N1", SoundPageId.Title, "スタート", "握りはじめた（スタートの前）", true),
             new SoundCandidate("N2", CharacterSelect, "カーソル", "キャラの声（カーソルが乗った・キャラごと）", true, voice: true),
         };
 
