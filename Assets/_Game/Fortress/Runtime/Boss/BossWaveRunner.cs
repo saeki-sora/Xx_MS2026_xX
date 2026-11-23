@@ -94,6 +94,11 @@ namespace MS2026.Fortress
                     EnsureFormed();
                     EnsureActor();
                     Play(_def != null ? _def.onWarning : null);
+                    if (_def != null && _def.bossBgm.IsValid)
+                    {
+                        FortressAudioMix.PlayBgm(_def.bossBgm);
+                    }
+
                     break;
                 case WavePhase.BossCombat:
                     EnsureFormed();

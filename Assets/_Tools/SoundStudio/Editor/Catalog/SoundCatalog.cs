@@ -158,6 +158,7 @@ namespace MS2026.SoundStudio
 
             // ボス
             E(Fort + "BossDefinition", "onWarning", Boss, "登場", "ボスが来る（警告）"),
+            Bgm(Fort + "BossDefinition", "bossBgm", Boss, "ボス戦の BGM"),
             E(Fort + "BossDefinition", "onEnter", Boss, "登場", "ボスが出てきた"),
             E(Fort + "BossDefinition", "onCannonFire", Boss, "ボスの攻撃", "ボスが撃った"),
             E(Fort + "BossDefinition", "onVentSpawn", Boss, "ボスの攻撃", "ボスが敵を出した"),
@@ -184,7 +185,6 @@ namespace MS2026.SoundStudio
             new SoundCandidate("N2", CharacterSelect, "カーソル", "キャラの声（カーソルが乗った・キャラごと）", true, voice: true),
             new SoundCandidate("N17", SoundPageId.Title, "BGM", "タイトルの BGM", false, isBgm: true),
             new SoundCandidate("N18", CharacterSelect, "BGM", "キャラ選択・遊び方の BGM", false, isBgm: true),
-            new SoundCandidate("N19", Boss, "BGM", "ボス戦の BGM（試合の BGM から切り替え）", false, isBgm: true),
         };
 
         private static readonly Dictionary<string, SoundCatalogEntry> ByKey = BuildIndex();

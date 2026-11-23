@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using MS2026.Fortress.Cameras;
+using DDrive.Foundation.Identity;
+using DDrive.Runtime.Audio;
 using UnityEngine;
 
 namespace MS2026.Fortress
@@ -222,6 +224,9 @@ namespace MS2026.Fortress
         // 演出（D-Drive の番号札。各PCで鳴らす。空なら鳴らさない）。
         [Tooltip("「WARNING」が出たとき。")]
         public FortressEffect onWarning = new FortressEffect { tintWithPlayerColor = false };
+
+        [Tooltip("ボス戦の BGM。「WARNING」が出たときに、試合の BGM から切り替える（空なら試合の BGM のまま。サウンドスタジオ N19）。")]
+        public AssetId<BgmMarker> bossBgm;
 
         [Tooltip("ボスが入ってきて止まったとき。")]
         public FortressEffect onEnter = new FortressEffect { tintWithPlayerColor = false };
