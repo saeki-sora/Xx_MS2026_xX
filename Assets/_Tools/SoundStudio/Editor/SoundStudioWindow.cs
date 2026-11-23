@@ -32,7 +32,6 @@ namespace MS2026.SoundStudio
         public void CreateGUI()
         {
             _context = new SoundStudioContext { Notify = message => ShowNotification(new GUIContent(message), 4) };
-            _context.Rescan();
             _context.GoToRequested += slot =>
             {
                 if (_pages.TryGetValue(slot.Page, out var page))
@@ -73,10 +72,46 @@ namespace MS2026.SoundStudio
             _played?.Dispose();
             _played = new PlayedSlotIndex(_context, _shell);
             _nextTick = 0;
+
+            // 調べるのは画面ができた後（調べている途中で失敗しても、画面は残り、何度も調べ直さない）。
+            ScheduleScan();
+        }
+
+        private void OnEnable()
+        {
+            EditorApplication.playModeStateChanged += OnPlayModeChanged;
+        }
+
+        // Play 中に調べた結果は、開いていないシーンの欄が抜けていて、シーンの部品も Play 用の物を指している。
+        // 止めたら調べ直す。
+        private void OnPlayModeChanged(PlayModeStateChange change)
+        {
+            if (change == PlayModeStateChange.EnteredEditMode)
+            {
+                ScheduleScan();
+            }
+        }
+
+        private void ScheduleScan()
+        {
+            EditorApplication.delayCall -= RunScan;
+            EditorApplication.delayCall += RunScan;
+        }
+
+        private void RunScan()
+        {
+            if (this == null || _context == null)
+            {
+                return;
+            }
+
+            _context.TryRescan();
         }
 
         private void OnDisable()
         {
+            EditorApplication.playModeStateChanged -= OnPlayModeChanged;
+            EditorApplication.delayCall -= RunScan;
             _played?.Dispose();
             _played = null;
             _context?.Preview.Dispose();

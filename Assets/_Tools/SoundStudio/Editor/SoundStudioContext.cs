@@ -70,6 +70,21 @@ namespace MS2026.SoundStudio
             }
         }
 
+        /// <summary>調べ直す。失敗しても例外を外へ出さず、お知らせを出す（窓・［調べ直す］から呼ぶ）。</summary>
+        public void TryRescan()
+        {
+            try
+            {
+                Rescan();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                Notify("音の欄を調べられませんでした: " + e.Message + "（［調べ直す］で、もう一度試せます）");
+                Touch();
+            }
+        }
+
         public void Select(SoundSlot slot)
         {
             Selected = slot;
@@ -153,6 +168,7 @@ namespace MS2026.SoundStudio
             {
                 preloaded.Add(balance);
                 PlayerSettings.SetPreloadedAssets(preloaded.ToArray());
+                AssetDatabase.SaveAssets();
             }
 
             FortressSoundBalance.Current = balance;

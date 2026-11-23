@@ -48,7 +48,7 @@ namespace MS2026.SoundStudio
             _voice = Master("声", "声全体の音量。", b => b.voiceVolume, (b, v) => b.voiceVolume = v);
             _bgm = Master("BGM", "BGM 全体の音量。", b => b.bgmVolume, (b, v) => b.bgmVolume = v);
 
-            Add(StudioUi.Button("調べ直す", () => _context.Rescan(),
+            Add(StudioUi.Button("調べ直す", () => _context.TryRescan(),
                 "プロジェクトの音の欄を調べ直す（欄を足した・シーンを変えたとき）。シーンを裏で開くので少し時間がかかる。", small: true));
 
             schedule.Execute(Refresh).Every(500);
