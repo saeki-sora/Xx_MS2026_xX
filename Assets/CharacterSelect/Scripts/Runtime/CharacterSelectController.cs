@@ -1,4 +1,6 @@
 using System;
+using DDrive.Foundation.Identity;
+using DDrive.Runtime.Audio;
 using MS2026.Fortress;
 using MS2026.UI;
 using MS2026.UI.Game;
@@ -94,6 +96,9 @@ namespace MS2026.CharacterSelect
         [Tooltip("全員のキャラが決まったとき。")]
         public FortressEffect onAllDecided = new FortressEffect();
 
+        [Tooltip("キャラ選択（と遊び方）の BGM（D-Drive の BGM）。キャラ選択が始まったら鳴らす。空なら前の場面の BGM のまま（サウンドスタジオ N18）。")]
+        public AssetId<BgmMarker> bgm;
+
         [Header("参照")]
         [Tooltip("見た目を受け持つ部品（空なら同じ物・シーンから探す）。")]
         public CharacterSelectView view;
@@ -149,6 +154,11 @@ namespace MS2026.CharacterSelect
 
         private void Awake()
         {
+            if (bgm.IsValid)
+            {
+                StartCoroutine(FortressAudioMix.PlayBgmWhenReady(bgm));
+            }
+
             _session = GameSession.Active;
             view = view != null ? view : GetComponent<CharacterSelectView>();
             view = view != null ? view : FindFirstObjectByType<CharacterSelectView>();

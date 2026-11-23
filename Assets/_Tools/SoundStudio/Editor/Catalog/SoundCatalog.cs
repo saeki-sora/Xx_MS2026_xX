@@ -42,6 +42,7 @@ namespace MS2026.SoundStudio
             P(Chara + "CharacterSelectController", "onCancel", CharacterSelect, "カーソル", "決めたのを取り消した"),
             P(Chara + "CharacterSelectController", "onRejected", CharacterSelect, "カーソル", "選べなかった（取られている）"),
             E(Chara + "CharacterSelectController", "onAllDecided", CharacterSelect, "みんな", "全員が決めた"),
+            Bgm(Chara + "CharacterSelectController", "bgm", CharacterSelect, "キャラ選択・遊び方の BGM"),
             E(Chara + "PasteCurtainSettings", "onCover", CharacterSelect, "歯みがき粉の幕", "幕が閉じる"),
             E(Chara + "PasteCurtainSettings", "onReveal", CharacterSelect, "歯みがき粉の幕", "幕が開く"),
 
@@ -184,7 +185,6 @@ namespace MS2026.SoundStudio
         {
             new SoundCandidate("N1", SoundPageId.Title, "スタート", "握りはじめた（スタートの前）", true),
             new SoundCandidate("N2", CharacterSelect, "カーソル", "キャラの声（カーソルが乗った・キャラごと）", true, voice: true),
-            new SoundCandidate("N18", CharacterSelect, "BGM", "キャラ選択・遊び方の BGM", false, isBgm: true),
         };
 
         private static readonly Dictionary<string, SoundCatalogEntry> ByKey = BuildIndex();
