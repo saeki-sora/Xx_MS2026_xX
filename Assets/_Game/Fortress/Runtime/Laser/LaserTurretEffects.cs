@@ -29,6 +29,7 @@ namespace MS2026.Fortress
         private bool _steamActive;
         private bool _impactActive;
         private TurretState _lastState = TurretState.Idle;
+        private ThresholdTrigger _heatWarning;
 
         private LaserEffectSettings Settings => _turret != null && _turret.tuning != null ? _turret.tuning.effects : null;
 
@@ -78,6 +79,7 @@ namespace MS2026.Fortress
             // LaserBeamVisual(Update)がこのフレームの当たり判定を済ませた後に読む。
             UpdateImpact();
             UpdateSteam();
+            UpdateHeatWarning();
         }
 
         private void HandleStateChanged(TurretState state)
@@ -107,6 +109,21 @@ namespace MS2026.Fortress
             else
             {
                 FortressEffectPlayer.Stop(ref _muzzleVfx);
+            }
+        }
+
+        private void UpdateHeatWarning()
+        {
+            var settings = Settings;
+            if (settings == null)
+            {
+                return;
+            }
+
+            // 熱が 0.1 下がるまでは、もう一度は鳴らさない。
+            if (_heatWarning.Update(_turret.HeatRatio01, settings.heatWarnAt, 0.1f))
+            {
+                PlayAtTurret(settings.onHeatWarning);
             }
         }
 

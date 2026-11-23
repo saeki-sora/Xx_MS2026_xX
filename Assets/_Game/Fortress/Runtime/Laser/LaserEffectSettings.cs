@@ -37,6 +37,13 @@ namespace MS2026.Fortress
         [Tooltip("オーバーヒートが治って、また撃てるようになった瞬間に1回出すエフェクトと効果音（サウンドスタジオ N7）。")]
         public FortressEffect onRecovered = new FortressEffect();
 
+        [Tooltip("熱がもうすぐオーバーヒートする所（下の「熱の危ない所」）を越えた瞬間に1回出すエフェクトと効果音（サウンドスタジオ N8）。" +
+                 "熱が少し下がるまで、2回は鳴らない。")]
+        public FortressEffect onHeatWarning = new FortressEffect();
+
+        [Range(0f, 1f), Tooltip("「熱が危ない」を鳴らす熱の量（0〜1。1 でオーバーヒート）。")]
+        public float heatWarnAt = 0.8f;
+
         [Min(0f), Tooltip("ビームを1秒撃つごとに増える湯気の時間（秒）。1なら、撃った時間と同じだけ湯気が出る。")]
         public float steamSecondsPerFireSecond = 1f;
 
