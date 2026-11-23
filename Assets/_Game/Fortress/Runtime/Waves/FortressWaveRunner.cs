@@ -42,6 +42,7 @@ namespace MS2026.Fortress
         private int _sentInput = -1;
         private int _lastCountdownTick = -1;
         private int _lastWarningSecond = -1;
+        private IncreaseBurstDetector _enemiesAppear;
         private bool _hashWarned;
         private int _seatExtra;
 
@@ -512,6 +513,13 @@ namespace MS2026.Fortress
                     _lastCountdownTick = tick;
                     PlayAtCore(_plan.onCountdownTick);
                 }
+            }
+
+            // 敵が出てきはじめた（群衆の数がしばらくぶりにふえた）瞬間。群衆の数は Host でも Client でも同じに増えるので、各PCで鳴らす（N11）。
+            var swarm = SwarmSystem.Current;
+            if (swarm != null && swarm.Storage != null && _enemiesAppear.Update(swarm.Storage.Count, Time.time, _plan.enemiesAppearGapSeconds))
+            {
+                PlayAtCore(_plan.onEnemiesAppear);
             }
 
             var warning = WaveDisplayTiming.Current.timeWarningSeconds;
