@@ -17,6 +17,7 @@ namespace MS2026.SoundStudio
         private readonly Label _mark;
         private IVisualElementScheduledItem _pendingWrite;
         private float _pendingScale;
+        private bool _hasPending;
 
         public SoundRow(SoundStudioContext context, SoundSlot slot, bool showOwner)
         {
@@ -99,6 +100,9 @@ namespace MS2026.SoundStudio
             }));
 
             WavDrop.Attach(this, _context, _slot);
+
+            // 書く前にページが替わった・描き直した（行が外れた）ときも、動かした音量は書く。
+            RegisterCallback<DetachFromPanelEvent>(_ => FlushScale());
             UpdateMark();
         }
 
@@ -127,6 +131,7 @@ namespace MS2026.SoundStudio
         private void QueueScale(float value)
         {
             _pendingScale = value;
+            _hasPending = true;
             if (_pendingWrite == null)
             {
                 _pendingWrite = schedule.Execute(WriteScale);
@@ -135,8 +140,23 @@ namespace MS2026.SoundStudio
             _pendingWrite.ExecuteLater(WriteDelayMs);
         }
 
+        private void FlushScale()
+        {
+            if (_pendingWrite != null && _hasPending)
+            {
+                _pendingWrite.Pause();
+                WriteScale();
+            }
+        }
+
         private void WriteScale()
         {
+            if (!_hasPending)
+            {
+                return;
+            }
+
+            _hasPending = false;
             var result = SoundSlotWriter.SetVolumeScale(_slot, _pendingScale);
             if (result != SoundWriteResult.Saved)
             {

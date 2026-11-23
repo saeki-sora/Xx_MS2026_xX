@@ -50,16 +50,9 @@ namespace MS2026.UI.Game
             var plan = FortressWaves.Plan;
             var wave = announcing ? FortressWaves.WaveIndex : -1;
 
-            // カードが見え始めた瞬間（値 wave.showNewEnemies が ON になった瞬間）に1回だけ鳴らす。
-            var showing = announcing && _shownCount > 0 && UiValues.GetBool(FortressUiKeys.WaveShowNewEnemies);
-            if (showing && !_wasShowing)
-            {
-                FortressEffectPlayer.PlaySound(onCardsShown, Vector3.zero);
-            }
-
-            _wasShowing = showing;
             if (wave == _shownWave && plan == _shownPlan)
             {
+                CheckCardsSound(announcing);
                 return;
             }
 
@@ -82,6 +75,21 @@ namespace MS2026.UI.Game
                     Fill(card, type);
                 }
             }
+
+            CheckCardsSound(announcing);
+        }
+
+        // カードが見え始めた瞬間（値 wave.showNewEnemies が ON になった瞬間）に1回だけ鳴らす。
+        // カードの数はこのフレームのウェーブの物（数を入れ直した後に見る）。
+        private void CheckCardsSound(bool announcing)
+        {
+            var showing = announcing && _shownCount > 0 && UiValues.GetBool(FortressUiKeys.WaveShowNewEnemies);
+            if (showing && !_wasShowing)
+            {
+                FortressEffectPlayer.PlaySound(onCardsShown, Vector3.zero);
+            }
+
+            _wasShowing = showing;
         }
 
         private static void FitText(Text text, int minSize)
