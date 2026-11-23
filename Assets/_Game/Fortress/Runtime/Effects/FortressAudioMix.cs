@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using DDrive.Foundation.Handle;
 using DDrive.Foundation.Identity;
@@ -107,6 +108,31 @@ namespace MS2026.Fortress
             }
 
             bootstrap.Bgm.PlayBgmData(ScaledClone(id.Value, data, master), fadeIn);
+        }
+
+        /// <summary>
+        /// D-Drive の準備ができるのを待ってから BGM を鳴らす（シーンの始めに使う。StartCoroutine に渡す）。
+        /// <paramref name="timeoutSeconds"/> 秒たっても準備ができなければ鳴らさない（D-Drive の起動役が無いシーンだけで遊んだとき）。
+        /// </summary>
+        public static IEnumerator PlayBgmWhenReady(AssetId<BgmMarker> id, float timeoutSeconds = 10f)
+        {
+            if (!id.IsValid)
+            {
+                yield break;
+            }
+
+            var until = Time.unscaledTime + timeoutSeconds;
+            while (DDriveRuntimeBootstrap.Instance == null || !DDriveRuntimeBootstrap.Instance.IsReady)
+            {
+                if (Time.unscaledTime > until)
+                {
+                    yield break;
+                }
+
+                yield return null;
+            }
+
+            PlayBgm(id);
         }
 
         private static BgmData ScaledClone(ulong id, BgmData source, float master)

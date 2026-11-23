@@ -27,6 +27,7 @@ namespace MS2026.SoundStudio
             E(Title + "TitleOpening", "onCovered", SoundPageId.Title, "オープニング", "画面が覆われた"),
             E(Title + "TitleElementMotion", "onLand", SoundPageId.Title, "オープニング", "文字・部品が着地した"),
             E(Title + "TitleScreenController", "onStart", SoundPageId.Title, "スタート", "スタートを押した"),
+            Bgm(Title + "TitleScreenController", "bgm", SoundPageId.Title, "タイトルの BGM"),
 
             // ロビー
             E(Session, "onPlayerJoined", Lobby, "人の出入り", "人が入った"),
@@ -183,7 +184,6 @@ namespace MS2026.SoundStudio
         {
             new SoundCandidate("N1", SoundPageId.Title, "スタート", "握りはじめた（スタートの前）", true),
             new SoundCandidate("N2", CharacterSelect, "カーソル", "キャラの声（カーソルが乗った・キャラごと）", true, voice: true),
-            new SoundCandidate("N17", SoundPageId.Title, "BGM", "タイトルの BGM", false, isBgm: true),
             new SoundCandidate("N18", CharacterSelect, "BGM", "キャラ選択・遊び方の BGM", false, isBgm: true),
         };
 

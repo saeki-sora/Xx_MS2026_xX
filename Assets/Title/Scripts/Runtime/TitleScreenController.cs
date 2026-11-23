@@ -1,4 +1,6 @@
 using System.Linq;
+using DDrive.Foundation.Identity;
+using DDrive.Runtime.Audio;
 using MS2026.Fortress;
 using MS2026.GripInputBridge.Processing;
 using UnityEngine;
@@ -85,6 +87,9 @@ namespace MS2026.Title
         [Header("エフェクト・効果音（D-Drive）")]
         [Tooltip("スタートを押した瞬間（「スタート」の文字の位置）。着地の音などは各配置物の On Land に入れる。")]
         public FortressEffect onStart = new() { tintWithPlayerColor = false };
+
+        [Tooltip("タイトルの BGM（D-Drive の BGM）。タイトルが始まったら鳴らす。空なら鳴らさない（サウンドスタジオ N17）。")]
+        public AssetId<BgmMarker> bgm;
 
         private enum State { Intro, Ready, Starting }
 
@@ -185,6 +190,7 @@ namespace MS2026.Title
         private void Start()
         {
             AdoptUnlistedElements();
+            if (bgm.IsValid) StartCoroutine(FortressAudioMix.PlayBgmWhenReady(bgm));
             if (opening != null) opening.Finished += BeginDrop;
             Begin();
         }
