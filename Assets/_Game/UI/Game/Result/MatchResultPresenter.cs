@@ -149,6 +149,7 @@ namespace MS2026.UI.Game
 
                     break;
                 case ResultRules.StepCombos:
+                    Cue(_rules != null ? _rules.onMaxCombo : null);
                     var mvp = _result.Mvp;
                     for (var p = 0; p < EnemyKillCounter.PlayerCount; p++)
                     {

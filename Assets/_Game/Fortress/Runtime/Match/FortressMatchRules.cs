@@ -41,5 +41,8 @@ namespace MS2026.Fortress
         [Tooltip("結果画面で数字が数え上がりはじめるたび（倒した数・コアの残り・きれいさ・1人ずつの数。サウンドスタジオ N14）。" +
                  "数え上がる音そのもの（カタカタ）にしたいときは、ループの音にせず短い音を入れ、SE の「連打の間引き」で間隔を決める。")]
         public FortressEffect onCountUp = new FortressEffect { tintWithPlayerColor = false };
+
+        [Tooltip("結果画面で最大コンボ（と MVP）を見せた瞬間（サウンドスタジオ N15）。")]
+        public FortressEffect onMaxCombo = new FortressEffect { tintWithPlayerColor = false };
     }
 }
