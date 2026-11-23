@@ -48,7 +48,12 @@ namespace MS2026.UI.Game
         [Range(0f, 0.95f)]
         public float coreBarLowShown = 0.25f;
 
+        [Header("演出（サウンドスタジオ）")]
+        [Tooltip("自分のコンボが 10・50・100、その後は 100 ごとに届いた瞬間に鳴らす効果音（このPCの人のコンボだけ。サウンドスタジオ N10）。")]
+        public FortressEffect onComboStep = new FortressEffect { tintWithPlayerColor = false };
+
         private readonly KillHudLogic _killLogic = new KillHudLogic();
+        private int _lastCombo;
         private float _nextKillPublish;
 
         private readonly List<LaserTurret> _turrets = new List<LaserTurret>();
@@ -213,6 +218,12 @@ namespace MS2026.UI.Game
             _killLogic.milestoneStepAfterLast = killMilestoneStepAfterLast;
             _killLogic.milestoneShowSeconds = killMilestoneShowSeconds;
             _killLogic.Update(own, total, now);
+            if (ComboSoundSteps.Reached(_lastCombo, _killLogic.Combo))
+            {
+                FortressEffectPlayer.PlaySound(onComboStep, Vector3.zero, local);
+            }
+
+            _lastCombo = _killLogic.Combo;
 
             UiValues.Set(FortressUiKeys.KillsTotal, total);
             UiValues.Set(FortressUiKeys.KillsGoal, FortressMatch.ClearKills);
