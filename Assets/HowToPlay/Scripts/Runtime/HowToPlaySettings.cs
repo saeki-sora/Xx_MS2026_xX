@@ -15,13 +15,13 @@ namespace MS2026.HowToPlay
 
         private static HowToPlaySettings _loaded;
 
-        [Header("練習（ステージ抽選の後、握って試す）")]
+        [Header("練習（ステージ抽選の後、キャラ選択の上で握って試す）")]
         [Tooltip("OFF にすると練習を出さず、ステージ抽選の後すぐゲームへ進む。")]
         public bool practiceEnabled = true;
 
-        [Tooltip("全員できていなくても、この秒数で練習を終えてゲームへ進む。")]
-        [Min(1f)]
-        public float timeLimitSeconds = 20f;
+        [Tooltip("全員できていなくても、この秒数で練習を終えてゲームへ進む。0 = 時間制限なし（全員が研修を終えるまで続く）。残りの秒数は、右上の研修の名前の横の丸に出る（2026-11-19 ユーザー決定で 80）。")]
+        [Min(0f)]
+        public float timeLimitSeconds = 80f;
 
         [Tooltip("全員できた（または時間切れ）後、ゲームへの幕を出すまでの秒数（「OK!」を見せる間）。")]
         [Min(0f)]
@@ -29,7 +29,13 @@ namespace MS2026.HowToPlay
 
         public PracticeRules rules = new PracticeRules();
 
-        [Header("練習の文字")]
+        [Header("練習のシーンの調整（本物の砲台・泡・敵。このシーンの中だけ。2026-11-13）")]
+        public PracticeSceneTuning sceneTuning = new PracticeSceneTuning();
+
+        [Header("練習の画面（レイアウトB 新人研修・2026-11-12）")]
+        public PracticeScreenSettings screen = new PracticeScreenSettings();
+
+        [Header("練習の文字（前の画面）")]
         public string title = "握って試そう";
         public string finishedText = "はじまるよ！";
         public string footer = "全員できたら はじまる";

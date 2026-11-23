@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: HowToPlaySettings
   m_EditorClassIdentifier: MS2026.HowToPlay.Runtime::MS2026.HowToPlay.HowToPlaySettings
   practiceEnabled: 1
-  timeLimitSeconds: 20
+  timeLimitSeconds: 80
   finishDelaySeconds: 1.2
   rules:
     heatGainPerSecond: 0.7

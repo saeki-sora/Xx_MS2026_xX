@@ -26,8 +26,11 @@ namespace MS2026.HowToPlay
 
         public readonly Seat[] seats = new Seat[SeatCount];
 
-        /// <summary>残り秒（0 で時間切れ）。</summary>
+        /// <summary>残り秒（0 で時間切れ。時間制限なしのときは使わない）。</summary>
         public float remaining;
+
+        /// <summary>時間制限があるか（Reset に 0 を渡すと、制限なし＝全員できるまで終わらない。2026-11-13）。</summary>
+        public bool HasTimeLimit { get; private set; } = true;
 
         /// <summary>練習が終わった（全員できた、または時間切れ）。</summary>
         public bool finished;
@@ -66,7 +69,7 @@ namespace MS2026.HowToPlay
         /// <summary>いる全員ができた（1人以上いるとき）。</summary>
         public bool AllDone => PresentCount > 0 && DoneCount == PresentCount;
 
-        public bool TimeUp => remaining <= 0f;
+        public bool TimeUp => HasTimeLimit && remaining <= 0f;
 
         public void Reset(float timeLimitSeconds)
         {
@@ -75,6 +78,7 @@ namespace MS2026.HowToPlay
                 seats[i] = new Seat { present = seats[i].present };
             }
 
+            HasTimeLimit = timeLimitSeconds > 0f;
             remaining = Mathf.Max(0f, timeLimitSeconds);
             finished = false;
             Touch();
@@ -119,7 +123,7 @@ namespace MS2026.HowToPlay
         /// <summary>残り時間を進める（1 秒の位が変わったら「変わった」とする）。</summary>
         public void Tick(float dt)
         {
-            if (finished || remaining <= 0f)
+            if (finished || !HasTimeLimit || remaining <= 0f)
             {
                 return;
             }
