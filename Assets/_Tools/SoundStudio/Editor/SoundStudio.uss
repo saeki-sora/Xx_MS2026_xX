@@ -1,0 +1,171 @@
+/* サウンドスタジオだけの見た目。土台の色・部品は StudioKit.uss の変数を使う。 */
+
+.ss-hidden {
+    display: none;
+}
+
+/* 上の帯 */
+.ss-header {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.ss-header-count {
+    color: var(--sk-text);
+    -unity-font-style: bold;
+    margin-right: 10px;
+}
+
+.ss-header-toggle {
+    margin-right: 8px;
+}
+
+.ss-header-search {
+    width: 140px;
+    margin-right: 8px;
+}
+
+.ss-header-master {
+    width: 120px;
+    margin-right: 6px;
+}
+
+.ss-header-master > Label {
+    min-width: 34px;
+}
+
+/* 行 */
+.ss-rows {
+    margin-bottom: 6px;
+}
+
+.ss-row {
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 8px;
+    margin-bottom: 2px;
+    border-radius: 6px;
+    background-color: var(--sk-card);
+    border-width: 1px;
+    border-color: rgba(0, 0, 0, 0);
+}
+
+.ss-row:hover {
+    background-color: var(--sk-card-hover);
+}
+
+.ss-row--selected {
+    border-color: var(--sk-accent);
+}
+
+.ss-row--flash {
+    background-color: rgba(95, 211, 155, 0.30);
+}
+
+.ss-row-mark {
+    width: 12px;
+    color: var(--sk-accent-2);
+    font-size: 9px;
+}
+
+.ss-row-name {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-direction: row;
+    align-items: center;
+    min-width: 160px;
+}
+
+.ss-row-label {
+    color: var(--sk-text);
+    margin-right: 6px;
+}
+
+.ss-row-owner {
+    color: var(--sk-faint);
+    font-size: 11px;
+    margin-right: 6px;
+}
+
+.ss-row-sound {
+    width: 190px;
+    -unity-text-align: middle-left;
+    overflow: hidden;
+}
+
+.ss-row-sound--empty {
+    color: var(--sk-accent);
+    border-color: var(--sk-accent);
+}
+
+.ss-row-scale {
+    width: 110px;
+    margin-left: 6px;
+    margin-right: 6px;
+}
+
+.ss-row-play {
+    width: 32px;
+}
+
+/* まだ欄がない候補: 紫の点線 */
+.ss-row--candidate {
+    background-color: rgba(167, 139, 250, 0.08);
+    border-color: rgba(167, 139, 250, 0.55);
+    border-width: 1px;
+}
+
+.ss-row-candidate-note {
+    color: #B9A6FF;
+    font-size: 11px;
+    margin-left: 8px;
+}
+
+/* 細かい設定 */
+.ss-detail {
+    margin-top: 12px;
+}
+
+.ss-detail-where {
+    color: var(--sk-sub);
+    margin-bottom: 6px;
+}
+
+.ss-detail-sound {
+    color: var(--sk-text);
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+}
+
+.ss-detail-fixed {
+    color: var(--sk-sub);
+    margin-top: 4px;
+}
+
+.ss-detail-link {
+    -unity-text-align: middle-left;
+}
+
+/* 音のファイルを落とす所 */
+.ss-drop {
+    border-width: 2px;
+    border-color: var(--sk-line);
+    border-radius: 8px;
+    padding: 18px;
+    align-items: center;
+}
+
+.ss-drop-label {
+    color: var(--sk-sub);
+}
+
+.ss-drop--over {
+    border-color: var(--sk-accent);
+    background-color: var(--sk-accent-soft);
+}
+
+/* Play 中に鳴った場面のナビ */
+.ss-nav--flash {
+    background-color: rgba(95, 211, 155, 0.30);
+}

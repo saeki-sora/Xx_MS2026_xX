@@ -13,6 +13,7 @@ namespace MS2026.Fortress.Tests.EditMode
         [TestCase(SoundAudience.OwnerOnly, -1, 0, false, true, ExpectedResult = true)] // 持ち主が分からない
         [TestCase(SoundAudience.OwnerOnly, 2, 0, true, false, ExpectedResult = true)] // CPU の席 → Host で鳴らす
         [TestCase(SoundAudience.OwnerOnly, 2, 1, false, false, ExpectedResult = false)] // CPU の席 → Client では鳴らさない
+        [TestCase(SoundAudience.OwnerOnly, 2, 0, true, true, ExpectedResult = false)] // Host でも、人がいる別の席の音は鳴らさない
         [TestCase(SoundAudience.Auto, 2, 0, false, true, ExpectedResult = false)] // 番号あり → その人だけ
         [TestCase(SoundAudience.Auto, -1, 0, false, true, ExpectedResult = true)] // 番号なし → 全員
         public bool ShouldPlay_Cases(SoundAudience audience, int owner, int local, bool isHost, bool ownerIsHuman)
