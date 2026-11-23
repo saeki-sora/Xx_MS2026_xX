@@ -69,6 +69,7 @@ namespace MS2026.SoundStudio
             E(Fort + "WavePlan", "onAnnounce", SoundPageId.Match, "試合の進行", "次のウェーブのお知らせ"),
             E(Fort + "WavePlan", "onCountdownTick", SoundPageId.Match, "試合の進行", "ウェーブ前のカウントダウン"),
             E(Fort + "WavePlan", "onWaveStart", SoundPageId.Match, "試合の進行", "ウェーブ開始"),
+            E(Fort + "WavePlan", "onEnemiesAppear", SoundPageId.Match, "敵・コア", "敵が画面に出てくる"),
             E(Fort + "WavePlan", "onTimeWarning", SoundPageId.Match, "試合の進行", "残り時間が少ない（10秒前から1秒ごと）"),
             E(Fort + "WavePlan", "onWaveClear", SoundPageId.Match, "試合の進行", "ウェーブクリア"),
             E(Fort + "WavePlan", "onFinalAnnounce", SoundPageId.Match, "試合の進行", "最後のウェーブのお知らせ"),
@@ -175,7 +176,6 @@ namespace MS2026.SoundStudio
         {
             new SoundCandidate("N1", SoundPageId.Title, "スタート", "握りはじめた（スタートの前）", true),
             new SoundCandidate("N2", CharacterSelect, "カーソル", "キャラの声（カーソルが乗った・キャラごと）", true, voice: true),
-            new SoundCandidate("N11", SoundPageId.Match, "敵・コア", "敵が画面に出てくる", false),
             new SoundCandidate("N13", Result, "結果画面", "結果画面が出る", false),
             new SoundCandidate("N14", Result, "結果画面", "数字が増えていく", false),
             new SoundCandidate("N15", Result, "結果画面", "最大コンボの発表", false),

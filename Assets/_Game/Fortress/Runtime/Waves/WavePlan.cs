@@ -163,6 +163,12 @@ namespace MS2026.Fortress
         [Tooltip("残り時間が少なくなったとき（10秒前から1秒ごと）。")]
         public FortressEffect onTimeWarning = new FortressEffect { tintWithPlayerColor = false };
 
+        [Tooltip("敵が湧き位置から出てきはじめたとき（湧き位置ごと、まとまりの最初の1体だけ。サウンドスタジオ N11）。位置はその湧き位置。")]
+        public FortressEffect onEnemiesAppear = new FortressEffect { tintWithPlayerColor = false };
+
+        [Min(0f), Tooltip("同じ湧き位置で、この秒数より間が空いてから出てきたら、新しいまとまりとして「敵が出てきた」を鳴らし直す。")]
+        public float enemiesAppearGapSeconds = 2f;
+
         public int Count => waves?.Count ?? 0;
 
         public WaveDefinition Get(int index) => waves != null && index >= 0 && index < waves.Count ? waves[index] : null;

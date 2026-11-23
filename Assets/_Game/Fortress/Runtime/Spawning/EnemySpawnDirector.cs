@@ -43,6 +43,7 @@ namespace MS2026.Fortress
         private Dictionary<string, EnemySpawnPoint> _spawnPointsById;
         private bool _swarmMissingLogged;
         private bool _noTypeLogged;
+        private readonly Dictionary<string, float> _lastSpawnTimeByPoint = new Dictionary<string, float>();
 
         private void Awake()
         {
@@ -193,6 +194,8 @@ namespace MS2026.Fortress
                 return;
             }
 
+            PlayAppearCue(entry.spawnPointId ?? "", spawnPoint.transform.position);
+
             if (entry.enemyType.simulationMode == EnemySimulationMode.Swarm)
             {
                 var swarm = SwarmSystem.Current;
@@ -218,6 +221,27 @@ namespace MS2026.Fortress
             }
 
             EnemyActorFactory.Create(entry.enemyType, spawnPoint.transform.position, fallbackEnemyPrefab);
+        }
+
+        /// <summary>
+        /// 湧き位置ごとに、まとまりの最初の1体のときだけ「敵が出てきた」を出す（サウンドスタジオ N11）。
+        /// 湧きの時計はどのPCでも同じに進むので、各PCが自分で鳴らす。
+        /// </summary>
+        private void PlayAppearCue(string pointId, Vector3 position)
+        {
+            var plan = FortressWaves.Plan != null ? FortressWaves.Plan : wavePlan;
+            if (plan == null || plan.onEnemiesAppear == null || plan.onEnemiesAppear.IsEmpty)
+            {
+                return;
+            }
+
+            var now = Time.time;
+            var first = !_lastSpawnTimeByPoint.TryGetValue(pointId, out var last) || now - last > plan.enemiesAppearGapSeconds;
+            _lastSpawnTimeByPoint[pointId] = now;
+            if (first)
+            {
+                FortressEffectPlayer.PlayOnce(plan.onEnemiesAppear, position, Quaternion.identity);
+            }
         }
 
         /// <summary>
