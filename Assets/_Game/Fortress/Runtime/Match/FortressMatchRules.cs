@@ -44,5 +44,8 @@ namespace MS2026.Fortress
 
         [Tooltip("結果画面で最大コンボ（と MVP）を見せた瞬間（サウンドスタジオ N15）。")]
         public FortressEffect onMaxCombo = new FortressEffect { tintWithPlayerColor = false };
+
+        [Tooltip("結果画面からタイトルへ戻る瞬間（握り続けた・時間がたった。サウンドスタジオ N16）。戻すきっかけになったPCで鳴る。")]
+        public FortressEffect onReturnToTitle = new FortressEffect { tintWithPlayerColor = false };
     }
 }

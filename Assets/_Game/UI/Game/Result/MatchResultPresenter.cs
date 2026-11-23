@@ -253,6 +253,7 @@ namespace MS2026.UI.Game
             }
 
             _leaving = true;
+            Cue(_rules != null ? _rules.onReturnToTitle : null);
             var session = GameSession.Active;
             if (session != null)
             {
