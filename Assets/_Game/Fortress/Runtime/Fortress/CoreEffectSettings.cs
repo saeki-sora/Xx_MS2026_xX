@@ -24,6 +24,10 @@ namespace MS2026.Fortress
         [Range(0f, 1f), Tooltip("「コアがピンチ」を出すHPの割合（0〜1）。")]
         public float pinchAt = 0.25f;
 
+        [Tooltip("コアのHPが回復しはじめた瞬間に1回出す演出（緑スキル・歯みがきなど。サウンドスタジオ N12）。" +
+                 "じわじわ回復している間は、ひと続きとして1回だけ。試合の始めに満タンにするときは出ない。")]
+        public FortressEffect onHealed = new FortressEffect();
+
         [Min(0f), Tooltip("ダメージ演出を出す最短の間隔（秒）。")]
         public float damageEffectInterval = 0.25f;
     }

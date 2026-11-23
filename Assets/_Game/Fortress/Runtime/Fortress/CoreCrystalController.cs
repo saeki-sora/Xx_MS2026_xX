@@ -94,6 +94,7 @@ namespace MS2026.Fortress
             if (refill)
             {
                 _pinch.Reset();
+                _ignoreHealUntil = Time.time + 1.5f;
             }
 
             OnHealthChanged?.Invoke(CurrentHealth, maxHealth);
@@ -101,6 +102,12 @@ namespace MS2026.Fortress
 
         private float _nextDamageEffectTime;
         private ThresholdTrigger _pinch;
+        private float _lastHealth = -1f;
+        private float _lastHealTime = -100f;
+        private float _ignoreHealUntil;
+
+        // この秒数より間が空いたら、別の回復として演出を出し直す（じわじわ回復をひと続きにするため）。
+        private const float HealStreakGap = 0.4f;
 
         private void Awake()
         {
@@ -222,6 +229,20 @@ namespace MS2026.Fortress
             {
                 Play(effects.onPinch);
             }
+
+            var healed = _lastHealth >= 0f && current > _lastHealth + 0.0001f && Time.time >= _ignoreHealUntil;
+            _lastHealth = current;
+            if (!healed)
+            {
+                return;
+            }
+
+            if (Time.time - _lastHealTime > HealStreakGap)
+            {
+                Play(effects.onHealed);
+            }
+
+            _lastHealTime = Time.time;
         }
 
         private void Play(FortressEffect effect)
