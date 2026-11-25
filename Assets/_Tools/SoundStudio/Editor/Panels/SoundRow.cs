@@ -48,7 +48,14 @@ namespace MS2026.SoundStudio
 
             if (slot.Voice)
             {
-                name.Add(StudioUi.Chip("声", ChipKind.Accent, "声の欄。上の帯の「声」の音量が効く。"));
+                name.Add(StudioUi.Chip("声", ChipKind.Accent, "声の欄。「はじめに」の全体の音量の「声」が効く。"));
+            }
+
+            if (!slot.Active)
+            {
+                AddToClassList("ss-row--inactive");
+                name.Add(StudioUi.Chip("使っていない", ChipKind.Plain,
+                    "この設定では、この仕組みを使っていない（例: 爆弾ではない敵の「爆発した」）。音を入れても鳴らない。音がない数にも数えない。"));
             }
 
             name.tooltip = string.IsNullOrEmpty(slot.Tooltip) ? slot.Label : slot.Tooltip;

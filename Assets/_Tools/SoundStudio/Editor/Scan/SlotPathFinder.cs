@@ -12,13 +12,15 @@ namespace MS2026.SoundStudio
     /// <summary>見つけた音の欄1つ（どこに・どの型の・どの欄か、と今の中身）。</summary>
     public sealed class FoundSlot
     {
-        public FoundSlot(string path, Type declaringType, FieldInfo field, bool isBgm, object value)
+        public FoundSlot(string path, Type declaringType, FieldInfo field, bool isBgm, object value, object container, string elementName)
         {
             Path = path;
             DeclaringType = declaringType;
             Field = field;
             IsBgm = isBgm;
             Value = value;
+            Container = container;
+            ElementName = elementName;
         }
 
         /// <summary>SerializedProperty.propertyPath と同じ書き方の道筋（配列は <c>name.Array.data[i]</c>）。</summary>
@@ -32,6 +34,12 @@ namespace MS2026.SoundStudio
 
         /// <summary>欄の今の中身（FortressEffect は実物そのもの。BGM は AssetId の値）。</summary>
         public object Value { get; }
+
+        /// <summary>この欄を持っている物（入れ子の設定クラスならその物）。「この仕組みを使っているか」のスイッチを見るのに使う。</summary>
+        public object Container { get; }
+
+        /// <summary>配列の中の欄なら、その要素の名前（label などの文字の欄。無ければ何番目か）。配列の外なら null。</summary>
+        public string ElementName { get; }
     }
 
     /// <summary>
@@ -51,7 +59,7 @@ namespace MS2026.SoundStudio
             var result = new List<FoundSlot>();
             if (root != null)
             {
-                Walk(root, root.GetType(), string.Empty, 0, result);
+                Walk(root, root.GetType(), string.Empty, 0, result, null);
             }
 
             return result;
@@ -108,7 +116,7 @@ namespace MS2026.SoundStudio
                    && t.IsDefined(typeof(SerializableAttribute), false);
         }
 
-        private static void Walk(object obj, Type type, string prefix, int depth, List<FoundSlot> result)
+        private static void Walk(object obj, Type type, string prefix, int depth, List<FoundSlot> result, string elementName)
         {
             if (depth > MaxDepth)
             {
@@ -119,21 +127,21 @@ namespace MS2026.SoundStudio
             {
                 var path = prefix.Length == 0 ? field.Name : prefix + "." + field.Name;
                 var value = field.GetValue(obj);
-                Visit(field, field.FieldType, value, path, depth, result);
+                Visit(obj, field, field.FieldType, value, path, depth, result, elementName);
             }
         }
 
-        private static void Visit(FieldInfo field, Type fieldType, object value, string path, int depth, List<FoundSlot> result)
+        private static void Visit(object container, FieldInfo field, Type fieldType, object value, string path, int depth, List<FoundSlot> result, string elementName)
         {
             if (IsEffect(fieldType))
             {
-                result.Add(new FoundSlot(path, field.DeclaringType, field, false, value));
+                result.Add(new FoundSlot(path, field.DeclaringType, field, false, value, container, elementName));
                 return;
             }
 
             if (IsBgm(fieldType))
             {
-                result.Add(new FoundSlot(path, field.DeclaringType, field, true, value));
+                result.Add(new FoundSlot(path, field.DeclaringType, field, true, value, container, elementName));
                 return;
             }
 
@@ -147,7 +155,7 @@ namespace MS2026.SoundStudio
 
                 for (var i = 0; i < list.Count; i++)
                 {
-                    Visit(field, element, list[i], path + ".Array.data[" + i + "]", depth + 1, result);
+                    Visit(container, field, element, list[i], path + ".Array.data[" + i + "]", depth + 1, result, NameOfElement(list[i], i));
                 }
 
                 return;
@@ -155,8 +163,28 @@ namespace MS2026.SoundStudio
 
             if (value != null && IsSerializableContainer(fieldType))
             {
-                Walk(value, value.GetType(), path, depth + 1, result);
+                Walk(value, value.GetType(), path, depth + 1, result, elementName);
             }
+        }
+
+        private static readonly string[] ElementNameFields = { "label", "displayName", "name", "title" };
+
+        // 配列の要素の名前: 要素に label などの文字の欄があればそれ、無ければ何番目か（1 から）。
+        private static string NameOfElement(object element, int index)
+        {
+            if (element != null && !(element is UnityEngine.Object))
+            {
+                foreach (var name in ElementNameFields)
+                {
+                    var field = element.GetType().GetField(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    if (field != null && field.FieldType == typeof(string) && field.GetValue(element) is string text && !string.IsNullOrWhiteSpace(text))
+                    {
+                        return text.Trim();
+                    }
+                }
+            }
+
+            return (index + 1).ToString();
         }
 
         private static bool MayHold(Type type, int depth, HashSet<Type> visiting)

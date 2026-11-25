@@ -39,6 +39,9 @@ namespace MS2026.SoundStudio
             _scenes = new VisualElement();
             root.Add(_scenes);
 
+            root.Add(StudioUi.Section("全体の音量", "ゲーム全体の音量。ここを下げると、その種類の音が全部小さくなる。"));
+            root.Add(new SoundMasterVolumes(_context));
+
             root.Add(StudioUi.Section("新しい音を入れる"));
             var drop = new SoundDropZone(_context, null);
             root.Add(drop);
@@ -53,14 +56,20 @@ namespace MS2026.SoundStudio
             }
 
             _shownVersion = _context.Version;
-            var real = _context.Slots.Where(s => s.Kind != SoundSlotKind.Candidate).ToList();
             _stats.Clear();
-            _stats.Add(StudioUi.Stat(real.Count.ToString(), "音の欄", "ゲームにある音の欄の数（BGM を含む）。"));
+            _scenes.Clear();
+            if (!_context.Scanned)
+            {
+                _scenes.Add(StudioUi.Note("音の欄を調べています…", NoteKind.Info));
+                return;
+            }
+
+            var real = _context.Slots.Where(s => s.Kind != SoundSlotKind.Candidate && s.Active).ToList();
+            _stats.Add(StudioUi.Stat(real.Count.ToString(), "音の欄", "ゲームにある音の欄の数（BGM を含む。使っていない欄は数えない）。"));
             _stats.Add(StudioUi.Stat(SoundStudioContext.CountMissing(real).ToString(), "音がない欄", "まだ音が入っていない欄の数。"));
             _stats.Add(StudioUi.Stat(_context.Library.AllSe.Count.ToString(), "SE の素材", "D-Drive に登録されている SE の数。"));
             _stats.Add(StudioUi.Stat(_context.Library.AllBgm.Count.ToString(), "BGM の素材", "D-Drive に登録されている BGM の数。"));
 
-            _scenes.Clear();
             var byPage = real.Where(s => !s.HasSound).GroupBy(s => s.Page).OrderByDescending(g => g.Count()).Take(4).ToList();
             if (byPage.Count == 0)
             {

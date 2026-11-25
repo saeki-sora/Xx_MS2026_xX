@@ -40,7 +40,7 @@ namespace MS2026.SoundStudio
             root.Add(StudioUi.PageTitle(Label));
             root.Add(StudioUi.Lead(_page == SoundPageId.Other
                 ? "ほかのページに分けていない欄です。"
-                : "行を押すと、下に細かい設定が出ます。▶ で聞けます。"));
+                : "行を押すと、その下に細かい設定が出ます。▶ で聞けます（鳴っている間は ■ で止まる）。"));
             _list = new VisualElement();
             root.Add(_list);
             _detail = new SoundDetailPanel(_context);
@@ -75,14 +75,18 @@ namespace MS2026.SoundStudio
 
         private void Rebuild()
         {
+            _detail.RemoveFromHierarchy();
+            _list.parent.Add(_detail);
             _list.Clear();
             _rows.Clear();
             var slots = _context.SlotsOn(_page).ToList();
             if (slots.Count == 0)
             {
-                _list.Add(StudioUi.Empty("♪", "出す行がありません", _context.MissingOnly || !string.IsNullOrEmpty(_context.Search)
-                    ? "絞り込みを外すと出ます。"
-                    : "この場面にはまだ音の欄がありません。"));
+                _list.Add(!_context.Scanned
+                    ? StudioUi.Note("音の欄を調べています…", NoteKind.Info)
+                    : StudioUi.Empty("♪", "出す行がありません", _context.MissingOnly || !string.IsNullOrEmpty(_context.Search)
+                        ? "絞り込みを外すと出ます。"
+                        : "この場面にはまだ音の欄がありません。"));
                 _detail.Refresh();
                 return;
             }
@@ -97,7 +101,7 @@ namespace MS2026.SoundStudio
                 AddGroup("BGM", bgm, shared);
             }
 
-            foreach (var group in slots.Except(bgm).GroupBy(s => s.Group))
+            foreach (var group in slots.Except(bgm).GroupBy(s => s.Group).OrderBy(g => g.Min(s => s.Order)))
             {
                 AddGroup(group.Key, group.ToList(), shared);
             }
@@ -110,15 +114,40 @@ namespace MS2026.SoundStudio
             _list.Add(StudioUi.Section(title));
             var box = new VisualElement();
             box.AddToClassList("ss-rows");
-            foreach (var slot in slots.OrderBy(s => s.Kind == SoundSlotKind.Candidate))
+            var ordered = slots.OrderBy(s => s.Kind == SoundSlotKind.Candidate).ThenBy(s => s.Order)
+                .ThenBy(s => s.OwnerName, System.StringComparer.Ordinal).ToList();
+            foreach (var slot in ordered.Where(s => s.Active))
             {
-                var showOwner = shared.Contains(slot.DeclaringType?.FullName + "|" + slot.FieldName);
-                var row = new SoundRow(_context, slot, showOwner);
-                _rows[slot.Key] = row;
-                box.Add(row);
+                box.Add(MakeRow(slot, shared));
             }
 
             _list.Add(box);
+
+            // 使っていない欄（爆弾ではない敵の「爆発した」など）は、閉じた箱にまとめて最後に置く（最初に見える行を減らす）。
+            var inactive = ordered.Where(s => !s.Active).ToList();
+            if (inactive.Count > 0)
+            {
+                var fold = new Foldout { text = "使っていない欄 " + inactive.Count + " 個", value = false };
+                fold.AddToClassList("ss-inactive-fold");
+                fold.tooltip = "この設定では使っていない仕組みの音の欄（例: 爆弾ではない敵の「爆発した」）。音を入れても鳴らない。";
+                var inner = new VisualElement();
+                inner.AddToClassList("ss-rows");
+                foreach (var slot in inactive)
+                {
+                    inner.Add(MakeRow(slot, shared));
+                }
+
+                fold.Add(inner);
+                _list.Add(fold);
+            }
+        }
+
+        private SoundRow MakeRow(SoundSlot slot, HashSet<string> shared)
+        {
+            var showOwner = shared.Contains(slot.DeclaringType?.FullName + "|" + slot.FieldName);
+            var row = new SoundRow(_context, slot, showOwner);
+            _rows[slot.Key] = row;
+            return row;
         }
 
         private void OnSelectionChanged()
@@ -128,7 +157,26 @@ namespace MS2026.SoundStudio
                 pair.Value.SetSelected(_context.Selected != null && pair.Key == _context.Selected.Key);
             }
 
-            _detail?.Show(_context.Selected != null && _context.Selected.Page == _page ? _context.Selected : null);
+            var selected = _context.Selected != null && _context.Selected.Page == _page ? _context.Selected : null;
+            if (_detail == null)
+            {
+                return;
+            }
+
+            if (selected != null && _rows.TryGetValue(selected.Key, out var row) && row.parent != null)
+            {
+                var box = row.parent;
+                _detail.RemoveFromHierarchy();
+                box.Insert(box.IndexOf(row) + 1, _detail);
+            }
+
+            _detail.Show(selected);
+
+            // 出した細かい設定が画面の外なら、そこまで送る（描かれて大きさが決まってから）。
+            if (selected != null)
+            {
+                _detail.schedule.Execute(() => _detail.GetFirstAncestorOfType<ScrollView>()?.ScrollTo(_detail)).StartingIn(50);
+            }
         }
 
         private static string Icons(SoundPageId page)

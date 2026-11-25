@@ -23,6 +23,9 @@ namespace MS2026.SoundStudio
         /// <summary>名前で探す文字。</summary>
         public string Search { get; set; } = string.Empty;
 
+        /// <summary>一度でも調べ終わったか（調べ終わる前は「調べています…」と出す）。</summary>
+        public bool Scanned { get; private set; }
+
         /// <summary>中身が変わるたびに増える（ページは自分の番号と違えば描き直す）。</summary>
         public int Version { get; private set; }
 
@@ -63,6 +66,7 @@ namespace MS2026.SoundStudio
             }
 
             Selected = selectedKey == null ? null : Slots.FirstOrDefault(s => s.Key == selectedKey);
+            Scanned = true;
             Touch();
             if (SoundSlotScanner.LastScanSkippedScenes)
             {
@@ -147,7 +151,7 @@ namespace MS2026.SoundStudio
         /// <summary>音がない欄の数（候補の行は数えない）。</summary>
         public static int CountMissing(IEnumerable<SoundSlot> slots)
         {
-            return slots.Count(s => s.Kind != SoundSlotKind.Candidate && !s.HasSound);
+            return slots.Count(s => s.Kind != SoundSlotKind.Candidate && s.Active && !s.HasSound);
         }
 
         /// <summary>音のバランスが無ければ作り、ビルドで読まれるよう Preloaded Assets に入れる。</summary>
@@ -178,7 +182,7 @@ namespace MS2026.SoundStudio
 
         private bool Passes(SoundSlot slot)
         {
-            if (MissingOnly && (slot.Kind == SoundSlotKind.Candidate || slot.HasSound))
+            if (MissingOnly && (slot.Kind == SoundSlotKind.Candidate || slot.HasSound || !slot.Active))
             {
                 return false;
             }

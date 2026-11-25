@@ -115,8 +115,20 @@ namespace MS2026.SoundStudio
             {
                 tooltip = "鳴らすたびに、この範囲で音の高さを少し変える（1 = そのまま）。同じ音の連打が機械的に聞こえるときに広げる。",
             };
-            pitch.RegisterValueChangedCallback(e => EditData(se, () => se.PitchRange = e.newValue));
-            card.Add(pitch);
+            var pitchValue = StudioUi.Styled(new Label(PitchText(se.PitchRange)), "ss-detail-pitch");
+            pitchValue.tooltip = pitch.tooltip;
+            pitch.RegisterValueChangedCallback(e =>
+            {
+                EditData(se, () => se.PitchRange = e.newValue);
+                pitchValue.text = PitchText(e.newValue);
+            });
+            pitch.RegisterCallback<PointerCaptureOutEvent>(_ => AssetDatabase.SaveAssetIfDirty(se));
+            pitch.style.flexGrow = 1;
+            var pitchRow = new VisualElement();
+            pitchRow.AddToClassList("ss-detail-pitch-row");
+            pitchRow.Add(pitch);
+            pitchRow.Add(pitchValue);
+            card.Add(pitchRow);
 
             var cooldown = new FloatField("連打の間引き（秒）") { value = se.CooldownSec, tooltip = "この秒数の中で2回目が来たら鳴らさない。たくさん同時に起きる音（敵を倒した等）がうるさいときに長くする。" };
             cooldown.RegisterValueChangedCallback(e => EditData(se, () => se.CooldownSec = Mathf.Max(0f, e.newValue)));
@@ -204,6 +216,11 @@ namespace MS2026.SoundStudio
             slider.RegisterValueChangedCallback(e => EditData(data, () => set(e.newValue)));
             slider.RegisterCallback<PointerCaptureOutEvent>(_ => AssetDatabase.SaveAssetIfDirty(data));
             return slider;
+        }
+
+        private static string PitchText(Vector2 range)
+        {
+            return Mathf.Approximately(range.x, range.y) ? range.x.ToString("0.00") + "（そのまま）" : range.x.ToString("0.00") + " 〜 " + range.y.ToString("0.00");
         }
 
         private static void EditData(Object data, System.Action change)

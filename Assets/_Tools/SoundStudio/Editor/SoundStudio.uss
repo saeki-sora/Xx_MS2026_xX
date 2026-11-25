@@ -115,6 +115,40 @@
 }
 
 /* まだ欄がない候補: 紫の点線 */
+.ss-inactive-fold {
+    margin-bottom: 8px;
+}
+
+.ss-inactive-fold > Toggle {
+    color: var(--sk-sub);
+}
+
+.ss-row--inactive {
+    opacity: 0.45;
+}
+
+.ss-masters {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.ss-master {
+    flex-direction: row;
+    align-items: center;
+    width: 300px;
+    margin-right: 16px;
+}
+
+.ss-master > #label {
+    width: 44px;
+    color: var(--sk-text);
+}
+
+.ss-master-slider {
+    flex-grow: 1;
+}
+
 .ss-row--candidate {
     background-color: rgba(167, 139, 250, 0.08);
     border-color: rgba(167, 139, 250, 0.55);
@@ -141,6 +175,17 @@
     color: var(--sk-text);
     -unity-font-style: bold;
     margin-bottom: 4px;
+}
+
+.ss-detail-pitch-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.ss-detail-pitch {
+    width: 150px;
+    margin-left: 8px;
+    color: var(--sk-text);
 }
 
 .ss-detail-fixed {

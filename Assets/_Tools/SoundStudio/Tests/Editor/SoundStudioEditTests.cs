@@ -39,6 +39,23 @@ namespace MS2026.SoundStudio.Tests
         }
 
         [Test]
+        public void SwitchedOffFeature_IsInactiveAndNotCountedMissing()
+        {
+            var bomb = SlotOf("bomb.onExplode");
+            Assert.That(bomb.Active, Is.False, "爆弾ではない（explodeOnDeath が OFF）なら、使っていない欄");
+            _holder.bomb.explodeOnDeath = true;
+            Assert.That(SlotOf("bomb.onExplode").Active, Is.True);
+            Assert.That(SoundStudioContext.CountMissing(new[] { bomb }), Is.EqualTo(0));
+        }
+
+        [Test]
+        public void ElementLabel_UsesElementName()
+        {
+            Assert.That(SlotOf("named.Array.data[0].voice").Label, Does.EndWith("（赤）"));
+            Assert.That(SlotOf("named.Array.data[1].voice").Label, Does.EndWith("（2）"));
+        }
+
+        [Test]
         public void CountMissing_IgnoresCandidates()
         {
             var slots = new[]

@@ -94,11 +94,13 @@ namespace MS2026.SoundStudio
                 Tooltip = tooltip,
                 Page = entry?.Page ?? SoundPageId.Other,
                 Group = entry?.Group ?? ObjectNames.NicifyVariableName(f.DeclaringType.Name),
-                Label = WithIndex(entry?.Label ?? FallbackLabel(tooltip, f.Field.Name), f.Path),
+                Label = WithElement(entry?.Label ?? FallbackLabel(tooltip, f.Field.Name), f.ElementName),
                 Personal = entry?.Personal ?? false,
                 Voice = entry?.Voice ?? false,
                 Value = f.Value,
                 HasSound = hasSound,
+                Active = IsActive(f),
+                Order = entry?.Order ?? int.MaxValue,
             };
         }
 
@@ -112,16 +114,23 @@ namespace MS2026.SoundStudio
             return owner.name;
         }
 
-        // 配列の中の欄（キャラごとの声・切り替え用の BGM など）は、名前の後ろに何番目かを付ける。
-        private static string WithIndex(string label, string path)
+        // 配列の中の欄（キャラごとの声・カットインごとの声など）は、名前の後ろに要素の名前（無ければ何番目か）を付ける。
+        private static string WithElement(string label, string elementName)
         {
-            if (!path.EndsWith("]"))
+            return string.IsNullOrEmpty(elementName) ? label : label + "（" + elementName + "）";
+        }
+
+        // 同じ設定の中の「この仕組みを使うか」のスイッチが OFF なら、使っていない欄。
+        private static bool IsActive(FoundSlot f)
+        {
+            var name = SoundCatalog.ActiveSwitchOf(f.DeclaringType.FullName);
+            if (name == null || f.Container == null)
             {
-                return label;
+                return true;
             }
 
-            var open = path.LastIndexOf('[');
-            return int.TryParse(path.Substring(open + 1, path.Length - open - 2), out var index) ? label + "（" + (index + 1) + "）" : label;
+            var field = f.Container.GetType().GetField(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            return field == null || field.FieldType != typeof(bool) || (bool)field.GetValue(f.Container);
         }
 
         private static string FallbackLabel(string tooltip, string fieldName)

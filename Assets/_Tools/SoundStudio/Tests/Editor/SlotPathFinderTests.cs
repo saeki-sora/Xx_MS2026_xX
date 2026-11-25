@@ -28,6 +28,16 @@ namespace MS2026.SoundStudio.Tests
         public static FortressEffect StaticOne = new FortressEffect();
         public ScriptableObject otherAsset;
 
+        [Serializable]
+        public sealed class Named
+        {
+            public string label = "";
+            public FortressEffect voice = new FortressEffect();
+        }
+
+        public List<Named> named = new List<Named> { new Named { label = "赤" }, new Named() };
+        public MS2026.Fortress.EnemyBombSettings bomb = new MS2026.Fortress.EnemyBombSettings();
+
         public FortressEffect Hidden => hidden;
     }
 
@@ -54,6 +64,7 @@ namespace MS2026.SoundStudio.Tests
             Assert.That(paths, Is.EquivalentTo(new[]
             {
                 "a", "list.Array.data[0]", "list.Array.data[1]", "nested.inner", "nestedList.Array.data[0].inner", "hidden",
+                "named.Array.data[0].voice", "named.Array.data[1].voice", "bomb.onExplode",
             }));
         }
 
@@ -76,6 +87,18 @@ namespace MS2026.SoundStudio.Tests
         {
             var slot = SlotPathFinder.FindSlots(_holder).Single(s => s.Path == "list.Array.data[1]");
             Assert.That(slot.Value, Is.SameAs(_holder.list[1]));
+        }
+
+        [Test]
+        public void FindSlots_KnowsContainerAndElementName()
+        {
+            var slots = SlotPathFinder.FindSlots(_holder);
+            var red = slots.Single(s => s.Path == "named.Array.data[0].voice");
+            Assert.That(red.Container, Is.SameAs(_holder.named[0]));
+            Assert.That(red.ElementName, Is.EqualTo("赤"));
+            Assert.That(slots.Single(s => s.Path == "named.Array.data[1].voice").ElementName, Is.EqualTo("2"));
+            Assert.That(slots.Single(s => s.Path == "a").ElementName, Is.Null);
+            Assert.That(slots.Single(s => s.Path == "list.Array.data[1]").ElementName, Is.EqualTo("2"));
         }
 
         [Test]

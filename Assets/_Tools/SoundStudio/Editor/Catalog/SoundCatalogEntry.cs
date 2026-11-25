@@ -40,5 +40,8 @@ namespace MS2026.SoundStudio
 
         /// <summary>BGM の欄か。</summary>
         public bool IsBgm { get; }
+
+        /// <summary>表の中の並び（0 から）。</summary>
+        public int Order { get; internal set; }
     }
 }

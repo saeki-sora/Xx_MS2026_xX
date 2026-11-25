@@ -73,7 +73,6 @@ namespace MS2026.SoundStudio
             E(Fort + "WavePlan", "onAnnounce", SoundPageId.Match, "試合の進行", "次のウェーブのお知らせ"),
             E(Fort + "WavePlan", "onCountdownTick", SoundPageId.Match, "試合の進行", "ウェーブ前のカウントダウン"),
             E(Fort + "WavePlan", "onWaveStart", SoundPageId.Match, "試合の進行", "ウェーブ開始"),
-            E(Fort + "WavePlan", "onEnemiesAppear", SoundPageId.Match, "敵・コア", "敵が画面に出てくる"),
             E(Fort + "WavePlan", "onTimeWarning", SoundPageId.Match, "試合の進行", "残り時間が少ない（10秒前から1秒ごと）"),
             E(Fort + "WavePlan", "onWaveClear", SoundPageId.Match, "試合の進行", "ウェーブクリア"),
             E(Fort + "WavePlan", "onFinalAnnounce", SoundPageId.Match, "試合の進行", "最後のウェーブのお知らせ"),
@@ -93,6 +92,7 @@ namespace MS2026.SoundStudio
             P(Fort + "LaserEffectSettings", "onHeatWarning", SoundPageId.Match, "レーザー", "熱が危ない（もうすぐオーバーヒート）"),
 
             // 試合 › 敵・コア
+            E(Fort + "WavePlan", "onEnemiesAppear", SoundPageId.Match, "敵・コア", "敵が画面に出てくる"),
             P("MS2026.ObjectToon.KillFx.KillFxSettings", "onKill", SoundPageId.Match, "敵・コア", "敵をやっつけた"),
             E(Fort + "FoamPopSettings", "sound", SoundPageId.Match, "敵・コア", "泡がはじけた"),
             E(Fort + "FoamPopSettings", "soundMany", SoundPageId.Match, "敵・コア", "泡がたくさんはじけた"),
@@ -213,12 +213,27 @@ namespace MS2026.SoundStudio
         private static Dictionary<string, SoundCatalogEntry> BuildIndex()
         {
             var map = new Dictionary<string, SoundCatalogEntry>();
-            foreach (var entry in EntryTable)
+            for (var i = 0; i < EntryTable.Length; i++)
             {
-                map[entry.DeclaringType + "|" + entry.FieldName] = entry;
+                EntryTable[i].Order = i;
+                map[EntryTable[i].DeclaringType + "|" + EntryTable[i].FieldName] = EntryTable[i];
             }
 
             return map;
+        }
+
+        // 「この仕組みを使っているか」のスイッチ（同じ設定の中の bool の欄）。OFF の物の音の欄は「使っていない」として薄く出す。
+        private static readonly Dictionary<string, string> ActiveSwitches = new Dictionary<string, string>
+        {
+            { Fort + "EnemyBombSettings", "explodeOnDeath" },
+            { Fort + "EnemyShieldSettings", "hasShield" },
+            { Skills + "SkillCutInEntry", "enabled" },
+        };
+
+        /// <summary>この型の音の欄が使われているかを決める bool の欄の名前（無ければ null = いつも使っている）。</summary>
+        public static string ActiveSwitchOf(string declaringType)
+        {
+            return declaringType != null && ActiveSwitches.TryGetValue(declaringType, out var name) ? name : null;
         }
 
         // みんなの事

@@ -70,6 +70,14 @@ namespace MS2026.SoundStudio
         /// <summary>見つけたときに音が入っていたか。</summary>
         public bool HasSound;
 
+        /// <summary>
+        /// この欄の仕組みを使っているか（例: 爆弾ではない敵の「爆発した」は使っていない）。使っていない欄は薄く出し、音がない数に数えない。
+        /// </summary>
+        public bool Active = true;
+
+        /// <summary>名前の表の並び（小見出し・行をこの順に並べる）。表に無ければ大きな数。</summary>
+        public int Order = int.MaxValue;
+
         /// <summary>行を見分ける文字列（場所 + 部品 + 道筋）。</summary>
         public string Key => (GlobalObjectId ?? AssetPath) + "|" + PropertyPath + "|" + Candidate?.Number;
     }
