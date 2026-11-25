@@ -99,6 +99,9 @@ MonoBehaviour:
         type: 0
       tintWithPlayerColor: 1
       colorParam: Color
+      audience: 0
+      volumeScale: 1
+      isVoice: 1
   - label: "\u9752\uFF08\u30D9\u30FC\u30BF\uFF09"
     enabled: 1
     skill: {fileID: 11400000, guid: 61fd9c7b77354750a9444f3c2e5dac11, type: 2}
@@ -120,6 +123,9 @@ MonoBehaviour:
         type: 0
       tintWithPlayerColor: 1
       colorParam: Color
+      audience: 0
+      volumeScale: 1
+      isVoice: 1
   - label: "\u7DD1\uFF08\u30AC\u30F3\u30DE\uFF09"
     enabled: 1
     skill: {fileID: 11400000, guid: 57d56c6a3ce242c6a13bb3f71bc24bc8, type: 2}
@@ -141,6 +147,9 @@ MonoBehaviour:
         type: 0
       tintWithPlayerColor: 1
       colorParam: Color
+      audience: 0
+      volumeScale: 1
+      isVoice: 1
   - label: "\u9EC4\u8272\uFF08\u30C7\u30EB\u30BF\uFF09"
     enabled: 1
     skill: {fileID: 11400000, guid: e493c07d159f43b4bdf2fa462978c2b9, type: 2}
@@ -162,6 +171,9 @@ MonoBehaviour:
         type: 0
       tintWithPlayerColor: 1
       colorParam: Color
+      audience: 0
+      volumeScale: 1
+      isVoice: 1
   motion:
     openSeconds: 0.12
     holdSeconds: 2
@@ -215,6 +227,9 @@ MonoBehaviour:
         type: 0
       tintWithPlayerColor: 1
       colorParam: Color
+      audience: 0
+      volumeScale: 1
+      isVoice: 0
     close:
       vfx:
         value: 0
@@ -224,6 +239,9 @@ MonoBehaviour:
         type: 0
       tintWithPlayerColor: 1
       colorParam: Color
+      audience: 0
+      volumeScale: 1
+      isVoice: 0
     smallPlaysSe: 1
     smallPlaysVoice: 0
   sortingOrder: 150
