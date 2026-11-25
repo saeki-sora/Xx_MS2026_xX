@@ -1,5 +1,7 @@
+using DDrive.Runtime.Audio;
 using MS2026.Fortress;
 using MS2026.StudioKit;
+using UnityEditor;
 using UnityEngine.UIElements;
 
 namespace MS2026.SoundStudio
@@ -17,6 +19,7 @@ namespace MS2026.SoundStudio
         private readonly Label _mark;
         private IVisualElementScheduledItem _pendingWrite;
         private float _pendingScale;
+        private Button _play;
         private bool _hasPending;
 
         public SoundRow(SoundStudioContext context, SoundSlot slot, bool showOwner)
@@ -80,14 +83,32 @@ namespace MS2026.SoundStudio
                 scale.RegisterValueChangedCallback(e => QueueScale(e.newValue));
                 Add(scale);
             }
+            else if (slot.Kind == SoundSlotKind.Bgm && _context.Library.Bgm(SoundStudioContext.SoundIdOf(slot)) is BgmData bgm)
+            {
+                // BGM の行のバーは「曲そのものの音量」（その曲を使う所すべてに効く）。聞きながら動かすと、その場で変わる。
+                var volume = new Slider(0f, 1f) { value = bgm.Volume, tooltip = "この BGM の音量（0〜1）。この曲を使う所すべてに効く。試聴しながら動かすと、その場で変わる。" };
+                volume.AddToClassList("ss-row-scale");
+                volume.RegisterCallback<ClickEvent>(e => e.StopPropagation());
+                volume.RegisterValueChangedCallback(e =>
+                {
+                    Undo.RecordObject(bgm, "サウンドスタジオ: BGM の音量");
+                    bgm.Volume = e.newValue;
+                    EditorUtility.SetDirty(bgm);
+                    _context.Preview.ApplyBgmVolume(bgm);
+                });
+                volume.RegisterCallback<PointerCaptureOutEvent>(_ => AssetDatabase.SaveAssetIfDirty(bgm));
+                volume.RegisterCallback<DetachFromPanelEvent>(_ => AssetDatabase.SaveAssetIfDirty(bgm));
+                Add(volume);
+            }
             else
             {
                 Add(StudioUi.Styled(new VisualElement(), "ss-row-scale"));
             }
 
-            var play = StudioUi.Button("▶", () => PlayNow(), "聞く（Play していなくても鳴る）。", small: true);
-            play.AddToClassList("ss-row-play");
-            Add(play);
+            _play = StudioUi.Button("▶", TogglePlay, "聞く（Play していなくても鳴る）。鳴っている間は ■ になり、押すと止まる。", small: true);
+            _play.AddToClassList("ss-row-play");
+            Add(_play);
+            schedule.Execute(UpdatePlayButton).Every(200);
 
             this.AddManipulator(new ContextualMenuManipulator(menu =>
             {
@@ -118,13 +139,29 @@ namespace MS2026.SoundStudio
             schedule.Execute(() => RemoveFromClassList("ss-row--flash")).StartingIn(900);
         }
 
-        private void PlayNow()
+        private void TogglePlay()
         {
-            var problem = _context.Preview.Play(_slot, _context.Library);
-            if (problem != null)
+            if (_context.Preview.IsPlaying(_slot))
             {
-                _context.Notify(problem);
+                _context.Preview.Stop();
             }
+            else
+            {
+                var problem = _context.Preview.Play(_slot, _context.Library);
+                if (problem != null)
+                {
+                    _context.Notify(problem);
+                }
+            }
+
+            UpdatePlayButton();
+        }
+
+        private void UpdatePlayButton()
+        {
+            var playing = _context.Preview.IsPlaying(_slot);
+            _play.text = playing ? "■" : "▶";
+            _play.EnableInClassList("ss-row-play--playing", playing);
         }
 
         // バーを動かしている間は書かず、止めて少し経ってから1回だけ書く（シーンの欄は書くたびにシーンを開くため）。

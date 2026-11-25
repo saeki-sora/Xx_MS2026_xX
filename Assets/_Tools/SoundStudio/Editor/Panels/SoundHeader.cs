@@ -15,6 +15,7 @@ namespace MS2026.SoundStudio
         private readonly Slider _voice;
         private readonly Slider _bgm;
         private int _shownVersion = -1;
+        private Button _stop;
 
         public SoundHeader(SoundStudioContext context)
         {
@@ -48,6 +49,9 @@ namespace MS2026.SoundStudio
             _voice = Master("声", "声全体の音量。", b => b.voiceVolume, (b, v) => b.voiceVolume = v);
             _bgm = Master("BGM", "BGM 全体の音量。", b => b.bgmVolume, (b, v) => b.bgmVolume = v);
 
+            _stop = StudioUi.Button("■ 止める", () => _context.Preview.Stop(), "試聴の音を全部止める（BGM も止まる）。", small: true);
+            Add(_stop);
+
             Add(StudioUi.Button("調べ直す", () => _context.TryRescan(),
                 "プロジェクトの音の欄を調べ直す（欄を足した・シーンを変えたとき）。シーンを裏で開くので少し時間がかかる。", small: true));
 
@@ -74,6 +78,7 @@ namespace MS2026.SoundStudio
                 Undo.RecordObject(balance, "サウンドスタジオ: 全体音量");
                 set(balance, e.newValue);
                 EditorUtility.SetDirty(balance);
+                _context.Preview.ApplyBgmMaster();
             });
             slider.RegisterCallback<PointerCaptureOutEvent>(_ =>
             {
@@ -93,6 +98,7 @@ namespace MS2026.SoundStudio
             SetIfIdle(_se, balance != null ? balance.seVolume : 1f);
             SetIfIdle(_voice, balance != null ? balance.voiceVolume : 1f);
             SetIfIdle(_bgm, balance != null ? balance.bgmVolume : 1f);
+            _stop.SetEnabled(_context.Preview.AnyPlaying);
             if (_shownVersion == _context.Version)
             {
                 return;
