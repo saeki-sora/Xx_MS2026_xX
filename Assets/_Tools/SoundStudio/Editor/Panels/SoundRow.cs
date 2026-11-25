@@ -20,6 +20,7 @@ namespace MS2026.SoundStudio
         private IVisualElementScheduledItem _pendingWrite;
         private float _pendingScale;
         private Button _play;
+        private readonly Label _chevron;
         private bool _hasPending;
 
         public SoundRow(SoundStudioContext context, SoundSlot slot, bool showOwner)
@@ -27,7 +28,12 @@ namespace MS2026.SoundStudio
             _context = context;
             _slot = slot;
             AddToClassList("ss-row");
-            RegisterCallback<ClickEvent>(_ => _context.Select(_slot));
+            // 押すと下に細かい設定が開き、もう一度押すと閉じる。
+            RegisterCallback<ClickEvent>(_ => _context.Select(_context.Selected == _slot ? null : _slot));
+
+            _chevron = StudioUi.Styled(new Label("▸"), "ss-row-chevron");
+            _chevron.tooltip = "押すと細かい設定を開く・閉じる。";
+            Add(_chevron);
 
             _mark = StudioUi.Styled(new Label("●"), "ss-row-mark");
             _mark.tooltip = "この場所の設定（音量・鳴らすPC）を初期値から変えています。右クリックで戻せます。";
@@ -74,6 +80,7 @@ namespace MS2026.SoundStudio
             var sound = StudioUi.Button(soundName ?? "音を入れる…", () => SePicker.Open(_context, _slot),
                 soundName == null ? "まだ音が入っていない。押して音を選ぶか、wav をこの行に落とす。" : "入っている音。押すと別の音を選べる。", small: true);
             sound.AddToClassList("ss-row-sound");
+            sound.RegisterCallback<ClickEvent>(e => e.StopPropagation());
             if (soundName == null)
             {
                 sound.AddToClassList("ss-row-sound--empty");
@@ -114,6 +121,7 @@ namespace MS2026.SoundStudio
 
             _play = StudioUi.Button("▶", TogglePlay, "聞く（Play していなくても鳴る）。鳴っている間は ■ になり、押すと止まる。", small: true);
             _play.AddToClassList("ss-row-play");
+            _play.RegisterCallback<ClickEvent>(e => e.StopPropagation());
             Add(_play);
             schedule.Execute(UpdatePlayButton).Every(200);
 
@@ -137,6 +145,7 @@ namespace MS2026.SoundStudio
         public void SetSelected(bool selected)
         {
             EnableInClassList("ss-row--selected", selected);
+            _chevron.text = selected ? "▾" : "▸";
         }
 
         /// <summary>Play 中に鳴ったとき、少しの間光らせる。</summary>

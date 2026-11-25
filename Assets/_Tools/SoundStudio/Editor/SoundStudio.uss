@@ -57,6 +57,19 @@
 
 .ss-row--selected {
     border-color: var(--sk-accent);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    margin-bottom: 0;
+}
+
+.ss-row-chevron {
+    width: 14px;
+    color: var(--sk-faint);
+    font-size: 11px;
+}
+
+.ss-row--selected .ss-row-chevron {
+    color: var(--sk-accent);
 }
 
 .ss-row--flash {
@@ -161,9 +174,47 @@
     margin-left: 8px;
 }
 
-/* 細かい設定 */
+/* 細かい設定（選んだ行のすぐ下に、行とつながって開く） */
 .ss-detail {
-    margin-top: 12px;
+    margin-bottom: 8px;
+    padding: 8px 12px 10px 12px;
+    background-color: var(--sk-panel);
+    border-width: 0 1px 1px 1px;
+    border-color: var(--sk-accent);
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+.ss-detail-columns {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.ss-detail-columns > .ss-detail-card {
+    flex-grow: 1;
+    flex-basis: 340px;
+}
+
+.ss-detail-card {
+    margin: 4px 8px 4px 0;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background-color: var(--sk-card);
+}
+
+.ss-detail-card-title {
+    color: var(--sk-text);
+    -unity-font-style: bold;
+}
+
+.ss-detail-card-body {
+    color: var(--sk-faint);
+    font-size: 11px;
+    margin-bottom: 4px;
+}
+
+.ss-detail-buttons {
+    margin-top: 6px;
 }
 
 .ss-detail-where {

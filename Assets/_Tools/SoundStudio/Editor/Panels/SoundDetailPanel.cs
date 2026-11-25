@@ -48,7 +48,7 @@ namespace MS2026.SoundStudio
                 return;
             }
 
-            Add(StudioUi.Section(_slot.Label));
+            // 行の名前は真上の行に出ているので、ここでは繰り返さない（どこの欄かだけ小さく）。
             Add(StudioUi.Styled(new Label(Where(_slot)), "ss-detail-where"));
 
             if (_slot.Kind == SoundSlotKind.Candidate)
@@ -57,10 +57,14 @@ namespace MS2026.SoundStudio
                 return;
             }
 
-            AddSoundItself();
+            // 「音そのもの」と「この場所だけ」は横に並べる（縦に長くならないように）。
+            var columns = new VisualElement();
+            columns.AddToClassList("ss-detail-columns");
+            Add(columns);
+            AddSoundItself(columns);
             if (_slot.Kind == SoundSlotKind.Effect && _slot.Value is FortressEffect effect)
             {
-                AddPlace(effect);
+                AddPlace(columns, effect);
             }
 
             AddUsedBy();
@@ -82,11 +86,11 @@ namespace MS2026.SoundStudio
             return string.IsNullOrEmpty(slot.OwnerName) ? page : page + "　（設定: " + slot.OwnerName + "）";
         }
 
-        private void AddSoundItself()
+        private void AddSoundItself(VisualElement parent)
         {
             var id = SoundStudioContext.SoundIdOf(_slot);
-            var card = StudioUi.Card("音そのもの", "この音を使う所すべてに効く。");
-            Add(card);
+            var card = DetailCard("音そのもの", "この音を使う所すべてに効く。");
+            parent.Add(card);
             if (_slot.Kind == SoundSlotKind.Bgm)
             {
                 var bgm = _context.Library.Bgm(id);
@@ -139,10 +143,10 @@ namespace MS2026.SoundStudio
             card.Add(concurrent);
         }
 
-        private void AddPlace(FortressEffect effect)
+        private void AddPlace(VisualElement parent, FortressEffect effect)
         {
-            var card = StudioUi.Card("この場所だけ", "ほかの所で同じ音を使っていても、ここだけに効く。");
-            Add(card);
+            var card = DetailCard("この場所だけ", "ほかの所で同じ音を使っていても、ここだけに効く。");
+            parent.Add(card);
 
             var scale = new Slider("音量の倍率", 0f, 1f) { value = effect.volumeScale, showInputField = true, tooltip = "この場所だけの音量（0〜1）。大きくしたいときは、上の「音そのもの」の音量を上げる。" };
             scale.RegisterCallback<PointerCaptureOutEvent>(_ => _context.Report(SoundSlotWriter.SetVolumeScale(_slot, scale.value)));
@@ -179,7 +183,7 @@ namespace MS2026.SoundStudio
                 return;
             }
 
-            var card = StudioUi.Card("同じ音を使っている所（" + others.Count + "）", "押すとその行へ飛ぶ。");
+            var card = DetailCard("同じ音を使っている所（" + others.Count + "）", "押すとその行へ飛ぶ。");
             foreach (var other in others.Take(12))
             {
                 var link = StudioUi.Button(SoundPageIds.Label(other.Page) + " › " + other.Label, () => _context.GoTo(other), "この行へ飛ぶ。", small: true);
@@ -193,21 +197,25 @@ namespace MS2026.SoundStudio
         private void AddButtons()
         {
             var id = SoundStudioContext.SoundIdOf(_slot);
+            // よく使う操作だけ大きく、作る人向けの操作は小さく右へ。止めるは行の ■ と上の帯にある。
             var row = StudioUi.Row(
-                StudioUi.Button("▶ 聞く", () =>
-                {
-                    var problem = _context.Preview.Play(_slot, _context.Library);
-                    if (problem != null)
-                    {
-                        _context.Notify(problem);
-                    }
-                }, "聞く（Play していなくても鳴る）。", primary: true),
-                StudioUi.Button("■ 止める", () => _context.Preview.Stop(), "試聴の音を止める。"),
-                StudioUi.Button("別の音を選ぶ", () => SePicker.Open(_context, _slot), "入れる音を一覧から選ぶ。"),
+                StudioUi.Button("別の音を選ぶ", () => SePicker.Open(_context, _slot), "入れる音を一覧から選ぶ。", primary: true),
                 StudioUi.Button("音を外す", () => Clear(_context, _slot), "この欄を空にする（音のファイルは消さない）。"),
-                StudioUi.Button("D-Drive で開く", () => OpenData(id), "音のデータを Inspector で開く（D-Drive の専用エディタへ進める）。"),
-                StudioUi.Button("設定のある所を見せる", () => Reveal(), "この欄を持っている設定ファイル・シーンを Project で見せる（作る人向け）。"));
+                StudioUi.Spacer(),
+                StudioUi.Button("D-Drive で開く", () => OpenData(id), "音のデータを Inspector で開く（D-Drive の専用エディタへ進める）。", small: true),
+                StudioUi.Button("設定のある所を見せる", () => Reveal(), "この欄を持っている設定ファイル・シーンを Project で見せる（作る人向け）。", small: true));
+            row.AddToClassList("ss-detail-buttons");
             Add(row);
+        }
+
+        // 細かい設定の中の箱（枠は1重だけ。外の箱は行とつながった背景だけ）。
+        private static VisualElement DetailCard(string title, string body)
+        {
+            var card = new VisualElement();
+            card.AddToClassList("ss-detail-card");
+            card.Add(StudioUi.Styled(new Label(title), "ss-detail-card-title"));
+            card.Add(StudioUi.Styled(new Label(body), "ss-detail-card-body"));
+            return card;
         }
 
         private VisualElement DataSlider(string label, string tooltip, Object data, float value, System.Action<float> set)
