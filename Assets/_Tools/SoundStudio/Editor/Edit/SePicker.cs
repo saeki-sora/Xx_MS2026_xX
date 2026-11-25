@@ -46,6 +46,14 @@ namespace MS2026.SoundStudio
             }
 
             rootVisualElement.AddToClassList("sk-root");
+            rootVisualElement.style.paddingLeft = 8;
+            rootVisualElement.style.paddingRight = 8;
+            rootVisualElement.style.paddingTop = 6;
+            var own = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/_Tools/SoundStudio/Editor/SoundStudio.uss");
+            if (own != null)
+            {
+                rootVisualElement.styleSheets.Add(own);
+            }
             rootVisualElement.Add(StudioUi.Lead("「" + _slot.Label + "」に入れる音を選んでください。"));
             var search = new TextField { tooltip = "名前で探す。" };
             search.textEdition.placeholder = "名前で探す";
@@ -80,17 +88,46 @@ namespace MS2026.SoundStudio
             foreach (var data in shown)
             {
                 var item = data;
-                _list.Add(StudioUi.Button(SoundLibrary.NameOf(item), () => Pick(item), item.name));
+                var key = "picker|" + item.Id;
+                var line = new VisualElement();
+                line.AddToClassList("ss-picker-line");
+                Button play = null;
+                play = StudioUi.Button("▶", () =>
+                {
+                    if (_context.Preview.IsPlayingKey(key))
+                    {
+                        _context.Preview.Stop();
+                    }
+                    else
+                    {
+                        var problem = _context.Preview.PlayData(item, key);
+                        if (problem != null)
+                        {
+                            ShowNotification(new GUIContent(problem));
+                        }
+                    }
+                }, "入れる前に聞く。鳴っている間は ■ になり、押すと止まる。", small: true);
+                play.AddToClassList("ss-picker-play");
+                play.schedule.Execute(() => play.text = _context.Preview.IsPlayingKey(key) ? "■" : "▶").Every(200);
+                line.Add(play);
+                var pick = StudioUi.Button(SoundLibrary.NameOf(item), () => Pick(item), item.name + "（押すとこの音を入れる）");
+                pick.AddToClassList("ss-picker-name");
+                line.Add(pick);
+                _list.Add(line);
             }
+        }
+
+        private void OnDisable()
+        {
+            _context?.Preview.Stop();
         }
 
         private void Pick(AssetDataBase data)
         {
-            var result = _slot.Kind == SoundSlotKind.Bgm
-                ? SoundSlotWriter.SetBgm(_slot, new AssetId<BgmMarker>(data.Id, AssetType.Bgm))
-                : SoundSlotWriter.SetSe(_slot, new AssetId<SeMarker>(data.Id, AssetType.Se));
-            _context.Report(result);
+            var context = _context;
+            var slot = _slot;
             Close();
+            SoundBulk.SetSound(context, slot, data.Id);
         }
     }
 }

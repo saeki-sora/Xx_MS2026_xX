@@ -56,6 +56,30 @@ namespace MS2026.SoundStudio.Tests
         }
 
         [Test]
+        public void SameSlots_FindsSameFieldOnOtherHolders_OnlyActive()
+        {
+            SoundSlot Make(string asset, string field, bool active = true, SoundSlotKind kind = SoundSlotKind.Effect) => new SoundSlot
+            {
+                Kind = kind, DeclaringType = typeof(TestSoundHolder), FieldName = field, AssetPath = asset, PropertyPath = field, Active = active,
+            };
+
+            var a = Make("A", "a");
+            var b = Make("B", "a");
+            var otherField = Make("C", "hidden");
+            var inactive = Make("D", "a", active: false);
+            var bgm = Make("E", "a", kind: SoundSlotKind.Bgm);
+            var same = SoundStudioContext.SameSlots(a, new[] { a, b, otherField, inactive, bgm });
+            Assert.That(same, Is.EqualTo(new[] { b }));
+        }
+
+        [Test]
+        public void SameSlots_NoneForCandidate()
+        {
+            var c = new SoundSlot { Kind = SoundSlotKind.Candidate };
+            Assert.That(SoundStudioContext.SameSlots(c, new[] { c }), Is.Empty);
+        }
+
+        [Test]
         public void CountMissing_IgnoresCandidates()
         {
             var slots = new[]

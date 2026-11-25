@@ -74,7 +74,11 @@ namespace MS2026.Fortress
             var handle = Audio.PlaySe(effect.se);
             FortressAudioMix.ApplySeVolume(handle, effect.se, effect.volumeScale, effect.isVoice);
 #if UNITY_EDITOR
-            Played?.Invoke(effect, playerIndex);
+            // 連打の間引きで鳴らなかったときは知らせない（サウンドスタジオが「実際に鳴った回数」を数えるため）。
+            if (handle != Handle<SeMarker>.Invalid)
+            {
+                Played?.Invoke(effect, playerIndex);
+            }
 #endif
             return handle;
         }

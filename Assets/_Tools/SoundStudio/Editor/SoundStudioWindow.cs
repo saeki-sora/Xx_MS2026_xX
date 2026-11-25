@@ -19,6 +19,7 @@ namespace MS2026.SoundStudio
         private readonly Dictionary<SoundPageId, IStudioPage> _pages = new Dictionary<SoundPageId, IStudioPage>();
         private PlayedSlotIndex _played;
         private double _nextTick;
+        private bool _scanPending;
 
         [MenuItem("Tools/サウンドスタジオ", priority = 31)]
         public static void Open()
@@ -65,6 +66,9 @@ namespace MS2026.SoundStudio
                 _shell.AddPage(page);
             }
 
+            // 流れの場面の後に「音のバランス」（うるさい所・大きさのばらつき）。
+            _shell.AddPage(new SoundBalancePage(_context));
+
             _shell.Show(_pages[SoundPageId.Start]);
             rootVisualElement.Clear();
             rootVisualElement.Add(_shell);
@@ -92,19 +96,23 @@ namespace MS2026.SoundStudio
             }
         }
 
+        // 調べ直しの予約。少し後（delayCall）か、窓の定期更新の早い方で1回だけ調べる
+        // （Unity が裏に回っていると delayCall が遅れることがあるため、両方で拾う）。
         private void ScheduleScan()
         {
+            _scanPending = true;
             EditorApplication.delayCall -= RunScan;
             EditorApplication.delayCall += RunScan;
         }
 
         private void RunScan()
         {
-            if (this == null || _context == null)
+            if (this == null || _context == null || !_scanPending || EditorApplication.isPlayingOrWillChangePlaymode && !EditorApplication.isPlaying)
             {
                 return;
             }
 
+            _scanPending = false;
             _context.TryRescan();
         }
 
@@ -130,6 +138,11 @@ namespace MS2026.SoundStudio
             {
                 CreateGUI();
                 return;
+            }
+
+            if (_scanPending)
+            {
+                RunScan();
             }
 
             _shell.Tick();

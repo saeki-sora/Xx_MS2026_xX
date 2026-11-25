@@ -270,3 +270,66 @@
 .ss-nav--flash {
     background-color: rgba(95, 211, 155, 0.30);
 }
+
+/* 音を選ぶ窓 */
+.ss-picker-line {
+    flex-direction: row;
+    align-items: center;
+}
+
+.ss-picker-play {
+    width: 30px;
+}
+
+.ss-picker-name {
+    flex-grow: 1;
+    -unity-text-align: middle-left;
+}
+
+/* 音のバランス */
+.ss-balance-group {
+    color: var(--sk-sub);
+    margin: 8px 0 4px 0;
+    -unity-font-style: bold;
+}
+
+.ss-balance-line {
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 8px;
+    margin-bottom: 2px;
+    border-radius: 6px;
+    background-color: var(--sk-card);
+}
+
+.ss-balance-line--link:hover {
+    background-color: var(--sk-card-hover);
+}
+
+.ss-balance-name {
+    flex-grow: 1;
+    color: var(--sk-text);
+}
+
+.ss-balance-value {
+    width: 130px;
+    color: var(--sk-text);
+    -unity-text-align: middle-right;
+    margin-right: 12px;
+}
+
+.ss-balance-sub {
+    width: 120px;
+    color: var(--sk-faint);
+    margin-right: 8px;
+}
+
+.ss-detail-loudness {
+    color: var(--sk-sub);
+    font-size: 11px;
+    margin-bottom: 2px;
+}
+
+.ss-detail-loudness--warn {
+    color: var(--sk-warn);
+}

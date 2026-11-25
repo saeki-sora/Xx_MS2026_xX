@@ -113,6 +113,7 @@ namespace MS2026.SoundStudio
             }
 
             card.Add(StudioUi.Styled(new Label(SoundLibrary.NameOf(se)), "ss-detail-sound"));
+            AddLoudnessLine(card, se);
             card.Add(DataSlider("音量", "この音の音量（0〜1）。この音を使う所すべてに効く。", se, se.Volume, v => se.Volume = v));
 
             var pitch = new MinMaxSlider("高さのばらつき", se.PitchRange.x, se.PitchRange.y, 0.5f, 2f)
@@ -208,6 +209,29 @@ namespace MS2026.SoundStudio
             Add(row);
         }
 
+        // 素材の大きさ（音のバランスのページと同じ測り方）。音量を変えたら、もう一度開くと新しい値になる。
+        private void AddLoudnessLine(VisualElement card, DDrive.Foundation.Data.AssetDataBase data)
+        {
+            var loudness = _context.Loudness;
+            if (!loudness.HasMeasured)
+            {
+                loudness.Measure(_context.Library);
+            }
+
+            var info = loudness.Find(data);
+            if (info == null || !info.Measured)
+            {
+                return;
+            }
+
+            var median = info.IsBgm ? loudness.BgmMedian : loudness.SeMedian;
+            var note = info.Mark == LoudnessMark.Loud ? "ほかの音より大きい" : info.Mark == LoudnessMark.Quiet ? "ほかの音より小さい" : "ふつう";
+            var label = StudioUi.Styled(new Label("大きさ: " + info.Db.ToString("0") + " dB（" + note + "。真ん中は " + median.ToString("0") + " dB）"), "ss-detail-loudness");
+            label.EnableInClassList("ss-detail-loudness--warn", info.Mark != LoudnessMark.Normal);
+            label.tooltip = "素材の波形を測った平均の大きさ（音そのものの音量も掛けた値）。ほかの音と 6 dB 以上ずれていたら、音量でそろえると聞きやすい。";
+            card.Add(label);
+        }
+
         // 細かい設定の中の箱（枠は1重だけ。外の箱は行とつながった背景だけ）。
         private static VisualElement DetailCard(string title, string body)
         {
@@ -222,7 +246,11 @@ namespace MS2026.SoundStudio
         {
             var slider = new Slider(label, 0f, 1f) { value = value, showInputField = true, tooltip = tooltip };
             slider.RegisterValueChangedCallback(e => EditData(data, () => set(e.newValue)));
-            slider.RegisterCallback<PointerCaptureOutEvent>(_ => AssetDatabase.SaveAssetIfDirty(data));
+            slider.RegisterCallback<PointerCaptureOutEvent>(_ =>
+            {
+                AssetDatabase.SaveAssetIfDirty(data);
+                _context.Loudness.Measure(_context.Library);
+            });
             return slider;
         }
 

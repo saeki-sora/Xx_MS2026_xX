@@ -1,5 +1,6 @@
 using System;
 using DDrive.Editor.Preview;
+using DDrive.Foundation.Data;
 using DDrive.Foundation.Handle;
 using DDrive.Foundation.Identity;
 using DDrive.Runtime.Audio;
@@ -48,7 +49,7 @@ namespace MS2026.SoundStudio
             }
 
             Stop();
-            var problem = slot.Kind == SoundSlotKind.Bgm ? PlayBgm(id, library) : PlaySe(slot, library);
+            var problem = slot.Kind == SoundSlotKind.Bgm ? PlayBgm(id, library.Bgm(id)) : PlaySe(slot, library);
             if (problem == null)
             {
                 _playingKey = slot.Key;
@@ -56,6 +57,48 @@ namespace MS2026.SoundStudio
             }
 
             return problem;
+        }
+
+        /// <summary>
+        /// 素材そのもの（欄に入れる前の SE / BGM）を聞く。音を選ぶ窓の ▶ で使う。<paramref name="key"/> は鳴っているかを見分ける名前。
+        /// 音そのものの音量 × 全体の音量で鳴らす（この場所の倍率はまだ無いので掛けない）。
+        /// </summary>
+        public string PlayData(AssetDataBase data, string key)
+        {
+            if (data == null)
+            {
+                return "音のデータが見つかりません。";
+            }
+
+            Stop();
+            string problem;
+            if (data is BgmData bgm)
+            {
+                problem = PlayBgm(bgm.Id, bgm);
+                _playingKind = SoundSlotKind.Bgm;
+            }
+            else if (data is SeData se)
+            {
+                problem = PlaySeData(se);
+                _playingKind = SoundSlotKind.Effect;
+            }
+            else
+            {
+                return "この素材は聞けません。";
+            }
+
+            if (problem == null)
+            {
+                _playingKey = key;
+            }
+
+            return problem;
+        }
+
+        /// <summary>この名前の音を試聴で鳴らしているか。</summary>
+        public bool IsPlayingKey(string key)
+        {
+            return key != null && _playingKey == key && IsStillPlaying();
         }
 
         /// <summary>試聴の音を全部止める（Play 中は、鳴っている BGM も止まる）。</summary>
@@ -185,9 +228,8 @@ namespace MS2026.SoundStudio
             return null;
         }
 
-        private string PlayBgm(ulong id, SoundLibrary library)
+        private string PlayBgm(ulong id, BgmData data)
         {
-            var data = library.Bgm(id);
             if (EditorApplication.isPlaying)
             {
                 FortressAudioMix.PlayBgm(new AssetId<BgmMarker>(id, AssetType.Bgm));
@@ -217,6 +259,30 @@ namespace MS2026.SoundStudio
             _bgmCopy.Volume = Mathf.Clamp01(data.Volume * FortressAudioMix.BgmMaster);
             service.PlayBgm(_bgmCopy);
             _bgmSource = data;
+            return null;
+        }
+
+        private string PlaySeData(SeData data)
+        {
+            if (EditorApplication.isPlaying)
+            {
+                _seHandle = Audio.PlaySe(new AssetId<SeMarker>(data.Id, AssetType.Se));
+                if (_seHandle != Handle<SeMarker>.Invalid && DDriveRuntimeBootstrap.Instance != null && DDriveRuntimeBootstrap.Instance.Audio != null)
+                {
+                    DDriveRuntimeBootstrap.Instance.Audio.SetVolume(_seHandle, FortressSoundRules.FinalVolume(data.Volume, 1f, FortressAudioMix.Master(false)));
+                }
+
+                return _seHandle == Handle<SeMarker>.Invalid ? "鳴りませんでした（連打の間引き中か、D-Drive の準備がまだです）。" : null;
+            }
+
+            var service = Service();
+            if (service == null)
+            {
+                return "Play していないときの試聴が使えませんでした。Play 中に試してください。";
+            }
+
+            _seHandle = service.PlaySe(data);
+            service.AudioManager?.SetVolume(_seHandle, FortressSoundRules.FinalVolume(data.Volume, 1f, FortressAudioMix.Master(false)));
             return null;
         }
 

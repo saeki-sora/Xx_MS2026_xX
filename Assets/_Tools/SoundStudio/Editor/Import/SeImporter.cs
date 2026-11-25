@@ -80,10 +80,7 @@ namespace MS2026.SoundStudio
                 context.Library.Reload();
                 if (slot != null)
                 {
-                    var result = isBgm
-                        ? SoundSlotWriter.SetBgm(slot, new AssetId<BgmMarker>(data.Id, AssetType.Bgm))
-                        : SoundSlotWriter.SetSe(slot, new AssetId<SeMarker>(data.Id, AssetType.Se));
-                    context.Report(result);
+                    SoundBulk.SetSound(context, slot, data.Id);
                 }
                 else
                 {

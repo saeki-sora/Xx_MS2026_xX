@@ -41,6 +41,12 @@ namespace MS2026.SoundStudio
         /// <summary>試聴の係（窓が入れる）。</summary>
         public SoundPreview Preview { get; } = new SoundPreview();
 
+        /// <summary>Play 中に鳴った回数の記録（音のバランスのページ）。</summary>
+        public SoundPlayStats Stats { get; } = new SoundPlayStats();
+
+        /// <summary>素材の大きさ（音のバランスのページ・細かい設定）。</summary>
+        public SoundLoudness Loudness { get; } = new SoundLoudness();
+
         /// <summary>音のバランス（無ければ null。全体音量を初めて動かしたときに作る）。</summary>
         public FortressSoundBalance Balance
         {
@@ -146,6 +152,20 @@ namespace MS2026.SoundStudio
                 case DDrive.Foundation.Identity.AssetId<DDrive.Runtime.Audio.BgmMarker> bgm: return bgm.Value;
                 default: return 0;
             }
+        }
+
+        /// <summary>
+        /// 同じ欄（同じ型の同じ欄）を持つ、ほかの持ち主の欄（例: ステージごとのウェーブの設定の「ウェーブクリア」）。使っていない欄は入れない。
+        /// </summary>
+        public static List<SoundSlot> SameSlots(SoundSlot slot, IEnumerable<SoundSlot> all)
+        {
+            if (slot == null || slot.Kind == SoundSlotKind.Candidate || slot.DeclaringType == null)
+            {
+                return new List<SoundSlot>();
+            }
+
+            return all.Where(s => s != slot && s.Kind == slot.Kind && s.Active && s.DeclaringType == slot.DeclaringType
+                                  && s.FieldName == slot.FieldName && s.Key != slot.Key).ToList();
         }
 
         /// <summary>音がない欄の数（候補の行は数えない）。</summary>

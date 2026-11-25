@@ -21,7 +21,7 @@ namespace MS2026.SoundStudio
         private readonly SoundStudioContext _context;
         private readonly StudioShell _shell;
         private readonly Dictionary<FortressEffect, SoundSlot> _map = new Dictionary<FortressEffect, SoundSlot>();
-        private readonly Queue<FortressEffect> _played = new Queue<FortressEffect>();
+        private readonly Queue<(FortressEffect effect, double time)> _played = new Queue<(FortressEffect, double)>();
         private readonly Dictionary<SoundPageId, double> _navFlashUntil = new Dictionary<SoundPageId, double>();
         private int _mapVersion = -1;
         private double _nextRebuild;
@@ -60,10 +60,11 @@ namespace MS2026.SoundStudio
             var missed = false;
             while (_played.Count > 0)
             {
-                var effect = _played.Dequeue();
+                var (effect, time) = _played.Dequeue();
                 if (_map.TryGetValue(effect, out var slot))
                 {
                     Light(slot);
+                    _context.Stats.Record(slot.Key, time);
                 }
                 else
                 {
@@ -82,9 +83,10 @@ namespace MS2026.SoundStudio
 
         private void OnPlayed(FortressEffect effect, int playerIndex)
         {
-            if (effect != null && _played.Count < 256)
+            // 鳴った時刻はここで覚える（行に伝えるのは 0.25 秒ごとなので、そのときの時刻だと1秒の回数がずれる）。
+            if (effect != null && _played.Count < 4096)
             {
-                _played.Enqueue(effect);
+                _played.Enqueue((effect, EditorApplication.timeSinceStartup));
             }
         }
 

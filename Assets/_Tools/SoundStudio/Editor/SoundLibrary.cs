@@ -20,6 +20,17 @@ namespace MS2026.SoundStudio
         {
             Load(_se, _allSe);
             Load(_bgm, _allBgm);
+
+            // 一覧（音を選ぶ窓・大きさの一覧）には、音のファイルが入っている物だけを出す（試験用の空のデータなどは出さない）。
+            // 番号から引くとき（欄に入っている音）は、空の物も引ける。
+            _allSe.RemoveAll(d => !HasClip(d));
+            _allBgm.RemoveAll(d => d.Intro == null && d.LoopBody == null);
+        }
+
+        private static bool HasClip(SeData data)
+        {
+            return (data.Clips != null && System.Array.Exists(data.Clips, c => c != null))
+                   || (data.Sources != null && System.Array.Exists(data.Sources, s => s.Source != null));
         }
 
         public SeData Se(ulong id) => id != 0 && _se.TryGetValue(id, out var data) ? data : null;
