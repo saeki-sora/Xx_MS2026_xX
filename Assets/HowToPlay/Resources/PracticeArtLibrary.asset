@@ -1,0 +1,102 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 746077a30f6f450d929eb5f90e3fb63c, type: 3}
+  m_Name: PracticeArtLibrary
+  m_EditorClassIdentifier: MS2026.HowToPlay.Runtime::MS2026.HowToPlay.PracticeArtLibrary
+  roster: {fileID: 11400000, guid: b1fcac3c3c1c5e94eaa06f25480491bf, type: 2}
+  font: {fileID: 12800000, guid: 4b5b2613fe2d4dd9a4abfd57907e8acc, type: 3}
+  fieldFrame: {fileID: 2800000, guid: 76149bb3ecd045b8bbd80cea73874691, type: 3}
+  rosterPanel: {fileID: 2800000, guid: 6861a1f9a31b4a97af07427a3ffb949d, type: 3}
+  lessonPanels:
+  - {fileID: 2800000, guid: 5a866de2c00546ccaf0861714a728f80, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  taskCards:
+  - {fileID: 2800000, guid: a8493bf416314b259946e96f93f1ec40, type: 3}
+  - {fileID: 2800000, guid: bd15fc263b914ab58aff318624c8d42c, type: 3}
+  - {fileID: 2800000, guid: 5131980c38c2411a8c020f77ad8dcc57, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  lessonPanelBlank: {fileID: 2800000, guid: 63cb80a1ce724f26871f72ecd09ad671, type: 3}
+  taskCardBlanks:
+  - {fileID: 2800000, guid: dfb6827886a847cf978f4c291faff5c6, type: 3}
+  - {fileID: 2800000, guid: dd850c82a51f422c9f1766755ce488ec, type: 3}
+  - {fileID: 2800000, guid: bf49eda620744e07835d58b813cb6435, type: 3}
+  taskCardCurrent: {fileID: 2800000, guid: 1c72ca8f7e5b486baac433b43b60de51, type: 3}
+  fieldPlate: {fileID: 0}
+  core: {fileID: 0}
+  beam: {fileID: 0}
+  enemySheet: {fileID: 0}
+  enemySheetFrames: 0
+  enemySheetDirections: 0
+  enemy: {fileID: 2800000, guid: 645e5268fc2141a5ba84a296b97a13ff, type: 3}
+  bubble: {fileID: 2800000, guid: aef14d670a218334db5ce6d4067874ca, type: 3}
+  background: {fileID: 2800000, guid: 8d1a7e86d51fc11429685a6fd3203c10, type: 3}
+  logo: {fileID: 2800000, guid: 2fa0ac58fee84fb4390d44c128de031f, type: 3}
+  halftone: {fileID: 2800000, guid: 5eabbaef799075e42a0cea5fb0930845, type: 3}
+  stripes: {fileID: 2800000, guid: 2940c2ef56d65bf4ca9491553388945a, type: 3}
+  hand: {fileID: 2800000, guid: 63d3d1aaf857297448c95f93b1d7a20a, type: 3}
+  stamp: {fileID: 2800000, guid: 8a38ca185f3734e499a7080968c67e56, type: 3}
+  sparkle: {fileID: 2800000, guid: 78c1b44ba1c79fd4daed572f5089e995, type: 3}
+  arrow: {fileID: 2800000, guid: 4257b891893e57e438ca0d825696d624, type: 3}
+  seatBadges:
+  - {fileID: 2800000, guid: 78c2d8c5ae9b62f44930d5776f79ff08, type: 3}
+  - {fileID: 2800000, guid: fd23376ea38373a4486490aeb2d7cb4c, type: 3}
+  - {fileID: 2800000, guid: 2cf249c16988c0c4f966ed1453a3c094, type: 3}
+  - {fileID: 2800000, guid: 19f204b286e54dd47b7917bb342aef79, type: 3}
+  characters:
+  - characterId: alpha
+    image: {fileID: 0}
+    crop:
+      serializedVersion: 2
+      x: 0.5
+      y: 0.5
+      width: 1
+      height: 0
+    iconOff: {fileID: 0}
+    iconOn: {fileID: 0}
+    pod: {fileID: 0}
+  - characterId: beta
+    image: {fileID: 0}
+    crop:
+      serializedVersion: 2
+      x: 0.5
+      y: 0.5
+      width: 1
+      height: 0
+    iconOff: {fileID: 0}
+    iconOn: {fileID: 0}
+    pod: {fileID: 0}
+  - characterId: delta
+    image: {fileID: 0}
+    crop:
+      serializedVersion: 2
+      x: 0.5
+      y: 0.5
+      width: 1
+      height: 0
+    iconOff: {fileID: 0}
+    iconOn: {fileID: 0}
+    pod: {fileID: 0}
+  - characterId: gamma
+    image: {fileID: 0}
+    crop:
+      serializedVersion: 2
+      x: 0.5
+      y: 0.5
+      width: 1
+      height: 0
+    iconOff: {fileID: 0}
+    iconOn: {fileID: 0}
+    pod: {fileID: 0}

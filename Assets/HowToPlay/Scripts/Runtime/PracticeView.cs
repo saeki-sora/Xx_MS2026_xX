@@ -68,16 +68,24 @@ namespace MS2026.HowToPlay
             public float StampAt = -1f;
         }
 
-        /// <summary>練習の画面を出しているか。</summary>
-        public static bool IsShowing => _current != null;
+        /// <summary>練習の画面を出しているか（新しい画面も含む）。</summary>
+        public static bool IsShowing => _current != null || PracticeScreen.IsShowing;
 
         /// <summary>
         /// 練習の画面を出す。keepVisible が false になったら消える（null ならずっと。<see cref="Hide"/> で消す）。
         /// fadeIn が false なら最初から見えている（前の画面から、間にキャラ選択を見せずに切り替えるとき）。
         /// </summary>
-        public static PracticeView Play(HowToPlaySettings settings, PracticeBoard board, int localSeat, Func<bool> keepVisible, bool fadeIn = true)
+        public static PracticeView Play(HowToPlaySettings settings, PracticeBoard board, int localSeat, Func<bool> keepVisible, bool fadeIn = true, string stageSceneName = null)
         {
             Hide(true);
+            PracticeScreen.Hide(true);
+            if (PracticeScreen.Enabled(settings))
+            {
+                // 新しい画面「新人研修」（レイアウトB・2026-11-12）。設定の「練習の画面」で OFF にすると前の画面に戻る。
+                PracticeScreen.Play(settings, board, localSeat, keepVisible, fadeIn, stageSceneName);
+                return null;
+            }
+
             if (settings == null || board == null)
             {
                 return null;
@@ -94,6 +102,7 @@ namespace MS2026.HowToPlay
         /// <summary>出している練習の画面を消す（immediate なら一瞬で、そうでなければふわっと）。</summary>
         public static void Hide(bool immediate = false)
         {
+            PracticeScreen.Hide(immediate);
             if (_current == null)
             {
                 return;
@@ -270,7 +279,7 @@ namespace MS2026.HowToPlay
 
             var present = _board.PresentCount;
             _footer.text = present > 0 ? $"{_settings.footer}　（OK {_board.DoneCount} / {present}人）" : _settings.footer;
-            _timer.enabled = !_board.finished;
+            _timer.enabled = !_board.finished && _board.HasTimeLimit;
             _timer.text = $"あと {Mathf.CeilToInt(_board.remaining)}";
         }
 
