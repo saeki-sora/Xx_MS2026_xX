@@ -17,12 +17,13 @@ namespace MS2026.GripInputBridge.Tests.EditMode
             StringAssert.Contains("Arduino 純正", GripPortKind.Describe(ArduinoUno));
             StringAssert.Contains("CH340", GripPortKind.Describe(@"\Device\CH341SER0"));
             StringAssert.Contains("FTDI", GripPortKind.Describe(@"\Device\VCP0"));
-            StringAssert.StartsWith("PC 本体", GripPortKind.Describe(@"\Device\Serial0"));
+            StringAssert.Contains("CH340", GripPortKind.Describe(@"\Device\Serial0"));
             Assert.AreEqual("Something7", GripPortKind.Describe(@"\Device\Something7"));
             Assert.IsNull(GripPortKind.Describe(null));
 
             Assert.IsFalse(GripPortKind.IsUsb(Bluetooth));
-            Assert.IsFalse(GripPortKind.IsUsb(@"\Device\Serial0"));
+            // CH340 の新しいドライバは \Device\Serial… で登録する（実例: メンバーの PC の COM3）。
+            Assert.IsTrue(GripPortKind.IsUsb(@"\Device\Serial0"));
             Assert.IsTrue(GripPortKind.IsUsb(ArduinoUno));
             Assert.IsTrue(GripPortKind.IsUsb(@"\Device\Something7"));
             Assert.IsFalse(GripPortKind.IsUsb(null));

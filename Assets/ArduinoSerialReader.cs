@@ -222,6 +222,10 @@ public sealed class ArduinoSerialReader : MonoBehaviour
         var options = Application.isEditor && editorRelaySensorNumber > 0
             ? GripRelayOptions.Create(editorRelaySensorNumber, editorRelayForceSend, relayBasePort)
             : GripRelayOptions.Parse(System.Environment.GetCommandLineArgs(), relayBasePort);
+        // 何を付けて起動されたかをログに残す（アイコンから起動したか・別の exe を起動していないかを、後から確かめられるように）。
+        var commandLine = System.Environment.GetCommandLineArgs();
+        Debug.Log($"[ArduinoSerialReader] 起動: {(commandLine.Length > 0 ? commandLine[0] : "?")}  起動オプション: " +
+                  (commandLine.Length > 1 ? string.Join(" ", commandLine, 1, commandLine.Length - 1) : "(なし)"));
         if (options.Error != null)
         {
             Debug.LogError("[ArduinoSerialReader] 起動オプションの書き方が違います: " + options.Error);

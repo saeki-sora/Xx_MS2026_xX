@@ -232,16 +232,17 @@ namespace MS2026.GripInputBridge.Transports
                 return "USB（PL2303）";
             }
 
+            // \Device\Serial… は PC 本体のシリアルのことも、CH340 の新しいドライバのこともある（名前だけでは見分けられない）。
             if (devicePath.StartsWith(@"\Device\Serial", StringComparison.OrdinalIgnoreCase))
             {
-                return "PC 本体のシリアル（Arduino ではない）";
+                return "シリアル（PC 本体か CH340 などの USB）";
             }
 
             const string prefix = @"\Device\";
             return devicePath.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) ? devicePath.Substring(prefix.Length) : devicePath;
         }
 
-        /// <summary>Arduino かもしれない機器か（Bluetooth・PC 本体のシリアル以外）。</summary>
+        /// <summary>Arduino かもしれない機器か（Bluetooth 以外。\Device\Serial… は CH340 のこともあるので含める）。</summary>
         public static bool IsUsb(string devicePath)
         {
             if (string.IsNullOrEmpty(devicePath))
@@ -249,7 +250,7 @@ namespace MS2026.GripInputBridge.Transports
                 return false;
             }
 
-            return !Contains(devicePath, "BthModem") && !devicePath.StartsWith(@"\Device\Serial", StringComparison.OrdinalIgnoreCase);
+            return !Contains(devicePath, "BthModem");
         }
 
         private static bool Contains(string text, string part) => text.IndexOf(part, StringComparison.OrdinalIgnoreCase) >= 0;

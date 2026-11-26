@@ -220,11 +220,10 @@ public sealed class GripRawValueOverlay : MonoBehaviour
         var maybeStatus = reader.RelayStatus;
         if (maybeStatus == null)
         {
-            if (reader.RelayOptionsError != null)
-            {
-                _relayLines.Add(("LAN: 起動オプションの間違いで使っていません: " + reader.RelayOptionsError, true));
-            }
-
+            // 使っていないことも出す（この行が無ければ、LAN で配る仕組みが入っていない古いビルド、と見分けられるように）。
+            _relayLines.Add(reader.RelayOptionsError != null
+                ? ("LAN: 起動オプションの間違いで使っていません: " + reader.RelayOptionsError, true)
+                : ("LAN: 使っていません（-grip-sensor なしで起動。4台をつなぐときは「センサーNで起動」のアイコンから）", false));
             return;
         }
 

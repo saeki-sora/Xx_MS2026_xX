@@ -184,6 +184,12 @@ foreach ($d in $devices) {
     if ($d.Name -match '\((COM\d+)\)') { $friendly[$Matches[1]] = $d.Name }
 }
 
+# 1 で見つけた USB 機器が使っている COM ポート（機器の名前の「(COM3)」から）。
+$usbPorts = @{}
+foreach ($f in $usbFound) {
+    if ($f.Device.Name -match '\((COM\d+)\)') { $usbPorts[$Matches[1]] = $f.Kind }
+}
+
 $readCandidates = @()
 if ($portNames.Count -eq 0) {
     Ng "COM ポートが1つもありません。"
@@ -191,9 +197,11 @@ if ($portNames.Count -eq 0) {
 foreach ($p in $portNames) {
     $path = $devicePaths[$p]
     $label = if ($friendly[$p]) { $friendly[$p] } else { "(名前不明)" }
-    $isBluetooth = $path -and $path -match 'BthModem'
-    $isOnboard = $path -and $path -match '^\\Device\\Serial'
-    if ($isBluetooth) { Info "$p  $label  … Bluetooth（Arduino ではない）" }
+    $isBluetooth = ($path -and $path -match 'BthModem') -or ($label -match 'Bluetooth')
+    # CH340 の新しいドライバなどは \Device\Serial… の名前で登録するので、その名前だけで「PC 本体」とは決めない（機器の名前で見分ける）。
+    $isOnboard = $label -match '^(通信ポート|Communications Port)'
+    if ($usbPorts.ContainsKey($p)) { Info "$p  $label  … $($usbPorts[$p])"; $readCandidates += $p }
+    elseif ($isBluetooth) { Info "$p  $label  … Bluetooth（Arduino ではない）" }
     elseif ($isOnboard) { Info "$p  $label  … PC 本体のシリアル（Arduino ではない）" }
     else { Info "$p  $label  $path"; $readCandidates += $p }
 }
@@ -346,12 +354,71 @@ else {
     Info "MS2026.exe が見つかりませんでした（このファイルを MS2026.exe と同じフォルダに置くか、MS2026.exe を .bat の上にドラッグすると調べます）。"
 }
 
+# そのフォルダのビルドが LAN で握力を配る（-grip-sensor）に対応しているか。$null = 調べられない。
+function Test-RelayBuild([string]$exe) {
+    $dll = Join-Path (Split-Path -Parent $exe) "MS2026_Data\Managed\MS2026.GripInputBridge.Runtime.dll"
+    if (-not (Test-Path -LiteralPath $dll)) { return $null }
+    return ([System.Text.Encoding]::ASCII.GetString([System.IO.File]::ReadAllBytes($dll))).Contains("GripRelaySession")
+}
+
+# デスクトップの「MS2026 センサーNで起動」アイコン（make_sensor_shortcuts.bat で作った物）が、どの exe を起動するか。
+# 別の場所の古いビルドを起動していると、-grip-sensor が付いていても LAN で配らない。
+Say ""
+Info "デスクトップの起動アイコン:"
+$desktops = @([Environment]::GetFolderPath("Desktop"), [Environment]::GetFolderPath("CommonDesktopDirectory")) | Where-Object { $_ -and (Test-Path -LiteralPath $_) } | Sort-Object -Unique
+$links = @($desktops | ForEach-Object { Get-ChildItem -LiteralPath $_ -Filter "MS2026*.lnk" -ErrorAction SilentlyContinue })
+if ($links.Count -eq 0) {
+    Info "  「MS2026 センサーNで起動」のアイコンがありません（4台をつなぐときは make_sensor_shortcuts.bat で作る）。"
+}
+else {
+    $wsh = New-Object -ComObject WScript.Shell
+    foreach ($lnk in $links) {
+        $s = $wsh.CreateShortcut($lnk.FullName)
+        $target = $s.TargetPath
+        Info "  $($lnk.BaseName)"
+        Info "     起動する exe: $target"
+        Info "     起動オプション: $(if ($s.Arguments) { $s.Arguments } else { '(なし)' })"
+        if (-not $target -or -not (Test-Path -LiteralPath $target)) {
+            Ng "     この exe はもうありません（フォルダを動かした・消した）。make_sensor_shortcuts.bat を今の MS2026.exe の隣で実行し直してください。"
+            Problem "起動アイコンの exe が無い（make_sensor_shortcuts.bat を実行し直す）"
+            continue
+        }
+        if ($s.Arguments -notmatch '-grip-sensor[ =]+[1-4]\b') {
+            Warn "     -grip-sensor 1〜4 が付いていません。"
+        }
+        $relay = Test-RelayBuild $target
+        if ($relay -eq $false) {
+            Ng "     この exe は古いビルドで、LAN で握力を配る仕組みが入っていません（-grip-sensor が効かない）。"
+            Problem "起動アイコンが古いビルドを起動している（make_sensor_shortcuts.bat を新しい MS2026.exe の隣で実行し直す）"
+        }
+        if ($ExePath -and (Test-Path -LiteralPath $ExePath) -and -not [string]::Equals((Resolve-Path -LiteralPath $target).Path, $ExePath, [StringComparison]::OrdinalIgnoreCase)) {
+            Warn "     上の「場所」とは別の MS2026.exe です。どちらが新しいか確かめてください。"
+            Problem "起動アイコンと診断したゲームが別のフォルダ（古い方を起動しているかも）"
+        }
+    }
+}
+
 $log = Join-Path $env:USERPROFILE "AppData\LocalLow\DefaultCompany\MS2026\Player.log"
 if (Test-Path -LiteralPath $log) {
+    Say ""
     Info "前回のゲームのログ: $log （$((Get-Item -LiteralPath $log).LastWriteTime)）"
-    $lines = @(Get-Content -LiteralPath $log -Encoding UTF8 -ErrorAction SilentlyContinue | Where-Object { $_ -match '\[(ArduinoSerialReader|GripInputBridge|GripRelay)\]' } | Select-Object -Last 12)
-    if ($lines.Count -eq 0) { Info "  （握力に関する行がありません。別のゲームのログかもしれません）" }
-    foreach ($l in $lines) { Info ("  " + $l) }
+    $all = @(Get-Content -LiteralPath $log -Encoding UTF8 -ErrorAction SilentlyContinue)
+    $grip = @($all | Where-Object { $_ -match '\[(ArduinoSerialReader|GripInputBridge|GripRelay)\]' })
+    if ($grip.Count -eq 0) { Info "  （握力に関する行がありません。別のゲームのログかもしれません）" }
+
+    # 起動したときの大事な行（値の行は除く）: 起動オプション・どのポートを使ったか・LAN へ配っているか。
+    $keyLines = @($grip | Where-Object { $_ -match '起動:|起動オプション|LAN へ放送|入力元にしました|ポートをさがしています|LAN で配る' } | Select-Object -Last 6)
+    foreach ($l in $keyLines) { Info ("  " + $l) }
+    $lastWarn = @($grip | Where-Object { $_ -match '値が届くポートがありませんでした|値が届かなくなりました' } | Select-Object -Last 1)
+    foreach ($l in $lastWarn) { Info ("  " + $l) }
+    $values = @($grip | Where-Object { $_ -match 'P1: arduino=' } | Select-Object -Last 3)
+    foreach ($l in $values) { Info ("  " + $l) }
+
+    if ($all | Where-Object { $_ -match 'LAN へ放送' }) { Ok "前回は Arduino の値を LAN へ配っていました（-grip-sensor が効いていた）。" }
+    elseif ($all | Where-Object { $_ -match 'を入力元にしました' }) {
+        Warn "前回は Arduino を読んだが、LAN へは配っていません（-grip-sensor が付いていない起動、または古いビルド）。4台をつなぐときは「センサーNで起動」のアイコンから起動してください。"
+        Problem "前回のゲームは LAN へ握力を配っていない（アイコンから起動していない・古いビルド）"
+    }
 }
 else {
     Info "ゲームのログはまだありません（一度起動すると $log にできます）。"
