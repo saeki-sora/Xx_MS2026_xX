@@ -37,6 +37,7 @@ namespace MS2026.Fortress
         private SwarmSystem _swarm;
         private BossDefinition _def;
         private BossActor _actor;
+        private BossFinaleController _finale;
         private bool _formed;
         private float _slideTime;
         private bool _sliding;
@@ -109,6 +110,11 @@ namespace MS2026.Fortress
                     EnsureFormed();
                     EnsureActor();
                     _actor?.BeginFinale(FortressNet.HasSimulationAuthority);
+                    if (_finale == null && _def != null)
+                    {
+                        _finale = BossFinaleController.Create(_def, _actor, FortressBoss.Layout, FortressNet.HasSimulationAuthority);
+                    }
+
                     break;
                 case WavePhase.BossReached:
                     EnsureFormed();
@@ -192,7 +198,9 @@ namespace MS2026.Fortress
             // カメラ: 全員同じ、コア・4人・ボスが収まる引きの画面。
             if (rig != null)
             {
-                rig.SetViewOverride(FitView(view, aspect, layout), animate ? def.cameraBlendSeconds : 0f);
+                var bossView = FitView(view, aspect, layout);
+                FortressBoss.View = bossView;
+                rig.SetViewOverride(bossView, animate ? def.cameraBlendSeconds : 0f);
             }
 
             _slides.Clear();
@@ -443,6 +451,13 @@ namespace MS2026.Fortress
 
         private void Cleanup(bool restoreLayout)
         {
+            if (_finale != null)
+            {
+                Destroy(_finale.gameObject);
+                _finale = null;
+                Time.timeScale = 1f;
+            }
+
             if (_actor != null)
             {
                 Destroy(_actor.gameObject);

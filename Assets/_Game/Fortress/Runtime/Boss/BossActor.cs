@@ -321,35 +321,49 @@ namespace MS2026.Fortress
             BossPuff.Spawn(part.transform.position, part.WorldRadius * 0.6f, part.WorldRadius * 1.8f, 0.3f, new Color(0.92f, 0.45f, 0.7f, 0.7f));
         }
 
-        // （仮）とどめの演出ができるまで: 少しふるえてから爆発し、消える。
+        // 「全員で握れ！」の間: 目を回して、ふるえて待つ（爆発はとどめの係が呼ぶ）。
         private void TickFinale()
         {
-            var seconds = Mathf.Max(0.5f, _def.finalePlaceholderSeconds);
-            _visual.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(_modeTime * 40f) * 4f * Mathf.Clamp01(_modeTime / seconds));
-            if (_modeTime >= seconds)
-            {
-                Explode();
-            }
+            _visual.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(_modeTime * 40f) * 3f * Mathf.Clamp01(_modeTime / 0.4f));
         }
 
-        private void Explode()
+        /// <summary>
+        /// 合体ビームが当たった瞬間の大爆発（とどめの係が全員のPCで呼ぶ）。閃光 → 爆炎 → 黒煙 → 収まる（桜井さんの原則: 爆発は段階を踏む）。
+        /// 止め・スローの間はゲームの時間で動くので、一緒に止まる・ゆっくりになる。
+        /// </summary>
+        public void Explode(float shakeStrength)
         {
-            Shake(_def.defeatShake, 1f);
+            if (_mode == Mode.Dying || _mode == Mode.Gone)
+            {
+                return;
+            }
+
+            if (shakeStrength > 0f)
+            {
+                Shake(_def.defeatShake, shakeStrength);
+            }
+
             Play(_def.onDefeat, transform.position);
-            for (var i = 0; i < 14; i++)
+            var r = Radius;
+            // 閃光
+            BossPuff.Spawn(new Vector3(_x, _y, _z), r * 0.5f, r * 5f, 0.9f, new Color(1f, 1f, 1f, 0.95f));
+            // 爆炎（4人の色も混ぜる）
+            for (var i = 0; i < 16; i++)
             {
-                var offset = Random.insideUnitCircle * Radius;
-                var color = i % 3 == 0 ? new Color(1f, 0.9f, 0.6f, 0.95f) : i % 3 == 1 ? new Color(0.75f, 0.45f, 0.95f, 0.9f) : FortressColors.PlayerColor(i % 4);
-                BossPuff.Spawn(new Vector3(_x + offset.x, _y + offset.y, _z), Radius * 0.2f, Radius * Random.Range(0.8f, 1.8f), Random.Range(0.4f, 0.9f), color, offset * 1.5f);
+                var offset = Random.insideUnitCircle * r;
+                var color = i % 3 == 0 ? new Color(1f, 0.85f, 0.45f, 0.95f) : i % 3 == 1 ? new Color(1f, 0.55f, 0.25f, 0.9f) : FortressColors.PlayerColor(i % 4);
+                BossPuff.Spawn(new Vector3(_x + offset.x, _y + offset.y, _z), r * 0.2f, r * Random.Range(0.8f, 1.8f), Random.Range(0.4f, 0.9f), color, offset * 1.5f);
             }
 
-            BossPuff.Spawn(new Vector3(_x, _y, _z), Radius * 0.5f, Radius * 5f, 0.9f, new Color(1f, 1f, 1f, 0.9f));
+            // 黒煙（少し遅れて湧き、ふくらみながら薄くなって収まる）
+            for (var i = 0; i < 20; i++)
+            {
+                var offset = Random.insideUnitCircle * r * 0.9f;
+                var drift = offset.normalized * Random.Range(0.3f, 1.2f) * r * 0.4f + Vector2.up * r * 0.1f;
+                BossPuff.Smoke(new Vector3(_x + offset.x, _y + offset.y, _z), r * 0.25f, r * Random.Range(0.5f, 0.9f), Random.Range(1.2f, 1.9f), new Color(0.17f, 0.14f, 0.19f, 0.6f), drift, 0.12f);
+            }
+
             FortressBoss.RaiseDefeated();
-            if (_authority)
-            {
-                FortressBoss.FinaleDone = true;
-            }
-
             SetMode(Mode.Dying);
         }
 

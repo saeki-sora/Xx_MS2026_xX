@@ -246,20 +246,26 @@ namespace MS2026.Fortress
             UpdateRotation(dt);
         }
 
-        private void UpdateGripState(float dt)
+        /// <summary>
+        /// このプレイヤーの今の握り（<see cref="InputLocked"/> に関係なく、入力元そのままの値）。
+        /// ボスの「全員で握れ！」のように、撃たずに握りだけを使うときに読む（Host では Client から届いた値）。
+        /// </summary>
+        public void ReadGrip(out bool isGripping, out float grip)
         {
-            bool isGripping;
-            float grip;
             if (GripSourceOverride != null)
             {
                 GripSourceOverride.GetGrip(playerIndex, out isGripping, out grip);
+                return;
             }
-            else
-            {
-                var provider = global::MS2026.GripInputBridge.GripInputBridge.Provider;
-                isGripping = provider.IsGripping(playerIndex);
-                grip = provider.GetGripValue(playerIndex);
-            }
+
+            var provider = global::MS2026.GripInputBridge.GripInputBridge.Provider;
+            isGripping = provider.IsGripping(playerIndex);
+            grip = provider.GetGripValue(playerIndex);
+        }
+
+        private void UpdateGripState(float dt)
+        {
+            ReadGrip(out var isGripping, out var grip);
 
             if (InputLocked)
             {

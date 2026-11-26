@@ -25,6 +25,30 @@ namespace MS2026.Fortress
 
         public static Sprite Bullet => _bullet != null ? _bullet : _bullet = Make(64, BulletPixel, "BossBullet");
 
+        /// <summary>横に伸ばして使う、上下のふちが柔らかい白い帯（合体ビーム）。</summary>
+        public static Sprite BeamSoft => _beamSoft != null ? _beamSoft : _beamSoft = Make(64, BeamPixel, "BossBeam");
+
+        private static Sprite _beamSoft;
+
+        private static Color BeamPixel(float x, float y)
+        {
+            var a = Mathf.Clamp01(1f - Mathf.Abs(y));
+            a = a * a * (3f - 2f * a);
+            var ends = Mathf.Clamp01((1f - Mathf.Abs(x)) / 0.08f);
+            return new Color(1f, 1f, 1f, a * ends);
+        }
+
+        /// <summary>ふちが柔らかい白い丸（光の玉・黒煙）。</summary>
+        public static Sprite SoftDisc => _softDisc != null ? _softDisc : _softDisc = Make(64, SoftDiscPixel, "BossSoftDisc");
+
+        private static Sprite _softDisc;
+
+        private static Color SoftDiscPixel(float x, float y)
+        {
+            var a = Mathf.Clamp01(1f - Mathf.Sqrt(x * x + y * y));
+            return new Color(1f, 1f, 1f, a * a * (3f - 2f * a));
+        }
+
         /// <summary>ふちが柔らかい白い輪（はじける・爆発の仮の表現）。</summary>
         public static Sprite Puff => _puff != null ? _puff : _puff = Make(64, PuffPixel, "BossPuff");
 

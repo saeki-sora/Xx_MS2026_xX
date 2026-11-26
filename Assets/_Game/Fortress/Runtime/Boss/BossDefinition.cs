@@ -191,14 +191,60 @@ namespace MS2026.Fortress
         [Min(0.2f)]
         public float enterSeconds = 2f;
 
-        [Header("終わり")]
-        [Tooltip("最後の「全員で握れ！」の最長の秒数（失敗しない。握らなくても、この秒数で必ず終わる）。")]
+        [Header("とどめ（全員で握れ！）")]
+        [Tooltip("握らなくても、この秒数で4人のゲージが満タンになる（失敗しない。2026-11-25: 遅さは罪なので短め）。")]
+        [Min(1f)]
+        public float gaugeMaxSeconds = 8f;
+
+        [Tooltip("いちばん強く握り続けたときに、ゲージが満タンになる秒数。")]
+        [Min(0.3f)]
+        public float gaugeFullGripSeconds = 2.5f;
+
+        [Tooltip("4本のレーザーが集まる場所（4人の列 0 〜 ボス 1 の間の割合）。")]
+        [Range(0.1f, 0.8f)]
+        public float mergePoint01 = 0.3f;
+
+        [Tooltip("カメラがボスへ寄る大きさ（2 なら半分の広さを映す）。ビームが伸びている間から、ゆっくり寄る（見本 E）。")]
+        [Range(1f, 3f)]
+        public float finaleZoom = 1.5f;
+
+        [Tooltip("当たった瞬間に止まる秒数（ヒットストップ）。")]
+        [Range(0f, 1f)]
+        public float finaleHitStopSeconds = 0.35f;
+
+        [Tooltip("止めの後のスローの秒数。")]
+        [Range(0f, 3f)]
+        public float finaleSlowSeconds = 0.9f;
+
+        [Tooltip("スローの間のゲームの速さ（0.25 なら 4 分の 1）。")]
+        [Range(0.05f, 1f)]
+        public float finaleSlowScale = 0.25f;
+
+        [Tooltip("爆発の後、4人とコアを映す絵へカメラが戻る秒数。")]
+        [Range(0.1f, 3f)]
+        public float finaleReturnSeconds = 0.7f;
+
+        [Tooltip("4人とコアを映す絵の寄り具合（1 なら引きの画面のまま）。")]
+        [Range(1f, 2f)]
+        public float finalePlayersZoom = 1.3f;
+
+        [Tooltip("4人とコアを映したまま止まって見せる秒数（この後、試合が終わって結果へ）。")]
+        [Range(0f, 5f)]
+        public float finaleHoldSeconds = 1.4f;
+
+        [Tooltip("当たった瞬間の光（白→暗→白の点滅）の強さ。0 で光らない。")]
+        [Range(0f, 1f)]
+        public float finaleFlashStrength = 0.75f;
+
+        [Tooltip("撃破のときの画面の揺れの強さ（下の「撃破」の揺れに掛ける）。0 で揺れない。")]
+        [Range(0f, 2f)]
+        public float finaleShakeStrength = 1f;
+
+        [Tooltip("最後の「全員で握れ！」の最長の秒数（安全のため。ゲージ・演出がこれより長くても、ここで必ず終わる）。")]
         [Min(3f)]
         public float finaleMaxSeconds = 30f;
 
-        [Tooltip("（仮・とどめの演出ができるまで）部位を全部壊してから爆発するまでの秒数。")]
-        [Min(0.5f)]
-        public float finalePlaceholderSeconds = 2.4f;
+        [Header("終わり")]
 
         [Tooltip("ボスがコアに届いたときに減らすコアの体力（最大の体力に対する割合。2026-11-15 ユーザー決定 45%）。")]
         [Range(0f, 1f)]
@@ -251,6 +297,25 @@ namespace MS2026.Fortress
 
         [Tooltip("ボスを倒したとき（大爆発）。")]
         public FortressEffect onDefeat = new FortressEffect { tintWithPlayerColor = false };
+
+        [Tooltip("「全員で握れ！」が出たとき。")]
+        public FortressEffect onFinaleStart = new FortressEffect { tintWithPlayerColor = false };
+
+        [Tooltip("1人のゲージが満タンになったとき（その人の色。その人の砲台の場所）。")]
+        public FortressEffect onGaugeFull = new FortressEffect();
+
+        [Tooltip("4人のレーザーが1点に集まり始めたとき。")]
+        public FortressEffect onMerge = new FortressEffect { tintWithPlayerColor = false };
+
+        [Tooltip("合体ビームがボスに当たった瞬間（止め）。")]
+        public FortressEffect onFinaleHit = new FortressEffect { tintWithPlayerColor = false };
+
+        /// <summary>合体ビームの、集まり始めてからボスに当たるまでの秒数（見本 E の流れ）。</summary>
+        public const float MergeToHitSeconds = 1.15f;
+
+        /// <summary>ゲージが満タンになってから試合が終わるまでの秒数。</summary>
+        public float FinaleShowSeconds =>
+            MergeToHitSeconds + finaleHitStopSeconds + finaleSlowSeconds + finaleReturnSeconds + finaleHoldSeconds;
 
         /// <summary>ボスウェーブの「WARNING ＋ 登場」の段階の長さ。</summary>
         public float WarningSeconds => Mathf.Max(0.5f, warningSeconds) + Mathf.Max(0.2f, enterSeconds);

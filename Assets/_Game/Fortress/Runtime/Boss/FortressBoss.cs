@@ -39,6 +39,21 @@ namespace MS2026.Fortress
         /// <summary>近づき具合（止まる場所 0 〜 コアに届く 1）。</summary>
         public static float Approach01 { get; internal set; }
 
+        /// <summary>ボス戦の全員同じ引きの画面（並び替えのときに決めたカメラの視点）。</summary>
+        public static Cameras.CameraViewSettings View { get; internal set; }
+
+        /// <summary>とどめの段階。</summary>
+        public static BossFinaleStage FinaleStage { get; internal set; }
+
+        /// <summary>「全員で握れ！」の4人のゲージ（0〜1。P1〜P4）。</summary>
+        public static readonly float[] Gauges = new float[4];
+
+        /// <summary>今の画面の光（正 = 白、負 = 暗。とどめの止めの間だけ）。</summary>
+        public static float FinaleFlash { get; internal set; }
+
+        /// <summary>今の画面のまわりの暗さ（0〜1）。</summary>
+        public static float FinaleDim { get; internal set; }
+
         /// <summary>部位が壊れた（部位の番号, 壊した人。分からなければ −1）。全員のPCで。</summary>
         public static event Action<int, int> PartBroken;
 
@@ -68,6 +83,11 @@ namespace MS2026.Fortress
             ReachedCore = false;
             FinaleDone = false;
             Approach01 = 0f;
+            View = default;
+            FinaleStage = BossFinaleStage.None;
+            FinaleFlash = 0f;
+            FinaleDim = 0f;
+            Array.Clear(Gauges, 0, Gauges.Length);
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
