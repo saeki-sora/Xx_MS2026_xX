@@ -194,6 +194,14 @@ namespace MS2026.Fortress
 
         private void Update()
         {
+            if (FortressMatch.InMatch && FortressMatch.HasEnded)
+            {
+                CurrentThickness01 = 0f;
+                CurrentThicknessMeters = 0f;
+                ChargeProgress01 = 0f;
+                SetState(TurretState.Idle);
+                return;
+            }
             if (IsReplica)
             {
                 TickReplica(Time.deltaTime);

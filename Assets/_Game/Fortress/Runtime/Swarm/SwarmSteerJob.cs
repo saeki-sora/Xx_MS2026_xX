@@ -68,6 +68,7 @@ namespace MS2026.Fortress
 
         /// <summary>1 なら撤退中（ウェーブの目標を倒した後）: コアではなく retreatDirs の道で、画面の外へ速く逃げる。張り付いていた敵も動く。</summary>
         public int retreat;
+        public int gather;
 
         public float retreatSpeed;
 
@@ -108,6 +109,25 @@ namespace MS2026.Fortress
 
                 var terrainR = speedMul[SwarmMath.NearestIndex(p, navOrigin, navCell, navW, navH)];
                 desired = away * (tp.maxSpeed * speedScale[i] * terrainR * retreatSpeed);
+            }
+            else if (gather != 0 && goalCount > 0)
+            {
+                var nearest = goals[0] - p;
+                for (var g = 1; g < goalCount; g++)
+                    if (math.lengthsq(goals[g] - p) < math.lengthsq(nearest)) nearest = goals[g] - p;
+                var distance = math.length(nearest);
+                if (distance < 3.2f)
+                {
+                    var toward = math.normalizesafe(nearest, new float2(0f, 1f));
+                    var tangent = new float2(-toward.y, toward.x);
+                    var radius = 1.5f + (netId[i] % 7) * 0.16f;
+                    desired = math.normalizesafe(tangent + toward * (distance - radius)) * tp.maxSpeed * speedScale[i];
+                }
+                else
+                {
+                    var flow = SwarmMath.SampleDirection(flowDirs, tp.profileIndex * navCellCount, p, navOrigin, navCell, navW, navH);
+                    desired = math.normalizesafe(flow, math.normalizesafe(nearest)) * tp.maxSpeed * speedScale[i];
+                }
             }
             else if (tp.followsShield != 0 && state[i] == 0 && followTargets.TryGetValue(i, out var slot))
             {

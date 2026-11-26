@@ -23,8 +23,28 @@ namespace MS2026.UI.Game
         private static readonly float[] ClearTimes = { 0f, 2.6f, 3.2f, 4.2f, 5.2f, 6.7f, 7.7f, 8.7f };
 
         // ゲームオーバー（仮）: 「GAME OVER」→ パネル → すぐ「タイトルへ」。
-        private const float GameOverPanelTime = 2.6f;
-        private const float GameOverNextTime = 3.4f;
+        public const float GameOverPanelTime = 5f;
+        public const float GameOverNextTime = 8.7f;
+        // クリアでは専用演出の中でコアを左へ移動済み。
+        public const float ClearResultEntryTime = 5.1f;
+
+        public static float GameOverGaugeHealth(float elapsed, float finalHealth) =>
+            Mathf.SmoothStep(1f, Mathf.Clamp01(finalHealth), Mathf.InverseLerp(1f, 1.9f, elapsed));
+
+        public static int KillsAt(int[] kills, int player) =>
+            kills != null && player >= 0 && player < kills.Length ? kills[player] : 0;
+
+        public static int[] PlayersByKills(int[] kills, int playerCount)
+        {
+            var players = new int[playerCount];
+            for (var i = 0; i < players.Length; i++) players[i] = i;
+            System.Array.Sort(players, (a, b) =>
+            {
+                var order = KillsAt(kills, b).CompareTo(KillsAt(kills, a));
+                return order != 0 ? order : a.CompareTo(b);
+            });
+            return players;
+        }
 
         /// <summary>結果が出てから elapsed 秒たったときの段階。</summary>
         public static int StepAt(bool clear, float elapsed)

@@ -305,6 +305,7 @@ namespace MS2026.Fortress
         /// </summary>
         public void QueueBeam(Vector2 origin, Vector2 end, float halfWidth, float damagePerSecond, int maxHits, int owner = -1)
         {
+            if (FortressMatch.EnemiesGatherAtCore) return;
             if (_beamCount >= SwarmLimits.MaxBeams)
             {
                 return;
@@ -594,7 +595,7 @@ namespace MS2026.Fortress
             Mark(ref handle, 0);
 
             // 撤退中（ウェーブの目標を倒した後）はビームが当たらない（逃げる敵を倒しても数えないので、当たらないことにする）。
-            var beamCount = Retreating ? 0 : _beamCount;
+            var beamCount = Retreating || FortressMatch.EnemiesGatherAtCore ? 0 : _beamCount;
             if (beamCount > 0 || _blastCount > 0)
             {
                 handle = new SwarmLaserJob
@@ -691,6 +692,7 @@ namespace MS2026.Fortress
                 minSpeedFactor = _settings.minSpeedFactor,
                 maxNeighbors = _settings.maxNeighborsChecked,
                 retreat = Retreating ? 1 : 0,
+                gather = FortressMatch.EnemiesGatherAtCore ? 1 : 0,
                 retreatSpeed = _retreatSpeed,
                 retreatDirs = _retreatDirs,
                 retreatHasField = _retreatHasField,
@@ -754,7 +756,7 @@ namespace MS2026.Fortress
                 dt = dt,
                 momentumTransfer = _settings.momentumTransfer,
                 flashDecay = 1f / _settings.hitFlashDuration,
-                arrivalRadius = _settings.arrivalRadius
+                arrivalRadius = FortressMatch.EnemiesGatherAtCore ? Mathf.Max(2f, _settings.arrivalRadius) : _settings.arrivalRadius
             }.Schedule(count, 128, handle);
             Mark(ref handle, 4);
             return ScheduleCompactionAndRender(handle, count);
@@ -783,7 +785,8 @@ namespace MS2026.Fortress
                 explosions = _explosions,
                 deaths = _deaths,
                 count = count,
-                arrivalMode = (int)_settings.arrivalMode,
+                arrivalMode = (int)(FortressMatch.EnemiesGatherAtCore ? SwarmArrivalMode.LingerAndAttack : _settings.arrivalMode),
+                gatherMode = FortressMatch.EnemiesGatherAtCore ? 1 : 0,
                 replicaMode = IsReplica ? 1 : 0,
                 retreatMode = Retreating ? 1 : 0,
                 removedIds = _removedIds,
@@ -901,7 +904,7 @@ namespace MS2026.Fortress
             for (var g = 0; g < goals; g++)
             {
                 var damage = _goalDamage[g] + _attached[g] * _settings.lingerDamagePerSecond * dt;
-                if (damage > 0f && _cores[g] != null)
+                if (!FortressMatch.EnemiesGatherAtCore && damage > 0f && _cores[g] != null)
                 {
                     _cores[g].TakeDamage(damage);
                 }

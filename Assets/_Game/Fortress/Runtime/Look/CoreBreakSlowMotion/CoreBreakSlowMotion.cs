@@ -10,6 +10,14 @@ namespace MS2026.Fortress
     /// </summary>
     public static class CoreBreakSlowMotion
     {
+        public static void BeginDecisionSequence()
+        {
+            CoreBreakSlowMotionRunner.Ensure();
+            CoreBreakSlowMotionRunner.BeginDecision();
+        }
+
+        public static void EndDecisionSequence() => CoreBreakSlowMotionRunner.EndDecision();
+
         private static CoreBreakSlowMotionSettings _settings;
 
         /// <summary>今の設定。null なら何もしない（ステージが無いシーン）。</summary>
@@ -56,8 +64,26 @@ namespace MS2026.Fortress
         private CoreCrystalController _core;
         private float _searchTimer;
         private bool _playing;
+        private bool _decision;
         private float _elapsed;
         private float _normalScale = 1f;
+
+        public static void BeginDecision()
+        {
+            var runner = _instance;
+            if (runner == null) return;
+            // 壊れた瞬間の既存スローが始まっていても、保存された通常速度を引き継ぐ。
+            if (!runner._playing) runner._normalScale = Time.timeScale > 0f ? Time.timeScale : 1f;
+            runner._decision = true;
+            runner._playing = true;
+            runner._elapsed = 0f;
+            Time.timeScale = runner._normalScale * 0.2f;
+        }
+
+        public static void EndDecision()
+        {
+            if (_instance != null && _instance._decision) _instance.Restore();
+        }
 
         public static void Ensure()
         {
@@ -81,6 +107,8 @@ namespace MS2026.Fortress
             }
         }
 
+        private void OnDisable() => Restore();
+
         private void Update()
         {
             if (_core == null)
@@ -95,6 +123,14 @@ namespace MS2026.Fortress
 
             if (!_playing)
             {
+                return;
+            }
+
+            if (_decision)
+            {
+                _elapsed += Time.unscaledDeltaTime;
+                Time.timeScale = CoreBreakSlowMotion.ScaleAt(_elapsed, 0.2f * _normalScale, _normalScale, 1.4f, 0.9f);
+                if (_elapsed >= 2.3f) Restore();
                 return;
             }
 
@@ -156,6 +192,7 @@ namespace MS2026.Fortress
             }
 
             _playing = false;
+            _decision = false;
             Time.timeScale = _normalScale;
         }
     }

@@ -65,6 +65,8 @@ namespace MS2026.Fortress
 
         /// <summary>P1〜P4 の最大コンボ。</summary>
         public int[] maxCombos;
+        /// <summary>最後に倒された敵の位置。ホストが決め、決着カメラの注視点を全員に共有する。</summary>
+        public Vector3 finishPosition;
 
         /// <summary>いちばん多く倒した人（0〜3。だれも倒していなければ -1）。同じ数なら番号が小さい人。</summary>
         public int Mvp
@@ -105,6 +107,15 @@ namespace MS2026.Fortress
         public static MatchOutcome Outcome { get; private set; }
 
         public static bool HasEnded => Outcome != MatchOutcome.Playing;
+        public static bool EnemiesGatherAtCore => InMatch && Outcome == MatchOutcome.GameOver;
+        private static Vector3? _lastDefeatedPosition;
+
+        public static void RecordDefeatedPosition(Vector3 position)
+        {
+            if (InMatch && !HasEnded) _lastDefeatedPosition = position;
+        }
+
+        internal static Vector3 FinishPosition(Vector3 fallback) => _lastDefeatedPosition ?? fallback;
 
         /// <summary>終わったときの結果（<see cref="HasEnded"/> のときだけ意味がある）。</summary>
         public static MatchResult Result { get; private set; }
@@ -126,6 +137,7 @@ namespace MS2026.Fortress
 
         internal static void Begin(int clearKills)
         {
+            _lastDefeatedPosition = null;
             Outcome = MatchOutcome.Playing;
             Result = default;
             ClearKills = Mathf.Max(1, clearKills);
@@ -152,6 +164,7 @@ namespace MS2026.Fortress
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
+            _lastDefeatedPosition = null;
             Outcome = MatchOutcome.Playing;
             Result = default;
             ClearKills = DefaultClearKills;
@@ -288,13 +301,14 @@ namespace MS2026.Fortress
                 kills = new int[Players],
                 maxCombos = new int[Players]
             };
+            result.finishPosition = FortressMatch.FinishPosition(_core != null ? _core.transform.position : Vector3.zero);
             for (var p = 0; p < Players; p++)
             {
                 result.kills[p] = EnemyKillCounter.ByPlayer(p);
                 result.maxCombos[p] = _combos[p].Max;
             }
 
-            if (_rules == null || _rules.removeEnemiesOnEnd)
+            if (outcome != MatchOutcome.GameOver && (_rules == null || _rules.removeEnemiesOnEnd))
             {
                 RemoveEnemies();
             }
@@ -361,6 +375,13 @@ namespace MS2026.Fortress
         private void Finish(MatchResult result)
         {
             FortressMatch.End(result);
+            if (result.outcome == MatchOutcome.GameOver)
+            {
+                foreach (var director in FindObjectsByType<EnemySpawnDirector>(FindObjectsSortMode.None))
+                    director.StopWave();
+                // 撤退中の時間切れでも、残った敵をコアへ向かわせる。
+                _swarm?.SetRetreating(false);
+            }
             PlayEndEffect(result.outcome);
             var wave = result.waveCount > 0 ? $"、ウェーブ {result.reachedWave}/{result.waveCount}" : "";
             Debug.Log($"[FortressMatch] 試合終了: {result.outcome}・{result.reason}（{result.durationSeconds:0.0}秒、撃破 {result.totalKills}、コア {result.coreHealth01:P0}{wave}）");
@@ -448,7 +469,7 @@ namespace MS2026.Fortress
             _nextHeartbeat = now + HeartbeatInterval;
 
             var ended = FortressMatch.HasEnded;
-            var size = 1 + sizeof(float) * 3 + (ended ? sizeof(float) + sizeof(int) * (1 + Players * 2) + 3 : 0);
+            var size = 1 + sizeof(float) * 3 + (ended ? sizeof(float) * 4 + sizeof(int) * (1 + Players * 2) + 3 : 0);
             using var writer = new FastBufferWriter(size, Allocator.Temp);
             writer.WriteValueSafe((byte)FortressMatch.Outcome);
             writer.WriteValueSafe(health);
@@ -472,6 +493,9 @@ namespace MS2026.Fortress
                 writer.WriteValueSafe((byte)result.reason);
                 writer.WriteValueSafe((byte)Mathf.Clamp(result.reachedWave, 0, 255));
                 writer.WriteValueSafe((byte)Mathf.Clamp(result.waveCount, 0, 255));
+                writer.WriteValueSafe(result.finishPosition.x);
+                writer.WriteValueSafe(result.finishPosition.y);
+                writer.WriteValueSafe(result.finishPosition.z);
             }
 
             manager.CustomMessagingManager.SendNamedMessageToAll(FortressMatch.MessageName, writer, NetworkDelivery.ReliableSequenced);
@@ -538,6 +562,10 @@ namespace MS2026.Fortress
             result.reason = (MatchEndReason)reason;
             result.reachedWave = reachedWave;
             result.waveCount = waveCount;
+            reader.ReadValueSafe(out float finishX);
+            reader.ReadValueSafe(out float finishY);
+            reader.ReadValueSafe(out float finishZ);
+            result.finishPosition = new Vector3(finishX, finishY, finishZ);
 
             Finish(result);
         }

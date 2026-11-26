@@ -162,6 +162,12 @@ namespace MS2026.Skills
 
         private void Update()
         {
+            if (FortressMatch.InMatch && FortressMatch.HasEnded)
+            {
+                StopCutInWait();
+                if (_runner != null && _runner.IsActive) _runner.Cancel();
+                return;
+            }
             UpdateCutInWait(Time.deltaTime);
             UpdateKillGauge();
         }
@@ -419,6 +425,7 @@ namespace MS2026.Skills
 
         private void Activate()
         {
+            if (FortressMatch.InMatch && FortressMatch.HasEnded) return;
             if (_runner == null)
             {
                 return;

@@ -124,9 +124,10 @@ namespace MS2026.Fortress
 
         private void Update()
         {
+            var dt = Time.deltaTime;
             if (IsReplica)
             {
-                TickReplica(Time.deltaTime);
+                TickReplica(dt);
                 return;
             }
 
@@ -138,6 +139,16 @@ namespace MS2026.Fortress
 
             var position = (Vector2)transform.position;
             var toTarget = (Vector2)target.position - position;
+
+            if (FortressMatch.EnemiesGatherAtCore && toTarget.sqrMagnitude <= 2.2f * 2.2f)
+            {
+                var distance = toTarget.magnitude;
+                var toward = distance > 0.001f ? toTarget / distance : Vector2.up;
+                var tangent = new Vector2(-toward.y, toward.x);
+                Velocity = (tangent + toward * (distance - 1.5f)).normalized * definition.moveSpeed;
+                transform.position += (Vector3)(Velocity * dt);
+                return;
+            }
 
             if (toTarget.magnitude <= ArrivalDistance)
             {
@@ -158,7 +169,7 @@ namespace MS2026.Fortress
                 }
             }
 
-            var blend = 1f - Mathf.Exp(-definition.turnSharpness * Time.deltaTime);
+            var blend = 1f - Mathf.Exp(-definition.turnSharpness * dt);
             _moveDirection = _moveDirection.sqrMagnitude < 1e-6f
                 ? desired
                 : Vector2.Lerp(_moveDirection, desired, blend);
@@ -169,7 +180,7 @@ namespace MS2026.Fortress
 
             var speed = definition.moveSpeed * (navigator != null ? navigator.GetSpeedMultiplier(position) : 1f);
             Velocity = _moveDirection * speed;
-            transform.position += (Vector3)(Velocity * Time.deltaTime);
+            transform.position += (Vector3)(Velocity * dt);
         }
 
         private void TickReplica(float dt)
@@ -203,6 +214,7 @@ namespace MS2026.Fortress
 
         public void TakeDamage(float amount)
         {
+            if (FortressMatch.EnemiesGatherAtCore) return;
             if (IsReplica || _currentHealth <= 0f)
             {
                 return;
@@ -212,6 +224,7 @@ namespace MS2026.Fortress
 
             if (_currentHealth <= 0f)
             {
+                FortressMatch.RecordDefeatedPosition(transform.position);
                 RemovalReason = EnemyRemovalReason.Died;
                 OnDeath?.Invoke(this);
                 Destroy(gameObject);
