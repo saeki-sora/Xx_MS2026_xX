@@ -35,6 +35,11 @@ namespace MS2026.Fortress
         private void CollectDeaths()
         {
             var count = _deaths.Length;
+            if (count > 0 && !IsReplica)
+            {
+                var last = _deaths[count - 1].position;
+                FortressMatch.RecordDefeatedPosition(new UnityEngine.Vector3(last.x, last.y, 0f));
+            }
             if (count == 0 || AgentsDied == null)
             {
                 return;

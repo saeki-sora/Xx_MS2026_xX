@@ -20,6 +20,12 @@ namespace MS2026.Fortress
         [Tooltip("ONなら、試合が終わった瞬間に敵の出現を止め、残っている敵を消す（消した敵は撃破数に入れない）。")]
         public bool removeEnemiesOnEnd = true;
 
+        [Header("新しいリザルト（森＿ゲームクリアから取り込み）")]
+        [Tooltip("ONなら、森さんの新しい決着演出とリザルト画面を使う（決着のスロー・カメラの寄り・クリア／ゲームオーバーの演出・新しいリザルト画面。" +
+                 "ゲームオーバーでは敵を消さずにコアの周りへ集め、試合が終わったらレーザーとスキルを止める。コアの光の輪は壊れた瞬間だけになる）。" +
+                 "OFF なら今までどおり（UIスタジオのリザルト画面「Result」）。全員のPCで同じにすること。")]
+        public bool newResultPresentation;
+
         [Header("コア")]
         [Tooltip("試合の始めのコアの体力（最大HP）。0 ならコア（CoreCrystalController）に入っている値のまま。全員のPCで同じ値になる。")]
         [Min(0f)]

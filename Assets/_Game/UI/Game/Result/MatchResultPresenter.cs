@@ -12,6 +12,8 @@ namespace MS2026.UI.Game
     /// ・ロビーから来たとき: <see cref="GameSession.ReturnToTitleFromResult"/>（ホストが全員に「タイトルへ」を配る）
     /// ・ゲームのシーンだけで遊んでいるとき: タイトルのシーンを読み込む（ビルドの設定に無ければ、ゲームのシーンを読み直す）
     /// 起動時に自動で作られる（シーンに置く物は無い）。画面が無いとき（UIスタジオで作っていない）は、ログを出してタイトルへの移動だけ行う。
+    /// 試合の決まり（<see cref="FortressMatchRules.newResultPresentation"/>）が ON の試合だけ、森＿ゲームクリアの新しい流れになる:
+    /// 決着の演出（<see cref="GameOverIntro"/> / <see cref="ClearMatchIntro"/>）→ 新しいリザルト画面（<see cref="GameOverResultView"/>。画像が無ければ今までの画面）。
     /// </summary>
     [AddComponentMenu("")]
     public sealed class MatchResultPresenter : MonoBehaviour
@@ -32,6 +34,13 @@ namespace MS2026.UI.Game
         private MatchResult _result;
         private FortressMatchRules _rules;
 
+        // 新しいリザルト（FortressMatchRules.newResultPresentation が ON の試合だけ。森＿ゲームクリアから取り込み）。
+        private bool _useNew;
+        private GameOverIntro _intro;
+        private ClearMatchIntro _clearIntro;
+        private GameOverResultView _gameOverView;
+        private bool _shuttingDown;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Install()
         {
@@ -44,17 +53,64 @@ namespace MS2026.UI.Game
         private void OnEnable()
         {
             FortressMatch.Ended += OnEnded;
+            SceneManager.sceneLoaded += HandleSceneLoaded;
+            GameSession.LeavingForTitle += HandleLeavingForTitle;
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.playModeStateChanged += HandleEditorPlayMode;
+#endif
         }
 
         private void OnDisable()
         {
             FortressMatch.Ended -= OnEnded;
+            SceneManager.sceneLoaded -= HandleSceneLoaded;
+            GameSession.LeavingForTitle -= HandleLeavingForTitle;
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.playModeStateChanged -= HandleEditorPlayMode;
+#endif
+            _showing = false;
+            CancelIntro();
+            CloseGameOverView();
+        }
+
+#if UNITY_EDITOR
+        private void HandleEditorPlayMode(UnityEditor.PlayModeStateChange state)
+        {
+            if (state == UnityEditor.PlayModeStateChange.ExitingPlayMode) ShutdownPresentation();
+        }
+#endif
+
+        private void OnApplicationQuit() => ShutdownPresentation();
+
+        private void ShutdownPresentation()
+        {
+            _shuttingDown = true;
+            _showing = false;
+            _leaving = true;
+            CancelIntro();
+            CloseGameOverView();
+            CoreBreakSlowMotion.EndDecisionSequence();
+        }
+
+        // 新しいリザルトのときだけ、シーンを出た・タイトルへ戻る瞬間にすぐ片づける（今までの画面は Update で片づける）。
+        private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (_useNew && mode == LoadSceneMode.Single && (_showing || _intro != null || _clearIntro != null)) Close();
+        }
+
+        private void HandleLeavingForTitle()
+        {
+            if (_useNew) Close();
         }
 
         private void OnEnded(MatchResult result)
         {
+            if (_shuttingDown) return;
+            CancelIntro();
+            CloseGameOverView();
             _result = result;
             _rules = FindFirstObjectByType<FortressMatchRules>();
+            _useNew = FortressMatch.NewResultPresentation;
             _clear = result.outcome == MatchOutcome.Clear;
             if (_rules != null)
             {
@@ -76,7 +132,49 @@ namespace MS2026.UI.Game
             UiValues.Set(FortressUiKeys.ResultReachedWave, result.reachedWave);
             UiValues.Set(FortressUiKeys.ResultSubtitle, WaveHudLogic.ResultSubtitle(result.reason, result.reachedWave, result.waveCount));
 
+            if (!_useNew)
+            {
+                // 今までどおり: UIスタジオのリザルト画面をすぐ開く。
+                var root = UiRoot.Active;
+                if (root == null || !root.Open(ResultScreenId))
+                {
+                    Debug.LogWarning($"[Result] リザルト画面「{ResultScreenId}」がありません。UIスタジオの「はじめに」の「リザルト画面を作る」で作ってください（今回はそのまま進みます）。");
+                }
+
+                return;
+            }
+
+            // 新しいリザルト: 決着の演出のあとで OpenResult。
+            if (!_clear)
+            {
+                _showing = false;
+                UiRoot.Active?.Close(HudScreenId);
+                _intro = GameOverIntro.Begin(transform, OpenResult, result.coreHealth01 <= 0f);
+                return;
+            }
+            _showing = false;
+            UiRoot.Active?.Close(HudScreenId);
+            _clearIntro = ClearMatchIntro.Begin(transform, result, OpenResult);
+        }
+
+        private void OpenResult()
+        {
+            if (_shuttingDown || !isActiveAndEnabled || !FortressMatch.InMatch || !FortressMatch.HasEnded) return;
+            _startedAt = Time.unscaledTime;
+            _showing = true;
             var root = UiRoot.Active;
+            var finalCore = _clear && _clearIntro != null ? _clearIntro.ReleaseCorePortrait() : null;
+            _gameOverView = GameOverResultView.Create(transform, _result, Brightness(), finalCore);
+            if (_gameOverView == null && finalCore != null)
+            {
+                finalCore.Release();
+                Destroy(finalCore);
+            }
+            if (_gameOverView != null)
+            {
+                root?.Close(HudScreenId);
+                return;
+            }
             if (root == null || !root.Open(ResultScreenId))
             {
                 Debug.LogWarning($"[Result] リザルト画面「{ResultScreenId}」がありません。UIスタジオの「はじめに」の「リザルト画面を作る」で作ってください（今回はそのまま進みます）。");
@@ -87,6 +185,7 @@ namespace MS2026.UI.Game
         {
             if (!_showing)
             {
+                if ((_intro != null || _clearIntro != null) && (!FortressMatch.HasEnded || !FortressMatch.InMatch)) CancelIntro();
                 return;
             }
 
@@ -100,16 +199,20 @@ namespace MS2026.UI.Game
             }
 
             var elapsed = Time.unscaledTime - _startedAt;
-            var step = ResultRules.StepAt(_clear, elapsed);
+            var sharedView = _gameOverView != null;
+            var step = sharedView
+                ? ResultRules.NewStepAt(elapsed + (_clear ? ResultRules.ClearResultEntryTime : 0f))
+                : ResultRules.StepAt(_clear, elapsed);
             while (_step < step)
             {
                 _step++;
                 Reveal(_step);
             }
 
-            var panelAt = ResultRules.PanelTime(_clear);
+            var panelAt = sharedView ? (_clear ? 0f : ResultRules.NewGameOverPanelTime) : ResultRules.PanelTime(_clear);
             var autoLeft = Mathf.Max(0f, AutoSeconds - Mathf.Max(0f, elapsed - panelAt));
             UiValues.Set(FortressUiKeys.ResultAutoSeconds, Mathf.Ceil(autoLeft));
+            _gameOverView?.Render(elapsed, _hold, autoLeft);
             if (_step < ResultRules.StepNext)
             {
                 return;
@@ -262,6 +365,11 @@ namespace MS2026.UI.Game
 
             _leaving = true;
             Cue(_rules != null ? _rules.onReturnToTitle : null);
+            if (_useNew)
+            {
+                Close();
+            }
+
             var session = GameSession.Active;
             if (session != null)
             {
@@ -285,8 +393,34 @@ namespace MS2026.UI.Game
         private void Close()
         {
             _showing = false;
+            CancelIntro();
+            CloseGameOverView();
             UiRoot.Active?.Close(ResultScreenId);
             ClearValues();
+        }
+
+        private void CancelIntro()
+        {
+            if (_clearIntro != null)
+            {
+                _clearIntro.Cancel();
+                _clearIntro.gameObject.SetActive(false);
+                Destroy(_clearIntro.gameObject);
+                _clearIntro = null;
+            }
+            if (_intro == null) return;
+            _intro.Cancel();
+            _intro.gameObject.SetActive(false);
+            Destroy(_intro.gameObject);
+            _intro = null;
+        }
+
+        private void CloseGameOverView()
+        {
+            if (_gameOverView == null) return;
+            _gameOverView.gameObject.SetActive(false);
+            Destroy(_gameOverView.gameObject);
+            _gameOverView = null;
         }
 
         private static void ClearValues()

@@ -43,5 +43,30 @@ namespace MS2026.UI.Tests.EditMode
             Assert.AreEqual(ResultRules.StepNext, ResultRules.StepAt(false, 3.5f));
             Assert.Less(ResultRules.PanelTime(false), 3f);
         }
+
+        [Test]
+        public void NewResultWaitsForAnimation()
+        {
+            Assert.AreEqual(ResultRules.StepBanner, ResultRules.NewStepAt(1f));
+            Assert.AreEqual(ResultRules.StepBanner, ResultRules.NewStepAt(4.99f));
+            Assert.AreEqual(ResultRules.StepPanel, ResultRules.NewStepAt(5f));
+            Assert.AreEqual(ResultRules.StepNext, ResultRules.NewStepAt(8.7f));
+        }
+
+        [Test]
+        public void AllPlayersAreRankedIncludingZeroKills()
+        {
+            CollectionAssert.AreEqual(new[] { 1, 2, 0, 3 }, ResultRules.PlayersByKills(new[] { 0, 12, 12 }, 4));
+            CollectionAssert.AreEqual(new[] { 0, 1, 2, 3 }, ResultRules.PlayersByKills(null, 4));
+        }
+
+        [Test]
+        public void GaugeStopsAtActualFinalHealth()
+        {
+            Assert.AreEqual(1f, ResultRules.GameOverGaugeHealth(0.9f, 0f));
+            Assert.That(ResultRules.GameOverGaugeHealth(1.45f, 0f), Is.EqualTo(0.5f).Within(0.001f));
+            Assert.AreEqual(0f, ResultRules.GameOverGaugeHealth(1.9f, 0f));
+            Assert.That(ResultRules.GameOverGaugeHealth(5f, 0.35f), Is.EqualTo(0.35f).Within(0.001f));
+        }
     }
 }

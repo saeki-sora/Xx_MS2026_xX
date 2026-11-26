@@ -36,6 +36,7 @@ namespace MS2026.Fortress
         public int count;
         public int arrivalMode;
         public int replicaMode;
+        public int gatherMode;
 
         /// <summary>1 なら撤退中: コアに着いても何もしない（ダメージ・張り付きなし）。張り付いていた敵も離れる。Host では removeIds の敵を「消えた」で消す。</summary>
         public int retreatMode;
@@ -89,6 +90,7 @@ namespace MS2026.Fortress
                 var read = order[k];
                 var type = typeIdx[read];
                 var id = netId[read];
+                if (gatherMode != 0) state[read] = 0;
                 var goal = goalOf[read];
 
                 if (replicaMode == 1)
@@ -118,9 +120,9 @@ namespace MS2026.Fortress
                         state[read] = 0;
                     }
                     else if (state[read] == 0 && goal >= 0 && arrivalMode == (int)SwarmArrivalMode.LingerAndAttack
-                        && types[type].explodeAtCore == 0)
+                        && (gatherMode != 0 || types[type].explodeAtCore == 0))
                     {
-                        state[read] = 1;
+                        state[read] = gatherMode != 0 ? 0 : 1;
                     }
                 }
                 else
@@ -159,8 +161,8 @@ namespace MS2026.Fortress
                     else if (state[read] == 0 && goal >= 0)
                     {
                         counters[2] = counters[2] + 1;
-                        var selfDestruct = types[type].explodeAtCore != 0;
-                        if (arrivalMode == (int)SwarmArrivalMode.VanishAndDamage || selfDestruct)
+                        var selfDestruct = gatherMode == 0 && types[type].explodeAtCore != 0;
+                        if (gatherMode == 0 && (arrivalMode == (int)SwarmArrivalMode.VanishAndDamage || selfDestruct))
                         {
                             goalDamage[goal] = goalDamage[goal] + types[type].damageToCore;
                             if (selfDestruct)
@@ -172,7 +174,7 @@ namespace MS2026.Fortress
                             continue;
                         }
 
-                        state[read] = 1;
+                        state[read] = gatherMode != 0 ? 0 : 1;
                     }
                 }
 

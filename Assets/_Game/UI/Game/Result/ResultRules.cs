@@ -26,6 +26,31 @@ namespace MS2026.UI.Game
         private const float GameOverPanelTime = 2.6f;
         private const float GameOverNextTime = 3.4f;
 
+        // 新しいリザルト（FortressMatchRules.newResultPresentation が ON のとき。森＿ゲームクリアから取り込み）。
+        // クリアもゲームオーバーも同じ画面（GameOverResultView）で、アニメを待ってからパネル・「タイトルへ」。
+        public const float NewGameOverPanelTime = 5f;
+        public const float NewGameOverNextTime = 8.7f;
+        // クリアでは専用演出の中でコアを左へ移動済み。
+        public const float ClearResultEntryTime = 5.1f;
+
+        public static float GameOverGaugeHealth(float elapsed, float finalHealth) =>
+            Mathf.SmoothStep(1f, Mathf.Clamp01(finalHealth), Mathf.InverseLerp(1f, 1.9f, elapsed));
+
+        public static int KillsAt(int[] kills, int player) =>
+            kills != null && player >= 0 && player < kills.Length ? kills[player] : 0;
+
+        public static int[] PlayersByKills(int[] kills, int playerCount)
+        {
+            var players = new int[playerCount];
+            for (var i = 0; i < players.Length; i++) players[i] = i;
+            System.Array.Sort(players, (a, b) =>
+            {
+                var order = KillsAt(kills, b).CompareTo(KillsAt(kills, a));
+                return order != 0 ? order : a.CompareTo(b);
+            });
+            return players;
+        }
+
         /// <summary>結果が出てから elapsed 秒たったときの段階。</summary>
         public static int StepAt(bool clear, float elapsed)
         {
@@ -49,6 +74,17 @@ namespace MS2026.UI.Game
             }
 
             return step;
+        }
+
+        /// <summary>新しいリザルトで、画面が出てから elapsed 秒たったときの段階。</summary>
+        public static int NewStepAt(float elapsed)
+        {
+            if (elapsed < 0f)
+            {
+                return StepNone;
+            }
+
+            return elapsed >= NewGameOverNextTime ? StepNext : elapsed >= NewGameOverPanelTime ? StepPanel : StepBanner;
         }
 
         /// <summary>パネルが出る秒数（自動でタイトルへ戻るまでの時間は、ここから数える）。</summary>

@@ -171,6 +171,7 @@ namespace MS2026.Fortress
 
         private void SpawnOne(EnemySpawnEntry entry)
         {
+            if (FortressMatch.EnemiesGatherAtCore) return;
             if (!TryGetSpawnPoint(entry.spawnPointId, out var spawnPoint))
             {
                 // 同じ名前の警告は1回だけ（1体ごとに出すと Console が埋まる）。

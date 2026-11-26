@@ -260,6 +260,7 @@ namespace MS2026.UI.Game
         /// <summary>通信を終えてタイトルのシーンへ戻る（ロビーのシーンごと閉じる）。</summary>
         public void GoToTitle()
         {
+            LeavingForTitle?.Invoke();
             if (State == SessionState.Leaving && !IsGameLoaded)
             {
                 return;

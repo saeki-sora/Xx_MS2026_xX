@@ -5,7 +5,7 @@ using UnityEngine.Rendering;
 namespace MS2026.Fortress
 {
     /// <summary>
-    /// コアがダメージを受けた瞬間に、コアから警告の光の輪を広げる（設定は <see cref="CoreCrystalController.hitRing"/>）。
+    /// コアのHPが0になった瞬間だけ、コアから光の輪を広げる（設定は <see cref="CoreCrystalController.hitRing"/>）。
     /// <see cref="CoreCrystalController"/> が起動時に自動で付ける。HP は Client にも届く（<see cref="CoreCrystalController.OnHealthChanged"/>）ので、全員の画面に出る。
     /// 輪は地面に寝た四角形（Resources/Fortress/CoreHitRing.shader）を使い回す。Play中のシーンの物として作るので、Playを止めれば消える。
     /// 既存のダメージの演出（エフェクト欄 onDamaged・カメラの揺れ・画面の赤さ）とは別に重ねて出る。
@@ -83,9 +83,24 @@ namespace MS2026.Fortress
 
         private void HandleHealthChanged(float current, float max)
         {
+            var settings = _core.hitRing;
+            if (FortressMatch.NewResultPresentation)
+            {
+                // 新しいリザルト: コアのHPが0になった瞬間だけ。
+                var destroyed = _lastHealth > 0f && current <= 0f;
+                _lastHealth = current;
+                if (!destroyed || settings == null || !settings.enabled)
+                {
+                    return;
+                }
+
+                Spawn();
+                return;
+            }
+
+            // 今までどおり: ダメージを受けるたび（間隔は minInterval）。
             var hit = _lastHealth >= 0f && current < _lastHealth - 0.0001f;
             _lastHealth = current;
-            var settings = _core.hitRing;
             if (!hit || settings == null || !settings.enabled || Time.time - _lastRingTime < settings.minInterval)
             {
                 return;

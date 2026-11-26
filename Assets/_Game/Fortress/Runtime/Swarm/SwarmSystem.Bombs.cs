@@ -158,6 +158,11 @@ namespace MS2026.Fortress
         private void PrepareBlasts()
         {
             _blastCount = 0;
+            if (FortressMatch.EnemiesGatherAtCore)
+            {
+                _blastQueue.Clear();
+                return;
+            }
             if (IsReplica || _blastQueue.Count == 0)
             {
                 return;
