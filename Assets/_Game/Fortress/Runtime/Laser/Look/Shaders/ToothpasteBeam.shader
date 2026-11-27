@@ -47,6 +47,11 @@ Shader "MS2026/Fortress/ToothpasteBeam"
         [HideInInspector] _BeamFlow ("Beam Flow", Float) = 0
         [HideInInspector] _BeamPower ("Beam Power", Float) = 0.5
         [HideInInspector] _BeamTipRound ("Beam Tip Round", Float) = 0
+
+        // 熱の見せ方（2026-11-27 案A。LaserHeatLookSettings → BeamGelDriver が砲台ごとに入れる。既定値なら前と同じ白い芯）
+        [HideInInspector] _CoreTint ("Core Tint (rgb=色, a=色を付ける強さ)", Color) = (1,1,1,0)
+        [HideInInspector] _CoreHeatWiden ("Core Heat Widen", Float) = 0
+        [HideInInspector] _CoreHeatScale ("Core Heat Scale", Float) = 1
     }
 
     SubShader
@@ -107,6 +112,9 @@ Shader "MS2026/Fortress/ToothpasteBeam"
                 float _BeamFlow;
                 half _BeamPower;
                 half _BeamTipRound;
+                half4 _CoreTint;
+                half _CoreHeatWiden;
+                half _CoreHeatScale;
             CBUFFER_END
 
             struct Attributes
@@ -273,11 +281,13 @@ Shader "MS2026/Fortress/ToothpasteBeam"
 
                 // 芯の白い光（2026-11-09 見た目強化）: 真ん中の帯を白く、強く握るほど帯が太く・明るく（1より明るいと光のにじみが付く）。
                 // 弱く握っているときは控えめにして、4人同時でも「全部が光る」にならないようにする。
+                // 熱（2026-11-27 案A）: 芯の色を 白→黄→橙→赤 に（_CoreTint）、熱いほど太く（_CoreHeatWiden）、危ない所で点滅（_CoreHeatScale）。
                 if (_CoreAmount > 0.001)
                 {
-                    float coreWidth = lerp(_CoreWidthWeak, _CoreWidthStrong, saturate(_BeamPower));
-                    half core = (1.0 - smoothstep(coreWidth * 0.55, coreWidth, ax)) * _CoreAmount;
-                    color = lerp(color, max(color, 1.0), core);
+                    float coreWidth = min(1.0, lerp(_CoreWidthWeak, _CoreWidthStrong, saturate(_BeamPower)) + _CoreHeatWiden);
+                    half core = (1.0 - smoothstep(coreWidth * 0.55, coreWidth, ax)) * _CoreAmount * saturate(_CoreHeatScale);
+                    half3 coreTarget = lerp(max(color, 1.0), _CoreTint.rgb * 1.15, saturate(_CoreTint.a));
+                    color = lerp(color, coreTarget, core);
                     color *= 1.0 + core * _CoreGlow * saturate(_BeamPower);
                 }
 

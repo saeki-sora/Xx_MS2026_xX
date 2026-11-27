@@ -85,13 +85,16 @@ MonoBehaviour:
   effects:
     muzzle:
       vfx:
-        value: 1496822387155871521
+        value: 0
         type: 3
       se:
         value: 16135865275358210923
         type: 1
       tintWithPlayerColor: 1
       colorParam: Color
+      audience: 0
+      volumeScale: 1
+      isVoice: 0
     impact:
       vfx:
         value: 4949327726820022131
@@ -101,6 +104,9 @@ MonoBehaviour:
         type: 1
       tintWithPlayerColor: 1
       colorParam: Color
+      audience: 0
+      volumeScale: 1
+      isVoice: 0
     swarmHit:
       vfx:
         value: 3298427915611929982
@@ -110,6 +116,9 @@ MonoBehaviour:
         type: 1
       tintWithPlayerColor: 1
       colorParam: Color
+      audience: 0
+      volumeScale: 1
+      isVoice: 0
     steam:
       vfx:
         value: 5465202105630298506
@@ -119,9 +128,148 @@ MonoBehaviour:
         type: 1
       tintWithPlayerColor: 1
       colorParam: Color
+      audience: 0
+      volumeScale: 1
+      isVoice: 0
+    onChargeStart:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+      audience: 0
+      volumeScale: 1
+      isVoice: 0
+    onOverheat:
+      vfx:
+        value: 865915282325765272
+        type: 3
+      se:
+        value: 17024609056135836289
+        type: 1
+      tintWithPlayerColor: 1
+      colorParam: Color
+      audience: 0
+      volumeScale: 1
+      isVoice: 0
+    onRecovered:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+      audience: 0
+      volumeScale: 1
+      isVoice: 0
+    onHeatWarning:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+      audience: 0
+      volumeScale: 1
+      isVoice: 0
+    heatWarnAt: 0.8
+    onDryFire:
+      vfx:
+        value: 1148039940316807166
+        type: 3
+      se:
+        value: 0
+        type: 1
+      tintWithPlayerColor: 1
+      colorParam: Color
+      audience: 0
+      volumeScale: 1
+      isVoice: 0
+    dryFireInterval: 0.3
+    heatLoop:
+      vfx:
+        value: 0
+        type: 0
+      se:
+        value: 0
+        type: 0
+      tintWithPlayerColor: 1
+      colorParam: Color
+      audience: 0
+      volumeScale: 1
+      isVoice: 0
+    heatLoopPitchCold: 0.8
+    heatLoopPitchHot: 1.8
+    heatLoopVolumeCold: 0.1
+    heatLoopVolumeHot: 1
     steamSecondsPerFireSecond: 1
     maxSteamSeconds: 10
   look:
     enabled: 1
     flowSpeedWeak: 1.5
     flowSpeedStrong: 7
+  heatLook:
+    enabled: 1
+    coreColors:
+      serializedVersion: 2
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 0.89, b: 0.42, a: 1}
+      key2: {r: 1, g: 0.54, b: 0.16, a: 0}
+      key3: {r: 1, g: 0.2, b: 0.14, a: 0}
+      key4: {r: 0, g: 0, b: 0, a: 0}
+      key5: {r: 0, g: 0, b: 0, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 32768
+      ctime2: 52428
+      ctime3: 65535
+      ctime4: 0
+      ctime5: 0
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 65535
+      atime2: 0
+      atime3: 0
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_ColorSpace: -1
+      m_NumColorKeys: 4
+      m_NumAlphaKeys: 2
+    coreTintStrength: 1
+    coreWidenAtFull: 0.22
+    blinkPerSecondStart: 3
+    blinkPerSecondEnd: 9
+    blinkDepth: 0.6
+    showRing: 1
+    ringRadius: 1.5
+    ringWidth: 0.16
+    ringTrackColor: {r: 0.08, g: 0.1, b: 0.12, a: 0.45}
+    ringTrackWidthScale: 1.6
+    ringShowFrom: 0.03
+    ringFadeSpeed: 6
+    overheatRingColor: {r: 0.42, g: 0.45, b: 0.5, a: 0.95}
+  beamLight:
+    enabled: 1
+    floorIntensity: 2.5
+    floorRange: 2.8
+    lightHeight: 0.8
+    impactBoost: 1.6
+    surfaceColorInfluence: 0.4
+    enemyStrength: 0.8
+    enemyRadius: 1.3
+    enemyColorOverlay: 0.35
+    colorSaturation: 1.3
+    weakGripBrightness: 0.45
+    fadeSpeed: 14

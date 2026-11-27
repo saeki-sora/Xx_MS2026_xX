@@ -119,6 +119,10 @@ namespace MS2026.Fortress
                  "ビームの色・つや・こぶ・泡は、ビームのマテリアル（MS2026/Fortress/ToothpasteBeam）の方で調整する。")]
         public LaserLookSettings look = new LaserLookSettings();
 
+        [Header("熱の見せ方（芯の色・砲台の輪・点滅）")]
+        [Tooltip("熱をビームの芯の色と砲台のまわりの輪で見せる（2026-11-27 案A）。見た目だけで、熱の計算は変えない。")]
+        public LaserHeatLookSettings heatLook = new LaserHeatLookSettings();
+
         [Header("ビームの光（床・背景の物・群衆の敵をプレイヤー色で照らす）")]
         [Tooltip("ビームがまわりを照らす光の見た目だけの設定。当たり判定・ダメージには影響しない。")]
         public LaserLightSettings beamLight = new LaserLightSettings();

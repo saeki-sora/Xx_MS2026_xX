@@ -1,0 +1,372 @@
+<title>熱の見せ方 見本</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&family=Noto+Sans+JP:wght@400;600&display=swap">
+<style>
+/* 並べ方: 上に操作の帯、その下に3つの案を横並び（狭いと縦）、最後に共通で入れる物と気づいたこと */
+:root{
+  --bg:#f3f6f5; --panel:#ffffff; --fg:#1d2a2a; --muted:#5b6b6a; --line:#d5dfdd;
+  --accent:#0f8f86; --warn:#d9481f; --chip:#e6efed;
+  --display:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Noto Sans JP",system-ui,sans-serif;
+  --body:"Noto Sans JP","Hiragino Sans",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111817; --panel:#18211f; --fg:#e4eeec; --muted:#9db0ad; --line:#2b3836;
+  --accent:#4fd1c5; --warn:#ff7a52; --chip:#22302d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111817; --panel:#18211f; --fg:#e4eeec; --muted:#9db0ad; --line:#2b3836;
+  --accent:#4fd1c5; --warn:#ff7a52; --chip:#22302d; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);line-height:1.7}
+.wrap{max-width:1180px;margin:0 auto;padding-block:28px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:grid;gap:22px}
+h1{font-family:var(--display);font-weight:800;font-size:1.9rem;margin:0;text-wrap:balance;letter-spacing:.02em}
+h2{font-family:var(--display);font-weight:800;font-size:1.2rem;margin:0;text-wrap:balance}
+p{margin:0}
+.lead{color:var(--muted);max-width:62ch}
+.bar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;background:var(--panel);
+  border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+.bar label{display:flex;align-items:center;gap:8px;font-size:.92rem}
+button{font:inherit;font-size:.92rem;border:1px solid var(--line);background:var(--chip);color:var(--fg);
+  border-radius:999px;padding:6px 14px;cursor:pointer}
+button[aria-pressed="true"]{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[type=range]{width:150px;accent-color:var(--accent)}
+.state{font-variant-numeric:tabular-nums;font-size:.92rem;color:var(--muted);margin-left:auto}
+.state b{color:var(--fg)}
+.state .hot{color:var(--warn)}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+.opt{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:grid;min-width:0}
+.opt canvas{display:block;width:100%;aspect-ratio:16/10;max-width:100%;background:#0e1f22}
+.opt .txt{padding:14px 16px 16px;display:grid;gap:8px;min-width:0}
+.tag{font-family:var(--display);font-weight:800;color:var(--accent);font-size:.85rem;letter-spacing:.08em}
+.pros,.cons{margin:0;padding-left:1.2em;font-size:.9rem}
+.cons li::marker{color:var(--warn)}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:grid;gap:8px}
+.note ul{margin:0;padding-left:1.2em}
+.small{font-size:.85rem;color:var(--muted)}
+</style>
+
+<div class="wrap">
+  <header style="display:grid;gap:8px">
+    <h1>熱の見せ方 見本（A1）</h1>
+    <p class="lead">今のゲームでは、熱が目に見える手がかりがありません（HUD の熱ゲージは隠れていて、オーバーヒートした瞬間の演出も空）。同じ熱の動きで3つの見せ方を並べました。上が赤（1P）、下が緑（4P）。4人の色が混ざっても、誰のビームか分かるかも見てください。</p>
+  </header>
+
+  <div class="bar" role="group" aria-label="見本の操作">
+    <button id="autoBtn" aria-pressed="true">自動で握る</button>
+    <label for="grip">赤の握る強さ <input id="grip" type="range" min="0" max="100" value="100" disabled></label>
+    <button id="speedBtn" aria-pressed="false">2倍速</button>
+    <button id="soundBtn" aria-pressed="false">音を出す</button>
+    <span class="state" id="state">赤: <b>—</b></span>
+  </div>
+
+  <div class="grid">
+    <section class="opt">
+      <canvas id="cA" aria-label="案A: 芯が熱くなる＋砲台の輪"></canvas>
+      <div class="txt">
+        <span class="tag">案 A</span>
+        <h2>芯が熱くなる＋砲台の輪</h2>
+        <p>ビームの外側はプレイヤーの色のまま。真ん中の白い芯だけが 白→黄→橙→赤 に変わる。砲台のまわりの輪が熱のゲージ。8割を超えると輪と芯が点滅。</p>
+        <ul class="pros"><li>誰のビームかが崩れない</li><li>輪で「あとどれだけ」が数字なしで分かる</li><li>オーバーヒート中は輪が灰色で減って、いつ戻るか分かる</li></ul>
+        <ul class="cons"><li>芯は細いので、弱く握っている時は色の変化が小さい</li></ul>
+      </div>
+    </section>
+    <section class="opt">
+      <canvas id="cB" aria-label="案B: 歯磨き粉が沸騰する"></canvas>
+      <div class="txt">
+        <span class="tag">案 B</span>
+        <h2>歯磨き粉が沸騰する</h2>
+        <p>熱いほどビームの中に泡がぶくぶく出て、湯気が立つ。限界が近いとビームが途切れ途切れになる。砲台が赤く焼けて光る。ゲージは出さない。</p>
+        <ul class="pros"><li>歯磨き粉のビームと題名の「灼ける」に合う</li><li>画面の雰囲気だけで「やばい」と感じる</li></ul>
+        <ul class="cons"><li>正確な残りは分からない</li><li>敵が多い場面では湯気が埋もれやすい</li></ul>
+      </div>
+    </section>
+    <section class="opt">
+      <canvas id="cC" aria-label="案C: ビームごと赤くなる＋温度計"></canvas>
+      <div class="txt">
+        <span class="tag">案 C</span>
+        <h2>ビームごと赤くなる＋温度計</h2>
+        <p>ビーム全体の色が、プレイヤーの色から 黄→赤 に変わる。砲台の横に縦の温度計。</p>
+        <ul class="pros"><li>いちばん目立って、一目で分かる</li></ul>
+        <ul class="cons"><li>熱い時は全員のビームが赤くなり、誰のビームか分からなくなる（緑を見てください）</li><li>赤のプレイヤーは変化がほとんど見えない</li></ul>
+      </div>
+    </section>
+  </div>
+
+  <div class="note">
+    <h2>どの案にも共通で入れる物</h2>
+    <ul>
+      <li><b>やかんの音</b>：撃っている間、熱いほど「ピー」の音が高く大きくなる（「音を出す」で聞けます）</li>
+      <li><b>オーバーヒートした瞬間の「プシュー」</b>：煙と音。今は何も出ていない</li>
+      <li><b>オーバーヒート中に握ると「カスッ」</b>：空撃ちの火花と音。握っても何も起きない時間をなくす</li>
+    </ul>
+  </div>
+
+  <div class="note">
+    <h2>作りながら気づいたこと（数値の話）</h2>
+    <p>今の設定だと、オーバーヒートで止まる3秒の間に熱は 100% から <b>82%</b> までしか下がりません。握ったままだと戻った直後の約2秒でまたオーバーヒートして、止まる・動くをくり返します（この見本の「自動」でも起きます）。テストの「オーバーヒート長すぎる」はこれが原因かもしれません。直すなら、止まっている間の冷え方を速くするか、戻る時に熱を0にするかです。</p>
+    <p class="small">見本の数値はゲームと同じです（思いきり握って約10秒でオーバーヒート、止まるのは3秒、冷え方は毎秒6%、8割で警告）。</p>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ---- ゲームと同じ熱の計算（LaserTurret と同じ式）----
+  const GAIN = 1, COOL = 0.6, LIMIT = 10, SILENCE = 3, WARN = 0.8;
+  const COLORS = { red: [255, 77, 77], green: [63, 209, 122] };
+
+  function makeSim(color, restAtStart) {
+    return { color, heat: 0, state: 'idle', silence: 0, grip: 0, auto: { mode: restAtStart ? 'rest' : 'hold', timer: restAtStart || 0 },
+             overFlash: 0, sputter: 0 };
+  }
+  const sims = [makeSim('red', 0), makeSim('green', 4.5)];
+
+  const ui = { auto: true, speed: 1, sound: false, manualGrip: 1 };
+
+  function stepAuto(s, dt) {
+    const a = s.auto;
+    if (a.mode === 'rest') { a.timer -= dt; s.grip = Math.max(0, s.grip - dt * 4); if (a.timer <= 0) a.mode = 'hold'; }
+    else s.grip = Math.min(1, s.grip + dt * 3);
+  }
+
+  function stepSim(s, dt, events) {
+    const wasOver = s.state === 'over';
+    if (s.state === 'over') {
+      s.silence -= dt; s.heat = Math.max(0, s.heat - COOL * dt);
+      if (s.grip > 0.05) s.sputter += dt;
+      if (s.silence <= 0) { s.state = 'idle'; if (s.auto) { s.auto.mode = 'rest'; s.auto.timer = 2.5; } }
+    } else if (s.grip > 0.05) {
+      s.heat += s.grip * s.grip * GAIN * dt; s.state = 'fire';
+      if (s.heat >= LIMIT) { s.heat = LIMIT; s.state = 'over'; s.silence = SILENCE; s.overFlash = 1; events.push({ type: 'over', sim: s }); }
+    } else { s.heat = Math.max(0, s.heat - COOL * dt); s.state = 'idle'; }
+    s.overFlash = Math.max(0, s.overFlash - dt * 1.5);
+    if (wasOver && s.state !== 'over') s.sputter = 0;
+  }
+
+  // ---- 色の道具 ----
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const mix = (c1, c2, t) => [lerp(c1[0], c2[0], t), lerp(c1[1], c2[1], t), lerp(c1[2], c2[2], t)];
+  const rgba = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+  const HEAT_STOPS = [[0, [255, 255, 255]], [0.5, [255, 227, 107]], [0.8, [255, 138, 42]], [1, [255, 52, 36]]];
+  function heatColor(h) {
+    for (let i = 1; i < HEAT_STOPS.length; i++) {
+      const [t1, c1] = HEAT_STOPS[i - 1], [t2, c2] = HEAT_STOPS[i];
+      if (h <= t2) return mix(c1, c2, (h - t1) / (t2 - t1));
+    }
+    return HEAT_STOPS[HEAT_STOPS.length - 1][1];
+  }
+  function hash(n) { const x = Math.sin(n * 127.1) * 43758.5453; return x - Math.floor(x); }
+
+  // ---- 1枚の見本（キャンバス）----
+  function makeView(id, kind) {
+    const cv = document.getElementById(id), ctx = cv.getContext('2d');
+    const parts = [[], []];
+    const view = { cv, ctx, kind, parts, W: 0, H: 0 };
+    function resize() {
+      const r = cv.getBoundingClientRect(), d = Math.min(2, window.devicePixelRatio || 1);
+      cv.width = Math.max(1, Math.round(r.width * d)); cv.height = Math.max(1, Math.round(r.height * d));
+      view.W = r.width; view.H = r.height; ctx.setTransform(d, 0, 0, d, 0, 0);
+    }
+    new ResizeObserver(resize).observe(cv); resize();
+    return view;
+  }
+  const views = [makeView('cA', 'A'), makeView('cB', 'B'), makeView('cC', 'C')];
+
+  function drawFloor(v, t) {
+    const { ctx, W, H } = v;
+    const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#13292d'); g.addColorStop(1, '#0c1b1e');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)'; ctx.lineWidth = 1;
+    for (let x = 0; x < W; x += 28) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = 0; y < H; y += 28) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    // 敵（雰囲気だけ）
+    for (let i = 0; i < 14; i++) {
+      const x = W * (0.55 + 0.42 * hash(i)) - ((t * 12 + i * 37) % 60);
+      const y = H * (0.12 + 0.76 * hash(i + 9)) + Math.sin(t * 2 + i) * 3;
+      ctx.fillStyle = 'rgba(160,110,220,0.55)'; ctx.beginPath(); ctx.arc(x, y, 5 + 2 * hash(i + 3), 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  // ビーム（歯磨き粉のジェル）。gaps: 途切れ（0〜1）、coreCol/coreW: 芯
+  function drawGel(ctx, x0, y, x1, w, col, t, o) {
+    const steps = 48, len = x1 - x0;
+    const edge = (sgn) => {
+      for (let i = 0; i <= steps; i++) {
+        const k = sgn > 0 ? i : steps - i; const x = x0 + len * k / steps;
+        const bump = 1 + 0.18 * Math.sin((x - x0) * 0.09 - t * 9);
+        const yy = y + sgn * (w / 2) * bump;
+        if (i === 0 && sgn > 0) ctx.moveTo(x, yy); else ctx.lineTo(x, yy);
+      }
+    };
+    ctx.save();
+    if (o.gaps > 0) { // 限界が近いと、流れながら途切れる
+      ctx.beginPath();
+      const seg = 34, off = (t * 160) % seg;
+      for (let x = x0 - seg + off; x < x1; x += seg) {
+        const keep = seg * (1 - o.gaps * (0.35 + 0.5 * hash(Math.floor((x - off) / seg) + Math.floor(t * 6))));
+        ctx.rect(Math.max(x0, x), y - w, Math.max(0, Math.min(keep, x1 - x)), w * 2);
+      }
+      ctx.clip();
+    }
+    ctx.beginPath(); edge(1); edge(-1); ctx.closePath();
+    const g = ctx.createLinearGradient(0, y - w / 2, 0, y + w / 2);
+    g.addColorStop(0, rgba(mix(col, [0, 0, 0], 0.25), 0.95)); g.addColorStop(0.5, rgba(mix(col, [255, 255, 255], 0.2), 0.95)); g.addColorStop(1, rgba(mix(col, [0, 0, 0], 0.3), 0.95));
+    ctx.fillStyle = g; ctx.shadowColor = rgba(col, 0.6); ctx.shadowBlur = 10; ctx.fill(); ctx.shadowBlur = 0;
+    if (o.coreW > 0) {
+      ctx.fillStyle = rgba(o.coreCol, o.coreA);
+      ctx.shadowColor = rgba(o.coreCol, 0.9); ctx.shadowBlur = o.coreGlow;
+      const cw = Math.max(1.5, w * o.coreW);
+      ctx.beginPath(); ctx.roundRect(x0, y - cw / 2, len, cw, cw / 2); ctx.fill(); ctx.shadowBlur = 0;
+    }
+    ctx.restore();
+  }
+
+  function drawTurret(ctx, x, y, col, body, glow) {
+    if (glow > 0) {
+      const g = ctx.createRadialGradient(x, y, 4, x, y, 40);
+      g.addColorStop(0, `rgba(255,90,40,${0.75 * glow})`); g.addColorStop(1, 'rgba(255,90,40,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 40, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.fillStyle = rgba(body); ctx.fillRect(x + 6, y - 6, 18, 12);
+    ctx.beginPath(); ctx.arc(x, y, 15, 0, Math.PI * 2); ctx.fillStyle = rgba(body); ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = rgba(col); ctx.stroke();
+  }
+
+  function spawn(list, p) { if (list.length < 160) list.push(p); }
+  function stepParts(ctx, list, dt) {
+    for (let i = list.length - 1; i >= 0; i--) {
+      const p = list[i]; p.life -= dt; if (p.life <= 0) { list.splice(i, 1); continue; }
+      p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.98; p.r += p.grow * dt;
+      const a = Math.min(1, p.life / p.max) * p.a;
+      if (p.kind === 'spark') { ctx.fillStyle = `rgba(255,200,120,${a})`; ctx.fillRect(p.x, p.y, 2.5, 2.5); }
+      else if (p.kind === 'bubble') { ctx.strokeStyle = `rgba(255,255,255,${a})`; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.stroke(); }
+      else { ctx.fillStyle = p.kind === 'smoke' ? `rgba(70,70,75,${a})` : `rgba(235,240,240,${a})`; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill(); }
+    }
+  }
+
+  function overheatCommon(list, x, y, s, dt) {
+    if (s.overFlash > 0.95) for (let i = 0; i < 26; i++) {
+      const a = Math.random() * Math.PI * 2, sp = 20 + Math.random() * 60;
+      spawn(list, { kind: 'steam', x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 20, r: 6 + Math.random() * 6, grow: 18, life: 1.2, max: 1.2, a: 0.55 });
+    }
+    if (s.state === 'over' && Math.random() < dt * 8) spawn(list, { kind: 'smoke', x: x + (Math.random() - .5) * 10, y: y - 6, vx: (Math.random() - .5) * 8, vy: -22, r: 4, grow: 10, life: 1.4, max: 1.4, a: 0.5 });
+    if (s.state === 'over' && s.grip > 0.05 && Math.floor(s.sputter * 4) !== Math.floor((s.sputter - dt) * 4)) {
+      for (let i = 0; i < 7; i++) { const a = (Math.random() - .5) * 1.2; spawn(list, { kind: 'spark', x: x + 24, y, vx: Math.cos(a) * 120, vy: Math.sin(a) * 120, r: 0, grow: 0, life: 0.25, max: 0.25, a: 1 }); }
+    }
+  }
+
+  function drawView(v, t, dt) {
+    const { ctx, W, H, kind } = v;
+    if (!W) return;
+    drawFloor(v, t);
+    sims.forEach((s, i) => {
+      const x = 46, y = H * (i === 0 ? 0.3 : 0.72), col = COLORS[s.color], list = v.parts[i];
+      const h = s.heat / LIMIT, firing = s.state === 'fire', w = lerp(4, 24, s.grip);
+      const warn = h >= WARN && s.state !== 'over';
+      const blink = warn ? 0.55 + 0.45 * Math.sin(t * (10 + 14 * (h - WARN) / (1 - WARN))) : 1;
+      let body = [52, 58, 62], glow = 0;
+      if (s.state === 'over') body = [30, 30, 32];
+
+      if (kind === 'A') {
+        if (firing) drawGel(ctx, x + 22, y, W, w, col, t, { gaps: 0, coreW: lerp(0.22, 0.6, h), coreCol: heatColor(h), coreA: warn ? 0.55 + 0.45 * blink : 1, coreGlow: 6 + 14 * h });
+        drawTurret(ctx, x, y, col, body, 0);
+        // 輪のゲージ
+        const R = 24; ctx.lineWidth = 5; ctx.lineCap = 'round';
+        ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.stroke();
+        if (s.state === 'over') {
+          const left = Math.max(0, s.silence / SILENCE);
+          ctx.strokeStyle = 'rgba(190,190,195,0.9)'; ctx.beginPath(); ctx.arc(x, y, R, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * left); ctx.stroke();
+        } else if (h > 0.003) {
+          ctx.strokeStyle = rgba(heatColor(Math.max(0.35, h)), warn ? blink : 0.95);
+          ctx.beginPath(); ctx.arc(x, y, R, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * h); ctx.stroke();
+        }
+        ctx.lineCap = 'butt';
+      } else if (kind === 'B') {
+        const boil = Math.max(0, (h - 0.25) / 0.75);
+        if (firing) {
+          drawGel(ctx, x + 22, y, W, w, col, t, { gaps: h > 0.85 ? (h - 0.85) / 0.15 : 0, coreW: 0.25, coreCol: [255, 255, 255], coreA: 0.8, coreGlow: 6 });
+          if (Math.random() < dt * 60 * boil) spawn(list, { kind: 'bubble', x: x + 30 + Math.random() * (W - 60), y: y + (Math.random() - .5) * w * 0.7, vx: 30, vy: -6, r: 1 + Math.random() * w * 0.12, grow: 2, life: 0.5, max: 0.5, a: 0.8 });
+          if (Math.random() < dt * 22 * boil) spawn(list, { kind: 'steam', x: x + 30 + Math.random() * (W - 60), y: y - w / 2, vx: 10, vy: -30 - 30 * boil, r: 3, grow: 9, life: 1.1, max: 1.1, a: 0.28 * boil + 0.08 });
+        }
+        glow = s.state === 'over' ? 0.35 : Math.max(0, (h - 0.35) / 0.65) * (warn ? 0.7 + 0.3 * blink : 1);
+        body = s.state === 'over' ? [26, 24, 24] : mix([52, 58, 62], [200, 70, 40], Math.max(0, (h - 0.4) / 0.6));
+        if (Math.random() < dt * 14 * Math.max(0, h - 0.5)) spawn(list, { kind: 'steam', x: x + (Math.random() - .5) * 16, y: y - 12, vx: 0, vy: -26, r: 3, grow: 8, life: 1, max: 1, a: 0.35 });
+        drawTurret(ctx, x, y, col, body, glow);
+      } else {
+        const beamCol = mix(col, heatColor(Math.max(0.5, h)), Math.min(1, h * 1.15));
+        if (firing) drawGel(ctx, x + 22, y, W, w, beamCol, t, { gaps: 0, coreW: 0.25, coreCol: [255, 255, 255], coreA: warn ? 0.6 + 0.4 * blink : 0.85, coreGlow: 6 });
+        drawTurret(ctx, x, y, col, body, 0);
+        // 温度計
+        const tx = x - 34, ty = y - 22, th = 44;
+        ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fillRect(tx, ty, 7, th);
+        const fill = s.state === 'over' ? 1 : h;
+        ctx.fillStyle = s.state === 'over' ? `rgba(255,52,36,${0.5 + 0.5 * Math.sin(t * 16)})` : rgba(heatColor(Math.max(0.3, h)), warn ? blink : 1);
+        ctx.fillRect(tx, ty + th * (1 - fill), 7, th * fill);
+      }
+      overheatCommon(list, x, y, s, dt);
+      stepParts(ctx, list, dt);
+    });
+  }
+
+  // ---- 音（やかん・プシュー・カスッ）----
+  let ac = null, osc = null, og = null;
+  function ensureAudio() {
+    if (ac) return;
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    osc = ac.createOscillator(); osc.type = 'triangle'; og = ac.createGain(); og.gain.value = 0;
+    osc.connect(og).connect(ac.destination); osc.start();
+  }
+  function noise(dur, f1, f2, vol) {
+    const n = ac.createBufferSource(), b = ac.createBuffer(1, ac.sampleRate * dur, ac.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    n.buffer = b; const f = ac.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 0.8;
+    f.frequency.setValueAtTime(f1, ac.currentTime); f.frequency.exponentialRampToValueAtTime(f2, ac.currentTime + dur);
+    const g = ac.createGain(); g.gain.setValueAtTime(vol, ac.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+    n.connect(f).connect(g).connect(ac.destination); n.start();
+  }
+  let lastSputter = 0;
+  function updateSound(events) {
+    if (!ui.sound || !ac) return;
+    const s = sims[0], h = s.heat / LIMIT, now = ac.currentTime;
+    const on = s.state === 'fire';
+    osc.frequency.setTargetAtTime(280 + h * h * 1000, now, 0.05);
+    og.gain.setTargetAtTime(on ? 0.015 + 0.07 * h * h : 0, now, 0.05);
+    events.forEach(e => { if (e.sim === s && e.type === 'over') noise(0.9, 3000, 700, 0.35); });
+    if (s.state === 'over' && s.grip > 0.05 && now - lastSputter > 0.25) { lastSputter = now; noise(0.06, 2500, 1800, 0.25); }
+  }
+
+  // ---- 操作 ----
+  const autoBtn = document.getElementById('autoBtn'), grip = document.getElementById('grip');
+  autoBtn.addEventListener('click', () => {
+    ui.auto = !ui.auto; autoBtn.setAttribute('aria-pressed', ui.auto); grip.disabled = ui.auto;
+    if (!ui.auto) sims[0].auto = null; else sims[0].auto = { mode: 'hold', timer: 0 };
+  });
+  grip.addEventListener('input', () => { ui.manualGrip = grip.value / 100; });
+  const speedBtn = document.getElementById('speedBtn');
+  speedBtn.addEventListener('click', () => { ui.speed = ui.speed === 1 ? 2 : 1; speedBtn.setAttribute('aria-pressed', ui.speed === 2); });
+  const soundBtn = document.getElementById('soundBtn');
+  soundBtn.addEventListener('click', () => {
+    ui.sound = !ui.sound; soundBtn.setAttribute('aria-pressed', ui.sound);
+    if (ui.sound) { ensureAudio(); ac.resume(); } else if (og) og.gain.setTargetAtTime(0, ac.currentTime, 0.03);
+  });
+
+  const stateEl = document.getElementById('state');
+  const NAMES = { idle: '撃っていない', fire: '撃っている', over: 'オーバーヒート' };
+  let last = performance.now(), t = 0;
+  function frame(now) {
+    const real = Math.min(0.05, (now - last) / 1000); last = now;
+    const dt = real * ui.speed; t += dt;
+    const events = [];
+    sims.forEach(s => { if (s.auto) stepAuto(s, dt); else s.grip = ui.manualGrip; stepSim(s, dt, events); });
+    views.forEach(v => drawView(v, t, dt));
+    updateSound(events);
+    const s = sims[0], pct = Math.round(s.heat / LIMIT * 100);
+    stateEl.innerHTML = `赤: <b class="${s.state === 'over' || pct >= 80 ? 'hot' : ''}">${NAMES[s.state]}</b>　熱 <b>${pct}%</b>` +
+      (s.state === 'over' ? `　あと <b>${Math.max(0, s.silence).toFixed(1)}秒</b>` : '');
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>

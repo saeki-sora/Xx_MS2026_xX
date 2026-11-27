@@ -291,6 +291,7 @@ namespace MS2026.Fortress.EditorTools
             DrawRotationAndAim(tuning);
             LaserEffectsPanel.Draw(tuning);
             LaserLookPanel.Draw(tuning, turrets);
+            LaserHeatLookPanel.Draw(tuning);
             LaserLightPanel.Draw(tuning);
 
             EditorGUILayout.Space(4);
