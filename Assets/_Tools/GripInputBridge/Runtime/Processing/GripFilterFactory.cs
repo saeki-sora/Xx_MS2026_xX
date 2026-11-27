@@ -11,7 +11,8 @@ namespace MS2026.GripInputBridge.Processing
     /// </summary>
     public static class GripFilterFactory
     {
-        public static IGripSignalFilter Create(GripFilterSettings settings)
+        /// <param name="clock">1€フィルターが使う時刻(秒)。省略時は実時間（テストで差し替える）。</param>
+        public static IGripSignalFilter Create(GripFilterSettings settings, Func<double> clock = null)
         {
             if (settings == null)
             {
@@ -24,6 +25,11 @@ namespace MS2026.GripInputBridge.Processing
                 GripFilterType.ExponentialMovingAverage => new ExponentialMovingAverageFilter(settings.emaAlpha),
                 GripFilterType.Median => new MedianFilter(settings.windowSize),
                 GripFilterType.MedianThenExponentialMovingAverage => new MedianThenEmaFilter(settings.windowSize, settings.emaAlpha),
+                GripFilterType.OneEuro => new OneEuroFilter(
+                    settings.oneEuroMinCutoff, settings.oneEuroBeta, settings.oneEuroDerivativeCutoff, clock),
+                GripFilterType.MedianThenOneEuro => new MedianThenOneEuroFilter(
+                    settings.windowSize, settings.oneEuroMinCutoff, settings.oneEuroBeta, settings.oneEuroDerivativeCutoff, clock),
+                GripFilterType.None => new PassthroughFilter(),
                 _ => throw new ArgumentOutOfRangeException(nameof(settings), settings.filterType, "未対応のGripFilterTypeです。")
             };
         }

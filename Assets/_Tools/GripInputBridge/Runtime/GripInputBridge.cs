@@ -104,7 +104,15 @@ namespace MS2026.GripInputBridge
 
         private static GripInputProvider CreateDefaultProvider()
         {
-            return new GripInputProvider(Simulator);
+            // Resources に「ゲームで使うフィルター設定」があれば最初から使う（無ければ今までどおりフィルター無し）。
+            // 設定は握力入力ブリッジの「なめらかさ」タブで作る。
+            return new GripInputProvider(Simulator, LoadGameFilterSettings());
+        }
+
+        /// <summary>ゲームで使うフィルター設定（Resources の <see cref="GripFilterSettings.GameSettingsResourcePath"/>）。無ければ null。</summary>
+        public static GripFilterSettings LoadGameFilterSettings()
+        {
+            return UnityEngine.Resources.Load<GripFilterSettings>(GripFilterSettings.GameSettingsResourcePath);
         }
     }
 }

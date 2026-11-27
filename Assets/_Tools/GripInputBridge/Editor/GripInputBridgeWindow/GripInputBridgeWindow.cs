@@ -12,7 +12,7 @@ namespace MS2026.GripInputBridge.EditorTools
 {
     /// <summary>
     /// 握力入力ブリッジの本番用エディタウィンドウ（Phase 6）。設計書 9章 参照。
-    /// タブ構成: はじめに / シミュレータ / キャリブレーション / 診断。
+    /// タブ構成: はじめに / シミュレータ / キャリブレーション / なめらかさ / 診断。
     /// UI Toolkit(USS)でダーク基調＋プレイヤーカラー統一のデザインにしている。
     /// </summary>
     public sealed class GripInputBridgeWindow : EditorWindow
@@ -35,6 +35,7 @@ namespace MS2026.GripInputBridge.EditorTools
             GettingStarted,
             Simulator,
             Calibration,
+            Filter,
             Diagnostics
         }
 
@@ -125,6 +126,7 @@ namespace MS2026.GripInputBridge.EditorTools
             AddTabButton(bar, Tab.GettingStarted, "はじめに", "ツールの使い方を3ステップで説明します。初めて開いた方はまずこちら。");
             AddTabButton(bar, Tab.Simulator, "シミュレータ", "実機の代わりにキーボードや波形プリセットで握力入力を確認・調整します。");
             AddTabButton(bar, Tab.Calibration, "キャリブレーション", "プレイヤーごとの最大握力を計測し、較正データを保存します。");
+            AddTabButton(bar, Tab.Filter, "なめらかさ", "握力の揺れを取るフィルターを見比べ、ゲームで使うフィルターを選びます（1€フィルターなど）。");
             AddTabButton(bar, Tab.Diagnostics, "診断", "4人分の接続状態や異常を確認します。本番運用中の監視にも使えます。");
 
             return bar;
@@ -158,6 +160,9 @@ namespace MS2026.GripInputBridge.EditorTools
                     break;
                 case Tab.Calibration:
                     _contentRoot.Add(BuildCalibrationTab());
+                    break;
+                case Tab.Filter:
+                    _contentRoot.Add(new GripFilterTabView());
                     break;
                 case Tab.Diagnostics:
                     _contentRoot.Add(BuildDiagnosticsTab());
