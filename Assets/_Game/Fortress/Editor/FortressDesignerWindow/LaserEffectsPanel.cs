@@ -34,6 +34,9 @@ namespace MS2026.Fortress.EditorTools
             DrawSlot("effects.impact", "着弾点（壁などに当たっている間）");
             DrawSlot("effects.swarmHit", "群衆の敵に当たった瞬間");
             DrawSlot("effects.steam", "撃ったあとの湯気（撃った時間ぶん続く）");
+            DrawSlot("effects.onOverheat", "オーバーヒートした瞬間");
+            DrawSlot("effects.onDryFire", "オーバーヒート中に握った（空撃ち）");
+            DrawSlot("effects.heatLoop", "撃っている間の熱の音（熱いほど高く）");
             _tuningSerialized.ApplyModifiedProperties();
 
             DrawSwarmBudget();

@@ -41,8 +41,31 @@ namespace MS2026.Fortress
                  "熱が少し下がるまで、2回は鳴らない。")]
         public FortressEffect onHeatWarning = new FortressEffect();
 
-        [Range(0f, 1f), Tooltip("「熱が危ない」を鳴らす熱の量（0〜1。1 でオーバーヒート）。")]
+        [Range(0f, 1f), Tooltip("「熱が危ない」を鳴らす熱の量（0〜1。1 でオーバーヒート）。ビームの芯と砲台の輪が点滅し始めるのもここから。")]
         public float heatWarnAt = 0.8f;
+
+        [Tooltip("オーバーヒート中に握ったとき（撃てないのに握っている間）、下の間隔ごとに発射口で出す空撃ちのエフェクトと効果音（「カスッ」）。" +
+                 "握っても何も起きない時間をなくすため（2026-11-27）。")]
+        public FortressEffect onDryFire = new FortressEffect();
+
+        [Min(0.05f), Tooltip("空撃ちを出す間隔（秒）。")]
+        public float dryFireInterval = 0.3f;
+
+        [Tooltip("撃っている間ずっと鳴らす熱の音（やかんの「ピー」のような音。2026-11-27）。熱いほど高く・大きくなる。" +
+                 "効果音は D-Drive の SE で「ループ」を ON にしたものを選ぶ。エフェクトは使わない。")]
+        public FortressEffect heatLoop = new FortressEffect();
+
+        [Min(0.1f), Tooltip("熱の音の高さ（熱 0 のとき。1 が元の高さ）。")]
+        public float heatLoopPitchCold = 0.8f;
+
+        [Min(0.1f), Tooltip("熱の音の高さ（オーバーヒート直前）。")]
+        public float heatLoopPitchHot = 1.8f;
+
+        [Range(0f, 1f), Tooltip("熱の音の大きさ（熱 0 のとき）。")]
+        public float heatLoopVolumeCold = 0.1f;
+
+        [Range(0f, 1f), Tooltip("熱の音の大きさ（オーバーヒート直前）。")]
+        public float heatLoopVolumeHot = 1f;
 
         [Min(0f), Tooltip("ビームを1秒撃つごとに増える湯気の時間（秒）。1なら、撃った時間と同じだけ湯気が出る。")]
         public float steamSecondsPerFireSecond = 1f;

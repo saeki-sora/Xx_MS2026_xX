@@ -88,6 +88,32 @@ namespace MS2026.Fortress
         }
 
         /// <summary>
+        /// 鳴っている SE の音量と高さを入れ直す（熱の音のように、鳴らしている間ずっと変える音用。2026-11-27）。
+        /// 音量は 音そのものの音量 × この場所の倍率 × <paramref name="extraScale"/> × 全体音量。<see cref="ApplySeVolume"/> と違い、倍率が 1 でも必ず入れる。
+        /// </summary>
+        public static void SetSeLevel(Handle<SeMarker> handle, AssetId<SeMarker> id, float slotScale, bool isVoice, float extraScale, float pitch)
+        {
+            if (handle == Handle<SeMarker>.Invalid)
+            {
+                return;
+            }
+
+            var bootstrap = DDriveRuntimeBootstrap.Instance;
+            if (bootstrap == null || bootstrap.Registry == null || bootstrap.Audio == null)
+            {
+                return;
+            }
+
+            if (!bootstrap.Registry.TryResolveSync<SeData>(id.Value, out var data) || data == null)
+            {
+                return;
+            }
+
+            bootstrap.Audio.SetVolume(handle, FortressSoundRules.FinalVolume(data.Volume, slotScale * Mathf.Clamp01(extraScale), Master(isVoice)));
+            bootstrap.Audio.SetPitch(handle, Mathf.Max(0.01f, pitch));
+        }
+
+        /// <summary>
         /// BGM を鳴らす（<c>Audio.PlayBgm</c> の代わり）。BGM 全体の音量が 1 なら今までと同じ。
         /// 1 より小さいときは、音量を掛けた複製のデータを鳴らす（曲ごとに1つ作って使い回す）。
         /// </summary>

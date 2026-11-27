@@ -90,6 +90,8 @@ namespace MS2026.SoundStudio
             P(Fort + "LaserEffectSettings", "onOverheat", SoundPageId.Match, "レーザー", "オーバーヒートした"),
             P(Fort + "LaserEffectSettings", "onRecovered", SoundPageId.Match, "レーザー", "オーバーヒートから戻った"),
             P(Fort + "LaserEffectSettings", "onHeatWarning", SoundPageId.Match, "レーザー", "熱が危ない（もうすぐオーバーヒート）"),
+            P(Fort + "LaserEffectSettings", "onDryFire", SoundPageId.Match, "レーザー", "オーバーヒート中に握った（空撃ち）"),
+            P(Fort + "LaserEffectSettings", "heatLoop", SoundPageId.Match, "レーザー", "撃っている間の熱の音（熱いほど高く・ループの音を選ぶ）"),
 
             // 試合 › 敵・コア
             E(Fort + "WavePlan", "onEnemiesAppear", SoundPageId.Match, "敵・コア", "敵が画面に出てくる"),

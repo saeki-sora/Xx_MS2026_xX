@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using DDrive.Foundation.Handle;
+using DDrive.Runtime.Audio;
 using DDrive.Runtime.Vfx;
 using UnityEngine;
 
@@ -30,6 +31,9 @@ namespace MS2026.Fortress
         private bool _impactActive;
         private TurretState _lastState = TurretState.Idle;
         private ThresholdTrigger _heatWarning;
+        private float _dryFireTimer;
+        private Handle<SeMarker> _heatLoopSe = Handle<SeMarker>.Invalid;
+        private bool _heatLoopActive;
 
         private LaserEffectSettings Settings => _turret != null && _turret.tuning != null ? _turret.tuning.effects : null;
 
@@ -56,6 +60,8 @@ namespace MS2026.Fortress
             StopSteam();
             _steamRemaining = 0f;
             StopImpact();
+            StopHeatLoop();
+            _dryFireTimer = 0f;
         }
 
         private void OnDestroy()
@@ -80,6 +86,86 @@ namespace MS2026.Fortress
             UpdateImpact();
             UpdateSteam();
             UpdateHeatWarning();
+            UpdateDryFire();
+            UpdateHeatLoop();
+        }
+
+        /// <summary>
+        /// オーバーヒート中に握っている間、間隔ごとに発射口で空撃ち（「カスッ」）を出す（2026-11-27）。
+        /// 握っても何も起きない時間をなくし、「今は撃てない」と分かるようにする。握りは各PCが入力元から読む（通信は増やさない）。
+        /// </summary>
+        private void UpdateDryFire()
+        {
+            var settings = Settings;
+            var effect = settings?.onDryFire;
+            if (effect == null || effect.IsEmpty || _turret.State != TurretState.Overheated || LaserTurret.InputLocked)
+            {
+                _dryFireTimer = 0f;
+                return;
+            }
+
+            _turret.ReadGrip(out var isGripping, out _);
+            if (!isGripping)
+            {
+                _dryFireTimer = 0f;
+                return;
+            }
+
+            _dryFireTimer += Time.deltaTime;
+            if (_dryFireTimer < settings.dryFireInterval)
+            {
+                return;
+            }
+
+            _dryFireTimer -= settings.dryFireInterval;
+            PlayAtMuzzle(effect);
+        }
+
+        /// <summary>撃っている間ずっと熱の音を鳴らし、熱いほど高く・大きくする（2026-11-27）。撃ち終わったら止める。</summary>
+        private void UpdateHeatLoop()
+        {
+            var settings = Settings;
+            var effect = settings?.heatLoop;
+            if (effect == null || !effect.HasSe || !_turret.IsFiring)
+            {
+                StopHeatLoop();
+                return;
+            }
+
+            if (!_heatLoopActive)
+            {
+                _heatLoopActive = true;
+                _heatLoopSe = FortressEffectPlayer.PlaySound(effect, transform.position, _turret.playerIndex);
+            }
+
+            var heat01 = _turret.HeatRatio01;
+            var curve = heat01 * heat01; // 最後の方で一気に高くなる（やかんのように）
+            FortressAudioMix.SetSeLevel(_heatLoopSe, effect.se, effect.volumeScale, effect.isVoice,
+                Mathf.Lerp(settings.heatLoopVolumeCold, settings.heatLoopVolumeHot, curve),
+                Mathf.Lerp(settings.heatLoopPitchCold, settings.heatLoopPitchHot, curve));
+        }
+
+        private void StopHeatLoop()
+        {
+            if (!_heatLoopActive)
+            {
+                return;
+            }
+
+            _heatLoopActive = false;
+            if (_heatLoopSe != Handle<SeMarker>.Invalid)
+            {
+                Audio.Stop(_heatLoopSe, 0.08f);
+            }
+
+            _heatLoopSe = Handle<SeMarker>.Invalid;
+        }
+
+        /// <summary>発射口で1回だけ出す（向きは発射口に合わせる）。</summary>
+        private void PlayAtMuzzle(FortressEffect effect)
+        {
+            var anchor = _turret.muzzle != null ? _turret.muzzle : transform;
+            FortressEffectPlayer.PlayOnce(effect, anchor.position, anchor.rotation, _turret.playerIndex);
         }
 
         private void HandleStateChanged(TurretState state)
@@ -194,7 +280,13 @@ namespace MS2026.Fortress
             _steamActive = true;
             var anchor = _turret.muzzle != null ? _turret.muzzle : transform;
             _steamVfx = FortressEffectPlayer.StartFollowing(effect, anchor, _turret.playerIndex);
-            FortressEffectPlayer.PlaySound(effect, anchor.position, _turret.playerIndex);
+
+            // オーバーヒートで止まったときは「オーバーヒートした」の音が鳴るので、湯気の音は重ねない（2026-11-27）。
+            var overheatHasSound = _turret.State == TurretState.Overheated && settings.onOverheat != null && settings.onOverheat.HasSe;
+            if (!overheatHasSound)
+            {
+                FortressEffectPlayer.PlaySound(effect, anchor.position, _turret.playerIndex);
+            }
         }
 
         private void StopSteam()
