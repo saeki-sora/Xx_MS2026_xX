@@ -125,6 +125,7 @@ namespace MS2026.Fortress
         private const float ReplicaAngleCorrection = 12f;
 
         private float _silenceRemaining;
+        private float _heatAtOverheat;
         private float _chargeTimer;
         private bool _hasChargedThisGrip;
 
@@ -144,6 +145,7 @@ namespace MS2026.Fortress
         {
             IsReplica = false;
             _silenceRemaining = State == TurretState.Overheated && tuning != null ? tuning.overheatSilenceDuration : 0f;
+            _heatAtOverheat = Heat;
             _chargeTimer = 0f;
             _hasChargedThisGrip = false;
         }
@@ -425,21 +427,28 @@ namespace MS2026.Fortress
             }
         }
 
+        // オーバーヒートで止まっている間は、止まる時間が終わるまでに熱が0まで下がるようにする（2026-11-27）。
+        // 前はふだんの冷え方（毎秒 heatCoolingPerSecond）だけだったので、3秒止まっても熱は 100%→82% にしか下がらず、
+        // 握ったまま待つと戻った直後の約2秒でまたオーバーヒートしていた（「冷めたのにオーバーヒート直前」に見えるバグ）。
         private void TickOverheated(float dt)
         {
             _silenceRemaining -= dt;
-            Heat = Mathf.Max(0f, Heat - tuning.heatCoolingPerSecond * dt);
+            var duration = tuning.overheatSilenceDuration;
+            var linear = duration > 0f ? _heatAtOverheat * Mathf.Clamp01(_silenceRemaining / duration) : 0f;
+            Heat = Mathf.Max(0f, Mathf.Min(Heat - tuning.heatCoolingPerSecond * dt, linear));
             CurrentThickness01 = 0f;
             CurrentThicknessMeters = 0f;
 
             if (_silenceRemaining <= 0f)
             {
+                Heat = 0f;
                 SetState(TurretState.Idle);
             }
         }
 
         private void EnterOverheated()
         {
+            _heatAtOverheat = Heat;
             _silenceRemaining = tuning.overheatSilenceDuration;
             CurrentThickness01 = 0f;
             CurrentThicknessMeters = 0f;
