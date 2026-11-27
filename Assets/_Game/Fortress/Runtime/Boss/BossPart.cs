@@ -29,6 +29,9 @@ namespace MS2026.Fortress
 
         public bool Alive { get; private set; } = true;
 
+        /// <summary>壊した人（P1〜P4 = 0〜3。分からない・まだ壊れていなければ −1）。Client へ配って、壊れたときの色をそろえる。</summary>
+        public int BrokenBy { get; internal set; } = -1;
+
         /// <summary>次の攻撃までの秒数（Host が数える）。</summary>
         public float Cooldown { get; set; }
 

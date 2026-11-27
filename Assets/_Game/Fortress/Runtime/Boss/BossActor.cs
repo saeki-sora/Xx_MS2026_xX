@@ -9,7 +9,8 @@ namespace MS2026.Fortress
     /// ボス本体（<see cref="BossWaveRunner"/> がボスウェーブで作る。2026-11-15）。
     /// 右から入ってきて止まり、少しずつ左（コア）へ近づく。上下にゆれる。部位（<see cref="BossPart"/>）を壊すと少し押し戻される。
     /// 本体は無敵（レーザーは体で止まる）。砲口はコアへ弾を撃ち、菌を出す口は雑魚を呼ぶ。
-    /// 動き・攻撃・ダメージを決めるのは Host（オフラインでは自分）。Client への同期は後の段階（今は Host と同じ場所に置くだけ）。
+    /// 動き・攻撃・ダメージを決めるのは Host（オフラインでは自分）。Host は位置と部位の HP・壊れたかを <see cref="BossWaveRunner"/> から配り、
+    /// Client はそれを写す（<see cref="ApplyRemotePosition"/>・<see cref="ApplyRemotePart"/>。2026-11-27）。
     /// </summary>
     [AddComponentMenu("")]
     internal sealed class BossActor : MonoBehaviour
@@ -25,6 +26,9 @@ namespace MS2026.Fortress
             Dying,
             Gone
         }
+
+        /// <summary>Client が Host の位置へ寄せる速さ（大きいほどすぐ追いつく）。</summary>
+        private const float RemoteFollowRate = 12f;
 
         private readonly List<BossPart> _parts = new List<BossPart>();
 
@@ -50,6 +54,8 @@ namespace MS2026.Fortress
         private bool _authority;
         private bool _reachDamageDone;
         private EnemyTypeDefinition _minionType;
+        private bool _hasRemotePosition;
+        private Vector2 _remotePosition;
 
         public float LaserDamageMultiplier => _def != null ? _def.laserDamageMultiplier : 1f;
 
@@ -62,6 +68,12 @@ namespace MS2026.Fortress
 
         /// <summary>まだ画面の外で待っている（WARNING の間）。</summary>
         public bool IsHidden => _mode == Mode.Hidden;
+
+        /// <summary>戦っている最中（Host が位置を決めている間）。</summary>
+        public bool IsFighting => _mode == Mode.Fighting;
+
+        /// <summary>Host が様子を配る間（画面に出てから、爆発・退場するまで）。</summary>
+        public bool SendsState => _mode == Mode.Ready || _mode == Mode.Fighting || _mode == Mode.Finale || _mode == Mode.Reached;
 
         public Vector2 Position => new Vector2(_x, _y);
 
@@ -232,7 +244,15 @@ namespace MS2026.Fortress
         {
             if (!_authority)
             {
-                // Client: 今は Host と同じ動きを自分で計算しない（同期は後の段階）。ゆれだけ見せる。
+                // Client: 動きは Host が配る位置へなめらかに寄せる（1秒10回届く）。まだ届いていなければ、ゆれだけ見せる。
+                if (_hasRemotePosition)
+                {
+                    var k = 1f - Mathf.Exp(-RemoteFollowRate * dt);
+                    _x = Mathf.Lerp(_x, _remotePosition.x, k);
+                    _y = Mathf.Lerp(_y, _remotePosition.y, k);
+                    return;
+                }
+
                 _bobTime += dt;
                 _y = _layout.bossStop.y + Mathf.Sin(_bobTime * Mathf.PI * 2f / Mathf.Max(1f, _def.bobPeriodSeconds)) * _layout.bobAmplitude;
                 return;
@@ -429,8 +449,57 @@ namespace MS2026.Fortress
             }
         }
 
+        // ───────── Client: Host が配った様子を写す ─────────
+
+        /// <summary>Host の位置（戦っている間だけ使う）。最初の1回はその場へ置く。</summary>
+        internal void ApplyRemotePosition(Vector2 position)
+        {
+            if (FortressNet.HasSimulationAuthority)
+            {
+                return;
+            }
+
+            if (!_hasRemotePosition && _mode == Mode.Fighting)
+            {
+                _x = position.x;
+                _y = position.y;
+            }
+
+            _remotePosition = position;
+            _hasRemotePosition = true;
+        }
+
+        /// <summary>Host の部位の HP・壊れたか。Host で壊れていれば、こちらでも同じ演出で壊す（壊した人の色で）。</summary>
+        internal void ApplyRemotePart(int index, float health, bool alive, int breaker)
+        {
+            if (FortressNet.HasSimulationAuthority || index < 0 || index >= _parts.Count || _mode == Mode.Dying || _mode == Mode.Gone)
+            {
+                return;
+            }
+
+            var part = _parts[index];
+            if (part == null || !part.Alive)
+            {
+                return;
+            }
+
+            if (!alive)
+            {
+                BreakPart(part, breaker);
+                return;
+            }
+
+            if (health < part.Health - 0.001f)
+            {
+                part.FlashHit();
+            }
+
+            part.Health = health;
+        }
+
         private void BreakPart(BossPart part, int player)
         {
+            part.BrokenBy = player;
             part.Break(_def.brokenPartSprite != null ? _def.brokenPartSprite : BossArt.Broken);
             FortressBoss.AliveMask &= ~(1 << part.Index);
             FortressBoss.PartsLeft = Mathf.Max(0, FortressBoss.PartsLeft - 1);

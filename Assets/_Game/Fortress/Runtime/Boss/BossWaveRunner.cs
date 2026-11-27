@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using MS2026.Fortress.Cameras;
 using MS2026.Fortress.Net;
+using Unity.Collections;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace MS2026.Fortress
@@ -12,6 +15,7 @@ namespace MS2026.Fortress
     /// ・WARNING（BossWarning）: ボスを画面の外に作り、WARNING の後に右から入れる
     /// ・戦い（BossCombat）: ボスを動かす（動き・攻撃・ダメージは Host だけ）
     /// ・最後の握り（BossFinale）／コアに届いた（BossReached）: ボスに知らせる
+    /// ・通信: Host がボスの位置と部位の HP・壊れたか・壊した人を1秒10回配り、Client が写す（2026-11-27。それまでは配っておらず、Client の HP のバーが減らなかった）
     /// 試合が新しくなったら全部片付ける。
     /// </summary>
     [AddComponentMenu("")]
@@ -20,6 +24,14 @@ namespace MS2026.Fortress
     {
         private const float ViewSafeArea = 0.94f;
         private const float ViewPadding = 0.6f;
+
+        /// <summary>ボスの様子の名前つきメッセージ。</summary>
+        internal const string StateMessage = "MS2026.Fortress.Boss";
+
+        /// <summary>Host が様子を配る間隔（秒）。</summary>
+        private const float SendInterval = 0.1f;
+
+        private const int MaxParts = 31;
 
         private struct Slide
         {
@@ -45,6 +57,15 @@ namespace MS2026.Fortress
         private float _turretZ;
         private int _layer;
 
+        private NetworkManager _registered;
+        private float _nextSend;
+        private bool _remoteDirty;
+        private Vector2 _remotePosition;
+        private int _remoteCount;
+        private int _remoteAlive;
+        private readonly float[] _remoteHealth = new float[MaxParts];
+        private readonly sbyte[] _remoteBreaker = new sbyte[MaxParts];
+
         private void OnEnable()
         {
             FortressWaves.PhaseChanged += OnPhaseChanged;
@@ -53,6 +74,7 @@ namespace MS2026.Fortress
         private void OnDisable()
         {
             FortressWaves.PhaseChanged -= OnPhaseChanged;
+            Unregister();
             Cleanup(restoreLayout: false);
         }
 
@@ -68,6 +90,16 @@ namespace MS2026.Fortress
                 FortressWaves.PhaseElapsed >= _def.warningSeconds)
             {
                 _actor.BeginEnter();
+            }
+
+            EnsureMessaging();
+            if (FortressNet.HasSimulationAuthority)
+            {
+                SendStateIfNeeded();
+            }
+            else
+            {
+                ApplyRemoteState();
             }
         }
 
@@ -505,7 +537,140 @@ namespace MS2026.Fortress
             _sliding = false;
             _formed = false;
             _def = null;
+            _remoteDirty = false;
             FortressBoss.ResetState();
+        }
+
+        // ───────── 通信 ─────────
+
+        private void EnsureMessaging()
+        {
+            var manager = NetworkManager.Singleton;
+            var listening = manager != null && manager.IsListening && manager.CustomMessagingManager != null;
+            if (!listening)
+            {
+                Unregister();
+                return;
+            }
+
+            if (ReferenceEquals(_registered, manager))
+            {
+                return;
+            }
+
+            Unregister();
+            manager.CustomMessagingManager.RegisterNamedMessageHandler(StateMessage, OnStateReceived);
+            _registered = manager;
+            _remoteDirty = false;
+        }
+
+        private void Unregister()
+        {
+            if (_registered == null)
+            {
+                return;
+            }
+
+            try
+            {
+                _registered.CustomMessagingManager?.UnregisterNamedMessageHandler(StateMessage);
+            }
+            catch (Exception)
+            {
+                // 通信を止めた後で、もう登録が消えている。
+            }
+
+            _registered = null;
+        }
+
+        // 送る中身: float x, float y, byte 部位の数, int 残っている部位（bit i）, 部位ごとに float HP + sbyte 壊した人。
+        // 毎回ぜんぶの様子を送るので、1つ落ちても次で追いつく（届く順は保つ）。
+        private void SendStateIfNeeded()
+        {
+            var manager = _registered;
+            if (manager == null || !manager.IsServer || manager.ConnectedClientsIds.Count <= 1 || _actor == null || !_actor.SendsState)
+            {
+                return;
+            }
+
+            var now = Time.unscaledTime;
+            if (now < _nextSend)
+            {
+                return;
+            }
+
+            _nextSend = now + SendInterval;
+            var parts = _actor.Parts;
+            var count = Mathf.Min(parts.Count, MaxParts);
+            var alive = 0;
+            for (var i = 0; i < count; i++)
+            {
+                if (parts[i] != null && parts[i].Alive)
+                {
+                    alive |= 1 << i;
+                }
+            }
+
+            var size = sizeof(float) * 2 + 1 + sizeof(int) + (sizeof(float) + 1) * count;
+            using var writer = new FastBufferWriter(size, Allocator.Temp);
+            var position = _actor.Position;
+            writer.WriteValueSafe(position.x);
+            writer.WriteValueSafe(position.y);
+            writer.WriteValueSafe((byte)count);
+            writer.WriteValueSafe(alive);
+            for (var i = 0; i < count; i++)
+            {
+                var part = parts[i];
+                writer.WriteValueSafe(part != null ? part.Health : 0f);
+                writer.WriteValueSafe((sbyte)Mathf.Clamp(part != null ? part.BrokenBy : -1, -1, 127));
+            }
+
+            manager.CustomMessagingManager.SendNamedMessageToAll(StateMessage, writer, NetworkDelivery.UnreliableSequenced);
+        }
+
+        private void OnStateReceived(ulong sender, FastBufferReader reader)
+        {
+            if (FortressNet.HasSimulationAuthority)
+            {
+                return;
+            }
+
+            reader.ReadValueSafe(out float x);
+            reader.ReadValueSafe(out float y);
+            reader.ReadValueSafe(out byte count);
+            reader.ReadValueSafe(out int alive);
+            var n = Mathf.Min(count, MaxParts);
+            for (var i = 0; i < count; i++)
+            {
+                reader.ReadValueSafe(out float health);
+                reader.ReadValueSafe(out sbyte breaker);
+                if (i < n)
+                {
+                    _remoteHealth[i] = health;
+                    _remoteBreaker[i] = breaker;
+                }
+            }
+
+            _remotePosition = new Vector2(x, y);
+            _remoteCount = n;
+            _remoteAlive = alive;
+            _remoteDirty = true;
+        }
+
+        // ボスがまだ作られていない（段階の知らせより先に届いた）ときは、作られるまで取っておく。
+        private void ApplyRemoteState()
+        {
+            if (!_remoteDirty || _actor == null)
+            {
+                return;
+            }
+
+            _remoteDirty = false;
+            _actor.ApplyRemotePosition(_remotePosition);
+            for (var i = 0; i < _remoteCount; i++)
+            {
+                _actor.ApplyRemotePart(i, _remoteHealth[i], (_remoteAlive & (1 << i)) != 0, _remoteBreaker[i]);
+            }
         }
 
         // ───────── そのほか ─────────
